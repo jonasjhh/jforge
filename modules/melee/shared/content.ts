@@ -157,7 +157,30 @@ export const cure: Skill = {
   effect: { type: "cleanse" },
 };
 
-export const skills = [heal, fireball, meteor, regen, cure];
+/** Lancer: thrusts through the target into the unit right behind it. */
+export const skewer: Skill = {
+  id: "skewer",
+  name: "Skewer",
+  description: "Spear thrust through the target and the unit behind it.",
+  mpCost: 4,
+  target: "enemy",
+  area: "line",
+  effect: { type: "strike", power: 0.9 },
+};
+
+/** Lancer: drags an enemy one row forward, out of cover. */
+export const hook: Skill = {
+  id: "hook",
+  name: "Hook",
+  description:
+    "Pulls an enemy one row forward. If something is in the way, it crashes into it.",
+  mpCost: 4,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 0.6, push: -1 },
+};
+
+export const skills = [heal, fireball, meteor, regen, cure, skewer, hook];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -265,7 +288,28 @@ export const wolf: CombatantDef = {
   resistances: { pierce: 1.5 },
 };
 
-export const playerTypes = [fighter, archer, mage, healer];
+/**
+ * Spear fighter: reaches the front-most unit and the one behind it. Pulls
+ * enemies out of cover and punishes stacked columns.
+ */
+export const lancer: CombatantDef = {
+  id: "lancer",
+  name: "Lancer",
+  stats: {
+    maxHp: 105,
+    maxMp: 16,
+    attack: 20,
+    magic: 4,
+    defense: 14,
+    spirit: 8,
+    speed: 11,
+  },
+  weapon: spear,
+  skills: [skewer, hook],
+  preferredRow: 0,
+};
+
+export const playerTypes = [fighter, lancer, archer, mage, healer];
 /** Fast and frail; its bite poisons. Likes soft targets. */
 export const viper: CombatantDef = {
   id: "viper",

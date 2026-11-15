@@ -130,6 +130,14 @@ export type SkillEffect =
     }
   /** Removes every harmful status from the target. */
   | { type: "cleanse" }
+  /**
+   * A weapon attack: uses the attacker's weapon (reach, rows, damage type)
+   * at `power` times normal. `push` moves the target that many rows back
+   * (negative pulls it forward). If the way is blocked by a unit (knocked
+   * out or not) or the edge of the grid, it doesn't move and takes a
+   * collision instead: x1.5 damage.
+   */
+  | { type: "strike"; power: number; push?: number }
   | {
       type: "heal";
       /** HP restored = power x the caster's magic. */
@@ -148,7 +156,7 @@ export type SkillEffect =
  * battlefield 5 wide and 6 deep, front rows touching, so an area can spill
  * across the front line onto the other side.
  */
-export type SkillArea = "single" | "plus" | "square";
+export type SkillArea = "single" | "plus" | "square" | "line";
 
 /** A skill is plain data, so char can design new ones later. */
 export interface Skill {
@@ -297,6 +305,8 @@ export type BattleEvent =
       unitId: string;
       /** The aimed cell. */
       cell: Cell;
+      /** The unit in the aimed cell when the skill was used, if any. */
+      targetId?: string;
       /** Every cell the skill covers (the aimed cell for single target). */
       area: Cell[];
       skillId: string;
@@ -338,6 +348,13 @@ export type BattleEvent =
     }
   | { type: "statusExpired"; unitId: string; statusId: string; name: string }
   | { type: "statusRemoved"; unitId: string; statusId: string; name: string }
+  | { type: "pushed"; unitId: string; from: Position; to: Position }
+  | {
+      type: "collided";
+      unitId: string;
+      /** The unit in the way, or absent when it hit the edge of the grid. */
+      blockerId?: string;
+    }
   | { type: "heal"; unitId: string; amount: number; hp: number }
   | { type: "moved"; unitId: string; from: Position; to: Position }
   | { type: "knockedOut"; unitId: string }

@@ -59,7 +59,10 @@ function cellAtDepth(depth: number, col: number): Cell | null {
 }
 
 /** The cells an area covers around `center`, clipped to the battlefield. */
-const AREA_OFFSETS: Record<Exclude<SkillArea, "single">, [number, number][]> = {
+const AREA_OFFSETS: Record<
+  Exclude<SkillArea, "single" | "line">,
+  [number, number][]
+> = {
   // [depth, column] offsets from the aimed cell.
   plus: [
     [0, 0],
@@ -75,6 +78,11 @@ const AREA_OFFSETS: Record<Exclude<SkillArea, "single">, [number, number][]> = {
 
 export function areaCells(center: Cell, area: SkillArea): Cell[] {
   if (area === "single") return [center];
+  if (area === "line") {
+    // The aimed cell and the one directly behind it, on the same side.
+    const behind = { ...center, row: center.row + 1 };
+    return isCellOnGrid(behind) ? [center, behind] : [center];
+  }
   const depth = depthOf(center);
   const offsets = AREA_OFFSETS[area];
   return offsets.flatMap(([dDepth, dCol]) => {

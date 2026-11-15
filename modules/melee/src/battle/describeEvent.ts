@@ -19,6 +19,14 @@ export function describeEvent(
       return event.effect === "heal"
         ? `${name(event.unitId)} regains ${event.amount} HP (${event.name})`
         : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
+    case "pushed":
+      return event.to.row < event.from.row
+        ? `${name(event.unitId)} is pulled forward`
+        : `${name(event.unitId)} is pushed back`;
+    case "collided":
+      return event.blockerId
+        ? `${name(event.unitId)} crashes into ${name(event.blockerId)}!`
+        : `${name(event.unitId)} crashes against the edge!`;
     case "statusRemoved":
       return `${name(event.unitId)} is cured of ${event.name}`;
     case "statusExpired":
@@ -27,8 +35,16 @@ export function describeEvent(
       return `${name(event.unitId)}'s ${event.skillName} fizzles`;
     case "skill": {
       if (event.delayed) return `${event.skillName} strikes!`;
-      const aimed = unitAt(state, event.cell);
-      const caster = `${name(event.unitId)} casts ${event.skillName}`;
+      // The unit aimed at when it was used: it may have moved since.
+      const aimed = event.targetId
+        ? state.units.find((u) => u.id === event.targetId)
+        : unitAt(state, event.cell);
+      // Weapon skills are "used"; spells are "cast".
+      const skill = state.units
+        .find((u) => u.id === event.unitId)
+        ?.skills.find((s) => s.id === event.skillId);
+      const verb = skill?.effect.type === "strike" ? "uses" : "casts";
+      const caster = `${name(event.unitId)} ${verb} ${event.skillName}`;
       if (!aimed) return caster;
       return event.area.length > 1
         ? `${caster} at ${aimed.name}`

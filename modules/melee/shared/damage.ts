@@ -77,17 +77,18 @@ export function expectedPhysicalDamage(attacker: Unit, target: Unit): number {
 }
 
 /**
- * Basic weapon attack: attack (scaled by rows for melee) against defense,
- * typed by the weapon.
+ * Weapon attack: attack (scaled by rows for melee, and by `power` for
+ * weapon skills) against defense, typed by the weapon.
  */
 export function physicalHit(
   state: BattleState,
   attacker: Unit,
   target: Unit,
+  power = 1,
 ): Hit {
   return mitigate(
     state,
-    effectiveStat(attacker, "attack") * rowFactor(attacker, target),
+    effectiveStat(attacker, "attack") * rowFactor(attacker, target) * power,
     effectiveStat(target, "defense"),
     target,
     attacker.weapon.damageType,

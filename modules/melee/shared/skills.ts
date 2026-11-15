@@ -1,4 +1,6 @@
-import { applyDamage, magicalHit } from "./damage";
+import { applyDamage, magicalHit, physicalHit } from "./damage";
+import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
+import { canReach } from "./reach";
 import {
   GRID_COLUMNS,
   GRID_ROWS,
@@ -32,6 +34,9 @@ export function validateSkill(
     return `${skill.name} targets an enemy`;
   }
   if (!isAlive(target)) return "Target is knocked out";
+  if (skill.effect.type === "strike" && !canReach(state, unit, target)) {
+    return "Target is out of reach";
+  }
   return null;
 }
 
@@ -125,6 +130,7 @@ function applySkill(
   events: BattleEvent[],
   delayed: boolean,
 ): void {
+  const aimedAt = unitAt(state, cell);
   events.push({
     type: "skill",
     unitId: unit.id,
@@ -133,6 +139,7 @@ function applySkill(
     skillId: skill.id,
     skillName: skill.name,
     mp: unit.mp,
+    ...(aimedAt ? { targetId: aimedAt.id } : {}),
     ...(delayed ? { delayed: true } : {}),
   });
 
@@ -156,6 +163,31 @@ function applySkill(
       case "cleanse":
         cleanse(target, events);
         break;
+      case "strike": {
+        // Decide the move first: a blocked push hits harder instead, and
+        // the crash is reported before the blow it causes.
+        const to = effect.push
+          ? pushDestination(state, target, effect.push)
+          : undefined;
+        const blocked = to === null;
+        if (blocked && effect.push) {
+          const blocker = pushBlocker(state, target, effect.push);
+          events.push({
+            type: "collided",
+            unitId: target.id,
+            ...(blocker ? { blockerId: blocker.id } : {}),
+          });
+        }
+        const power = effect.power * (blocked ? COLLISION_POWER : 1);
+        applyDamage(
+          state,
+          target,
+          physicalHit(state, unit, target, power),
+          events,
+        );
+        if (to && isAlive(target)) moveBy(target, to, events);
+        break;
+      }
       case "damage":
         applyDamage(
           state,
