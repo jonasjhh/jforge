@@ -18,7 +18,7 @@ export { MOVE_GAUGE_LEFT, validateMove } from "./move";
 export { AMBUSH_POWER, isStealthed } from "./stealth";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";
 export { applyStatus } from "./status";
-export { GAUGE_FULL, fillRate } from "./timeline";
+export { GAUGE_FULL, fillRate, turnOrder } from "./timeline";
 export {
   DEFENSE_K,
   magicalHit,

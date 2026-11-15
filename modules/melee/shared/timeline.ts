@@ -85,3 +85,37 @@ export function advanceTime(
     events.push({ type: "turnReady", unitId: unit.id });
   }
 }
+
+/**
+ * A forecast of the next `count` turns, as unit IDs in order (a unit can
+ * appear more than once). Units already ready come first; then gauges fill
+ * at today's speed, a caster's after its spell lands, and every turn is
+ * assumed to empty the gauge. Modifiers that expire, Quicken, half-turn
+ * actions and knockouts can change it, so it is only a forecast.
+ */
+export function turnOrder(state: BattleState, count: number): string[] {
+  const order = state.ready.slice(0, count);
+  const queue: { id: string; at: number; rate: number }[] = [];
+  for (const unit of state.units) {
+    if (!isAlive(unit) || unit.obstacle || unit.vanished) continue;
+    const rate = effectiveStat(unit, "speed");
+    if (rate <= 0) continue;
+    const full = GAUGE_FULL / rate;
+    const at = state.ready.includes(unit.id)
+      ? state.time + full
+      : (unit.casting?.readyAt ?? state.time) +
+        (GAUGE_FULL - unit.gauge) / rate;
+    queue.push({ id: unit.id, at, rate });
+  }
+  while (order.length < count && queue.length > 0) {
+    // Soonest first; at the same moment, faster first, then by ID (as
+    // advanceTime queues them).
+    queue.sort(
+      (a, b) => a.at - b.at || b.rate - a.rate || a.id.localeCompare(b.id),
+    );
+    const next = queue[0]!;
+    order.push(next.id);
+    next.at += GAUGE_FULL / next.rate;
+  }
+  return order;
+}

@@ -715,3 +715,41 @@ button:disabled {
 .details-list li + li {
   margin-top: 0.25rem;
 }
+
+/* Who acts next: party in blue, enemies in red, the waiting unit first. */
+.turn-order {
+  display: flex;
+  gap: 4px;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.turn {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.turn-player {
+  background: rgba(143, 182, 255, 0.16);
+  color: #c4d6ff;
+}
+
+.turn-enemy {
+  background: rgba(255, 107, 90, 0.16);
+  color: #ffb3a8;
+}
+
+.turn-now {
+  border-color: #ffd166;
+  color: #ffd166;
+}

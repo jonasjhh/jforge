@@ -93,6 +93,9 @@ unit is ready, a modifier expires) instead of ticking frame by frame.
   poison, but does not make it end sooner.
 - If no unit can ever act again (everyone stopped), the battle ends in a
   draw.
+- The battle screen shows a **turn order forecast** (`turnOrder`): the next
+  5 turns at today's speeds, a caster's after its spell lands. Expiring
+  modifiers, Quicken, half turns and knockouts can change it.
 
 ### Stats and modifiers
 

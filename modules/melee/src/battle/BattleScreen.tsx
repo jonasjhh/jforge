@@ -16,6 +16,7 @@ import {
   type Unit,
 } from "../../shared";
 import { Grid } from "./Grid";
+import { TurnOrder } from "./TurnOrder";
 import { UnitDetails } from "./UnitDetails";
 import { useBattle } from "./useBattle";
 
@@ -167,6 +168,7 @@ export function BattleScreen({
         <span className="muted">Seed {seed}</span>
       </header>
 
+      <TurnOrder state={state} />
       <p className="side-label">Enemies</p>
       <Grid side="enemy" {...gridProps} />
       <div className="frontline" aria-hidden="true" />
