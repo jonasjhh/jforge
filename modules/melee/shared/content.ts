@@ -252,6 +252,17 @@ export const skewer: Skill = {
   effect: { type: "strike", power: 0.9 },
 };
 
+/** Fighter: one wide swing through every enemy the sword can reach. */
+export const cleave: Skill = {
+  id: "cleave",
+  name: "Cleave",
+  description: "A wide swing that strikes every enemy within reach.",
+  mpCost: 5,
+  target: "enemy",
+  area: "reach",
+  effect: { type: "strike", power: 0.7 },
+};
+
 /** Lancer: drags an enemy one row forward, out of cover. */
 export const hook: Skill = {
   id: "hook",
@@ -541,6 +552,7 @@ export const skills = [
   meteor,
   regen,
   cure,
+  cleave,
   skewer,
   hook,
   haste,
@@ -572,6 +584,7 @@ export const fighter: CombatantDef = {
     speed: 10,
   },
   weapon: sword,
+  skills: [cleave],
   preferredRow: 0,
 };
 

@@ -96,7 +96,7 @@ describe("move", () => {
         .map((u) => u.name)
         .sort();
     const burned = (s: BattleState) =>
-      skillVictims(s, fireball, { side: "enemy", col: 1, row: 0 }).map(
+      skillVictims(s, hero(s), fireball, { side: "enemy", col: 1, row: 0 }).map(
         (u) => u.name,
       );
 

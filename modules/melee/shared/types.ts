@@ -235,9 +235,10 @@ export type SkillEffect =
 /**
  * Which cells a skill hits around the aimed cell. The two grids form one
  * battlefield 5 wide and 6 deep, front rows touching, so an area can spill
- * across the front line onto the other side.
+ * across the front line onto the other side. "reach" ignores the aimed cell's
+ * surroundings: it covers every enemy the caster's weapon can reach.
  */
-export type SkillArea = "single" | "plus" | "square" | "line";
+export type SkillArea = "single" | "plus" | "square" | "line" | "reach";
 
 /** A skill is plain data, so char can design new ones later. */
 export interface Skill {

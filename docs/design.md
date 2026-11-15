@@ -212,6 +212,11 @@ Started: units have MP; a skill costs MP and is aimed at a **cell**. Its
 `target` says where it may be aimed (a living ally, a living enemy, or any
 cell) and its `area` which cells it hits around the aimed one.
 
+- **Cleave** (Fighter): a slash strike at x0.7 on **every enemy the
+  sword can reach** (the `reach` area: whatever the weapon could attack
+  right now, so covered units are safe and the aimed cell only picks the
+  swing), 5 MP. Reusable for any weapon: a spear's reach is deeper, a
+  bow's covers every column.
 - **Heal** (Healer): one living ally, restores power x magic HP, never
   above max.
 - **Fireball** (Mage): any cell, hits a **plus** (the cell and its four
@@ -373,7 +378,7 @@ To decide before push/pull lands:
 
 ### Class roster plan (10 archetypes)
 
-Existing (10): **Fighter** (melee, front), **Archer** (ranged), **Mage**
+Existing (10): **Fighter** (melee, front; Cleave hits all in reach), **Archer** (ranged), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:

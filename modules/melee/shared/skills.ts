@@ -1,11 +1,12 @@
 import { applyDamage, magicalHit, physicalHit } from "./damage";
 import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
-import { canReach } from "./reach";
+import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isStealthed } from "./stealth";
 import {
   GRID_COLUMNS,
   GRID_ROWS,
   areaCells,
+  cellOf,
   isCellOnGrid,
   unitAt,
 } from "./grid";
@@ -126,13 +127,28 @@ export function skillCells(
   return cells;
 }
 
-/** The living units a skill aimed at `cell` would hit, friend or foe. */
+/**
+ * The cells `unit`'s skill aimed at `cell` covers. A "reach" area is every
+ * enemy the unit's weapon can reach right now.
+ */
+export function skillArea(
+  state: BattleState,
+  unit: Unit,
+  skill: Skill,
+  cell: Cell,
+): Cell[] {
+  if (skill.area === "reach") return reachableTargets(state, unit).map(cellOf);
+  return areaCells(cell, skill.area);
+}
+
+/** The living units `unit`'s skill aimed at `cell` would hit, friend or foe. */
 export function skillVictims(
   state: BattleState,
+  unit: Unit,
   skill: Skill,
   cell: Cell,
 ): Unit[] {
-  return areaCells(cell, skill.area).flatMap((c) => {
+  return skillArea(state, unit, skill, cell).flatMap((c) => {
     const unit = unitAt(state, c);
     return unit && isAlive(unit) ? [unit] : [];
   });
@@ -163,7 +179,7 @@ export function castSkill(
     applySkill(state, unit, skill, cell, events, false);
     return;
   }
-  const area = areaCells(cell, skill.area);
+  const area = skillArea(state, unit, skill, cell);
   const readyAt = state.time + skill.castTime;
   unit.casting = {
     skillId: skill.id,
@@ -212,7 +228,7 @@ function applySkill(
     type: "skill",
     unitId: unit.id,
     cell,
-    area: areaCells(cell, skill.area),
+    area: skillArea(state, unit, skill, cell),
     skillId: skill.id,
     skillName: skill.name,
     mp: unit.mp,
@@ -230,7 +246,7 @@ function applySkill(
       vanish(boulder);
       events.push({ type: "shattered", unitId: boulder.id, byId: unit.id });
     }
-    for (const target of skillVictims(state, skill, cell)) {
+    for (const target of skillVictims(state, unit, skill, cell)) {
       const hit = magicalHit(
         state,
         unit,
@@ -269,7 +285,7 @@ function applySkill(
       : 1;
 
   // Victims are fixed before any effect lands, so order doesn't matter.
-  for (const target of skillVictims(state, skill, cell)) {
+  for (const target of skillVictims(state, unit, skill, cell)) {
     const effect = skill.effect;
     switch (effect.type) {
       case "heal": {

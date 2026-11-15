@@ -1,10 +1,10 @@
 import { useState } from "react";
 import {
-  areaCells,
   getUnit,
   isAlive,
   ROW_DEALT,
   sameCell,
+  skillArea,
   skillVictims,
   unitAt,
   validateCommand,
@@ -120,7 +120,9 @@ export function BattleScreen({
 
   const aim = menu.kind === "skill" ? menu.aim : null;
   const area =
-    menu.kind === "skill" && aim ? areaCells(aim, menu.skill.area) : actionArea;
+    menu.kind === "skill" && aim && active
+      ? skillArea(state, active, menu.skill, aim)
+      : actionArea;
   const gridProps = {
     state,
     hits,
@@ -261,7 +263,9 @@ export function BattleScreen({
               skill={menu.skill}
               aim={menu.aim}
               victims={
-                menu.aim ? previewVictims(state, menu.skill, menu.aim) : []
+                menu.aim
+                  ? previewVictims(state, active, menu.skill, menu.aim)
+                  : []
               }
               casterSide={active.side}
             />
@@ -338,8 +342,13 @@ interface SkillPromptProps {
  * Who an area skill would hit if cast now. Shatter destroys its boulder
  * before the blast, so the boulder itself isn't counted.
  */
-function previewVictims(state: BattleState, skill: Skill, aim: Cell): Unit[] {
-  const victims = skillVictims(state, skill, aim);
+function previewVictims(
+  state: BattleState,
+  caster: Unit,
+  skill: Skill,
+  aim: Cell,
+): Unit[] {
+  const victims = skillVictims(state, caster, skill, aim);
   if (skill.effect.type !== "shatter") return victims;
   const rock = unitAt(state, aim);
   return victims.filter((u) => u !== rock);
@@ -380,7 +389,9 @@ function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
         <strong>{skill.name}</strong> —{" "}
         {skill.effect.type === "shatter"
           ? "tap one of your boulders to aim"
-          : "tap any cell to aim"}
+          : skill.area === "reach"
+            ? "tap a highlighted enemy to aim"
+            : "tap any cell to aim"}
         .
         {skill.castTime && (
           <span className="muted">

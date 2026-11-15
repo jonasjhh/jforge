@@ -60,7 +60,7 @@ function cellAtDepth(depth: number, col: number): Cell | null {
 
 /** The cells an area covers around `center`, clipped to the battlefield. */
 const AREA_OFFSETS: Record<
-  Exclude<SkillArea, "single" | "line">,
+  Exclude<SkillArea, "single" | "line" | "reach">,
   [number, number][]
 > = {
   // [depth, column] offsets from the aimed cell.
@@ -76,7 +76,10 @@ const AREA_OFFSETS: Record<
   ),
 };
 
-export function areaCells(center: Cell, area: SkillArea): Cell[] {
+/** Areas fixed by shape alone; "reach" depends on the caster (see skills). */
+export type ShapeArea = Exclude<SkillArea, "reach">;
+
+export function areaCells(center: Cell, area: ShapeArea): Cell[] {
   if (area === "single") return [center];
   if (area === "line") {
     // The aimed cell and the one directly behind it, on the same side.
