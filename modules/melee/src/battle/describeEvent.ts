@@ -9,7 +9,12 @@ export function describeEvent(
   switch (event.type) {
     case "attack":
       return `${name(event.unitId)} attacks ${name(event.targetId)}`;
+    case "castStarted":
+      return `${name(event.unitId)} begins casting ${event.skillName}`;
+    case "castFizzled":
+      return `${name(event.unitId)}'s ${event.skillName} fizzles`;
     case "skill": {
+      if (event.delayed) return `${event.skillName} strikes!`;
       const aimed = unitAt(state, event.cell);
       const caster = `${name(event.unitId)} casts ${event.skillName}`;
       if (!aimed) return caster;

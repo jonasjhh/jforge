@@ -107,6 +107,14 @@ export function applyDamage(
   });
   if (target.hp === 0) {
     target.gauge = 0;
+    if (target.casting) {
+      events.push({
+        type: "castFizzled",
+        unitId: target.id,
+        skillName: target.casting.skillName,
+      });
+      target.casting = undefined;
+    }
     state.ready = state.ready.filter((id) => id !== target.id);
     events.push({ type: "knockedOut", unitId: target.id });
   }

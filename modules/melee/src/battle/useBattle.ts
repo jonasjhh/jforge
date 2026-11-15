@@ -70,18 +70,26 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
       setLog((old) => [...lines.reverse(), ...old].slice(0, LOG_LINES));
 
     const action = step.events.find(
-      (e) => e.type === "attack" || e.type === "skill" || e.type === "moved",
+      (e) =>
+        e.type === "attack" ||
+        e.type === "skill" ||
+        e.type === "moved" ||
+        e.type === "castStarted",
     );
     if (
       action &&
       (action.type === "attack" ||
         action.type === "skill" ||
-        action.type === "moved")
+        action.type === "moved" ||
+        action.type === "castStarted")
     ) {
       setActorId(action.unitId);
       setActionText(describeEvent(step.state, action));
       setActionArea(
-        action.type === "skill" && action.area.length > 1 ? action.area : [],
+        (action.type === "skill" || action.type === "castStarted") &&
+          action.area.length > 1
+          ? action.area
+          : [],
       );
       frozenUntil.current = performance.now() + ACTION_MS;
       setHits(

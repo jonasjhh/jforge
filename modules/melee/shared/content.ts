@@ -78,7 +78,22 @@ export const fireball: Skill = {
   effect: { type: "damage", kind: "magical", element: "fire", power: 1.2 },
 };
 
-export const skills = [heal, fireball];
+/**
+ * Fireball's big brother: a 3x3 blast that lands after a delay. Everyone in
+ * the zone at impact is hit, so allies can step out while it falls.
+ */
+export const meteor: Skill = {
+  id: "meteor",
+  name: "Meteor",
+  description: "After a delay, crushes a 3x3 area. Clear the zone in time.",
+  mpCost: 24,
+  target: "any",
+  area: "square",
+  effect: { type: "damage", kind: "magical", element: "fire", power: 2 },
+  castTime: 60,
+};
+
+export const skills = [heal, fireball, meteor];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -125,7 +140,7 @@ export const mage: CombatantDef = {
     speed: 9,
   },
   weapon: staff,
-  skills: [fireball],
+  skills: [fireball, meteor],
   preferredRow: 2,
 };
 

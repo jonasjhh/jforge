@@ -3,7 +3,7 @@ import { applyDamage, physicalHit } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
 import { resolveMove, validateMove } from "./move";
-import { resolveSkill, validateSkill } from "./skills";
+import { landCast, castSkill, validateSkill } from "./skills";
 import { isAlive } from "./stats";
 import { advanceTime, timeToNextEvent } from "./timeline";
 import type {
@@ -92,6 +92,19 @@ export function advance(
   for (let step = 0; step < MAX_STEPS; step++) {
     if (next.phase.kind !== "running") break;
     if (endIfDecided(next, events)) break;
+
+    // Delayed skills land before anyone due at the same moment acts.
+    const landing = next.units.find(
+      (u) => u.casting && u.casting.readyAt <= next.time + 1e-9,
+    );
+    if (landing) {
+      landCast(next, landing, events);
+      if (options.stopAfterAction) {
+        endIfDecided(next, events);
+        break;
+      }
+      continue;
+    }
 
     const readyId = next.ready[0];
     if (readyId !== undefined) {
@@ -198,7 +211,7 @@ function resolve(
   if (command.type === "skill") {
     const skill = unit.skills.find((s) => s.id === command.skillId);
     if (!skill) throw new Error(`Unknown skill ${command.skillId}`);
-    resolveSkill(state, unit, skill, command.cell, events);
+    castSkill(state, unit, skill, command.cell, events);
     finishTurn(state, unit);
     return;
   }

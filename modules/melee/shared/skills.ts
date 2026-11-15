@@ -64,8 +64,11 @@ export function skillVictims(
   });
 }
 
-/** Pays for and applies a skill that has already been validated. */
-export function resolveSkill(
+/**
+ * Uses a skill that has already been validated. An instant skill is paid
+ * for and lands now; a delayed one is paid for and starts casting.
+ */
+export function castSkill(
   state: BattleState,
   unit: Unit,
   skill: Skill,
@@ -73,6 +76,54 @@ export function resolveSkill(
   events: BattleEvent[],
 ): void {
   unit.mp -= skill.mpCost;
+  if (!skill.castTime) {
+    applySkill(state, unit, skill, cell, events, false);
+    return;
+  }
+  const area = areaCells(cell, skill.area);
+  const readyAt = state.time + skill.castTime;
+  unit.casting = {
+    skillId: skill.id,
+    skillName: skill.name,
+    cell,
+    area,
+    startedAt: state.time,
+    readyAt,
+  };
+  events.push({
+    type: "castStarted",
+    unitId: unit.id,
+    skillId: skill.id,
+    skillName: skill.name,
+    cell,
+    area,
+    readyAt,
+    mp: unit.mp,
+  });
+}
+
+/** Lands a delayed skill whose cast has finished. */
+export function landCast(
+  state: BattleState,
+  unit: Unit,
+  events: BattleEvent[],
+): void {
+  const casting = unit.casting;
+  if (!casting) return;
+  unit.casting = undefined;
+  const skill = unit.skills.find((s) => s.id === casting.skillId);
+  if (skill) applySkill(state, unit, skill, casting.cell, events, true);
+}
+
+/** The skill's effect on everyone in its area, right now. */
+function applySkill(
+  state: BattleState,
+  unit: Unit,
+  skill: Skill,
+  cell: Cell,
+  events: BattleEvent[],
+  delayed: boolean,
+): void {
   events.push({
     type: "skill",
     unitId: unit.id,
@@ -81,6 +132,7 @@ export function resolveSkill(
     skillId: skill.id,
     skillName: skill.name,
     mp: unit.mp,
+    ...(delayed ? { delayed: true } : {}),
   });
 
   // Victims are fixed before any effect lands, so order doesn't matter.

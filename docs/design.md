@@ -120,6 +120,11 @@ cell) and its `area` which cells it hits around the aimed one.
   the front rows touching, so a blast aimed at the enemy front row also
   burns your unit standing opposite. Aiming takes two taps: preview the
   area (allies caught in it are flagged), then cast.
+- **Meteor** (Mage): a **delayed** spell. Any cell, hits a 3x3 **square**,
+  power 2 fire, 24 MP. A skill with a `castTime` is paid for at once, then
+  the caster is busy (its gauge waits and shows the cast instead) until the
+  impact, which hits whoever stands in the marked zone at that moment, so
+  allies can step out. If the caster is knocked out first, it fizzles.
 
 The full shape below is the goal.
 
@@ -185,10 +190,9 @@ automatically once they have a `threat`.
 
 Ideas to build in small steps, roughly in this order when they fit:
 
-- **Drain spells** that heal the caster by part of the damage dealt.
+- **Drain spells** that heal the caster by part of the damage dealt, for a
+  future dark-caster class (not the Mage).
 - **Damage and healing over time** (poison, burn, regen).
-- **Delayed spells**: a cast time before they fire, in exchange for more
-  power; interrupted if the caster is knocked out.
 - **Push and pull**: movement as a skill effect, also as part of spells.
 - **A new class** with its own skills; **a new skill for an existing
   class**.

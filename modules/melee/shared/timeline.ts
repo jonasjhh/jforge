@@ -5,8 +5,9 @@ export const GAUGE_FULL = 1000;
 // Float tolerance for "the gauge is full".
 const EPSILON = 1e-9;
 
-/** Gauge filled per unit of game time. */
+/** Gauge filled per unit of game time. A casting unit's gauge waits. */
 export function fillRate(unit: Unit): number {
+  if (unit.casting) return 0;
   return effectiveStat(unit, "speed");
 }
 
@@ -20,6 +21,9 @@ export function timeToNextEvent(state: BattleState): number {
     if (!isAlive(unit)) continue;
     const rate = fillRate(unit);
     if (rate > 0) next = Math.min(next, (GAUGE_FULL - unit.gauge) / rate);
+    if (unit.casting) {
+      next = Math.min(next, unit.casting.readyAt - state.time);
+    }
     for (const m of unit.modifiers) {
       if (m.expiresAt !== undefined) {
         next = Math.min(next, m.expiresAt - state.time);

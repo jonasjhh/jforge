@@ -5,11 +5,17 @@ import {
   sameCell,
   unitAt,
   type BattleState,
+  type Casting,
   type Cell,
   type Side,
   type Unit,
 } from "../../shared";
 import type { Hit } from "./useBattle";
+
+function castProgress(casting: Casting, time: number): number {
+  const total = casting.readyAt - casting.startedAt;
+  return total > 0 ? Math.min(1, (time - casting.startedAt) / total) : 1;
+}
 
 interface GridProps {
   side: Side;
@@ -25,6 +31,8 @@ interface GridProps {
   area: Cell[];
   /** The aimed cell while previewing an area skill. */
   aim: Cell | null;
+  /** Cells a delayed skill will hit when it lands. */
+  incoming: Cell[];
 }
 
 // Enemies show their back row at the top; the party shows its front row at
@@ -47,6 +55,7 @@ export function Grid({
   actionName,
   area,
   aim,
+  incoming,
 }: GridProps) {
   return (
     <div
@@ -67,6 +76,7 @@ export function Grid({
             const targetable = canTarget(cell);
             const inArea = area.some((c) => sameCell(c, cell));
             const aimed = aim !== null && sameCell(aim, cell);
+            const threatened = incoming.some((c) => sameCell(c, cell));
             const onClick = () => onTarget(cell);
             if (!unit) {
               return (
@@ -76,6 +86,7 @@ export function Grid({
                   targetable={targetable}
                   inArea={inArea}
                   aimed={aimed}
+                  incoming={threatened}
                   onClick={onClick}
                 />
               );
@@ -103,6 +114,8 @@ export function Grid({
                   isAlive(unit)
                 }
                 aimed={aimed}
+                incoming={threatened}
+                time={state.time}
                 onClick={onClick}
                 actionName={actionName}
               />
@@ -119,6 +132,7 @@ interface EmptyCellProps {
   targetable: boolean;
   inArea: boolean;
   aimed: boolean;
+  incoming: boolean;
   onClick: () => void;
 }
 
@@ -127,6 +141,7 @@ function EmptyCell({
   targetable,
   inArea,
   aimed,
+  incoming,
   onClick,
 }: EmptyCellProps) {
   const classes = [
@@ -135,6 +150,7 @@ function EmptyCell({
     targetable ? "targetable" : "",
     inArea ? "in-area" : "",
     aimed ? "aimed" : "",
+    incoming ? "incoming" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -162,6 +178,9 @@ interface UnitCellProps {
   inArea: boolean;
   danger: boolean;
   aimed: boolean;
+  incoming: boolean;
+  /** Game time now, for the cast bar of a casting unit. */
+  time: number;
   onClick: () => void;
   actionName: string;
 }
@@ -176,6 +195,8 @@ function UnitCell({
   inArea,
   danger,
   aimed,
+  incoming,
+  time,
   onClick,
   actionName,
 }: UnitCellProps) {
@@ -192,6 +213,8 @@ function UnitCell({
     inArea ? "in-area" : "",
     danger ? "danger" : "",
     aimed ? "aimed" : "",
+    incoming ? "incoming" : "",
+    unit.casting ? "casting" : "",
     hits.some((h) => h.kind === "damage") ? "hit" : "",
   ]
     .filter(Boolean)
@@ -220,12 +243,23 @@ function UnitCell({
           <span style={{ width: `${(unit.mp / unit.base.maxMp) * 100}%` }} />
         </span>
       )}
-      <span className="bar gauge" aria-hidden="true">
+      {unit.casting ? (
         <span
-          style={{ width: `${(unit.gauge / GAUGE_FULL) * 100}%` }}
-          className={unit.gauge >= GAUGE_FULL ? "full" : ""}
-        />
-      </span>
+          className="bar cast"
+          aria-label={`Casting ${unit.casting.skillName}`}
+        >
+          <span
+            style={{ width: `${castProgress(unit.casting, time) * 100}%` }}
+          />
+        </span>
+      ) : (
+        <span className="bar gauge" aria-hidden="true">
+          <span
+            style={{ width: `${(unit.gauge / GAUGE_FULL) * 100}%` }}
+            className={unit.gauge >= GAUGE_FULL ? "full" : ""}
+          />
+        </span>
+      )}
       {hits.map((h) => (
         <span className={`damage ${h.kind} ${h.tag ?? ""}`} key={h.key}>
           {h.tag && <span className="damage-tag">{h.tag}</span>}

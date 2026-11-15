@@ -91,7 +91,7 @@ export type SkillEffect =
  * battlefield 5 wide and 6 deep, front rows touching, so an area can spill
  * across the front line onto the other side.
  */
-export type SkillArea = "single" | "plus";
+export type SkillArea = "single" | "plus" | "square";
 
 /** A skill is plain data, so char can design new ones later. */
 export interface Skill {
@@ -106,6 +106,23 @@ export interface Skill {
   target: "ally" | "enemy" | "any";
   area: SkillArea;
   effect: SkillEffect;
+  /**
+   * Game time between choosing the skill and its impact. While casting the
+   * unit cannot act; if it is knocked out the skill fizzles. Absent means
+   * instant.
+   */
+  castTime?: number;
+}
+
+/** A delayed skill on its way: aimed, paid for, landing at `readyAt`. */
+export interface Casting {
+  skillId: string;
+  skillName: string;
+  cell: Cell;
+  /** The cells it will hit, fixed when the cast starts. */
+  area: Cell[];
+  startedAt: number;
+  readyAt: number;
 }
 
 /**
@@ -172,6 +189,8 @@ export interface Unit {
   skills: Skill[];
   targeting: TargetingProfile;
   resistances: Resistances;
+  /** A delayed skill this unit is casting, if any. */
+  casting?: Casting;
   hp: number;
   mp: number;
   /** 0..GAUGE_FULL; the unit acts when it is full. */
@@ -225,7 +244,20 @@ export type BattleEvent =
       skillName: string;
       /** The caster's MP after paying for the skill. */
       mp: number;
+      /** True when this is the impact of a delayed skill. */
+      delayed?: boolean;
     }
+  | {
+      type: "castStarted";
+      unitId: string;
+      skillId: string;
+      skillName: string;
+      cell: Cell;
+      area: Cell[];
+      readyAt: number;
+      mp: number;
+    }
+  | { type: "castFizzled"; unitId: string; skillName: string }
   | { type: "heal"; unitId: string; amount: number; hp: number }
   | { type: "moved"; unitId: string; from: Position; to: Position }
   | { type: "knockedOut"; unitId: string }

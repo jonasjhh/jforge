@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   areaCells,
   getUnit,
+  isAlive,
   sameCell,
   skillVictims,
   unitAt,
@@ -107,6 +108,9 @@ export function BattleScreen({
           : "Attack",
     area,
     aim,
+    incoming: state.units.flatMap((u) =>
+      u.casting && isAlive(u) ? u.casting.area : [],
+    ),
   };
 
   return (
@@ -201,6 +205,7 @@ export function BattleScreen({
                   onClick={() => choose({ kind: "skill", skill, aim: null })}
                 >
                   {skill.name} · {skill.mpCost} MP
+                  {skill.castTime ? " · delayed" : ""}
                 </button>
               ))}
               <button
@@ -306,6 +311,12 @@ function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
     return (
       <p>
         <strong>{skill.name}</strong> — tap any cell to aim.
+        {skill.castTime && (
+          <span className="muted">
+            {" "}
+            It lands after a delay: whoever stands in the zone then is hit.
+          </span>
+        )}
       </p>
     );
   }
