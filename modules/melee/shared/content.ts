@@ -93,7 +93,31 @@ export const meteor: Skill = {
   castTime: 60,
 };
 
-export const skills = [heal, fireball, meteor];
+/**
+ * Heals a little at a time: more in total than Heal, but slow. Best cast on
+ * the front line before the damage piles up.
+ */
+export const regen: Skill = {
+  id: "regen",
+  name: "Regen",
+  description: "Heals one ally a little every few moments for a while.",
+  mpCost: 10,
+  target: "ally",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "regen",
+      name: "Regen",
+      effect: "heal",
+      power: 0.4,
+      interval: 30,
+      ticks: 5,
+    },
+  },
+};
+
+export const skills = [heal, fireball, meteor, regen];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -157,7 +181,7 @@ export const healer: CombatantDef = {
     speed: 11,
   },
   weapon: staff,
-  skills: [heal],
+  skills: [heal, regen],
   preferredRow: 2,
 };
 

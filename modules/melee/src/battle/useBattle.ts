@@ -3,6 +3,7 @@ import {
   act,
   advance,
   createBattle,
+  type BattleEvent,
   type BattleSetup,
   type Cell,
   type BattleState,
@@ -92,31 +93,11 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
           : [],
       );
       frozenUntil.current = performance.now() + ACTION_MS;
-      setHits(
-        step.events.flatMap((e): Hit[] => {
-          if (e.type === "heal") {
-            return [
-              {
-                key: ++hitKey.current,
-                unitId: e.unitId,
-                amount: e.amount,
-                kind: "heal",
-              },
-            ];
-          }
-          if (e.type !== "damage") return [];
-          return [
-            {
-              key: ++hitKey.current,
-              unitId: e.unitId,
-              amount: e.amount,
-              kind: "damage",
-              tag: resistanceTag(e.multiplier),
-            },
-          ];
-        }),
-      );
     }
+    // Numbers to float up: from the action, or from effects over time,
+    // which tick without pausing the battle.
+    const hits = hitsFrom(step.events, () => ++hitKey.current);
+    if (action || hits.length > 0) setHits(hits);
   }, []);
 
   const running = state.phase.kind === "running";
@@ -156,6 +137,27 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
   );
 
   return { state, log, hits, actorId, actionText, actionArea, command };
+}
+
+function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
+  return events.flatMap((e): Hit[] => {
+    if (e.type === "heal" || (e.type === "statusTick" && e.effect === "heal")) {
+      if (e.amount <= 0) return [];
+      return [
+        { key: nextKey(), unitId: e.unitId, amount: e.amount, kind: "heal" },
+      ];
+    }
+    if (e.type !== "damage") return [];
+    return [
+      {
+        key: nextKey(),
+        unitId: e.unitId,
+        amount: e.amount,
+        kind: "damage",
+        tag: resistanceTag(e.multiplier),
+      },
+    ];
+  });
 }
 
 function resistanceTag(multiplier: number): Hit["tag"] {

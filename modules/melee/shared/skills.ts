@@ -6,6 +6,7 @@ import {
   isCellOnGrid,
   unitAt,
 } from "./grid";
+import { applyStatus } from "./status";
 import { effectiveStat, isAlive } from "./stats";
 import type { BattleEvent, BattleState, Cell, Skill, Unit } from "./types";
 
@@ -149,6 +150,9 @@ function applySkill(
         events.push({ type: "heal", unitId: target.id, amount, hp: target.hp });
         break;
       }
+      case "status":
+        applyStatus(state, unit, target, effect.status, events);
+        break;
       case "damage":
         applyDamage(
           state,

@@ -4,6 +4,7 @@ import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
 import { resolveMove, validateMove } from "./move";
 import { landCast, castSkill, validateSkill } from "./skills";
+import { runDueTicks } from "./status";
 import { isAlive } from "./stats";
 import { advanceTime, timeToNextEvent } from "./timeline";
 import type {
@@ -37,6 +38,7 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
       skills: (p.def.skills ?? []).map((s) => structuredClone(s)),
       targeting: { ...(p.def.targeting ?? DEFAULT_TARGETING) },
       resistances: { ...p.def.resistances },
+      statuses: [],
       hp: p.def.stats.maxHp,
       mp: p.def.stats.maxMp,
       gauge: 0,
@@ -105,6 +107,9 @@ export function advance(
       }
       continue;
     }
+
+    // Effects over time tick on their own; they don't pause the battle.
+    if (runDueTicks(next, events)) continue;
 
     const readyId = next.ready[0];
     if (readyId !== undefined) {

@@ -107,6 +107,7 @@ export function applyDamage(
   });
   if (target.hp === 0) {
     target.gauge = 0;
+    target.statuses = [];
     if (target.casting) {
       events.push({
         type: "castFizzled",

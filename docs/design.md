@@ -125,6 +125,11 @@ cell) and its `area` which cells it hits around the aimed one.
   the caster is busy (its gauge waits and shows the cast instead) until the
   impact, which hits whoever stands in the marked zone at that moment, so
   allies can step out. If the caster is knocked out first, it fizzles.
+- **Regen** (Healer): the first **effect over time**. One living ally gains
+  a status that heals 0.4 x magic every 30 game time, 5 times. Statuses
+  tick on game time (haste doesn't stretch them), recasting refreshes
+  instead of stacking, and a knockout clears them. Ticks don't pause the
+  battle; the unit shows a badge.
 
 The full shape below is the goal.
 
@@ -192,7 +197,7 @@ Ideas to build in small steps, roughly in this order when they fit:
 
 - **Drain spells** that heal the caster by part of the damage dealt, for a
   future dark-caster class (not the Mage).
-- **Damage and healing over time** (poison, burn, regen).
+- **Damage over time** (poison, burn), reusing Regen's status ticks.
 - **Push and pull**: movement as a skill effect, also as part of spells.
 - **A new class** with its own skills; **a new skill for an existing
   class**.

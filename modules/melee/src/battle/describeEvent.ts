@@ -11,6 +11,14 @@ export function describeEvent(
       return `${name(event.unitId)} attacks ${name(event.targetId)}`;
     case "castStarted":
       return `${name(event.unitId)} begins casting ${event.skillName}`;
+    case "statusApplied":
+      return `${name(event.unitId)} gains ${event.name}`;
+    case "statusTick":
+      // A tick that heals nothing (already at full HP) isn't worth a line.
+      if (event.amount === 0) return null;
+      return `${name(event.unitId)} regains ${event.amount} HP (${event.name})`;
+    case "statusExpired":
+      return `${name(event.unitId)}'s ${event.name} wears off`;
     case "castFizzled":
       return `${name(event.unitId)}'s ${event.skillName} fizzles`;
     case "skill": {

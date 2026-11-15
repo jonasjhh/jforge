@@ -1,3 +1,4 @@
+import { timeToNextTick } from "./status";
 import { effectiveStat, isAlive } from "./stats";
 import type { BattleEvent, BattleState, Unit } from "./types";
 
@@ -30,7 +31,7 @@ export function timeToNextEvent(state: BattleState): number {
       }
     }
   }
-  return Math.max(0, next);
+  return Math.max(0, Math.min(next, timeToNextTick(state)));
 }
 
 /**

@@ -71,8 +71,42 @@ export interface Cell {
   row: number;
 }
 
+/**
+ * An effect over time a skill can put on a unit: something happens every
+ * `interval` of game time, `ticks` times. Game time, not turns, so haste
+ * does not stretch it. More kinds (poison, burn) arrive later.
+ */
+export interface StatusDef {
+  id: string;
+  name: string;
+  /** What each tick does. */
+  effect: "heal";
+  /** Per tick: power x the caster's magic, worked out when applied. */
+  power: number;
+  interval: number;
+  ticks: number;
+}
+
+/** A status effect running on a unit. */
+export interface Status {
+  id: string;
+  name: string;
+  effect: StatusDef["effect"];
+  /** HP per tick, fixed when it was applied. */
+  amount: number;
+  interval: number;
+  nextTickAt: number;
+  ticksLeft: number;
+  /** The unit that applied it. */
+  sourceId: string;
+}
+
 /** What a skill does to each unit it hits. More effect types arrive later. */
 export type SkillEffect =
+  | {
+      type: "status";
+      status: StatusDef;
+    }
   | {
       type: "heal";
       /** HP restored = power x the caster's magic. */
@@ -191,6 +225,8 @@ export interface Unit {
   resistances: Resistances;
   /** A delayed skill this unit is casting, if any. */
   casting?: Casting;
+  /** Effects over time running on this unit. */
+  statuses: Status[];
   hp: number;
   mp: number;
   /** 0..GAUGE_FULL; the unit acts when it is full. */
@@ -258,6 +294,23 @@ export type BattleEvent =
       mp: number;
     }
   | { type: "castFizzled"; unitId: string; skillName: string }
+  | {
+      type: "statusApplied";
+      unitId: string;
+      statusId: string;
+      name: string;
+      ticks: number;
+    }
+  | {
+      type: "statusTick";
+      unitId: string;
+      statusId: string;
+      name: string;
+      effect: StatusDef["effect"];
+      amount: number;
+      hp: number;
+    }
+  | { type: "statusExpired"; unitId: string; statusId: string; name: string }
   | { type: "heal"; unitId: string; amount: number; hp: number }
   | { type: "moved"; unitId: string; from: Position; to: Position }
   | { type: "knockedOut"; unitId: string }

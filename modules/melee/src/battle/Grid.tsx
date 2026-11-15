@@ -226,6 +226,19 @@ function UnitCell({
         <span className="unit-name">{unit.name}</span>
         <span className="unit-hp">{alive ? unit.hp : "KO"}</span>
       </span>
+      {unit.statuses.length > 0 && (
+        <span className="statuses">
+          {unit.statuses.map((s) => (
+            <span
+              key={s.id}
+              className={`status status-${s.effect}`}
+              title={s.name}
+            >
+              {s.name}
+            </span>
+          ))}
+        </span>
+      )}
       <span
         className="bar hp"
         aria-label={`HP ${unit.hp} of ${unit.base.maxHp}`}

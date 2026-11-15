@@ -337,6 +337,28 @@ button:disabled {
   border-color: #ff9f3d;
 }
 
+.statuses {
+  position: absolute;
+  right: 4px;
+  bottom: -6px;
+  display: flex;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.status {
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.status-heal {
+  background: #1f6b43;
+  color: #d9ffe6;
+}
+
 .warn {
   color: #ff8a7a;
   font-weight: 700;
