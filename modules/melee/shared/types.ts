@@ -194,9 +194,10 @@ export type SkillEffect =
    * at `power` times normal. `push` moves the target that many rows back
    * (negative pulls it forward). If the way is blocked by a unit (knocked
    * out or not) or the edge of the grid, it doesn't move and takes a
-   * collision instead: x1.5 damage.
+   * collision instead: x1.5 damage. `ignoreCover` lets it reach units
+   * behind others in their column (the weapon's column limit still holds).
    */
-  | { type: "strike"; power: number; push?: number }
+  | { type: "strike"; power: number; push?: number; ignoreCover?: boolean }
   | {
       type: "heal";
       /** HP restored = power x the caster's magic. */

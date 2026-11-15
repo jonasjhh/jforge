@@ -263,6 +263,17 @@ export const cleave: Skill = {
   effect: { type: "strike", power: 0.7 },
 };
 
+/** Archer: a careful shot over the front line at a covered enemy. */
+export const aimedShot: Skill = {
+  id: "aimed-shot",
+  name: "Aimed Shot",
+  description: "A careful shot that finds any visible enemy, even in cover.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 1, ignoreCover: true },
+};
+
 /** Lancer: drags an enemy one row forward, out of cover. */
 export const hook: Skill = {
   id: "hook",
@@ -553,6 +564,7 @@ export const skills = [
   regen,
   cure,
   cleave,
+  aimedShot,
   skewer,
   hook,
   haste,
@@ -601,6 +613,7 @@ export const archer: CombatantDef = {
     speed: 13,
   },
   weapon: bow,
+  skills: [aimedShot],
   preferredRow: 1,
 };
 

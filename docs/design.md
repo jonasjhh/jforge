@@ -217,6 +217,10 @@ cell) and its `area` which cells it hits around the aimed one.
   right now, so covered units are safe and the aimed cell only picks the
   swing), 5 MP. Reusable for any weapon: a spear's reach is deeper, a
   bow's covers every column.
+- **Aimed Shot** (Archer): a bow strike at x1.0 that **ignores cover**
+  (`ignoreCover` on a strike), so it reaches any visible enemy, back row
+  included, 6 MP. Its job is picking off casters and the wounded behind a
+  front line; stealth still hides a unit from it.
 - **Heal** (Healer): one living ally, restores power x magic HP, never
   above max.
 - **Fireball** (Mage): any cell, hits a **plus** (the cell and its four
@@ -378,7 +382,7 @@ To decide before push/pull lands:
 
 ### Class roster plan (10 archetypes)
 
-Existing (10): **Fighter** (melee, front; Cleave hits all in reach), **Archer** (ranged), **Mage**
+Existing (10): **Fighter** (melee, front; Cleave hits all in reach), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:

@@ -103,7 +103,10 @@ export function validateSkill(
     if (state.ready.includes(target.id))
       return `${target.name} is already ready`;
   }
-  if (skill.effect.type === "strike" && !canReach(state, unit, target)) {
+  if (
+    skill.effect.type === "strike" &&
+    !canReach(state, unit, target, { ignoreCover: skill.effect.ignoreCover })
+  ) {
     return "Target is out of reach";
   }
   return null;
@@ -137,7 +140,11 @@ export function skillArea(
   skill: Skill,
   cell: Cell,
 ): Cell[] {
-  if (skill.area === "reach") return reachableTargets(state, unit).map(cellOf);
+  if (skill.area === "reach") {
+    const ignoreCover =
+      skill.effect.type === "strike" && skill.effect.ignoreCover;
+    return reachableTargets(state, unit, { ignoreCover }).map(cellOf);
+  }
   return areaCells(cell, skill.area);
 }
 

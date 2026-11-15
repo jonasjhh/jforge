@@ -2,6 +2,11 @@ import { isStealthed } from "./stealth";
 import { isAlive } from "./stats";
 import type { BattleState, Unit } from "./types";
 
+export interface ReachOptions {
+  /** Covered units count as exposed (a skill like Aimed Shot). */
+  ignoreCover?: boolean;
+}
+
 /**
  * The enemies `attacker` can hit with its weapon.
  *
@@ -13,11 +18,16 @@ import type { BattleState, Unit } from "./types";
  *   weapon with depth 1 reaches only the front-most; the rest are covered.
  *   An empty front cell leaves the unit behind it exposed.
  */
-export function reachableTargets(state: BattleState, attacker: Unit): Unit[] {
+export function reachableTargets(
+  state: BattleState,
+  attacker: Unit,
+  { ignoreCover = false }: ReachOptions = {},
+): Unit[] {
   const enemies = state.units.filter(
     (u) => u.side !== attacker.side && isAlive(u),
   );
-  const { columns, depth } = attacker.weapon;
+  const { columns } = attacker.weapon;
+  const depth = ignoreCover ? "any" : attacker.weapon.depth;
 
   const exposed = enemies.filter((target) => {
     if (depth === "any") return true;
@@ -45,6 +55,9 @@ export function canReach(
   state: BattleState,
   attacker: Unit,
   target: Unit,
+  options: ReachOptions = {},
 ): boolean {
-  return reachableTargets(state, attacker).some((u) => u.id === target.id);
+  return reachableTargets(state, attacker, options).some(
+    (u) => u.id === target.id,
+  );
 }
