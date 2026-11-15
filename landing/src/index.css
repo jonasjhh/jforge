@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  background: #121212;
+  background: #0d0907;
   color: #f2f2f2;
   font-family: system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
@@ -13,9 +13,21 @@ body {
   box-sizing: border-box;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.brand img {
+  border-radius: 16px;
+  box-shadow: 0 0 24px rgba(255, 106, 26, 0.35);
+}
+
 h1 {
   font-size: 2.4rem;
-  margin: 1.5rem 0 0.25rem;
+  margin: 0;
 }
 
 .muted {

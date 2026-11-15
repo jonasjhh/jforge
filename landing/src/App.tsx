@@ -3,7 +3,10 @@ import { modules } from "./modules";
 export function App() {
   return (
     <main className="page">
-      <h1>jforge</h1>
+      <header className="brand">
+        <img src="/pwa-192x192.png" alt="" width={64} height={64} />
+        <h1>jforge</h1>
+      </header>
       <p className="muted">
         Pick a module. Each one also installs as its own app.
       </p>

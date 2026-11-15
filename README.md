@@ -18,7 +18,8 @@ credentials, deploys and secrets are set up once, not per module.
 ## Layout
 
 ```
-landing/              landing page at /, lists every modules/*/meta.ts
+landing/              landing page at /, the installable "jforge" app;
+                      lists every modules/*/meta.ts
 modules/<name>/
   meta.ts             name, title, description, theme colour, dev port
   index.html, src/    the module's React app (its own PWA, scoped to /<name>/)
@@ -26,7 +27,8 @@ modules/<name>/
   worker/             the module's Hono API, mounted at /api/<name>
   public/             icons
 worker/index.ts       the one Worker: mounts every module's API, serves dist/
-tooling/              shared Vite/PWA config, dev ports, icon generator
+tooling/              shared Vite/PWA config, dev ports, icon generator,
+                      icons/jforge.svg (source of the jforge app icon)
 wrangler.toml         the one Worker's config
 ```
 

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- jforge app icon: a molten "j" on an anvil. Source for the PNGs in
+       landing/public/. The artwork group is scaled per icon size (smaller
+       for the maskable icon, which gets cropped to a circle). -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="58%" r="75%">
+      <stop offset="0" stop-color="#3a1d10" />
+      <stop offset="0.55" stop-color="#150d0a" />
+      <stop offset="1" stop-color="#070506" />
+    </radialGradient>
+    <radialGradient id="heat" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ff7a1a" stop-opacity="0.75" />
+      <stop offset="0.5" stop-color="#ff4d00" stop-opacity="0.22" />
+      <stop offset="1" stop-color="#ff4d00" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="molten" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6c2" />
+      <stop offset="0.35" stop-color="#ffc23d" />
+      <stop offset="0.75" stop-color="#ff6a1a" />
+      <stop offset="1" stop-color="#e0300f" />
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a95a3" />
+      <stop offset="0.12" stop-color="#4b535e" />
+      <stop offset="1" stop-color="#1b1e23" />
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff8a3d" stop-opacity="0" />
+      <stop offset="0.5" stop-color="#ffb066" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#ff8a3d" stop-opacity="0" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="9" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="spark" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="2.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#bg)" />
+
+  <g id="art" transform="translate(256 256) scale(SCALE) translate(-256 -270)">
+    <ellipse cx="262" cy="300" rx="190" ry="170" fill="url(#heat)" />
+
+    <!-- Anvil -->
+    <path
+      d="M56 368 Q100 364 140 362 L420 362 L420 404 Q372 410 350 428 L344 446
+         L392 462 L392 486 L140 486 L140 462 L188 446 L182 428 Q160 410 136 406
+         Q92 398 56 368 Z"
+      fill="url(#steel)"
+    />
+    <rect x="120" y="360" width="300" height="5" rx="2.5" fill="url(#rim)" />
+
+    <!-- Molten j -->
+    <g filter="url(#glow)">
+      <path
+        d="M300 165 L300 290 Q300 345 245 345 L215 345"
+        fill="none"
+        stroke="url(#molten)"
+        stroke-width="56"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <circle cx="300" cy="100" r="31" fill="url(#molten)" />
+    </g>
+
+    <!-- Sparks -->
+    <g filter="url(#spark)" stroke-linecap="round" fill="none">
+      <path d="M352 330 L408 286" stroke="#ffd166" stroke-width="6" />
+      <path d="M362 350 L432 336" stroke="#ff9f3d" stroke-width="5" />
+      <path d="M340 312 L372 252" stroke="#ffe8a3" stroke-width="4" />
+      <path d="M180 330 L132 292" stroke="#ff9f3d" stroke-width="5" />
+      <path d="M168 350 L104 344" stroke="#ffd166" stroke-width="4" />
+      <path d="M196 312 L176 262" stroke="#ffb35c" stroke-width="3.5" />
+    </g>
+    <g filter="url(#spark)">
+      <circle cx="420" cy="262" r="5" fill="#ffd166" />
+      <circle cx="446" cy="316" r="3.5" fill="#ff9f3d" />
+      <circle cx="384" cy="226" r="3" fill="#ffe8a3" />
+      <circle cx="116" cy="270" r="4" fill="#ffb35c" />
+      <circle cx="90" cy="326" r="3" fill="#ffd166" />
+      <circle cx="160" cy="232" r="2.5" fill="#ffe8a3" />
+    </g>
+  </g>
+</svg>
