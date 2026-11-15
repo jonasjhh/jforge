@@ -1,24 +1,28 @@
-import type { StrikeResult } from "@jforge/melee/shared";
+import type { BattleSummary } from "@jforge/melee/shared";
 import { meta } from "../meta";
-import { openingBattle, playTurn } from "../shared";
+import { previewOpeningBattle } from "../shared";
 import { useApiHealth } from "./useApiHealth";
 
 interface Health {
   module: string;
   status: string;
   uses: string[];
-  demo: StrikeResult[];
+  demo: BattleSummary;
 }
 
-function describe(turn: StrikeResult[]): string {
-  return turn
-    .map((hit) => `${hit.attacker} hits ${hit.defender} for ${hit.damage}`)
-    .join(", ");
+function describeBattle(summary: BattleSummary): string {
+  const result =
+    summary.winner === null
+      ? "Draw"
+      : summary.winner === "player"
+        ? "Party wins"
+        : "Enemies win";
+  return `${result} after ${summary.actions} actions`;
 }
 
 export function App() {
   const health = useApiHealth<Health>("/api/jrpg/health");
-  const localTurn = playTurn(openingBattle);
+  const local = previewOpeningBattle();
   return (
     <main className="page">
       <a className="back" href="/">
@@ -35,8 +39,8 @@ export function App() {
             <code>/{meta.name}/</code>
           </li>
           <li>
-            Uses melee in the browser:{" "}
-            <span className="good">{describe(localTurn)}</span>
+            Opening battle with melee in the browser:{" "}
+            <span className="good">{describeBattle(local)}</span>
           </li>
           <li>
             API <code>/api/{meta.name}/health</code>:{" "}
@@ -47,7 +51,7 @@ export function App() {
             {health.state === "ok" && (
               <span className="good">
                 {health.body.status}, uses {health.body.uses.join(", ")} —{" "}
-                {describe(health.body.demo)}
+                {describeBattle(health.body.demo)}
               </span>
             )}
           </li>

@@ -1,15 +1,26 @@
-import type { StrikeResult } from "../shared";
+import { content, simulate, type BattleSummary } from "../shared";
 import { meta } from "../meta";
 import { useApiHealth } from "./useApiHealth";
 
 interface Health {
   module: string;
   status: string;
-  demo: StrikeResult;
+  demo: BattleSummary;
+}
+
+function describeBattle(summary: BattleSummary): string {
+  const result =
+    summary.winner === null
+      ? "Draw"
+      : summary.winner === "player"
+        ? "Party wins"
+        : "Enemies win";
+  return `${result} after ${summary.actions} actions (survivors: ${summary.survivors.join(", ") || "none"})`;
 }
 
 export function App() {
   const health = useApiHealth<Health>("/api/melee/health");
+  const local = simulate(content.sampleBattle, 42);
   return (
     <main className="page">
       <a className="back" href="/">
@@ -26,6 +37,10 @@ export function App() {
             <code>/{meta.name}/</code>
           </li>
           <li>
+            Engine in the browser:{" "}
+            <span className="good">{describeBattle(local)}</span>
+          </li>
+          <li>
             API <code>/api/{meta.name}/health</code>:{" "}
             {health.state === "loading" && "checking…"}
             {health.state === "error" && (
@@ -33,8 +48,7 @@ export function App() {
             )}
             {health.state === "ok" && (
               <span className="good">
-                {health.body.status} — {health.body.demo.attacker} hits{" "}
-                {health.body.demo.defender} for {health.body.demo.damage}
+                {health.body.status} — {describeBattle(health.body.demo)}
               </span>
             )}
           </li>

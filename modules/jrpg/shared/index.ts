@@ -1,21 +1,26 @@
-// JRPG's rules. Combat comes from melee, imported through the workspace
+// JRPG's rules. Battles come from melee, imported through the workspace
 // package "@jforge/melee" rather than a relative path, the same way any
 // module depends on another.
-import { strike, type Fighter, type StrikeResult } from "@jforge/melee/shared";
+import {
+  content,
+  simulate,
+  type BattleSetup,
+  type BattleSummary,
+} from "@jforge/melee/shared";
 
-export interface Party {
-  hero: Fighter;
-  enemy: Fighter;
-}
+const { fighter, healer, slime } = content;
 
-export const openingBattle: Party = {
-  hero: { name: "Hero", attack: 5, defense: 2, hp: 20 },
-  enemy: { name: "Slime", attack: 3, defense: 1, hp: 8 },
+/** Placeholder first battle: two heroes against two slimes. */
+export const openingBattle: BattleSetup = {
+  placements: [
+    { def: fighter, side: "player", position: { col: 1, row: 0 } },
+    { def: healer, side: "player", position: { col: 3, row: 2 } },
+    { def: slime, side: "enemy", position: { col: 1, row: 0 } },
+    { def: slime, side: "enemy", position: { col: 3, row: 0 } },
+  ],
 };
 
-/** One turn: the hero strikes first, the enemy answers if still standing. */
-export function playTurn({ hero, enemy }: Party): StrikeResult[] {
-  const first = strike(hero, enemy);
-  if (first.knockedOut) return [first];
-  return [first, strike(enemy, hero)];
+/** Auto-plays the opening battle with melee's engine. */
+export function previewOpeningBattle(seed = 1): BattleSummary {
+  return simulate(openingBattle, seed);
 }

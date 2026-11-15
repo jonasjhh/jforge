@@ -1,30 +1,9 @@
-// Melee's public rules, importable by other modules as "@jforge/melee/shared".
-// Placeholder: a single strike between two fighters.
-
-export interface Fighter {
-  name: string;
-  attack: number;
-  defense: number;
-  hp: number;
-}
-
-export interface StrikeResult {
-  attacker: string;
-  defender: string;
-  damage: number;
-  defenderHp: number;
-  knockedOut: boolean;
-}
-
-/** Every hit lands for at least 1 damage; hp never drops below 0. */
-export function strike(attacker: Fighter, defender: Fighter): StrikeResult {
-  const damage = Math.max(1, attacker.attack - defender.defense);
-  const defenderHp = Math.max(0, defender.hp - damage);
-  return {
-    attacker: attacker.name,
-    defender: defender.name,
-    damage,
-    defenderHp,
-    knockedOut: defenderHp === 0,
-  };
-}
+// Melee's public API, importable by other modules as "@jforge/melee/shared".
+export * from "./types";
+export { GRID_COLUMNS, GRID_ROWS, MAX_PARTY_SIZE, isOnGrid } from "./grid";
+export { effectiveStat, isAlive } from "./stats";
+export { GAUGE_FULL, fillRate } from "./timeline";
+export { DEFENSE_K, physicalDamage } from "./damage";
+export { act, advance, createBattle, getUnit, validateCommand } from "./battle";
+export { simulate, type BattleSummary } from "./simulate";
+export * as content from "./content";

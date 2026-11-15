@@ -1,0 +1,106 @@
+// Core battle types. Everything here is plain data so a battle can be
+// saved, sent to the Worker, or replayed.
+
+export type Side = "player" | "enemy";
+
+export const STAT_NAMES = [
+  "maxHp",
+  "maxMp",
+  "attack",
+  "magic",
+  "defense",
+  "spirit",
+  "speed",
+] as const;
+
+export type StatName = (typeof STAT_NAMES)[number];
+export type Stats = Record<StatName, number>;
+
+/** Grid cell on one side. Row 0 is the front, row 2 the back. */
+export interface Position {
+  col: number;
+  row: number;
+}
+
+/** A modifier changes one stat; statuses, buffs and equipment are modifiers. */
+export interface Modifier {
+  stat: StatName;
+  op: "add" | "mul";
+  value: number;
+  /** What applied it, e.g. "haste". Shown in events. */
+  source: string;
+  /** Game time at which it ends; absent means permanent. */
+  expiresAt?: number;
+}
+
+/** What a combatant is, independent of any battle. */
+export interface CombatantDef {
+  id: string;
+  name: string;
+  stats: Stats;
+}
+
+/** Puts a combatant on the grid for one battle. */
+export interface Placement {
+  def: CombatantDef;
+  side: Side;
+  position: Position;
+  /** Who chooses this unit's actions. Defaults to player side = player. */
+  control?: Control;
+  modifiers?: Modifier[];
+}
+
+export type Control = "player" | "ai";
+
+export interface BattleSetup {
+  placements: Placement[];
+}
+
+/** A combatant during a battle. */
+export interface Unit {
+  /** Unique within the battle: "<side>-<col>-<row>". */
+  id: string;
+  defId: string;
+  name: string;
+  side: Side;
+  control: Control;
+  position: Position;
+  base: Stats;
+  hp: number;
+  mp: number;
+  /** 0..GAUGE_FULL; the unit acts when it is full. */
+  gauge: number;
+  modifiers: Modifier[];
+}
+
+export type Phase =
+  | { kind: "running" }
+  | { kind: "awaitingCommand"; unitId: string }
+  | { kind: "over"; winner: Side | null };
+
+export interface BattleState {
+  /** Game time elapsed. */
+  time: number;
+  units: Unit[];
+  /** Units whose gauge is full, in the order they will act. */
+  ready: string[];
+  phase: Phase;
+  /** Seeded random generator state. */
+  rng: number;
+}
+
+export type Command = { type: "attack"; targetId: string };
+
+export type BattleEvent =
+  | { type: "timeAdvanced"; time: number }
+  | { type: "turnReady"; unitId: string }
+  | { type: "attack"; unitId: string; targetId: string }
+  | { type: "damage"; unitId: string; amount: number; hp: number }
+  | { type: "knockedOut"; unitId: string }
+  | { type: "modifierExpired"; unitId: string; source: string }
+  | { type: "battleOver"; winner: Side | null };
+
+export interface StepResult {
+  state: BattleState;
+  events: BattleEvent[];
+}
