@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import {
   GAUGE_FULL,
   GRID_COLUMNS,
@@ -247,9 +248,11 @@ function UnitCell({
 
   const content = (
     <>
-      <span className="unit-top">
-        <span className="unit-name">{unit.name}</span>
-        <span className="unit-hp">{alive ? unit.hp : "KO"}</span>
+      <span
+        className="unit-name"
+        style={{ "--chars": unit.name.length } as CSSProperties}
+      >
+        {unit.name}
       </span>
       {badges.length > 0 && (
         <span className="statuses">
@@ -272,6 +275,9 @@ function UnitCell({
           style={{ width: `${hp * 100}%` }}
           className={hp < 0.3 ? "low" : ""}
         />
+        <span className="unit-hp" aria-hidden="true">
+          {alive ? unit.hp : "KO"}
+        </span>
       </span>
       {unit.skills.length > 0 && unit.base.maxMp > 0 && (
         <span

@@ -196,6 +196,7 @@ button:disabled {
 }
 
 .unit {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -215,25 +216,37 @@ button:disabled {
   border-color: #5c3a2a;
 }
 
-.unit-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 2px;
-}
-
 .unit-name {
   min-width: 0;
-  font-size: 0.7rem;
+  /* Shrinks long names (Chronomancer) to fit the cell's width: about 0.6em
+     per character, set from Grid as --chars. */
+  font-size: min(0.7rem, calc(100cqi / (var(--chars) * 0.62)));
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.unit-hp {
-  font-size: 0.65rem;
-  color: #c9a9a1;
+/* The HP bar is tall enough to carry its number. */
+.bar.hp {
+  position: relative;
+  height: 11px;
+}
+
+.bar.hp > .unit-hp {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fbeee8;
+  text-shadow:
+    0 0 2px #140909,
+    0 0 2px #140909;
   font-variant-numeric: tabular-nums;
 }
 
@@ -251,12 +264,12 @@ button:disabled {
   border-radius: 3px;
 }
 
-.bar.hp > span {
+.bar.hp > span:first-child {
   background: #5fd38d;
   transition: width 300ms ease;
 }
 
-.bar.hp > span.low {
+.bar.hp > span.low:first-child {
   background: #ff8a7a;
 }
 
