@@ -11,7 +11,15 @@ import {
 import { applyModifier, applyStatus, cleanse } from "./status";
 import { GAUGE_FULL } from "./timeline";
 import { effectiveStat, isAlive } from "./stats";
-import type { BattleEvent, BattleState, Cell, Skill, Unit } from "./types";
+import { makeUnit, vanish } from "./units";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  CombatantDef,
+  Skill,
+  Unit,
+} from "./types";
 
 /** Why `unit` cannot aim `skill` at `cell` right now, or null if it can. */
 export function validateSkill(
@@ -22,7 +30,19 @@ export function validateSkill(
 ): string | null {
   if (!skill) return "Unknown skill";
   if (unit.mp < skill.mpCost) return `Not enough MP for ${skill.name}`;
+  if (skill.hpCost && unit.hp <= skill.hpCost) {
+    return `Not enough HP for ${skill.name}`;
+  }
   if (!isCellOnGrid(cell)) return "That cell is off the battlefield";
+  if (skill.effect.type === "summon") {
+    // An empty cell on the caster's side, or its current summon's cell.
+    if (cell.side !== unit.side) return "Summon on your own side";
+    const there = unitAt(state, cell);
+    if (there && !(there.summonedBy === unit.id && isAlive(there))) {
+      return "That cell is occupied";
+    }
+    return null;
+  }
   if (skill.target === "any") return null;
 
   const target = unitAt(state, cell);
@@ -91,6 +111,15 @@ export function castSkill(
   events: BattleEvent[],
 ): void {
   unit.mp -= skill.mpCost;
+  if (skill.hpCost) {
+    unit.hp -= skill.hpCost;
+    events.push({
+      type: "hpPaid",
+      unitId: unit.id,
+      amount: skill.hpCost,
+      hp: unit.hp,
+    });
+  }
   if (!skill.castTime) {
     applySkill(state, unit, skill, cell, events, false);
     return;
@@ -152,6 +181,11 @@ function applySkill(
     ...(delayed ? { delayed: true } : {}),
   });
 
+  if (skill.effect.type === "summon") {
+    summon(state, unit, skill.effect.creature, cell, events);
+    return;
+  }
+
   // Victims are fixed before any effect lands, so order doesn't matter.
   for (const target of skillVictims(state, skill, cell)) {
     const effect = skill.effect;
@@ -212,14 +246,58 @@ function applySkill(
         if (to && isAlive(target)) moveBy(target, to, events);
         break;
       }
-      case "damage":
-        applyDamage(
+      case "damage": {
+        const hit = magicalHit(
           state,
+          unit,
           target,
-          magicalHit(state, unit, target, effect.power, effect.element),
-          events,
+          effect.power,
+          effect.element,
         );
+        applyDamage(state, target, hit, events);
+        if (effect.drain && isAlive(unit)) {
+          const amount = Math.min(
+            unit.base.maxHp - unit.hp,
+            Math.floor(hit.amount * effect.drain),
+          );
+          if (amount > 0) {
+            unit.hp += amount;
+            events.push({ type: "heal", unitId: unit.id, amount, hp: unit.hp });
+          }
+        }
         break;
+      }
     }
   }
+}
+
+/**
+ * Puts a new unit for `creature` in `cell`, controlled like the caster.
+ * The caster's previous summon, if any, vanishes first.
+ */
+function summon(
+  state: BattleState,
+  caster: Unit,
+  creature: CombatantDef,
+  cell: Cell,
+  events: BattleEvent[],
+): void {
+  for (const old of state.units) {
+    if (old.summonedBy === caster.id && !old.vanished) {
+      vanish(old);
+      state.ready = state.ready.filter((id) => id !== old.id);
+      events.push({ type: "vanished", unitId: old.id });
+    }
+  }
+  state.summons += 1;
+  const unit = makeUnit(
+    creature,
+    caster.side,
+    { col: cell.col, row: cell.row },
+    caster.control,
+    `summon-${state.summons}`,
+  );
+  unit.summonedBy = caster.id;
+  state.units.push(unit);
+  events.push({ type: "summoned", unitId: unit.id, byId: caster.id, cell });
 }

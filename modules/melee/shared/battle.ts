@@ -1,4 +1,5 @@
-import { DEFAULT_TARGETING, chooseCommand } from "./ai";
+import { chooseCommand } from "./ai";
+import { makeUnit } from "./units";
 import { applyDamage, physicalHit } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
@@ -26,24 +27,14 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
     if (!isOnGrid(p.position)) {
       throw new Error(`${p.def.name} is off the grid`);
     }
-    return {
-      id: unitId(p.side, p.position),
-      defId: p.def.id,
-      name: p.def.name,
-      side: p.side,
-      control: p.control ?? (p.side === "player" ? "player" : "ai"),
-      position: { ...p.position },
-      base: { ...p.def.stats },
-      weapon: { ...p.def.weapon },
-      skills: (p.def.skills ?? []).map((s) => structuredClone(s)),
-      targeting: { ...(p.def.targeting ?? DEFAULT_TARGETING) },
-      resistances: { ...p.def.resistances },
-      statuses: [],
-      hp: p.def.stats.maxHp,
-      mp: p.def.stats.maxMp,
-      gauge: 0,
-      modifiers: (p.modifiers ?? []).map((m) => ({ ...m })),
-    };
+    return makeUnit(
+      p.def,
+      p.side,
+      p.position,
+      p.control ?? (p.side === "player" ? "player" : "ai"),
+      unitId(p.side, p.position),
+      p.modifiers,
+    );
   });
 
   nameDuplicates(units);
@@ -68,6 +59,7 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
     ready: [],
     phase: { kind: "running" },
     rng: seed | 0,
+    summons: 0,
   };
 }
 
@@ -238,8 +230,9 @@ function finishTurn(state: BattleState, unit: Unit): void {
 
 /** Ends the battle if one side has no living units. */
 function endIfDecided(state: BattleState, events: BattleEvent[]): boolean {
+  // Summons don't keep a side in the battle on their own.
   const alive = (side: Side) =>
-    state.units.some((u) => u.side === side && isAlive(u));
+    state.units.some((u) => u.side === side && isAlive(u) && !u.summonedBy);
   const players = alive("player");
   const enemies = alive("enemy");
   if (players && enemies) return false;

@@ -36,6 +36,22 @@ const ATTACK: Menu = { kind: "attack" };
 
 const ROW_LABELS = ["front", "middle", "back"];
 
+/** "Blood Bolt · 15 HP", "Meteor · 24 MP · delayed". */
+function skillLabel(skill: Skill): string {
+  const costs = [
+    skill.hpCost ? `${skill.hpCost} HP` : "",
+    skill.mpCost || !skill.hpCost ? `${skill.mpCost} MP` : "",
+  ].filter(Boolean);
+  return [skill.name, ...costs, skill.castTime ? "delayed" : ""]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Enough MP, and more HP than an HP cost (it may never be fatal). */
+function canAfford(unit: Unit, skill: Skill): boolean {
+  return unit.mp >= skill.mpCost && unit.hp > (skill.hpCost ?? 0);
+}
+
 /** ", front row: full damage" for melee; ranged weapons ignore rows. */
 function rowHint(unit: Unit): string {
   if (unit.weapon.kind !== "melee") return "";
@@ -221,11 +237,10 @@ export function BattleScreen({
                   type="button"
                   className="command"
                   title={skill.description}
-                  disabled={active.mp < skill.mpCost}
+                  disabled={!canAfford(active, skill)}
                   onClick={() => choose({ kind: "skill", skill, aim: null })}
                 >
-                  {skill.name} · {skill.mpCost} MP
-                  {skill.castTime ? " · delayed" : ""}
+                  {skillLabel(skill)}
                 </button>
               ))}
               <button
@@ -323,7 +338,14 @@ function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
     return (
       <p>
         <strong>{skill.name}</strong> — tap a highlighted{" "}
-        {skill.target === "ally" ? "ally" : "enemy"}.
+        {skill.effect.type === "summon"
+          ? "empty cell on your side"
+          : skill.target === "ally"
+            ? "ally"
+            : skill.target === "enemy"
+              ? "enemy"
+              : "cell"}
+        .
       </p>
     );
   }

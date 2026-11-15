@@ -210,6 +210,7 @@ function UnitCell({
   const hp = unit.hp / unit.base.maxHp;
   // Effects over time and timed modifiers (Haste, Slow) as small badges.
   const badges = [
+    ...(unit.summonedBy ? [{ name: "Summon", kind: "summon" }] : []),
     ...unit.statuses.map((st) => ({ name: st.name, kind: st.effect })),
     ...unit.modifiers
       .filter((mod) => mod.expiresAt !== undefined)

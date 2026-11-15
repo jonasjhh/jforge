@@ -1,4 +1,5 @@
 import { nextRandom } from "./rng";
+import { vanish } from "./units";
 import { effectiveStat } from "./stats";
 import type { BattleEvent, BattleState, DamageType, Unit } from "./types";
 
@@ -150,4 +151,8 @@ export function knockOutIfDown(
   }
   state.ready = state.ready.filter((id) => id !== target.id);
   events.push({ type: "knockedOut", unitId: target.id });
+  if (target.summonedBy) {
+    vanish(target);
+    events.push({ type: "vanished", unitId: target.id });
+  }
 }

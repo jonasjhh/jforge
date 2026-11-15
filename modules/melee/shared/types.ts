@@ -42,6 +42,8 @@ export const DAMAGE_TYPES = [
   "blunt",
   "fire",
   "poison",
+  "dark",
+  "holy",
 ] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
@@ -169,7 +171,15 @@ export type SkillEffect =
       element: DamageType;
       /** Damage = power x magic x K / (K + target's spirit), +-10%. */
       power: number;
-    };
+      /** Share of the damage dealt that heals the caster, e.g. 0.5. */
+      drain?: number;
+    }
+  /**
+   * Puts `creature` in the aimed cell on the caster's own side, controlled
+   * like the caster. One per caster: summoning again replaces the old one.
+   * A summon vanishes (leaving no body) when knocked out.
+   */
+  | { type: "summon"; creature: CombatantDef };
 
 /**
  * Which cells a skill hits around the aimed cell. The two grids form one
@@ -199,6 +209,8 @@ export interface Skill {
   castTime?: number;
   /** True if the caster may not target itself (e.g. Quicken). */
   notSelf?: boolean;
+  /** HP paid to use it. Refused unless the caster has more HP than this. */
+  hpCost?: number;
 }
 
 /** A delayed skill on its way: aimed, paid for, landing at `readyAt`. */
@@ -280,6 +292,10 @@ export interface Unit {
   casting?: Casting;
   /** Effects over time running on this unit. */
   statuses: Status[];
+  /** Set for summoned units: who summoned it. */
+  summonedBy?: string;
+  /** A summon that is gone: off the grid, no body. */
+  vanished?: boolean;
   hp: number;
   mp: number;
   /** 0..GAUGE_FULL; the unit acts when it is full. */
@@ -301,6 +317,8 @@ export interface BattleState {
   phase: Phase;
   /** Seeded random generator state. */
   rng: number;
+  /** Summons made so far, for unique IDs ("summon-1", ...). */
+  summons: number;
 }
 
 export type Command =
@@ -378,6 +396,9 @@ export type BattleEvent =
       harmful: boolean;
     }
   | { type: "gaugeChanged"; unitId: string; gauge: number }
+  | { type: "hpPaid"; unitId: string; amount: number; hp: number }
+  | { type: "summoned"; unitId: string; byId: string; cell: Cell }
+  | { type: "vanished"; unitId: string }
   | {
       type: "collided";
       unitId: string;

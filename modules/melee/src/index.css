@@ -359,6 +359,11 @@ button:disabled {
   color: #d9ffe6;
 }
 
+.status-summon {
+  background: #3d2a5c;
+  color: #e9dcff;
+}
+
 .status-buff {
   background: #24508f;
   color: #dceaff;

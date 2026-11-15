@@ -1,9 +1,4 @@
-import {
-  GAUGE_FULL,
-  unitAt,
-  type BattleEvent,
-  type BattleState,
-} from "../../shared";
+import { GAUGE_FULL, type BattleEvent, type BattleState } from "../../shared";
 
 /** One battle log line for an event, or null for events not worth showing. */
 export function describeEvent(
@@ -24,6 +19,12 @@ export function describeEvent(
       return event.effect === "heal"
         ? `${name(event.unitId)} regains ${event.amount} HP (${event.name})`
         : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
+    case "hpPaid":
+      return `${name(event.unitId)} pays ${event.amount} HP`;
+    case "summoned":
+      return `${name(event.byId)} summons ${name(event.unitId)}`;
+    case "vanished":
+      return `${name(event.unitId)} vanishes`;
     case "modifierApplied":
       return event.harmful
         ? `${name(event.unitId)} suffers ${event.source}`
@@ -48,10 +49,11 @@ export function describeEvent(
       return `${name(event.unitId)}'s ${event.skillName} fizzles`;
     case "skill": {
       if (event.delayed) return `${event.skillName} strikes!`;
-      // The unit aimed at when it was used: it may have moved since.
+      // The unit aimed at when it was used (it may have moved since). None
+      // for an empty cell, even if a summon stands there now.
       const aimed = event.targetId
         ? state.units.find((u) => u.id === event.targetId)
-        : unitAt(state, event.cell);
+        : undefined;
       // Weapon skills are "used"; spells are "cast".
       const skill = state.units
         .find((u) => u.id === event.unitId)

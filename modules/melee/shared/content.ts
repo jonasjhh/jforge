@@ -89,6 +89,26 @@ export const hourglass: Weapon = {
   kind: "ranged",
 };
 
+/** Warlock: dark bolts from a spellbook; any column, front-most only. */
+export const grimoire: Weapon = {
+  id: "grimoire",
+  name: "Grimoire",
+  columns: "any",
+  depth: 1,
+  damageType: "dark",
+  kind: "ranged",
+};
+
+/** Imp: small melee claws. */
+export const claws: Weapon = {
+  id: "claws",
+  name: "Claws",
+  columns: 1,
+  depth: 1,
+  damageType: "slash",
+  kind: "melee",
+};
+
 export const weapons = [
   sword,
   spear,
@@ -98,6 +118,8 @@ export const weapons = [
   fangs,
   venomFangs,
   hourglass,
+  grimoire,
+  claws,
 ];
 
 export const heal: Skill = {
@@ -253,6 +275,77 @@ export const quicken: Skill = {
   effect: { type: "gauge", to: 1 },
 };
 
+/** Warlock: dark damage that heals the Warlock by half of it. */
+export const drain: Skill = {
+  id: "drain",
+  name: "Drain",
+  description: "Dark damage to one enemy; heals you by half the damage dealt.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "damage",
+    kind: "magical",
+    element: "dark",
+    power: 1,
+    drain: 0.5,
+  },
+};
+
+/** Warlock: a heavy dark bolt paid for with the Warlock's own HP. */
+export const bloodBolt: Skill = {
+  id: "blood-bolt",
+  name: "Blood Bolt",
+  description: "Heavy dark damage to one enemy, paid for with 15 of your HP.",
+  mpCost: 0,
+  hpCost: 15,
+  target: "enemy",
+  area: "single",
+  effect: { type: "damage", kind: "magical", element: "dark", power: 2 },
+};
+
+/** Imp: a small ranged fire spell. */
+export const firebolt: Skill = {
+  id: "firebolt",
+  name: "Firebolt",
+  description: "Fire damage to one enemy, anywhere.",
+  mpCost: 4,
+  target: "enemy",
+  area: "single",
+  effect: { type: "damage", kind: "magical", element: "fire", power: 1 },
+};
+
+/** Summoned by the Warlock; controlled by the player like a party member. */
+export const imp: CombatantDef = {
+  id: "imp",
+  name: "Imp",
+  stats: {
+    maxHp: 30,
+    maxMp: 12,
+    attack: 12,
+    magic: 12,
+    defense: 6,
+    spirit: 8,
+    speed: 14,
+  },
+  weapon: claws,
+  skills: [firebolt],
+  resistances: { fire: 0.5, holy: 2 },
+};
+
+/** Warlock: summons an Imp into an empty cell; replaces the old one. */
+export const summonImp: Skill = {
+  id: "summon-imp",
+  name: "Summon Imp",
+  description:
+    "Summons an Imp you control into an empty cell on your side. Replaces your current Imp.",
+  mpCost: 6,
+  hpCost: 10,
+  target: "any",
+  area: "single",
+  effect: { type: "summon", creature: imp },
+};
+
 export const skills = [
   heal,
   fireball,
@@ -264,6 +357,10 @@ export const skills = [
   haste,
   slow,
   quicken,
+  drain,
+  bloodBolt,
+  firebolt,
+  summonImp,
 ];
 
 export const fighter: CombatantDef = {
@@ -414,6 +511,27 @@ export const chronomancer: CombatantDef = {
   preferredRow: 2,
 };
 
+/**
+ * Dark caster that spends its own HP: Blood Bolt costs HP, Drain wins it
+ * back, and it can summon an Imp to fight alongside the party.
+ */
+export const warlock: CombatantDef = {
+  id: "warlock",
+  name: "Warlock",
+  stats: {
+    maxHp: 85,
+    maxMp: 36,
+    attack: 8,
+    magic: 20,
+    defense: 9,
+    spirit: 14,
+    speed: 10,
+  },
+  weapon: grimoire,
+  skills: [drain, bloodBolt, summonImp],
+  preferredRow: 2,
+};
+
 export const playerTypes = [
   fighter,
   lancer,
@@ -421,6 +539,7 @@ export const playerTypes = [
   mage,
   healer,
   chronomancer,
+  warlock,
 ];
 /** Fast and frail; its bite poisons. Likes soft targets. */
 export const viper: CombatantDef = {

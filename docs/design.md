@@ -143,6 +143,15 @@ cell) and its `area` which cells it hits around the aimed one.
   tick on game time (haste doesn't stretch them), recasting refreshes
   instead of stacking, and a knockout clears them. Ticks don't pause the
   battle; the unit shows a badge.
+- **Drain / Blood Bolt / Summon Imp** (Warlock): damage effects can
+  **drain** (heal the caster by a share of the damage dealt; nothing from
+  an immune target). Skills can cost **HP**, refused unless the caster has
+  more HP than the cost. A `summon` effect puts a creature (data) in an
+  empty cell on the caster's side, controlled like the caster; one per
+  caster, and summoning again replaces the old one (even in its cell). The
+  **Imp** (30 HP, fast, melee claws, Firebolt 4 MP) lasts until knocked out
+  or replaced. Summons **vanish** when knocked out (no body), don't count
+  toward the 5-unit party limit, and don't keep a lost battle going.
 - **Haste / Slow / Quicken** (Chronomancer): Haste and Slow are timed
   speed modifiers (x1.5 / x0.5 for 150 game time) applied by a `modify`
   skill effect; Slow is harmful, so Cure removes it. Quicken (a `gauge`
@@ -222,8 +231,8 @@ Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 16,
-Normal 18, Hard 20) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 91% / 72% / 41%
+Normal 17, Hard 19) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 89% / 78% / 49%
 party wins (real play also uses skills and movement);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
@@ -252,10 +261,12 @@ To decide before push/pull lands:
 
 ### Class roster plan (10 archetypes)
 
-Existing (6): **Fighter** (melee, front), **Archer** (ranged), **Mage**
+Existing (7): **Fighter** (melee, front), **Archer** (ranged), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
-Haste, Slow, and Quicken to give an ally its turn now).
+Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
+Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
+Imp on the field).
 
 Planned, in rough order (names and kits are proposals):
 
@@ -263,7 +274,6 @@ Planned, in rough order (names and kits are proposals):
 | -------- | --------------------------------------------------- | --------------------------- |
 | Guardian | Tank (on hold: needs a mechanic no other class has) | To be designed              |
 | Rogue    | Fast skirmisher                                     | Bleed/poison, repositioning |
-| Warlock  | Dark caster                                         | Drain (heals the caster)    |
 | Bard     | Support through buffs                               | Party-wide buffs over time  |
 
 With more than five classes, random encounters pick a seeded party of up
@@ -273,8 +283,6 @@ to five from the roster (kept in roster order) instead of every class.
 
 Ideas to build in small steps, roughly in this order when they fit:
 
-- **Drain spells** that heal the caster by part of the damage dealt, for a
-  future dark-caster class (not the Mage).
 - **Burn** (fire damage over time), e.g. on Fireball.
 - **Push on spells**: reuse the strike push on a spell (e.g. a blast that
   knocks enemies back).
