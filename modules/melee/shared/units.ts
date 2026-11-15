@@ -34,6 +34,7 @@ export function makeUnit(
     mp: def.stats.maxMp,
     gauge: 0,
     modifiers: modifiers.map((m) => ({ ...m })),
+    ...(def.obstacle ? { obstacle: true } : {}),
   };
 }
 

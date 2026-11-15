@@ -9,6 +9,7 @@ import {
   unitAt,
   validateCommand,
   type BattleSetup,
+  type BattleState,
   type Cell,
   type Command,
   type Skill,
@@ -260,7 +261,7 @@ export function BattleScreen({
               skill={menu.skill}
               aim={menu.aim}
               victims={
-                menu.aim ? skillVictims(state, menu.skill, menu.aim) : []
+                menu.aim ? previewVictims(state, menu.skill, menu.aim) : []
               }
               casterSide={active.side}
             />
@@ -333,11 +334,26 @@ interface SkillPromptProps {
   casterSide: "player" | "enemy";
 }
 
+/**
+ * Who an area skill would hit if cast now. Shatter destroys its boulder
+ * before the blast, so the boulder itself isn't counted.
+ */
+function previewVictims(state: BattleState, skill: Skill, aim: Cell): Unit[] {
+  const victims = skillVictims(state, skill, aim);
+  if (skill.effect.type !== "shatter") return victims;
+  const rock = unitAt(state, aim);
+  return victims.filter((u) => u !== rock);
+}
+
 /** What to tap for a single-target skill. */
 function targetHint(skill: Skill): string {
+  if (skill.effect.type === "summon" && skill.effect.anySide) {
+    return "tap a highlighted empty cell on either side";
+  }
   if (skill.effect.type === "summon" || skill.effect.type === "teleport") {
     return "tap a highlighted empty cell on your side";
   }
+  if (skill.effect.type === "heave") return "tap a highlighted unit";
   switch (skill.target) {
     case "self":
       return "tap yourself to use it";
@@ -361,7 +377,11 @@ function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
   if (!aim) {
     return (
       <p>
-        <strong>{skill.name}</strong> — tap any cell to aim.
+        <strong>{skill.name}</strong> —{" "}
+        {skill.effect.type === "shatter"
+          ? "tap one of your boulders to aim"
+          : "tap any cell to aim"}
+        .
         {skill.castTime && (
           <span className="muted">
             {" "}

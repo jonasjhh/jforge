@@ -17,8 +17,8 @@ import type {
   BattleEvent,
   BattleState,
   Cell,
-  CombatantDef,
   Skill,
+  SkillEffect,
   Unit,
 } from "./types";
 
@@ -41,11 +41,35 @@ export function validateSkill(
     return null;
   }
   if (skill.effect.type === "summon") {
-    // An empty cell on the caster's side, or its current summon's cell.
-    if (cell.side !== unit.side) return "Summon on your own side";
+    // An empty cell (on the caster's side unless anySide), or the cell of
+    // one of the caster's own summons of that kind, which it replaces.
+    const { creature, anySide } = skill.effect;
+    if (!anySide && cell.side !== unit.side) return "Summon on your own side";
     const there = unitAt(state, cell);
-    if (there && !(there.summonedBy === unit.id && isAlive(there))) {
-      return "That cell is occupied";
+    const ownKind =
+      there?.summonedBy === unit.id &&
+      there.defId === creature.id &&
+      isAlive(there);
+    if (there && !ownKind) return "That cell is occupied";
+    return null;
+  }
+  if (skill.effect.type === "heave") {
+    const target = unitAt(state, cell);
+    if (!target || !isAlive(target)) return `${skill.name} needs a unit there`;
+    if (target.side !== unit.side && isStealthed(target)) {
+      return `${target.name} can't be seen`;
+    }
+    return null;
+  }
+  if (skill.effect.type === "shatter") {
+    const boulder = unitAt(state, cell);
+    if (
+      !boulder ||
+      !boulder.obstacle ||
+      !isAlive(boulder) ||
+      boulder.summonedBy !== unit.id
+    ) {
+      return `${skill.name} needs one of your boulders`;
     }
     return null;
   }
@@ -54,6 +78,9 @@ export function validateSkill(
   const target = unitAt(state, cell);
   if (!target) return `${skill.name} needs a target in that cell`;
   const sameSide = target.side === unit.side;
+  if (target.obstacle && skill.target === "ally") {
+    return `${skill.name} can't target a boulder`;
+  }
   if ((skill.target === "ally" || skill.target === "self") && !sameSide) {
     return `${skill.name} targets an ally`;
   }
@@ -194,7 +221,34 @@ function applySkill(
   });
 
   if (skill.effect.type === "summon") {
-    summon(state, unit, skill.effect.creature, cell, events);
+    summon(state, unit, skill.effect, cell, events);
+    return;
+  }
+  if (skill.effect.type === "shatter") {
+    const boulder = unitAt(state, cell);
+    if (boulder) {
+      vanish(boulder);
+      events.push({ type: "shattered", unitId: boulder.id, byId: unit.id });
+    }
+    for (const target of skillVictims(state, skill, cell)) {
+      const hit = magicalHit(
+        state,
+        unit,
+        target,
+        skill.effect.power,
+        skill.effect.element,
+      );
+      applyDamage(state, target, hit, events);
+    }
+    return;
+  }
+  if (skill.effect.type === "heave") {
+    const target = unitAt(state, cell);
+    if (target) {
+      const to = pushDestination(state, target, skill.effect.rows);
+      if (to) moveBy(target, to, events);
+      else events.push({ type: "unmoved", unitId: target.id });
+    }
     return;
   }
   if (skill.effect.type === "teleport") {
@@ -301,27 +355,38 @@ function applySkill(
 }
 
 /**
- * Puts a new unit for `creature` in `cell`, controlled like the caster.
- * The caster's previous summon, if any, vanishes first.
+ * Puts a new unit for the effect's creature in `cell`, controlled like the
+ * caster. If the aimed cell holds one of the caster's summons of that kind,
+ * it is replaced; otherwise, at the limit, the oldest one vanishes.
  */
 function summon(
   state: BattleState,
   caster: Unit,
-  creature: CombatantDef,
+  effect: Extract<SkillEffect, { type: "summon" }>,
   cell: Cell,
   events: BattleEvent[],
 ): void {
-  for (const old of state.units) {
-    if (old.summonedBy === caster.id && !old.vanished) {
-      vanish(old);
-      state.ready = state.ready.filter((id) => id !== old.id);
-      events.push({ type: "vanished", unitId: old.id });
-    }
-  }
+  const { creature } = effect;
+  const limit = effect.limit ?? 1;
+  const mine = () =>
+    state.units.filter(
+      (u) =>
+        u.summonedBy === caster.id && u.defId === creature.id && !u.vanished,
+    );
+  const remove = (old: Unit) => {
+    vanish(old);
+    state.ready = state.ready.filter((id) => id !== old.id);
+    events.push({ type: "vanished", unitId: old.id });
+  };
+  const inCell = unitAt(state, cell);
+  if (inCell && mine().includes(inCell)) remove(inCell);
+  // Oldest first: units are appended as they are summoned.
+  while (mine().length >= limit) remove(mine()[0]!);
+
   state.summons += 1;
   const unit = makeUnit(
     creature,
-    caster.side,
+    cell.side,
     { col: cell.col, row: cell.row },
     caster.control,
     `summon-${state.summons}`,

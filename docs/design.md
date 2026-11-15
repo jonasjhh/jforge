@@ -143,6 +143,16 @@ cell) and its `area` which cells it hits around the aimed one.
   tick on game time (haste doesn't stretch them), recasting refreshes
   instead of stacking, and a knockout clears them. Ticks don't pause the
   battle; the unit shows a badge.
+- **Raise Boulder / Shatter / Upheaval** (Geomancer): boulders are
+  **obstacle** units (40 HP, very high defense and spirit, never act)
+  raised in any empty cell on either side, two per Geomancer (a third
+  replaces the oldest). They block movement, pushes and teleports, give
+  cover to units behind them, can be attacked, vanish when destroyed and
+  never decide a battle; ally skills can't target them. Shatter destroys
+  one of your boulders and deals earth damage (power 1.2) to everyone in
+  the plus around it, friends included. Upheaval heaves any unit or
+  boulder one row back (no damage; nothing happens if blocked). The Rod
+  and Shatter deal **earth** damage; Vipers are weak to it.
 - **Aegis / Last Rites** (Paladin): all damage (weapons, spells,
   collisions, poison) goes through one function. A **shield** status
   absorbs first (Aegis: 2 x magic, 150 game time, refreshes on recast); a
@@ -246,8 +256,8 @@ Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 16,
-Normal 18, Hard 20) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 88% / 70% / 41%
+Normal 18, Hard 19) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 90% / 66% / 50%
 party wins (real play also uses skills and movement);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
@@ -271,19 +281,20 @@ To decide before push/pull lands:
 ## Roadmap rules
 
 - **No new skills for existing classes until there are at least 10
-  distinct class archetypes.** Each new class ships with its own starting
-  skills; after that it counts as existing too.
+  distinct class archetypes.** Reached with the Geomancer (10 classes):
+  new skills for existing classes may now be proposed.
 
 ### Class roster plan (10 archetypes)
 
-Existing (9): **Fighter** (melee, front), **Archer** (ranged), **Mage**
+Existing (10): **Fighter** (melee, front), **Archer** (ranged), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields
-an ally, Last Rites keeps an ally from being knocked out).
+an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (earth
+damage; raises boulders, shatters them on crowds, heaves units back).
 
 Planned, in rough order (names and kits are proposals):
 

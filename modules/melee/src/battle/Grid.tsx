@@ -210,7 +210,9 @@ function UnitCell({
   const hp = unit.hp / unit.base.maxHp;
   // Effects over time and timed modifiers (Haste, Slow) as small badges.
   const badges = [
-    ...(unit.summonedBy ? [{ name: "Summon", kind: "summon" }] : []),
+    ...(unit.summonedBy && !unit.obstacle
+      ? [{ name: "Summon", kind: "summon" }]
+      : []),
     ...unit.statuses.map((st) => ({
       name: st.effect === "shield" ? `${st.name} ${st.amount}` : st.name,
       kind: st.effect,
@@ -236,6 +238,7 @@ function UnitCell({
     incoming ? "incoming" : "",
     unit.casting ? "casting" : "",
     emphasized ? "emphasized" : "",
+    unit.obstacle ? "boulder" : "",
     unit.statuses.some((st) => st.effect === "stealth") ? "stealthed" : "",
     hits.some((h) => h.kind === "damage") ? "hit" : "",
   ]
@@ -278,7 +281,7 @@ function UnitCell({
           <span style={{ width: `${(unit.mp / unit.base.maxMp) * 100}%` }} />
         </span>
       )}
-      {unit.casting ? (
+      {unit.obstacle ? null : unit.casting ? (
         <span
           className="bar cast"
           aria-label={`Casting ${unit.casting.skillName}`}

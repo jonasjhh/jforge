@@ -44,6 +44,7 @@ export const DAMAGE_TYPES = [
   "poison",
   "dark",
   "holy",
+  "earth",
 ] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
@@ -186,7 +187,21 @@ export type SkillEffect =
    * like the caster. One per caster: summoning again replaces the old one.
    * A summon vanishes (leaving no body) when knocked out.
    */
-  | { type: "summon"; creature: CombatantDef };
+  | {
+      type: "summon";
+      creature: CombatantDef;
+      /** How many of this creature one caster may have; default 1. */
+      limit?: number;
+      /** May be placed on either side (boulders), not just the caster's. */
+      anySide?: boolean;
+    }
+  /**
+   * Destroys one of the caster's obstacles (a boulder); every unit in the
+   * plus around its cell takes magic damage, friend or foe.
+   */
+  | { type: "shatter"; power: number; element: DamageType }
+  /** Moves the target `rows` back on its own side; blocked means no move. */
+  | { type: "heave"; rows: number };
 
 /**
  * Which cells a skill hits around the aimed cell. The two grids form one
@@ -260,6 +275,11 @@ export interface CombatantDef {
   resistances?: Resistances;
   /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
   preferredRow?: number;
+  /**
+   * An obstacle (a boulder): takes up its cell, gives cover and can be
+   * attacked, but never acts.
+   */
+  obstacle?: boolean;
   /** How dangerous a monster is, for building encounters to a budget. */
   threat?: number;
 }
@@ -303,6 +323,8 @@ export interface Unit {
   statuses: Status[];
   /** Set for summoned units: who summoned it. */
   summonedBy?: string;
+  /** An obstacle (boulder): never acts, can't be helped by ally skills. */
+  obstacle?: boolean;
   /** A summon that is gone: off the grid, no body. */
   vanished?: boolean;
   hp: number;
@@ -413,6 +435,8 @@ export type BattleEvent =
   | { type: "summoned"; unitId: string; byId: string; cell: Cell }
   | { type: "vanished"; unitId: string }
   | { type: "ambush"; unitId: string }
+  | { type: "shattered"; unitId: string; byId: string }
+  | { type: "unmoved"; unitId: string }
   | { type: "shieldBroken"; unitId: string; name: string }
   | { type: "warded"; unitId: string; name: string }
   | { type: "teleported"; unitId: string; from: Position; to: Position }

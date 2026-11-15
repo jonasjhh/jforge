@@ -129,6 +129,26 @@ export const blessedBlade: Weapon = {
   kind: "melee",
 };
 
+/** Geomancer: earth bolts; any column, front-most unit only. */
+export const rod: Weapon = {
+  id: "rod",
+  name: "Rod",
+  columns: "any",
+  depth: 1,
+  damageType: "earth",
+  kind: "ranged",
+};
+
+/** For obstacles, which never attack. */
+export const noWeapon: Weapon = {
+  id: "none",
+  name: "None",
+  columns: 0,
+  depth: 1,
+  damageType: "blunt",
+  kind: "melee",
+};
+
 export const weapons = [
   sword,
   spear,
@@ -142,6 +162,7 @@ export const weapons = [
   claws,
   daggers,
   blessedBlade,
+  rod,
 ];
 
 export const heal: Skill = {
@@ -456,6 +477,63 @@ export const lastRites: Skill = {
   },
 };
 
+/**
+ * Raised by the Geomancer: takes up a cell, gives cover, can be attacked,
+ * never acts. Vanishes (no rubble) when destroyed.
+ */
+export const boulder: CombatantDef = {
+  id: "boulder",
+  name: "Boulder",
+  stats: {
+    maxHp: 40,
+    maxMp: 0,
+    attack: 0,
+    magic: 0,
+    defense: 60,
+    spirit: 60,
+    speed: 0,
+  },
+  weapon: noWeapon,
+  resistances: { poison: 0 },
+  obstacle: true,
+};
+
+/** Geomancer: a boulder in any empty cell, on either side. Two at most. */
+export const raiseBoulder: Skill = {
+  id: "raise-boulder",
+  name: "Raise Boulder",
+  description:
+    "Raises a boulder in an empty cell on either side: it blocks the cell and gives cover. Two at most; a third replaces the oldest.",
+  mpCost: 6,
+  target: "any",
+  area: "single",
+  effect: { type: "summon", creature: boulder, limit: 2, anySide: true },
+};
+
+/** Geomancer: blows up one of its boulders; everyone around it is hit. */
+export const shatter: Skill = {
+  id: "shatter",
+  name: "Shatter",
+  description:
+    "Destroys one of your boulders: earth damage to every unit around it, friend or foe.",
+  mpCost: 8,
+  target: "any",
+  area: "plus",
+  effect: { type: "shatter", power: 1.2, element: "earth" },
+};
+
+/** Geomancer: heaves any unit (or boulder) one row back. */
+export const upheaval: Skill = {
+  id: "upheaval",
+  name: "Upheaval",
+  description:
+    "The ground heaves one unit (ally, enemy or boulder) one row back. Nothing happens if the way is blocked.",
+  mpCost: 6,
+  target: "any",
+  area: "single",
+  effect: { type: "heave", rows: 1 },
+};
+
 export const skills = [
   heal,
   fireball,
@@ -475,6 +553,9 @@ export const skills = [
   shadowstep,
   aegis,
   lastRites,
+  raiseBoulder,
+  shatter,
+  upheaval,
 ];
 
 export const fighter: CombatantDef = {
@@ -689,6 +770,27 @@ export const paladin: CombatantDef = {
   preferredRow: 0,
 };
 
+/**
+ * Shapes the battlefield: raises boulders for cover and blocking, shatters
+ * them on crowds, and heaves units (or boulders) back a row.
+ */
+export const geomancer: CombatantDef = {
+  id: "geomancer",
+  name: "Geomancer",
+  stats: {
+    maxHp: 95,
+    maxMp: 34,
+    attack: 10,
+    magic: 17,
+    defense: 12,
+    spirit: 14,
+    speed: 10,
+  },
+  weapon: rod,
+  skills: [raiseBoulder, shatter, upheaval],
+  preferredRow: 1,
+};
+
 export const playerTypes = [
   fighter,
   lancer,
@@ -699,6 +801,7 @@ export const playerTypes = [
   warlock,
   rogue,
   paladin,
+  geomancer,
 ];
 /** Fast and frail; its bite poisons. Likes soft targets. */
 export const viper: CombatantDef = {
@@ -715,7 +818,8 @@ export const viper: CombatantDef = {
   },
   weapon: venomFangs,
   targeting: { finish: 2, wounded: 1, soft: 2, noise: 0.5 },
-  resistances: { poison: 0 },
+  // Crushed in their burrows: weak to earth.
+  resistances: { poison: 0, earth: 1.5 },
   threat: 2,
 };
 

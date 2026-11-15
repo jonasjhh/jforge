@@ -5,7 +5,8 @@ export function describeEvent(
   state: BattleState,
   event: BattleEvent,
 ): string | null {
-  const name = (id: string) => state.units.find((u) => u.id === id)?.name ?? id;
+  const unit = (id: string) => state.units.find((u) => u.id === id);
+  const name = (id: string) => unit(id)?.name ?? id;
   switch (event.type) {
     case "attack":
       return `${name(event.unitId)} attacks ${name(event.targetId)}`;
@@ -30,9 +31,17 @@ export function describeEvent(
     case "hpPaid":
       return `${name(event.unitId)} pays ${event.amount} HP`;
     case "summoned":
-      return `${name(event.byId)} summons ${name(event.unitId)}`;
+      return unit(event.unitId)?.obstacle
+        ? `${name(event.byId)} raises a ${name(event.unitId)}`
+        : `${name(event.byId)} summons ${name(event.unitId)}`;
     case "vanished":
-      return `${name(event.unitId)} vanishes`;
+      return unit(event.unitId)?.obstacle
+        ? `${name(event.unitId)} crumbles`
+        : `${name(event.unitId)} vanishes`;
+    case "shattered":
+      return `${name(event.byId)} shatters the ${name(event.unitId)}!`;
+    case "unmoved":
+      return `${name(event.unitId)} doesn't budge`;
     case "modifierApplied":
       return event.harmful
         ? `${name(event.unitId)} suffers ${event.source}`

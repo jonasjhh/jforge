@@ -425,6 +425,13 @@ button:disabled {
   animation: none;
 }
 
+.unit.boulder {
+  background:
+    radial-gradient(circle at 35% 30%, #8a8f99 0 20%, transparent 60%),
+    linear-gradient(160deg, #6b6f78, #3c3f46);
+  border-color: #9aa0aa;
+}
+
 .unit.unreachable {
   opacity: 0.45;
   filter: grayscale(0.6);
