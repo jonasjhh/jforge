@@ -1,3 +1,4 @@
+import { knockOutIfDown, resistance } from "./damage";
 import { effectiveStat, isAlive } from "./stats";
 import type { BattleEvent, BattleState, StatusDef, Unit } from "./types";
 
@@ -6,7 +7,8 @@ const EPSILON = 1e-9;
 
 /**
  * Puts a status on `target`. Reapplying the same status refreshes it (new
- * amount, full duration) instead of stacking a second copy.
+ * amount, full duration) instead of stacking a second copy. A damaging
+ * status doesn't take hold on a target immune to its damage type.
  */
 export function applyStatus(
   state: BattleState,
@@ -15,15 +17,17 @@ export function applyStatus(
   def: StatusDef,
   events: BattleEvent[],
 ): void {
+  if (def.damageType && resistance(target, def.damageType) === 0) return;
   const amount = Math.max(
     1,
-    Math.round(def.power * effectiveStat(caster, "magic")),
+    Math.round(def.power * effectiveStat(caster, def.stat)),
   );
   target.statuses = target.statuses.filter((s) => s.id !== def.id);
   target.statuses.push({
     id: def.id,
     name: def.name,
     effect: def.effect,
+    ...(def.damageType ? { damageType: def.damageType } : {}),
     amount,
     interval: def.interval,
     nextTickAt: state.time + def.interval,
@@ -62,7 +66,9 @@ export function runDueTicks(
     for (const status of [...unit.statuses]) {
       if (status.nextTickAt > state.time + EPSILON) continue;
       ran = true;
-      tick(unit, status, events);
+      tick(state, unit, status, events);
+      // A damage tick can knock the unit out, which clears its statuses.
+      if (!isAlive(unit)) break;
       status.ticksLeft -= 1;
       if (status.ticksLeft <= 0) {
         unit.statuses = unit.statuses.filter((s) => s !== status);
@@ -81,11 +87,32 @@ export function runDueTicks(
 }
 
 function tick(
+  state: BattleState,
   unit: Unit,
   status: Unit["statuses"][number],
   events: BattleEvent[],
 ): void {
   switch (status.effect) {
+    case "damage": {
+      const multiplier = status.damageType
+        ? resistance(unit, status.damageType)
+        : 1;
+      const amount = Math.min(unit.hp, Math.round(status.amount * multiplier));
+      unit.hp -= amount;
+      events.push({
+        type: "statusTick",
+        unitId: unit.id,
+        statusId: status.id,
+        name: status.name,
+        effect: status.effect,
+        amount,
+        hp: unit.hp,
+        ...(status.damageType ? { damageType: status.damageType } : {}),
+        multiplier,
+      });
+      knockOutIfDown(state, unit, events);
+      break;
+    }
     case "heal": {
       const amount = Math.min(unit.base.maxHp - unit.hp, status.amount);
       unit.hp += amount;

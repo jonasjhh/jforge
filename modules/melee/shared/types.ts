@@ -34,7 +34,13 @@ export interface Modifier {
 }
 
 /** What kind of damage a weapon or spell deals; resistances key on this. */
-export const DAMAGE_TYPES = ["slash", "pierce", "blunt", "fire"] as const;
+export const DAMAGE_TYPES = [
+  "slash",
+  "pierce",
+  "blunt",
+  "fire",
+  "poison",
+] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
 /**
@@ -62,6 +68,8 @@ export interface Weapon {
    */
   depth: number | "any";
   damageType: DamageType;
+  /** A status every damaging hit puts on the target, e.g. venom. */
+  onHit?: StatusDef;
 }
 
 /** One cell of the battlefield, on either side. */
@@ -79,9 +87,13 @@ export interface Cell {
 export interface StatusDef {
   id: string;
   name: string;
-  /** What each tick does. */
-  effect: "heal";
-  /** Per tick: power x the caster's magic, worked out when applied. */
+  /** What each tick does to the unit carrying it. */
+  effect: "heal" | "damage";
+  /** For damage ticks: the type resistances apply to. */
+  damageType?: DamageType;
+  /** Which of the applier's stats scales it. */
+  stat: "attack" | "magic";
+  /** Per tick: power x the applier's `stat`, worked out when applied. */
   power: number;
   interval: number;
   ticks: number;
@@ -92,7 +104,8 @@ export interface Status {
   id: string;
   name: string;
   effect: StatusDef["effect"];
-  /** HP per tick, fixed when it was applied. */
+  damageType?: DamageType;
+  /** HP per tick before resistances, fixed when it was applied. */
   amount: number;
   interval: number;
   nextTickAt: number;
@@ -309,6 +322,9 @@ export type BattleEvent =
       effect: StatusDef["effect"];
       amount: number;
       hp: number;
+      /** For damage ticks: the type and the target's multiplier for it. */
+      damageType?: DamageType;
+      multiplier?: number;
     }
   | { type: "statusExpired"; unitId: string; statusId: string; name: string }
   | { type: "heal"; unitId: string; amount: number; hp: number }

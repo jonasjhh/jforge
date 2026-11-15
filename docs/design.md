@@ -177,17 +177,32 @@ char can edit it later):
 - **noise**: seeded randomness, so enemies aren't fully predictable but
   battles still replay exactly.
 
-The Wolf is a finisher; the Slime is clumsy. Monsters don't use skills or
-move yet.
+The Wolf is a finisher; the Slime is clumsy; the Viper picks on soft
+targets. Monsters don't cast skills or move yet.
+
+### Monsters
+
+| Monster | Role                                  | Weak to | Resists / immune     | Threat |
+| ------- | ------------------------------------- | ------- | -------------------- | ------ |
+| Slime   | Slow, sturdy, clumsy                  | fire    | blunt; poison immune | 2      |
+| Wolf    | Fast finisher                         | pierce  |                      | 3      |
+| Viper   | Fast, frail; venom bite poisons (DoT) |         | poison immune        | 2      |
+
+A weapon can carry an **on-hit status**: the Viper's bite poisons whoever
+it wounds (0.4 x attack poison damage every 30 game time, 5 times). Poison
+can knock a unit out, refreshes rather than stacks, and doesn't take hold
+on a target immune to poison. Statuses say which stat scales them (attack
+for venom, magic for Regen).
 
 ### Random encounters
 
 Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
-until a **threat budget** is spent (Slime 2, Wolf 3; Easy 12, Normal 13,
-Hard 14) and lean toward the front. Budgets are tuned with auto-played
-battles where both sides only attack, to about 89% / 76% / 55% party wins;
+until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 11,
+Normal 12, Hard 13) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 93% / 76% / 48%
+party wins;
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
@@ -197,11 +212,12 @@ Ideas to build in small steps, roughly in this order when they fit:
 
 - **Drain spells** that heal the caster by part of the damage dealt, for a
   future dark-caster class (not the Mage).
-- **Damage over time** (poison, burn), reusing Regen's status ticks.
+- **Cure** for the Healer, to remove poison.
+- **Burn** (fire damage over time), e.g. on Fireball.
 - **Push and pull**: movement as a skill effect, also as part of spells.
 - **A new class** with its own skills; **a new skill for an existing
   class**.
-- **A new monster**, and **skills for monsters** (casting enemies).
+- **Casting monsters**: monsters that use skills, not just weapons.
 - The attacker's own row matters for melee.
 
 ## char (phase 4)

@@ -359,6 +359,19 @@ button:disabled {
   color: #d9ffe6;
 }
 
+.status-damage {
+  background: #5b2a86;
+  color: #f0dcff;
+}
+
+.damage.over-time {
+  color: #e6c6ff;
+  font-size: 0.95rem;
+  text-shadow:
+    0 0 4px #9b4dff,
+    0 1px 0 #000;
+}
+
 .warn {
   color: #ff8a7a;
   font-weight: 700;

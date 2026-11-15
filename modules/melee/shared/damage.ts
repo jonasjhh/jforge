@@ -105,18 +105,26 @@ export function applyDamage(
     damageType: hit.damageType,
     multiplier: hit.multiplier,
   });
-  if (target.hp === 0) {
-    target.gauge = 0;
-    target.statuses = [];
-    if (target.casting) {
-      events.push({
-        type: "castFizzled",
-        unitId: target.id,
-        skillName: target.casting.skillName,
-      });
-      target.casting = undefined;
-    }
-    state.ready = state.ready.filter((id) => id !== target.id);
-    events.push({ type: "knockedOut", unitId: target.id });
+  knockOutIfDown(state, target, events);
+}
+
+/** At 0 HP: clear the unit's turn, statuses and cast, and report it. */
+export function knockOutIfDown(
+  state: BattleState,
+  target: Unit,
+  events: BattleEvent[],
+): void {
+  if (target.hp > 0) return;
+  target.gauge = 0;
+  target.statuses = [];
+  if (target.casting) {
+    events.push({
+      type: "castFizzled",
+      unitId: target.id,
+      skillName: target.casting.skillName,
+    });
+    target.casting = undefined;
   }
+  state.ready = state.ready.filter((id) => id !== target.id);
+  events.push({ type: "knockedOut", unitId: target.id });
 }

@@ -274,7 +274,10 @@ function UnitCell({
         </span>
       )}
       {hits.map((h) => (
-        <span className={`damage ${h.kind} ${h.tag ?? ""}`} key={h.key}>
+        <span
+          className={`damage ${h.kind} ${h.tag ?? ""} ${h.overTime ? "over-time" : ""}`}
+          key={h.key}
+        >
           {h.tag && <span className="damage-tag">{h.tag}</span>}
           {h.kind === "heal" ? `+${h.amount}` : h.amount}
         </span>

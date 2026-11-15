@@ -4,7 +4,7 @@ import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
 import { resolveMove, validateMove } from "./move";
 import { landCast, castSkill, validateSkill } from "./skills";
-import { runDueTicks } from "./status";
+import { applyStatus, runDueTicks } from "./status";
 import { isAlive } from "./stats";
 import { advanceTime, timeToNextEvent } from "./timeline";
 import type {
@@ -222,7 +222,12 @@ function resolve(
   }
   const target = getUnit(state, command.targetId);
   events.push({ type: "attack", unitId: unit.id, targetId: target.id });
-  applyDamage(state, target, physicalHit(state, unit, target), events);
+  const hit = physicalHit(state, unit, target);
+  applyDamage(state, target, hit, events);
+  // Venom and the like: a damaging hit on a target still standing.
+  if (unit.weapon.onHit && hit.amount > 0 && isAlive(target)) {
+    applyStatus(state, unit, target, unit.weapon.onHit, events);
+  }
   finishTurn(state, unit);
 }
 

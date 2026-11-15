@@ -52,7 +52,26 @@ export const fangs: Weapon = {
   damageType: "pierce",
 };
 
-export const weapons = [sword, spear, bow, staff, slam, fangs];
+/** A bite that leaves venom: poisons whoever it wounds. */
+export const venomFangs: Weapon = {
+  id: "venom-fangs",
+  name: "Venom Fangs",
+  columns: 1,
+  depth: 1,
+  damageType: "pierce",
+  onHit: {
+    id: "poison",
+    name: "Poison",
+    effect: "damage",
+    damageType: "poison",
+    stat: "attack",
+    power: 0.4,
+    interval: 30,
+    ticks: 5,
+  },
+};
+
+export const weapons = [sword, spear, bow, staff, slam, fangs, venomFangs];
 
 export const heal: Skill = {
   id: "heal",
@@ -110,6 +129,7 @@ export const regen: Skill = {
       id: "regen",
       name: "Regen",
       effect: "heal",
+      stat: "magic",
       power: 0.4,
       interval: 30,
       ticks: 5,
@@ -202,7 +222,7 @@ export const slime: CombatantDef = {
   targeting: { finish: 1, wounded: 0.5, soft: 0.5, noise: 2 },
   threat: 2,
   // Melts in fire; blunt blows just squish it.
-  resistances: { fire: 2, blunt: 0.5 },
+  resistances: { fire: 2, blunt: 0.5, poison: 0 },
 };
 
 export const wolf: CombatantDef = {
@@ -226,7 +246,26 @@ export const wolf: CombatantDef = {
 };
 
 export const playerTypes = [fighter, archer, mage, healer];
-export const monsters = [slime, wolf];
+/** Fast and frail; its bite poisons. Likes soft targets. */
+export const viper: CombatantDef = {
+  id: "viper",
+  name: "Viper",
+  stats: {
+    maxHp: 40,
+    maxMp: 0,
+    attack: 10,
+    magic: 0,
+    defense: 4,
+    spirit: 6,
+    speed: 13,
+  },
+  weapon: venomFangs,
+  targeting: { finish: 2, wounded: 1, soft: 2, noise: 0.5 },
+  resistances: { poison: 0 },
+  threat: 2,
+};
+
+export const monsters = [slime, wolf, viper];
 
 /** The four player types against a small mixed pack. */
 export const sampleBattle: BattleSetup = {

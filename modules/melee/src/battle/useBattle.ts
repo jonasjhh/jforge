@@ -27,6 +27,8 @@ export interface Hit {
   kind: "damage" | "heal";
   /** How the target's resistance changed a damage hit. */
   tag?: "weak" | "resist" | "immune";
+  /** Damage from an effect over time, e.g. poison. */
+  overTime?: boolean;
 }
 
 export interface BattleView {
@@ -145,6 +147,18 @@ function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
       if (e.amount <= 0) return [];
       return [
         { key: nextKey(), unitId: e.unitId, amount: e.amount, kind: "heal" },
+      ];
+    }
+    if (e.type === "statusTick") {
+      if (e.amount <= 0) return [];
+      return [
+        {
+          key: nextKey(),
+          unitId: e.unitId,
+          amount: e.amount,
+          kind: "damage",
+          overTime: true,
+        },
       ];
     }
     if (e.type !== "damage") return [];

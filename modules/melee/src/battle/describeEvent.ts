@@ -16,7 +16,9 @@ export function describeEvent(
     case "statusTick":
       // A tick that heals nothing (already at full HP) isn't worth a line.
       if (event.amount === 0) return null;
-      return `${name(event.unitId)} regains ${event.amount} HP (${event.name})`;
+      return event.effect === "heal"
+        ? `${name(event.unitId)} regains ${event.amount} HP (${event.name})`
+        : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
     case "statusExpired":
       return `${name(event.unitId)}'s ${event.name} wears off`;
     case "castFizzled":
