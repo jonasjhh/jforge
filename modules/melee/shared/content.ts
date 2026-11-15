@@ -109,6 +109,16 @@ export const claws: Weapon = {
   kind: "melee",
 };
 
+/** Rogue: quick melee blades. */
+export const daggers: Weapon = {
+  id: "daggers",
+  name: "Daggers",
+  columns: 1,
+  depth: 1,
+  damageType: "slash",
+  kind: "melee",
+};
+
 export const weapons = [
   sword,
   spear,
@@ -120,6 +130,7 @@ export const weapons = [
   hourglass,
   grimoire,
   claws,
+  daggers,
 ];
 
 export const heal: Skill = {
@@ -346,6 +357,46 @@ export const summonImp: Skill = {
   effect: { type: "summon", creature: imp },
 };
 
+/**
+ * Rogue: hides. Enemies can't single it out; its next damaging action is
+ * an ambush for x2 and ends the stealth.
+ */
+export const vanish: Skill = {
+  id: "vanish",
+  name: "Vanish",
+  description:
+    "Hide for a while: enemies can't single you out, and your next attack ambushes for double damage.",
+  mpCost: 6,
+  target: "self",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "stealth",
+      name: "Stealth",
+      effect: "stealth",
+      harmful: false,
+      stat: "magic",
+      power: 0,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
+/** Rogue: steps to any empty cell on its side, for half a turn. */
+export const shadowstep: Skill = {
+  id: "shadowstep",
+  name: "Shadowstep",
+  description:
+    "Move to any empty cell on your side. Costs half a turn and keeps you hidden.",
+  mpCost: 4,
+  target: "any",
+  area: "single",
+  halfTurn: true,
+  effect: { type: "teleport" },
+};
+
 export const skills = [
   heal,
   fireball,
@@ -361,6 +412,8 @@ export const skills = [
   bloodBolt,
   firebolt,
   summonImp,
+  vanish,
+  shadowstep,
 ];
 
 export const fighter: CombatantDef = {
@@ -532,6 +585,27 @@ export const warlock: CombatantDef = {
   preferredRow: 2,
 };
 
+/**
+ * Fast and fragile: hides with Vanish, slips anywhere with Shadowstep, and
+ * ambushes from stealth for double damage.
+ */
+export const rogue: CombatantDef = {
+  id: "rogue",
+  name: "Rogue",
+  stats: {
+    maxHp: 80,
+    maxMp: 20,
+    attack: 19,
+    magic: 4,
+    defense: 9,
+    spirit: 9,
+    speed: 15,
+  },
+  weapon: daggers,
+  skills: [vanish, shadowstep],
+  preferredRow: 1,
+};
+
 export const playerTypes = [
   fighter,
   lancer,
@@ -540,6 +614,7 @@ export const playerTypes = [
   healer,
   chronomancer,
   warlock,
+  rogue,
 ];
 /** Fast and frail; its bite poisons. Likes soft targets. */
 export const viper: CombatantDef = {

@@ -333,19 +333,28 @@ interface SkillPromptProps {
   casterSide: "player" | "enemy";
 }
 
+/** What to tap for a single-target skill. */
+function targetHint(skill: Skill): string {
+  if (skill.effect.type === "summon" || skill.effect.type === "teleport") {
+    return "tap a highlighted empty cell on your side";
+  }
+  switch (skill.target) {
+    case "self":
+      return "tap yourself to use it";
+    case "ally":
+      return "tap a highlighted ally";
+    case "enemy":
+      return "tap a highlighted enemy";
+    case "any":
+      return "tap a highlighted cell";
+  }
+}
+
 function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
   if (skill.area === "single") {
     return (
       <p>
-        <strong>{skill.name}</strong> — tap a highlighted{" "}
-        {skill.effect.type === "summon"
-          ? "empty cell on your side"
-          : skill.target === "ally"
-            ? "ally"
-            : skill.target === "enemy"
-              ? "enemy"
-              : "cell"}
-        .
+        <strong>{skill.name}</strong> — {targetHint(skill)}.
       </p>
     );
   }

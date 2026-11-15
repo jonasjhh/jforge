@@ -233,6 +233,7 @@ function UnitCell({
     incoming ? "incoming" : "",
     unit.casting ? "casting" : "",
     emphasized ? "emphasized" : "",
+    unit.statuses.some((st) => st.effect === "stealth") ? "stealthed" : "",
     hits.some((h) => h.kind === "damage") ? "hit" : "",
   ]
     .filter(Boolean)

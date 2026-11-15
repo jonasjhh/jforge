@@ -3,7 +3,8 @@ import { makeUnit } from "./units";
 import { applyDamage, physicalHit } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
-import { resolveMove, validateMove } from "./move";
+import { MOVE_GAUGE_LEFT, resolveMove, validateMove } from "./move";
+import { breakStealth } from "./stealth";
 import { landCast, castSkill, validateSkill } from "./skills";
 import { applyStatus, runDueTicks } from "./status";
 import { isAlive } from "./stats";
@@ -210,11 +211,13 @@ function resolve(
     if (!skill) throw new Error(`Unknown skill ${command.skillId}`);
     castSkill(state, unit, skill, command.cell, events);
     finishTurn(state, unit);
+    if (skill.halfTurn) unit.gauge = MOVE_GAUGE_LEFT;
     return;
   }
   const target = getUnit(state, command.targetId);
   events.push({ type: "attack", unitId: unit.id, targetId: target.id });
-  const hit = physicalHit(state, unit, target);
+  const ambush = breakStealth(unit, events);
+  const hit = physicalHit(state, unit, target, ambush);
   applyDamage(state, target, hit, events);
   // Venom and the like: a damaging hit on a target still standing.
   if (unit.weapon.onHit && hit.amount > 0 && isAlive(target)) {

@@ -97,7 +97,7 @@ export interface StatusDef {
   id: string;
   name: string;
   /** What each tick does to the unit carrying it. */
-  effect: "heal" | "damage";
+  effect: "heal" | "damage" | "stealth";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */
@@ -134,6 +134,8 @@ export type SkillEffect =
     }
   /** Removes every harmful status and modifier from the target. */
   | { type: "cleanse" }
+  /** Moves the caster to the aimed empty cell on its own side. */
+  | { type: "teleport" }
   /** A timed stat modifier, e.g. Haste (speed x1.5) or Slow (x0.5). */
   | {
       type: "modify";
@@ -198,7 +200,7 @@ export interface Skill {
    * Where it may be aimed, relative to the caster: a living ally or enemy,
    * or "any" cell on either side (occupied or empty).
    */
-  target: "ally" | "enemy" | "any";
+  target: "ally" | "enemy" | "any" | "self";
   area: SkillArea;
   effect: SkillEffect;
   /**
@@ -211,6 +213,8 @@ export interface Skill {
   notSelf?: boolean;
   /** HP paid to use it. Refused unless the caster has more HP than this. */
   hpCost?: number;
+  /** Costs only half a turn, like Move: the gauge drops to half. */
+  halfTurn?: boolean;
 }
 
 /** A delayed skill on its way: aimed, paid for, landing at `readyAt`. */
@@ -399,6 +403,8 @@ export type BattleEvent =
   | { type: "hpPaid"; unitId: string; amount: number; hp: number }
   | { type: "summoned"; unitId: string; byId: string; cell: Cell }
   | { type: "vanished"; unitId: string }
+  | { type: "ambush"; unitId: string }
+  | { type: "teleported"; unitId: string; from: Position; to: Position }
   | {
       type: "collided";
       unitId: string;

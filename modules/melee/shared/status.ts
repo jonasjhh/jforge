@@ -100,6 +100,9 @@ function tick(
   events: BattleEvent[],
 ): void {
   switch (status.effect) {
+    case "stealth":
+      // Nothing happens on its single tick: it just ends.
+      break;
     case "damage": {
       const multiplier = status.damageType
         ? resistance(unit, status.damageType)

@@ -1,3 +1,4 @@
+import { isStealthed } from "./stealth";
 import { isAlive } from "./stats";
 import type { BattleState, Unit } from "./types";
 
@@ -27,15 +28,17 @@ export function reachableTargets(state: BattleState, attacker: Unit): Unit[] {
     ).length;
     return inFront < depth;
   });
-  if (columns === "any") return exposed;
+  if (columns === "any") return exposed.filter((u) => !isStealthed(u));
 
   const distance = (u: Unit) =>
     Math.abs(u.position.col - attacker.position.col);
-  const inRange = exposed.filter((u) => distance(u) <= columns);
-  if (inRange.length > 0 || exposed.length === 0) return inRange;
+  // Stealthed units still cover what's behind them, but can't be picked.
+  const visible = exposed.filter((u) => !isStealthed(u));
+  const inRange = visible.filter((u) => distance(u) <= columns);
+  if (inRange.length > 0 || visible.length === 0) return inRange;
 
-  const nearest = Math.min(...exposed.map(distance));
-  return exposed.filter((u) => distance(u) === nearest);
+  const nearest = Math.min(...visible.map(distance));
+  return visible.filter((u) => distance(u) === nearest);
 }
 
 export function canReach(

@@ -19,6 +19,10 @@ export function describeEvent(
       return event.effect === "heal"
         ? `${name(event.unitId)} regains ${event.amount} HP (${event.name})`
         : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
+    case "ambush":
+      return `${name(event.unitId)} strikes from the shadows!`;
+    case "teleported":
+      return `${name(event.unitId)} shadowsteps`;
     case "hpPaid":
       return `${name(event.unitId)} pays ${event.amount} HP`;
     case "summoned":

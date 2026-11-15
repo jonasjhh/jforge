@@ -1,6 +1,7 @@
 import { applyDamage, magicalHit, physicalHit } from "./damage";
 import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
 import { canReach } from "./reach";
+import { breakStealth, isStealthed } from "./stealth";
 import {
   GRID_COLUMNS,
   GRID_ROWS,
@@ -34,6 +35,11 @@ export function validateSkill(
     return `Not enough HP for ${skill.name}`;
   }
   if (!isCellOnGrid(cell)) return "That cell is off the battlefield";
+  if (skill.effect.type === "teleport") {
+    if (cell.side !== unit.side) return "Move within your own side";
+    if (unitAt(state, cell)) return "That cell is occupied";
+    return null;
+  }
   if (skill.effect.type === "summon") {
     // An empty cell on the caster's side, or its current summon's cell.
     if (cell.side !== unit.side) return "Summon on your own side";
@@ -48,13 +54,19 @@ export function validateSkill(
   const target = unitAt(state, cell);
   if (!target) return `${skill.name} needs a target in that cell`;
   const sameSide = target.side === unit.side;
-  if (skill.target === "ally" && !sameSide) {
+  if ((skill.target === "ally" || skill.target === "self") && !sameSide) {
     return `${skill.name} targets an ally`;
   }
   if (skill.target === "enemy" && sameSide) {
     return `${skill.name} targets an enemy`;
   }
   if (!isAlive(target)) return "Target is knocked out";
+  if (skill.target === "self" && target.id !== unit.id) {
+    return `${skill.name} can only target its caster`;
+  }
+  if (!sameSide && skill.area === "single" && isStealthed(target)) {
+    return `${target.name} can't be seen`;
+  }
   if (skill.notSelf && target.id === unit.id) {
     return `${skill.name} can't target its caster`;
   }
@@ -185,6 +197,22 @@ function applySkill(
     summon(state, unit, skill.effect.creature, cell, events);
     return;
   }
+  if (skill.effect.type === "teleport") {
+    const from = { ...unit.position };
+    unit.position = { col: cell.col, row: cell.row };
+    events.push({
+      type: "teleported",
+      unitId: unit.id,
+      from,
+      to: { ...unit.position },
+    });
+    return;
+  }
+  // The first damaging action out of stealth is an ambush.
+  const ambush =
+    skill.effect.type === "damage" || skill.effect.type === "strike"
+      ? breakStealth(unit, events)
+      : 1;
 
   // Victims are fixed before any effect lands, so order doesn't matter.
   for (const target of skillVictims(state, skill, cell)) {
@@ -236,7 +264,7 @@ function applySkill(
             ...(blocker ? { blockerId: blocker.id } : {}),
           });
         }
-        const power = effect.power * (blocked ? COLLISION_POWER : 1);
+        const power = effect.power * (blocked ? COLLISION_POWER : 1) * ambush;
         applyDamage(
           state,
           target,
@@ -251,7 +279,7 @@ function applySkill(
           state,
           unit,
           target,
-          effect.power,
+          effect.power * ambush,
           effect.element,
         );
         applyDamage(state, target, hit, events);

@@ -15,6 +15,7 @@ export { effectiveStat, isAlive } from "./stats";
 export { canReach, reachableTargets } from "./reach";
 export { skillCells, skillVictims, validateSkill } from "./skills";
 export { MOVE_GAUGE_LEFT, validateMove } from "./move";
+export { AMBUSH_POWER, isStealthed } from "./stealth";
 export { applyStatus } from "./status";
 export { GAUGE_FULL, fillRate } from "./timeline";
 export {

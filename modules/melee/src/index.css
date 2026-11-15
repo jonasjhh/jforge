@@ -364,6 +364,16 @@ button:disabled {
   color: #e9dcff;
 }
 
+.status-stealth {
+  background: #2c3344;
+  color: #c9d3ea;
+}
+
+.unit.stealthed {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
 .status-buff {
   background: #24508f;
   color: #dceaff;

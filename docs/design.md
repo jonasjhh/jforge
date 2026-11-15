@@ -143,6 +143,14 @@ cell) and its `area` which cells it hits around the aimed one.
   tick on game time (haste doesn't stretch them), recasting refreshes
   instead of stacking, and a knockout clears them. Ticks don't pause the
   battle; the unit shows a badge.
+- **Vanish / Shadowstep** (Rogue): **Stealth** is a timed status (one
+  silent tick that just ends it). A stealthed unit can't be picked by
+  enemies for weapon attacks or single-target skills (areas and poison
+  still hit it; it still covers units behind it). Its first damaging
+  action is an **ambush** for x2, which ends stealth. Shadowstep is a
+  `teleport` effect to any empty cell on its side and a **half-turn**
+  skill (gauge drops to half, like Move); it keeps stealth. Skills can
+  target `self` only.
 - **Drain / Blood Bolt / Summon Imp** (Warlock): damage effects can
   **drain** (heal the caster by a share of the damage dealt; nothing from
   an immune target). Skills can cost **HP**, refused unless the caster has
@@ -231,8 +239,8 @@ Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 16,
-Normal 17, Hard 19) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 89% / 78% / 49%
+Normal 18, Hard 19) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 92% / 68% / 52%
 party wins (real play also uses skills and movement);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
@@ -261,20 +269,20 @@ To decide before push/pull lands:
 
 ### Class roster plan (10 archetypes)
 
-Existing (7): **Fighter** (melee, front), **Archer** (ranged), **Mage**
+Existing (8): **Fighter** (melee, front), **Archer** (ranged), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
-Imp on the field).
+Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
+side, ambush from stealth for x2).
 
 Planned, in rough order (names and kits are proposals):
 
-| Class    | Role                                                | Signature mechanics         |
-| -------- | --------------------------------------------------- | --------------------------- |
-| Guardian | Tank (on hold: needs a mechanic no other class has) | To be designed              |
-| Rogue    | Fast skirmisher                                     | Bleed/poison, repositioning |
-| Bard     | Support through buffs                               | Party-wide buffs over time  |
+| Class    | Role                                                | Signature mechanics        |
+| -------- | --------------------------------------------------- | -------------------------- |
+| Guardian | Tank (on hold: needs a mechanic no other class has) | To be designed             |
+| Bard     | Support through buffs                               | Party-wide buffs over time |
 
 With more than five classes, random encounters pick a seeded party of up
 to five from the roster (kept in roster order) instead of every class.
