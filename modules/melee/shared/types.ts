@@ -53,12 +53,31 @@ export interface Weapon {
   depth: number | "any";
 }
 
+/** What a skill does to its target. More effect types arrive over time. */
+export type SkillEffect = {
+  type: "heal";
+  /** HP restored = power x the caster's magic. */
+  power: number;
+};
+
+/** A skill is plain data, so char can design new ones later. */
+export interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  mpCost: number;
+  /** Whose side the target must be on, relative to the caster. */
+  target: "ally" | "enemy";
+  effect: SkillEffect;
+}
+
 /** What a combatant is, independent of any battle. */
 export interface CombatantDef {
   id: string;
   name: string;
   stats: Stats;
   weapon: Weapon;
+  skills?: Skill[];
 }
 
 /** Puts a combatant on the grid for one battle. */
@@ -88,6 +107,7 @@ export interface Unit {
   position: Position;
   base: Stats;
   weapon: Weapon;
+  skills: Skill[];
   hp: number;
   mp: number;
   /** 0..GAUGE_FULL; the unit acts when it is full. */
@@ -111,13 +131,25 @@ export interface BattleState {
   rng: number;
 }
 
-export type Command = { type: "attack"; targetId: string };
+export type Command =
+  | { type: "attack"; targetId: string }
+  | { type: "skill"; skillId: string; targetId: string };
 
 export type BattleEvent =
   | { type: "timeAdvanced"; time: number }
   | { type: "turnReady"; unitId: string }
   | { type: "attack"; unitId: string; targetId: string }
   | { type: "damage"; unitId: string; amount: number; hp: number }
+  | {
+      type: "skill";
+      unitId: string;
+      targetId: string;
+      skillId: string;
+      skillName: string;
+      /** The caster's MP after paying for the skill. */
+      mp: number;
+    }
+  | { type: "heal"; unitId: string; amount: number; hp: number }
   | { type: "knockedOut"; unitId: string }
   | { type: "modifierExpired"; unitId: string; source: string }
   | { type: "battleOver"; winner: Side | null };

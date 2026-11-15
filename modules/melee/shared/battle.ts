@@ -2,6 +2,7 @@ import { chooseCommand } from "./ai";
 import { physicalDamage } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
+import { resolveSkill, validateSkill } from "./skills";
 import { isAlive } from "./stats";
 import { advanceTime, timeToNextEvent } from "./timeline";
 import type {
@@ -32,6 +33,7 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
       position: { ...p.position },
       base: { ...p.def.stats },
       weapon: { ...p.def.weapon },
+      skills: (p.def.skills ?? []).map((s) => structuredClone(s)),
       hp: p.def.stats.maxHp,
       mp: p.def.stats.maxMp,
       gauge: 0,
@@ -147,6 +149,10 @@ export function validateCommand(
   command: Command,
 ): string | null {
   const target = state.units.find((u) => u.id === command.targetId);
+  if (command.type === "skill") {
+    const skill = unit.skills.find((s) => s.id === command.skillId);
+    return validateSkill(unit, skill, target);
+  }
   if (!target) return "Unknown target";
   if (target.side === unit.side) return "Cannot attack an ally";
   if (!isAlive(target)) return "Target is already knocked out";
@@ -182,6 +188,13 @@ function resolve(
   events: BattleEvent[],
 ): void {
   const target = getUnit(state, command.targetId);
+  if (command.type === "skill") {
+    const skill = unit.skills.find((s) => s.id === command.skillId);
+    if (!skill) throw new Error(`Unknown skill ${command.skillId}`);
+    resolveSkill(unit, skill, target, events);
+    finishTurn(state, unit);
+    return;
+  }
   events.push({ type: "attack", unitId: unit.id, targetId: target.id });
   const amount = physicalDamage(state, unit, target);
   target.hp = Math.max(0, target.hp - amount);

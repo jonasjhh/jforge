@@ -1,7 +1,10 @@
+import { useState } from "react";
 import {
   getUnit,
   validateCommand,
   type BattleSetup,
+  type Command,
+  type Skill,
   type Unit,
 } from "../../shared";
 import { Grid } from "./Grid";
@@ -13,6 +16,12 @@ interface BattleScreenProps {
   onRestart: () => void;
   onExit: () => void;
 }
+
+/** What the active party member is choosing. */
+type Menu =
+  { kind: "attack" } | { kind: "skills" } | { kind: "skill"; skill: Skill };
+
+const ATTACK: Menu = { kind: "attack" };
 
 export function BattleScreen({
   setup,
@@ -28,12 +37,35 @@ export function BattleScreen({
   const active =
     phase.kind === "awaitingCommand" ? getUnit(state, phase.unitId) : null;
 
-  const canTarget = (target: Unit) =>
-    active !== null &&
-    validateCommand(state, active, { type: "attack", targetId: target.id }) ===
-      null;
-  const onTarget = (target: Unit) =>
-    command({ type: "attack", targetId: target.id });
+  // The menu belongs to one turn; every turn starts on Attack. Game time
+  // stands still during a turn and always differs between two turns of the
+  // same unit, so unit + time identifies the turn.
+  const turn = active ? `${active.id}@${state.time}` : null;
+  const [chosen, setChosen] = useState<{ turn: string; menu: Menu } | null>(
+    null,
+  );
+  const menu = turn && chosen?.turn === turn ? chosen.menu : ATTACK;
+  const choose = (next: Menu) => turn && setChosen({ turn, menu: next });
+
+  const commandFor = (target: Unit): Command | null => {
+    if (menu.kind === "attack") return { type: "attack", targetId: target.id };
+    if (menu.kind === "skill") {
+      return { type: "skill", skillId: menu.skill.id, targetId: target.id };
+    }
+    return null;
+  };
+  const canTarget = (target: Unit) => {
+    const c = commandFor(target);
+    return (
+      active !== null &&
+      c !== null &&
+      validateCommand(state, active, c) === null
+    );
+  };
+  const onTarget = (target: Unit) => {
+    const c = commandFor(target);
+    if (c) command(c);
+  };
   const gridProps = {
     units: state.units,
     hits,
@@ -41,6 +73,7 @@ export function BattleScreen({
     actorId,
     canTarget,
     onTarget,
+    actionName: menu.kind === "skill" ? menu.skill.name : "Attack",
   };
 
   return (
@@ -64,7 +97,8 @@ export function BattleScreen({
             {actionText ?? "Time is moving…"}
           </p>
         )}
-        {active && (
+
+        {active && menu.kind === "attack" && (
           <>
             <p>
               <strong>{active.name}</strong>'s turn ({active.weapon.name}) — tap
@@ -81,14 +115,65 @@ export function BattleScreen({
               <button
                 type="button"
                 className="command"
-                disabled
-                title="Skills arrive in phase 2"
+                disabled={active.skills.length === 0}
+                onClick={() => choose({ kind: "skills" })}
               >
                 Skill
               </button>
             </div>
           </>
         )}
+
+        {active && menu.kind === "skills" && (
+          <>
+            <p>
+              <strong>{active.name}</strong> — choose a skill.{" "}
+              <span className="muted">
+                MP {active.mp}/{active.base.maxMp}
+              </span>
+            </p>
+            <div className="command-list">
+              {active.skills.map((skill) => (
+                <button
+                  key={skill.id}
+                  type="button"
+                  className="command"
+                  title={skill.description}
+                  disabled={active.mp < skill.mpCost}
+                  onClick={() => choose({ kind: "skill", skill })}
+                >
+                  {skill.name} · {skill.mpCost} MP
+                </button>
+              ))}
+              <button
+                type="button"
+                className="command"
+                onClick={() => choose(ATTACK)}
+              >
+                Back
+              </button>
+            </div>
+          </>
+        )}
+
+        {active && menu.kind === "skill" && (
+          <>
+            <p>
+              <strong>{menu.skill.name}</strong> — tap a highlighted{" "}
+              {menu.skill.target === "ally" ? "ally" : "enemy"}.
+            </p>
+            <div className="command-list">
+              <button
+                type="button"
+                className="command"
+                onClick={() => choose({ kind: "skills" })}
+              >
+                Back
+              </button>
+            </div>
+          </>
+        )}
+
         {phase.kind === "over" && (
           <>
             <p className={`result result-${phase.winner ?? "draw"}`}>

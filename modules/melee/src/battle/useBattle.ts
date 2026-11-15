@@ -22,12 +22,13 @@ export interface Hit {
   key: number;
   unitId: string;
   amount: number;
+  kind: "damage" | "heal";
 }
 
 export interface BattleView {
   state: BattleState;
   log: string[];
-  /** Damage numbers from the latest action, keyed so the animation replays. */
+  /** Damage and heal numbers from the latest action, keyed to replay. */
   hits: Hit[];
   /** The unit that acted last, while its action is being shown. */
   actorId: string | null;
@@ -62,15 +63,24 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
     if (lines.length)
       setLog((old) => [...lines.reverse(), ...old].slice(0, LOG_LINES));
 
-    const attack = step.events.find((e) => e.type === "attack");
-    if (attack) {
-      setActorId(attack.unitId);
-      setActionText(describeEvent(step.state, attack));
+    const action = step.events.find(
+      (e) => e.type === "attack" || e.type === "skill",
+    );
+    if (action && (action.type === "attack" || action.type === "skill")) {
+      setActorId(action.unitId);
+      setActionText(describeEvent(step.state, action));
       frozenUntil.current = performance.now() + ACTION_MS;
       setHits(
         step.events.flatMap((e) =>
-          e.type === "damage"
-            ? [{ key: ++hitKey.current, unitId: e.unitId, amount: e.amount }]
+          e.type === "damage" || e.type === "heal"
+            ? [
+                {
+                  key: ++hitKey.current,
+                  unitId: e.unitId,
+                  amount: e.amount,
+                  kind: e.type,
+                },
+              ]
             : [],
         ),
       );

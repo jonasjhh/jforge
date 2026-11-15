@@ -1,4 +1,4 @@
-import type { BattleSetup, CombatantDef, Weapon } from "./types";
+import type { BattleSetup, CombatantDef, Skill, Weapon } from "./types";
 
 // Starter content so melee can set up a fight on its own. The four player
 // types become class templates in char later. Everyone uses a basic attack
@@ -37,6 +37,17 @@ export const fangs: Weapon = {
 };
 
 export const weapons = [sword, spear, bow, staff, slam, fangs];
+
+export const heal: Skill = {
+  id: "heal",
+  name: "Heal",
+  description: "Restores HP to one ally.",
+  mpCost: 8,
+  target: "ally",
+  effect: { type: "heal", power: 1.6 },
+};
+
+export const skills = [heal];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -96,6 +107,7 @@ export const healer: CombatantDef = {
     speed: 11,
   },
   weapon: staff,
+  skills: [heal],
 };
 
 export const slime: CombatantDef = {

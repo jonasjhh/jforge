@@ -209,6 +209,15 @@ button:disabled {
   background: #ff8a7a;
 }
 
+.bar.mp {
+  height: 3px;
+}
+
+.bar.mp > span {
+  background: #b98cff;
+  transition: width 300ms ease;
+}
+
 .bar.gauge > span {
   background: #8fb6ff;
 }
@@ -257,6 +266,13 @@ button:disabled {
     0 1px 0 #000;
   pointer-events: none;
   animation: damage-float 700ms ease-out forwards;
+}
+
+.damage.heal {
+  color: #d9ffe6;
+  text-shadow:
+    0 0 4px #2fbf6b,
+    0 1px 0 #000;
 }
 
 @keyframes damage-float {

@@ -15,6 +15,8 @@ interface GridProps {
   actorId: string | null;
   canTarget: (unit: Unit) => boolean;
   onTarget: (unit: Unit) => void;
+  /** What tapping a target does, for screen readers: "Attack", "Heal". */
+  actionName: string;
 }
 
 // Enemies show their back row at the top; the party shows its front row at
@@ -33,6 +35,7 @@ export function Grid({
   actorId,
   canTarget,
   onTarget,
+  actionName,
 }: GridProps) {
   const at = (col: number, row: number) =>
     units.find(
@@ -72,6 +75,7 @@ export function Grid({
                   !canTarget(unit)
                 }
                 onTarget={() => onTarget(unit)}
+                actionName={actionName}
               />
             );
           })}
@@ -90,6 +94,7 @@ interface UnitCellProps {
   /** An enemy the active party member's weapon cannot reach. */
   unreachable: boolean;
   onTarget: () => void;
+  actionName: string;
 }
 
 function UnitCell({
@@ -100,6 +105,7 @@ function UnitCell({
   targetable,
   unreachable,
   onTarget,
+  actionName,
 }: UnitCellProps) {
   const alive = isAlive(unit);
   const hp = unit.hp / unit.base.maxHp;
@@ -111,7 +117,7 @@ function UnitCell({
     acting ? "acting" : "",
     targetable ? "targetable" : "",
     unreachable ? "unreachable" : "",
-    hits.length ? "hit" : "",
+    hits.some((h) => h.kind === "damage") ? "hit" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -131,6 +137,14 @@ function UnitCell({
           className={hp < 0.3 ? "low" : ""}
         />
       </span>
+      {unit.skills.length > 0 && unit.base.maxMp > 0 && (
+        <span
+          className="bar mp"
+          aria-label={`MP ${unit.mp} of ${unit.base.maxMp}`}
+        >
+          <span style={{ width: `${(unit.mp / unit.base.maxMp) * 100}%` }} />
+        </span>
+      )}
       <span className="bar gauge" aria-hidden="true">
         <span
           style={{ width: `${(unit.gauge / GAUGE_FULL) * 100}%` }}
@@ -138,8 +152,8 @@ function UnitCell({
         />
       </span>
       {hits.map((h) => (
-        <span className="damage" key={h.key}>
-          {h.amount}
+        <span className={`damage ${h.kind}`} key={h.key}>
+          {h.kind === "heal" ? `+${h.amount}` : h.amount}
         </span>
       ))}
     </>
@@ -151,7 +165,7 @@ function UnitCell({
       className={classes}
       role="gridcell"
       onClick={onTarget}
-      aria-label={`Attack ${unit.name}`}
+      aria-label={`${actionName} ${unit.name}`}
     >
       {content}
     </button>

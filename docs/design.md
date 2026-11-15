@@ -98,7 +98,11 @@ Elements (phase 2): none, fire, ice, lightning, water, earth, wind, holy,
 dark, poison. Resistances are multipliers per element: 2 weak, 1 normal,
 0.5 resist, 0 immune, -1 absorb.
 
-### Skills (phase 2), as data
+### Skills, as data
+
+Started: units have MP, a skill costs MP and targets an ally or an enemy,
+and the Healer has **Heal** (restores power x magic HP, never above max,
+never on a knocked-out ally). The full shape below is the goal.
 
 ```
 Skill {

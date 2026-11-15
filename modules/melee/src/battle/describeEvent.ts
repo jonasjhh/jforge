@@ -9,6 +9,10 @@ export function describeEvent(
   switch (event.type) {
     case "attack":
       return `${name(event.unitId)} attacks ${name(event.targetId)}`;
+    case "skill":
+      return `${name(event.unitId)} casts ${event.skillName} on ${name(event.targetId)}`;
+    case "heal":
+      return `${name(event.unitId)} recovers ${event.amount} HP`;
     case "damage":
       return `${name(event.unitId)} takes ${event.amount} damage`;
     case "knockedOut":
