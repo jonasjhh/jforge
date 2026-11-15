@@ -1,0 +1,7 @@
+packages:
+  - landing
+  - modules/*
+
+allowBuilds:
+  esbuild: true
+  workerd: true

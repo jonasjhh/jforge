@@ -1,0 +1,29 @@
+# The one Worker for all of jforge. Every module's API and static files are
+# served from here, so Cloudflare credentials, deploys and secrets are set
+# up once, not per module. It shares nothing with heatshift, kinetic or any
+# other app: its own script name, workers.dev URL and storage.
+name = "jforge"
+workers_dev = true
+main = "worker/index.ts"
+compatibility_date = "2026-08-24"
+
+# Serves the build output: the landing page at / and each module at
+# /<name>/. The Worker runs first for every request so it can handle
+# /api/* and send unknown paths inside a module to that module's
+# index.html (see worker/index.ts).
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "none"
+
+# Durable Objects: add one [[durable_objects.bindings]] per class, prefixed
+# with the module name (e.g. name = "MELEE_ARENA", class_name =
+# "MeleeArena"), plus a [[migrations]] entry, and re-export the class from
+# worker/index.ts.
+
+# Different local ports from heatshift (8789/9230) and kinetic (8788/9229)
+# so they can all run side by side. Keep in sync with tooling/ports.ts.
+[dev]
+port = 8790
+inspector_port = 9231

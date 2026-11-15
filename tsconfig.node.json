@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "types": ["node"]
+  },
+  "include": [
+    "tooling",
+    "vitest.config.ts",
+    "eslint.config.js",
+    "landing/vite.config.ts",
+    "modules/*/vite.config.ts",
+    "modules/*/meta.ts"
+  ]
+}

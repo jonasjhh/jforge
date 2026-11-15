@@ -1,0 +1,19 @@
+{
+  "name": "@jforge/melee",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./shared": "./shared/index.ts",
+    "./worker": "./worker/index.ts"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "hono": "^4.13.17",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
