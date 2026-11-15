@@ -42,7 +42,7 @@ describe("Drain", () => {
     const { events, state } = cast(start, "drain", foeCell);
     const dealt = events.find((e): e is Ev<"damage"> => e.type === "damage")!;
     const healed = events.find((e): e is Ev<"heal"> => e.type === "heal")!;
-    expect(dealt.damageType).toBe("dark");
+    expect(dealt.damageType).toBe("shadow");
     expect(healed).toMatchObject({
       unitId: "player-4-2",
       amount: Math.floor(dealt.amount / 2),
@@ -57,7 +57,7 @@ describe("Drain", () => {
 
     const ghost = {
       ...def("ghost", { maxHp: 1000, speed: 1 }),
-      resistances: { dark: 0 },
+      resistances: { shadow: 0 },
     };
     const start = warlockTurn(ghost);
     warlockOf(start).hp = 40;

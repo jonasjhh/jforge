@@ -1,4 +1,5 @@
 import { DEFAULT_TARGETING } from "./ai";
+import { resistancesFor } from "./traits";
 import type {
   CombatantDef,
   Control,
@@ -28,7 +29,7 @@ export function makeUnit(
     weapon: { ...def.weapon },
     skills: (def.skills ?? []).map((s) => structuredClone(s)),
     targeting: { ...(def.targeting ?? DEFAULT_TARGETING) },
-    resistances: { ...def.resistances },
+    resistances: resistancesFor(def),
     statuses: [],
     hp: def.stats.maxHp,
     mp: def.stats.maxMp,

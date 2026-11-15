@@ -35,17 +35,30 @@ export interface Modifier {
   harmful?: boolean;
 }
 
-/** What kind of damage a weapon or spell deals; resistances key on this. */
-export const DAMAGE_TYPES = [
+/**
+ * What a hit is made of; resistances key on this. Independent of delivery
+ * (physical uses attack vs defense, magical uses magic vs spirit): a
+ * Geomancer's thrown rock is magical delivery with an impact type.
+ * One type per hit. See docs/design.md, "Damage types".
+ */
+export const PHYSICAL_TYPES = [
   "slash",
   "pierce",
-  "blunt",
-  "fire",
-  "poison",
-  "dark",
-  "holy",
-  "earth",
+  "chop",
+  "crush",
+  "impact",
 ] as const;
+export const MAGICAL_TYPES = [
+  "fire",
+  "cold",
+  "lightning",
+  "acid",
+  "poison",
+  "holy",
+  "shadow",
+  "arcane",
+] as const;
+export const DAMAGE_TYPES = [...PHYSICAL_TYPES, ...MAGICAL_TYPES] as const;
 export type DamageType = (typeof DAMAGE_TYPES)[number];
 
 /**
@@ -53,6 +66,22 @@ export type DamageType = (typeof DAMAGE_TYPES)[number];
  * not listed), 0.5 resistant, 0 immune.
  */
 export type Resistances = Partial<Record<DamageType, number>>;
+
+/**
+ * What a creature is made of. Each trait brings default resistances (see
+ * traits.ts); a creature's own `resistances` override them.
+ */
+export const TRAITS = [
+  "beast",
+  "reptile",
+  "ooze",
+  "stone",
+  "demon",
+  "undead",
+  "construct",
+  "armored",
+] as const;
+export type Trait = (typeof TRAITS)[number];
 
 /**
  * What a combatant attacks with; decides which enemies it can reach.
@@ -272,6 +301,8 @@ export interface CombatantDef {
   skills?: Skill[];
   /** How it picks targets when AI-controlled; a sensible default if absent. */
   targeting?: TargetingProfile;
+  /** Default resistances come from traits; `resistances` overrides them. */
+  traits?: Trait[];
   resistances?: Resistances;
   /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
   preferredRow?: number;

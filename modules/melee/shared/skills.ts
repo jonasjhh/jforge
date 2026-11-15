@@ -322,7 +322,14 @@ function applySkill(
         applyDamage(
           state,
           target,
-          physicalHit(state, unit, target, power),
+          physicalHit(
+            state,
+            unit,
+            target,
+            power,
+            // A crash into something is impact damage.
+            blocked ? "impact" : unit.weapon.damageType,
+          ),
           events,
         );
         if (to && isAlive(target)) moveBy(target, to, events);

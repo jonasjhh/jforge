@@ -86,13 +86,15 @@ export function physicalHit(
   attacker: Unit,
   target: Unit,
   power = 1,
+  /** Overrides the weapon's type, e.g. impact for a collision. */
+  damageType: DamageType = attacker.weapon.damageType,
 ): Hit {
   return mitigate(
     state,
     effectiveStat(attacker, "attack") * rowFactor(attacker, target) * power,
     effectiveStat(target, "defense"),
     target,
-    attacker.weapon.damageType,
+    damageType,
   );
 }
 

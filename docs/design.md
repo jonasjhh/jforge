@@ -111,14 +111,100 @@ Dividing by defense means damage never hits zero and scales smoothly with
 player-designed skills. Physical uses attack vs defense, magical uses magic
 vs spirit.
 
-**Damage types** (done): every weapon and damaging spell has one: slash
-(sword), pierce (bow, spear, fangs), blunt (staff, slam), fire
-(Fireball). Each combatant has **resistances**: a multiplier per type, 2
-weak, 1 normal (the default), 0.5 resistant, 0 immune. Slimes are weak to
-fire and resist blunt; Wolves are weak to pierce. The multiplier applies
-after defense, the AI's expected damage includes it, and hits show a WEAK
-or RESIST tag. More elements (ice, lightning, holy, ...) and absorb (-1)
-can be added the same way.
+### Damage types
+
+Two separate axes:
+
+- **Delivery** decides which stats apply: **physical** (attack vs
+  defense; weapons, weapon skills) or **magical** (magic vs spirit;
+  spells).
+- **Type** decides which resistances apply. Types describe what the
+  damage _is_, not who causes it: a Geomancer's hurled rock is magical
+  delivery with crush or impact type; a flaming arrow would be physical
+  with fire type.
+
+**One type per hit.** A weapon has one **primary** type for basic
+attacks; a skill may strike with another (a sword's thrust is pierce, a
+halberd's spike is pierce, a warhammer's pick is pierce).
+
+**Physical types**
+
+| Type   | Typical sources                                  | Identity                                        |
+| ------ | ------------------------------------------------ | ----------------------------------------------- |
+| Slash  | swords, claws, whips, glaives, scythes           | Strong vs flesh; poor vs armor, stone, bone     |
+| Pierce | arrows, spears, fangs, daggers, rapiers, darts   | Strong vs beasts, light armor; poor vs oozes    |
+| Chop   | axes, cleavers, halberds, throwing axes          | Splitting blows: strong vs wood, shields, armor |
+| Crush  | maces, clubs, staffs, flails, hammers, fists     | Strong vs armor, bone, stone; poor vs oozes     |
+| Impact | siege engines, giants, collisions, falls, blasts | Beyond human scale; strong vs structures        |
+
+Crush is anything a person swings; impact is beyond human scale.
+**Collisions** (blocked pushes and pulls) and **Shatter** deal impact.
+
+**Magical types**
+
+| Type      | Identity                                              |
+| --------- | ----------------------------------------------------- |
+| Fire      | Strong vs beasts, plants, oozes                       |
+| Cold      | Strong vs reptiles, fire creatures                    |
+| Lightning | Strong vs armored and metal targets                   |
+| Acid      | Eats armor                                            |
+| Poison    | Living things only (undead, constructs, oozes immune) |
+| Holy      | Strong vs undead and demons                           |
+| Shadow    | Strong vs holy and celestial creatures                |
+| Arcane    | Pure magic, the neutral baseline; rarely resisted     |
+
+Later: **sonic** (instruments, a future Bard) and psychic.
+
+**Drain is not a type** but a property of a hit: heal the attacker by a
+share of the damage dealt (the Warlock's Drain is shadow type with
+drain).
+
+**Weapon families** (primary type): swords, glaives, scythes, whips,
+claws: slash. Rapiers, daggers, spears, pikes, lances, tridents,
+javelins, bows, crossbows, blowguns, darts, firearms: pierce. Axes,
+cleavers, halberds, throwing axes: chop. Maces, clubs, staffs, flails,
+morning stars, warhammers, mauls, fists, slings, boomerangs, shield
+bashes: crush. Siege engines, explosives, giant blows, falling objects:
+impact. Wands, orbs, rods: arcane unless the spell says otherwise. Nets
+and bolas deal no damage (control effects).
+
+**Signature effects** (optional, per skill, never automatic):
+
+| Type      | Effect                                         |
+| --------- | ---------------------------------------------- |
+| Slash     | Bleed: physical damage over time (later)       |
+| Pierce    | Puncture: ignores part of defense              |
+| Chop      | Sunder: defense down                           |
+| Crush     | Stagger: knocks the target's gauge back        |
+| Impact    | Knockback: pushes the target a row             |
+| Fire      | Burn: damage over time                         |
+| Cold      | Chill: speed down                              |
+| Lightning | Interrupt: cancels a delayed cast              |
+| Acid      | Corrode: defense down                          |
+| Poison    | Poison: damage over time (exists, Viper venom) |
+
+**Resistances** are multipliers per type (2 weak, 1 normal, 0.5
+resistant, 0 immune), applied after defense; the AI's expected damage
+includes them and hits show WEAK / RESIST tags. They come from **creature
+traits**: each trait brings defaults, several traits multiply, and a
+creature's own `resistances` override them (`traits.ts`).
+
+| Trait     | Defaults                                                      |
+| --------- | ------------------------------------------------------------- |
+| beast     | pierce x1.5                                                   |
+| reptile   | cold x1.5                                                     |
+| ooze      | crush x0.5, pierce x0.5, fire x2, cold x1.5, poison immune    |
+| stone     | slash x0.5, pierce x0.5, crush x1.5, impact x2, poison immune |
+| demon     | holy x2, fire x0.5, shadow x0.5                               |
+| undead    | holy x2, shadow x0.5, poison immune                           |
+| construct | slash x0.5, crush x1.5, lightning x1.5, poison immune         |
+| armored   | slash/pierce x0.75, chop/crush/lightning x1.25, acid x1.5     |
+
+**Current content:** Sword, Claws: slash. Spear, Bow, Fangs, Venom
+Fangs, Daggers: pierce. Staff, Slam, Hourglass, Rod: crush. Blessed
+Blade: holy. Grimoire, Drain, Blood Bolt: shadow. Fireball, Meteor,
+Firebolt: fire. Shatter and collisions: impact. Slime: ooze. Wolf: beast.
+Viper: beast + reptile, immune to poison. Imp: demon. Boulder: stone.
 
 ### Skills, as data
 
@@ -149,10 +235,11 @@ cell) and its `area` which cells it hits around the aimed one.
   replaces the oldest). They block movement, pushes and teleports, give
   cover to units behind them, can be attacked, vanish when destroyed and
   never decide a battle; ally skills can't target them. Shatter destroys
-  one of your boulders and deals earth damage (power 1.2) to everyone in
+  one of your boulders and deals impact damage (power 1.2) to everyone in
   the plus around it, friends included. Upheaval heaves any unit or
   boulder one row back (no damage; nothing happens if blocked). The Rod
-  and Shatter deal **earth** damage; Vipers are weak to it.
+  deals crush damage and Shatter impact (boulders are stone: weak to
+  impact).
 - **Aegis / Last Rites** (Paladin): all damage (weapons, spells,
   collisions, poison) goes through one function. A **shield** status
   absorbs first (Aegis: 2 x magic, 150 game time, refreshes on recast); a
@@ -238,11 +325,11 @@ targets. Monsters don't cast skills or move yet.
 
 ### Monsters
 
-| Monster | Role                                  | Weak to | Resists / immune     | Threat |
-| ------- | ------------------------------------- | ------- | -------------------- | ------ |
-| Slime   | Slow, sturdy, clumsy                  | fire    | blunt; poison immune | 2      |
-| Wolf    | Fast finisher                         | pierce  |                      | 3      |
-| Viper   | Fast, frail; venom bite poisons (DoT) |         | poison immune        | 2      |
+| Monster | Role                                  | Traits         | Notes            | Threat |
+| ------- | ------------------------------------- | -------------- | ---------------- | ------ |
+| Slime   | Slow, sturdy, clumsy                  | ooze           |                  | 2      |
+| Wolf    | Fast finisher                         | beast          |                  | 3      |
+| Viper   | Fast, frail; venom bite poisons (DoT) | beast, reptile | immune to poison | 2      |
 
 A weapon can carry an **on-hit status**: the Viper's bite poisons whoever
 it wounds (0.4 x attack poison damage every 30 game time, 5 times). Poison
@@ -255,9 +342,9 @@ for venom, magic for Regen).
 Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
-until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 16,
-Normal 18, Hard 19) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 90% / 66% / 50%
+until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 15,
+Normal 17, Hard 19) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 93% / 71% / 38%
 party wins (real play also uses skills and movement);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
@@ -293,8 +380,8 @@ Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its 
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields
-an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (earth
-damage; raises boulders, shatters them on crowds, heaves units back).
+an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
+and impact; raises boulders, shatters them on crowds, heaves units back).
 
 Planned, in rough order (names and kits are proposals):
 
@@ -311,6 +398,10 @@ to five from the roster (kept in roster order) instead of every class.
 Ideas to build in small steps, roughly in this order when they fit:
 
 - **Burn** (fire damage over time), e.g. on Fireball.
+- **Bleed** (physical damage over time, the slash signature effect).
+- **Signature effects** for the other types (puncture, sunder, stagger,
+  knockback, chill, interrupt, corrode) as skills call for them.
+- **Sonic** damage type, with a future Bard.
 - **Push on spells**: reuse the strike push on a spell (e.g. a blast that
   knocks enemies back).
 - **Casting monsters**: monsters that use skills, not just weapons.

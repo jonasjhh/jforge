@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import {
-  geomancer,
-  raiseBoulder,
-  shatter,
-  sword,
-  upheaval,
-  viper,
-} from "../content";
+import { geomancer, raiseBoulder, shatter, sword, upheaval } from "../content";
 import { unitAt } from "../grid";
 import { reachableTargets } from "../reach";
 import type { BattleEvent, BattleState, Cell, Placement } from "../types";
@@ -183,7 +176,7 @@ describe("Shatter", () => {
     expect(hit).toEqual(["enemy-2-1", "enemy-3-0", "player-2-0"]);
     expect(
       events.find((e): e is Damage => e.type === "damage")!.damageType,
-    ).toBe("earth");
+    ).toBe("impact");
     expect(unitAt(state, E(2, 0))).toBeUndefined();
     expect(shatter.mpCost).toBe(8);
   });
@@ -231,23 +224,14 @@ describe("Upheaval", () => {
   });
 });
 
-describe("Earth damage", () => {
-  it("hits Vipers harder", () => {
-    expect(viper.resistances?.earth).toBe(1.5);
-    const hitOn = (foe: Placement) => {
-      const s = geoTurn([foe]);
-      return act(s, { type: "attack", targetId: "enemy-2-0" }).events.find(
-        (e): e is Damage => e.type === "damage",
-      )!;
-    };
-    const onViper = hitOn(
-      place(
-        { ...viper, stats: { ...viper.stats, maxHp: 1000, speed: 1 } },
-        "enemy",
-        2,
-        0,
-      ),
-    );
-    expect(onViper).toMatchObject({ damageType: "earth", multiplier: 1.5 });
+describe("Geomancer damage types", () => {
+  it("the Rod deals crush damage", () => {
+    const s = geoTurn([
+      place(def("target", { maxHp: 1000, speed: 1 }), "enemy", 2, 0),
+    ]);
+    const hit = act(s, { type: "attack", targetId: "enemy-2-0" }).events.find(
+      (e): e is Damage => e.type === "damage",
+    )!;
+    expect(hit.damageType).toBe("crush");
   });
 });

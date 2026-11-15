@@ -37,7 +37,7 @@ export const staff: Weapon = {
   name: "Staff",
   columns: "any",
   depth: "any",
-  damageType: "blunt",
+  damageType: "crush",
   kind: "ranged",
 };
 /** Natural melee weapons of monsters. */
@@ -46,7 +46,7 @@ export const slam: Weapon = {
   name: "Slam",
   columns: 1,
   depth: 1,
-  damageType: "blunt",
+  damageType: "crush",
   kind: "melee",
 };
 export const fangs: Weapon = {
@@ -85,17 +85,17 @@ export const hourglass: Weapon = {
   name: "Hourglass",
   columns: "any",
   depth: 1,
-  damageType: "blunt",
+  damageType: "crush",
   kind: "ranged",
 };
 
-/** Warlock: dark bolts from a spellbook; any column, front-most only. */
+/** Warlock: shadow bolts from a spellbook; any column, front-most only. */
 export const grimoire: Weapon = {
   id: "grimoire",
   name: "Grimoire",
   columns: "any",
   depth: 1,
-  damageType: "dark",
+  damageType: "shadow",
   kind: "ranged",
 };
 
@@ -115,7 +115,7 @@ export const daggers: Weapon = {
   name: "Daggers",
   columns: 1,
   depth: 1,
-  damageType: "slash",
+  damageType: "pierce",
   kind: "melee",
 };
 
@@ -129,13 +129,13 @@ export const blessedBlade: Weapon = {
   kind: "melee",
 };
 
-/** Geomancer: earth bolts; any column, front-most unit only. */
+/** Geomancer: hurled stones (crush); any column, front-most unit only. */
 export const rod: Weapon = {
   id: "rod",
   name: "Rod",
   columns: "any",
   depth: 1,
-  damageType: "earth",
+  damageType: "crush",
   kind: "ranged",
 };
 
@@ -145,7 +145,7 @@ export const noWeapon: Weapon = {
   name: "None",
   columns: 0,
   depth: 1,
-  damageType: "blunt",
+  damageType: "crush",
   kind: "melee",
 };
 
@@ -318,33 +318,34 @@ export const quicken: Skill = {
   effect: { type: "gauge", to: 1 },
 };
 
-/** Warlock: dark damage that heals the Warlock by half of it. */
+/** Warlock: shadow damage that heals the Warlock by half of it. */
 export const drain: Skill = {
   id: "drain",
   name: "Drain",
-  description: "Dark damage to one enemy; heals you by half the damage dealt.",
+  description:
+    "Shadow damage to one enemy; heals you by half the damage dealt.",
   mpCost: 6,
   target: "enemy",
   area: "single",
   effect: {
     type: "damage",
     kind: "magical",
-    element: "dark",
+    element: "shadow",
     power: 1,
     drain: 0.5,
   },
 };
 
-/** Warlock: a heavy dark bolt paid for with the Warlock's own HP. */
+/** Warlock: a heavy shadow bolt paid for with the Warlock's own HP. */
 export const bloodBolt: Skill = {
   id: "blood-bolt",
   name: "Blood Bolt",
-  description: "Heavy dark damage to one enemy, paid for with 15 of your HP.",
+  description: "Heavy shadow damage to one enemy, paid for with 15 of your HP.",
   mpCost: 0,
   hpCost: 15,
   target: "enemy",
   area: "single",
-  effect: { type: "damage", kind: "magical", element: "dark", power: 2 },
+  effect: { type: "damage", kind: "magical", element: "shadow", power: 2 },
 };
 
 /** Imp: a small ranged fire spell. */
@@ -373,7 +374,7 @@ export const imp: CombatantDef = {
   },
   weapon: claws,
   skills: [firebolt],
-  resistances: { fire: 0.5, holy: 2 },
+  traits: ["demon"],
 };
 
 /** Warlock: summons an Imp into an empty cell; replaces the old one. */
@@ -494,7 +495,7 @@ export const boulder: CombatantDef = {
     speed: 0,
   },
   weapon: noWeapon,
-  resistances: { poison: 0 },
+  traits: ["stone"],
   obstacle: true,
 };
 
@@ -515,11 +516,11 @@ export const shatter: Skill = {
   id: "shatter",
   name: "Shatter",
   description:
-    "Destroys one of your boulders: earth damage to every unit around it, friend or foe.",
+    "Destroys one of your boulders: impact damage to every unit around it, friend or foe.",
   mpCost: 8,
   target: "any",
   area: "plus",
-  effect: { type: "shatter", power: 1.2, element: "earth" },
+  effect: { type: "shatter", power: 1.2, element: "impact" },
 };
 
 /** Geomancer: heaves any unit (or boulder) one row back. */
@@ -640,8 +641,8 @@ export const slime: CombatantDef = {
   // Clumsy: mostly flails at whatever is in reach.
   targeting: { finish: 1, wounded: 0.5, soft: 0.5, noise: 2 },
   threat: 2,
-  // Melts in fire; blunt blows just squish it.
-  resistances: { fire: 2, blunt: 0.5, poison: 0 },
+  // An ooze: melts in fire, shrugs off crushing and piercing, no poison.
+  traits: ["ooze"],
 };
 
 export const wolf: CombatantDef = {
@@ -660,8 +661,8 @@ export const wolf: CombatantDef = {
   // A finisher: goes for the wounded and the kill.
   targeting: { finish: 5, wounded: 3, soft: 1, noise: 0.3 },
   threat: 3,
-  // Arrows and spears find its flanks.
-  resistances: { pierce: 1.5 },
+  // A beast: arrows and spears find its flanks.
+  traits: ["beast"],
 };
 
 /**
@@ -818,8 +819,9 @@ export const viper: CombatantDef = {
   },
   weapon: venomFangs,
   targeting: { finish: 2, wounded: 1, soft: 2, noise: 0.5 },
-  // Crushed in their burrows: weak to earth.
-  resistances: { poison: 0, earth: 1.5 },
+  // Beast and reptile (weak to pierce and cold); immune to its own venom.
+  traits: ["beast", "reptile"],
+  resistances: { poison: 0 },
   threat: 2,
 };
 
