@@ -360,19 +360,18 @@ automatically once they have a `threat`.
 
 ## Open questions
 
-**Knocked-out units.** Today a knocked-out unit stays in its cell for the
-rest of the battle. It no longer counts for cover, reach, area effects or
-targeting (the unit behind it is exposed at once), but it still **blocks
-movement** into its cell. Its turn, statuses and any cast are cleared.
+**Knocked-out units.** Decided: bodies stay. A knocked-out unit keeps its
+cell for the rest of the battle (so a later Revive can bring it back). It
+**blocks movement, teleports and pushes** (a push or pull into a body is a
+collision), but never attacks, reach, cover or areas: the unit behind it is
+exposed at once, and areas pass over it. Its turn, statuses and any cast
+are cleared. Summons and boulders are the exception: they vanish and free
+their cell.
 
-To decide before push/pull lands:
+Still open, one at a time:
 
-- Keep bodies (needed for a later Revive) and let them block movement and
-  pushes (bashing into a body is a collision) but never attacks, reach or
-  areas. **Recommended.**
-- Or remove bodies when a unit falls: simpler, but no Revive.
-- Also open: Revive itself, and whether a row emptied by deaths changes
-  anything beyond cover.
+- Revive itself: who gets it, and at what HP.
+- Whether a row emptied by knockouts changes anything beyond cover.
 
 ## Roadmap rules
 
