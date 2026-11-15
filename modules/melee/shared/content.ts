@@ -44,10 +44,25 @@ export const heal: Skill = {
   description: "Restores HP to one ally.",
   mpCost: 8,
   target: "ally",
+  area: "single",
   effect: { type: "heal", power: 1.6 },
 };
 
-export const skills = [heal];
+/**
+ * Hits the aimed cell and the four next to it, on either side. Aimed at the
+ * enemy front row, the blast crosses the line onto your own front row.
+ */
+export const fireball: Skill = {
+  id: "fireball",
+  name: "Fireball",
+  description: "Burns a plus-shaped area. Mind your own front line.",
+  mpCost: 12,
+  target: "any",
+  area: "plus",
+  effect: { type: "damage", kind: "magical", power: 1.2 },
+};
+
+export const skills = [heal, fireball];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -92,6 +107,7 @@ export const mage: CombatantDef = {
     speed: 9,
   },
   weapon: staff,
+  skills: [fireball],
 };
 
 export const healer: CombatantDef = {

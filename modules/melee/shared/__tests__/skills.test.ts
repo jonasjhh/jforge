@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
 import { heal } from "../content";
-import { skillTargets } from "../skills";
-import type { BattleState, Skill } from "../types";
+import { skillCells } from "../skills";
+import type { BattleState, Cell, Skill } from "../types";
 import { def, place } from "./helpers";
 
 // The healer acts first; everyone else is too slow to matter.
@@ -26,8 +26,14 @@ function battle(options: { healerMp?: number; allyHp?: number } = {}) {
   return advance(start).state;
 }
 
+const at = (side: Cell["side"], col: number, row = 0): Cell => ({
+  side,
+  col,
+  row,
+});
+
 const healAlly = (state: BattleState) =>
-  act(state, { type: "skill", skillId: "heal", targetId: "player-1-0" });
+  act(state, { type: "skill", skillId: "heal", cell: at("player", 1) });
 
 const hpOf = (state: BattleState, id: string) =>
   state.units.find((u) => u.id === id)!.hp;
@@ -60,7 +66,7 @@ describe("Heal", () => {
   it("can target the caster itself", () => {
     const waiting = battle();
     expect(() =>
-      act(waiting, { type: "skill", skillId: "heal", targetId: "player-0-0" }),
+      act(waiting, { type: "skill", skillId: "heal", cell: at("player", 0) }),
     ).not.toThrow();
   });
 
@@ -73,14 +79,14 @@ describe("Heal", () => {
   it("is refused on an enemy, a knocked-out ally or an unknown skill", () => {
     const waiting = battle();
     expect(() =>
-      act(waiting, { type: "skill", skillId: "heal", targetId: "enemy-0-0" }),
+      act(waiting, { type: "skill", skillId: "heal", cell: at("enemy", 0) }),
     ).toThrow(/targets an ally/);
     expect(() => healAlly(battle({ allyHp: 0 }))).toThrow(/knocked out/);
     expect(() =>
       act(waiting, {
         type: "skill",
         skillId: "fireball",
-        targetId: "enemy-0-0",
+        cell: at("enemy", 0),
       }),
     ).toThrow(/Unknown skill/);
   });
@@ -88,12 +94,18 @@ describe("Heal", () => {
   it("offers living allies, including the caster, as targets", () => {
     const waiting = battle();
     const healer = waiting.units[0]!;
-    expect(skillTargets(waiting, healer, heal).map((u) => u.id)).toEqual([
-      "player-0-0",
-      "player-1-0",
+    expect(skillCells(waiting, healer, heal)).toEqual([
+      at("player", 0),
+      at("player", 1),
     ]);
     const broke = battle({ healerMp: 0 });
-    expect(skillTargets(broke, broke.units[0]!, heal)).toEqual([]);
+    expect(skillCells(broke, broke.units[0]!, heal)).toEqual([]);
+  });
+
+  it("needs a unit in the aimed cell", () => {
+    expect(() =>
+      act(battle(), { type: "skill", skillId: "heal", cell: at("player", 4) }),
+    ).toThrow(/needs a target/);
   });
 
   it("does not change the skill definitions it was given", () => {

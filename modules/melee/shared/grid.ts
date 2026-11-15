@@ -1,4 +1,11 @@
-import type { Position, Side } from "./types";
+import type {
+  BattleState,
+  Cell,
+  Position,
+  Side,
+  SkillArea,
+  Unit,
+} from "./types";
 
 export const GRID_COLUMNS = 5;
 export const GRID_ROWS = 3;
@@ -17,4 +24,53 @@ export function isOnGrid({ col, row }: Position): boolean {
 
 export function unitId(side: Side, { col, row }: Position): string {
   return `${side}-${col}-${row}`;
+}
+
+export function isCellOnGrid(cell: Cell): boolean {
+  return (cell.side === "player" || cell.side === "enemy") && isOnGrid(cell);
+}
+
+export function cellOf(unit: Unit): Cell {
+  return { side: unit.side, ...unit.position };
+}
+
+export function sameCell(a: Cell, b: Cell): boolean {
+  return a.side === b.side && a.col === b.col && a.row === b.row;
+}
+
+/** The unit standing in a cell, alive or not. */
+export function unitAt(state: BattleState, cell: Cell): Unit | undefined {
+  return state.units.find((u) => sameCell(cellOf(u), cell));
+}
+
+// The battlefield is one field 6 rows deep: enemy back row (0) through the
+// enemy front (2), then the player front (3) through the player back (5).
+function depthOf({ side, row }: Cell): number {
+  return side === "enemy" ? GRID_ROWS - 1 - row : GRID_ROWS + row;
+}
+
+function cellAtDepth(depth: number, col: number): Cell | null {
+  if (depth < 0 || depth >= GRID_ROWS * 2) return null;
+  const cell: Cell =
+    depth < GRID_ROWS
+      ? { side: "enemy", col, row: GRID_ROWS - 1 - depth }
+      : { side: "player", col, row: depth - GRID_ROWS };
+  return isCellOnGrid(cell) ? cell : null;
+}
+
+/** The cells an area covers around `center`, clipped to the battlefield. */
+export function areaCells(center: Cell, area: SkillArea): Cell[] {
+  if (area === "single") return [center];
+  const depth = depthOf(center);
+  const offsets: [number, number][] = [
+    [0, 0],
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ];
+  return offsets.flatMap(([dDepth, dCol]) => {
+    const cell = cellAtDepth(depth + dDepth, center.col + dCol);
+    return cell ? [cell] : [];
+  });
 }

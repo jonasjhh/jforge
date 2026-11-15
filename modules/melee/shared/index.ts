@@ -1,11 +1,21 @@
 // Melee's public API, importable by other modules as "@jforge/melee/shared".
 export * from "./types";
-export { GRID_COLUMNS, GRID_ROWS, MAX_PARTY_SIZE, isOnGrid } from "./grid";
+export {
+  GRID_COLUMNS,
+  GRID_ROWS,
+  MAX_PARTY_SIZE,
+  areaCells,
+  cellOf,
+  isCellOnGrid,
+  isOnGrid,
+  sameCell,
+  unitAt,
+} from "./grid";
 export { effectiveStat, isAlive } from "./stats";
 export { canReach, reachableTargets } from "./reach";
-export { skillTargets, validateSkill } from "./skills";
+export { skillCells, skillVictims, validateSkill } from "./skills";
 export { GAUGE_FULL, fillRate } from "./timeline";
-export { DEFENSE_K, physicalDamage } from "./damage";
+export { DEFENSE_K, magicalDamage, physicalDamage } from "./damage";
 export {
   act,
   advance,

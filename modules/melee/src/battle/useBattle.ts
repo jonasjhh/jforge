@@ -4,6 +4,7 @@ import {
   advance,
   createBattle,
   type BattleSetup,
+  type Cell,
   type BattleState,
   type Command,
   type StepResult,
@@ -34,6 +35,8 @@ export interface BattleView {
   actorId: string | null;
   /** Log line for the action being shown. */
   actionText: string | null;
+  /** Cells covered by the area skill being shown, for the blast effect. */
+  actionArea: Cell[];
   command: (command: Command) => void;
 }
 
@@ -48,6 +51,7 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
   const [hits, setHits] = useState<Hit[]>([]);
   const [actorId, setActorId] = useState<string | null>(null);
   const [actionText, setActionText] = useState<string | null>(null);
+  const [actionArea, setActionArea] = useState<Cell[]>([]);
   const stateRef = useRef(state);
   const frozenUntil = useRef(0);
   const hitKey = useRef(0);
@@ -69,6 +73,9 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
     if (action && (action.type === "attack" || action.type === "skill")) {
       setActorId(action.unitId);
       setActionText(describeEvent(step.state, action));
+      setActionArea(
+        action.type === "skill" && action.area.length > 1 ? action.area : [],
+      );
       frozenUntil.current = performance.now() + ACTION_MS;
       setHits(
         step.events.flatMap((e) =>
@@ -98,6 +105,7 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
       if (now >= frozenUntil.current) {
         setActorId(null);
         setActionText(null);
+        setActionArea([]);
         const current = stateRef.current;
         apply(
           advance(current, {
@@ -122,5 +130,5 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
     [apply],
   );
 
-  return { state, log, hits, actorId, actionText, command };
+  return { state, log, hits, actorId, actionText, actionArea, command };
 }

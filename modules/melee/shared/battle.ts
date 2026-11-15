@@ -1,5 +1,5 @@
 import { chooseCommand } from "./ai";
-import { physicalDamage } from "./damage";
+import { applyDamage, physicalDamage } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
 import { resolveSkill, validateSkill } from "./skills";
@@ -148,11 +148,11 @@ export function validateCommand(
   unit: Unit,
   command: Command,
 ): string | null {
-  const target = state.units.find((u) => u.id === command.targetId);
   if (command.type === "skill") {
     const skill = unit.skills.find((s) => s.id === command.skillId);
-    return validateSkill(unit, skill, target);
+    return validateSkill(state, unit, skill, command.cell);
   }
+  const target = state.units.find((u) => u.id === command.targetId);
   if (!target) return "Unknown target";
   if (target.side === unit.side) return "Cannot attack an ally";
   if (!isAlive(target)) return "Target is already knocked out";
@@ -187,23 +187,16 @@ function resolve(
   command: Command,
   events: BattleEvent[],
 ): void {
-  const target = getUnit(state, command.targetId);
   if (command.type === "skill") {
     const skill = unit.skills.find((s) => s.id === command.skillId);
     if (!skill) throw new Error(`Unknown skill ${command.skillId}`);
-    resolveSkill(unit, skill, target, events);
+    resolveSkill(state, unit, skill, command.cell, events);
     finishTurn(state, unit);
     return;
   }
+  const target = getUnit(state, command.targetId);
   events.push({ type: "attack", unitId: unit.id, targetId: target.id });
-  const amount = physicalDamage(state, unit, target);
-  target.hp = Math.max(0, target.hp - amount);
-  events.push({ type: "damage", unitId: target.id, amount, hp: target.hp });
-  if (target.hp === 0) {
-    target.gauge = 0;
-    state.ready = state.ready.filter((id) => id !== target.id);
-    events.push({ type: "knockedOut", unitId: target.id });
-  }
+  applyDamage(state, target, physicalDamage(state, unit, target), events);
   finishTurn(state, unit);
 }
 

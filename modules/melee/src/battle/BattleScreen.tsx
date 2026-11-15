@@ -1,11 +1,15 @@
 import { useState } from "react";
 import {
+  areaCells,
   getUnit,
+  sameCell,
+  skillVictims,
+  unitAt,
   validateCommand,
   type BattleSetup,
+  type Cell,
   type Command,
   type Skill,
-  type Unit,
 } from "../../shared";
 import { Grid } from "./Grid";
 import { useBattle } from "./useBattle";
@@ -19,7 +23,10 @@ interface BattleScreenProps {
 
 /** What the active party member is choosing. */
 type Menu =
-  { kind: "attack" } | { kind: "skills" } | { kind: "skill"; skill: Skill };
+  | { kind: "attack" }
+  | { kind: "skills" }
+  /** `aim` is the previewed cell of an area skill, before it is cast. */
+  | { kind: "skill"; skill: Skill; aim: Cell | null };
 
 const ATTACK: Menu = { kind: "attack" };
 
@@ -29,10 +36,8 @@ export function BattleScreen({
   onRestart,
   onExit,
 }: BattleScreenProps) {
-  const { state, log, hits, actorId, actionText, command } = useBattle(
-    setup,
-    seed,
-  );
+  const { state, log, hits, actorId, actionText, actionArea, command } =
+    useBattle(setup, seed);
   const { phase } = state;
   const active =
     phase.kind === "awaitingCommand" ? getUnit(state, phase.unitId) : null;
@@ -47,33 +52,55 @@ export function BattleScreen({
   const menu = turn && chosen?.turn === turn ? chosen.menu : ATTACK;
   const choose = (next: Menu) => turn && setChosen({ turn, menu: next });
 
-  const commandFor = (target: Unit): Command | null => {
-    if (menu.kind === "attack") return { type: "attack", targetId: target.id };
+  const commandFor = (cell: Cell): Command | null => {
+    if (menu.kind === "attack") {
+      const target = unitAt(state, cell);
+      return target ? { type: "attack", targetId: target.id } : null;
+    }
     if (menu.kind === "skill") {
-      return { type: "skill", skillId: menu.skill.id, targetId: target.id };
+      return { type: "skill", skillId: menu.skill.id, cell };
     }
     return null;
   };
-  const canTarget = (target: Unit) => {
-    const c = commandFor(target);
+  const canTarget = (cell: Cell) => {
+    const c = commandFor(cell);
     return (
       active !== null &&
       c !== null &&
       validateCommand(state, active, c) === null
     );
   };
-  const onTarget = (target: Unit) => {
-    const c = commandFor(target);
-    if (c) command(c);
+  const onTarget = (cell: Cell) => {
+    const c = commandFor(cell);
+    if (!c) return;
+    // Area skills take two taps: the first aims and previews, a second tap
+    // on the same cell casts.
+    if (menu.kind === "skill" && menu.skill.area !== "single") {
+      if (menu.aim && sameCell(menu.aim, cell)) command(c);
+      else choose({ ...menu, aim: cell });
+      return;
+    }
+    command(c);
   };
+
+  const aim = menu.kind === "skill" ? menu.aim : null;
+  const area =
+    menu.kind === "skill" && aim ? areaCells(aim, menu.skill.area) : actionArea;
   const gridProps = {
-    units: state.units,
+    state,
     hits,
     activeId: active?.id ?? null,
     actorId,
     canTarget,
     onTarget,
-    actionName: menu.kind === "skill" ? menu.skill.name : "Attack",
+    actionName:
+      menu.kind === "skill"
+        ? menu.skill.area === "single"
+          ? menu.skill.name
+          : `Aim ${menu.skill.name} at`
+        : "Attack",
+    area,
+    aim,
   };
 
   return (
@@ -140,7 +167,7 @@ export function BattleScreen({
                   className="command"
                   title={skill.description}
                   disabled={active.mp < skill.mpCost}
-                  onClick={() => choose({ kind: "skill", skill })}
+                  onClick={() => choose({ kind: "skill", skill, aim: null })}
                 >
                   {skill.name} · {skill.mpCost} MP
                 </button>
@@ -158,11 +185,31 @@ export function BattleScreen({
 
         {active && menu.kind === "skill" && (
           <>
-            <p>
-              <strong>{menu.skill.name}</strong> — tap a highlighted{" "}
-              {menu.skill.target === "ally" ? "ally" : "enemy"}.
-            </p>
+            <SkillPrompt
+              skill={menu.skill}
+              aim={menu.aim}
+              victims={
+                menu.aim ? skillVictims(state, menu.skill, menu.aim) : []
+              }
+              casterSide={active.side}
+            />
             <div className="command-list">
+              {menu.aim && (
+                <button
+                  type="button"
+                  className="command selected"
+                  onClick={() =>
+                    menu.aim &&
+                    command({
+                      type: "skill",
+                      skillId: menu.skill.id,
+                      cell: menu.aim,
+                    })
+                  }
+                >
+                  Cast
+                </button>
+              )}
               <button
                 type="button"
                 className="command"
@@ -205,5 +252,48 @@ export function BattleScreen({
         ))}
       </ol>
     </main>
+  );
+}
+
+interface SkillPromptProps {
+  skill: Skill;
+  aim: Cell | null;
+  victims: ReturnType<typeof skillVictims>;
+  casterSide: "player" | "enemy";
+}
+
+function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
+  if (skill.area === "single") {
+    return (
+      <p>
+        <strong>{skill.name}</strong> — tap a highlighted{" "}
+        {skill.target === "ally" ? "ally" : "enemy"}.
+      </p>
+    );
+  }
+  if (!aim) {
+    return (
+      <p>
+        <strong>{skill.name}</strong> — tap any cell to aim.
+      </p>
+    );
+  }
+  const foes = victims.filter((u) => u.side !== casterSide);
+  const friends = victims.filter((u) => u.side === casterSide);
+  return (
+    <p>
+      <strong>{skill.name}</strong>{" "}
+      {victims.length === 0
+        ? "would hit nothing."
+        : `hits ${foes.length} ${foes.length === 1 ? "enemy" : "enemies"}`}
+      {friends.length > 0 && (
+        <span className="warn">
+          {" "}
+          and {friends.map((u) => u.name).join(", ")}!
+        </span>
+      )}
+      {victims.length > 0 && friends.length === 0 && "."}{" "}
+      <span className="muted">Tap again to cast.</span>
+    </p>
   );
 }

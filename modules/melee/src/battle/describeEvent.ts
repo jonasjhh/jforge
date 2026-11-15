@@ -1,4 +1,4 @@
-import type { BattleEvent, BattleState } from "../../shared";
+import { unitAt, type BattleEvent, type BattleState } from "../../shared";
 
 /** One battle log line for an event, or null for events not worth showing. */
 export function describeEvent(
@@ -9,8 +9,14 @@ export function describeEvent(
   switch (event.type) {
     case "attack":
       return `${name(event.unitId)} attacks ${name(event.targetId)}`;
-    case "skill":
-      return `${name(event.unitId)} casts ${event.skillName} on ${name(event.targetId)}`;
+    case "skill": {
+      const aimed = unitAt(state, event.cell);
+      const caster = `${name(event.unitId)} casts ${event.skillName}`;
+      if (!aimed) return caster;
+      return event.area.length > 1
+        ? `${caster} at ${aimed.name}`
+        : `${caster} on ${aimed.name}`;
+    }
     case "heal":
       return `${name(event.unitId)} recovers ${event.amount} HP`;
     case "damage":

@@ -53,12 +53,33 @@ export interface Weapon {
   depth: number | "any";
 }
 
-/** What a skill does to its target. More effect types arrive over time. */
-export type SkillEffect = {
-  type: "heal";
-  /** HP restored = power x the caster's magic. */
-  power: number;
-};
+/** One cell of the battlefield, on either side. */
+export interface Cell {
+  side: Side;
+  col: number;
+  row: number;
+}
+
+/** What a skill does to each unit it hits. More effect types arrive later. */
+export type SkillEffect =
+  | {
+      type: "heal";
+      /** HP restored = power x the caster's magic. */
+      power: number;
+    }
+  | {
+      type: "damage";
+      kind: "magical";
+      /** Damage = power x magic x K / (K + target's spirit), +-10%. */
+      power: number;
+    };
+
+/**
+ * Which cells a skill hits around the aimed cell. The two grids form one
+ * battlefield 5 wide and 6 deep, front rows touching, so an area can spill
+ * across the front line onto the other side.
+ */
+export type SkillArea = "single" | "plus";
 
 /** A skill is plain data, so char can design new ones later. */
 export interface Skill {
@@ -66,8 +87,12 @@ export interface Skill {
   name: string;
   description: string;
   mpCost: number;
-  /** Whose side the target must be on, relative to the caster. */
-  target: "ally" | "enemy";
+  /**
+   * Where it may be aimed, relative to the caster: a living ally or enemy,
+   * or "any" cell on either side (occupied or empty).
+   */
+  target: "ally" | "enemy" | "any";
+  area: SkillArea;
   effect: SkillEffect;
 }
 
@@ -133,7 +158,7 @@ export interface BattleState {
 
 export type Command =
   | { type: "attack"; targetId: string }
-  | { type: "skill"; skillId: string; targetId: string };
+  | { type: "skill"; skillId: string; cell: Cell };
 
 export type BattleEvent =
   | { type: "timeAdvanced"; time: number }
@@ -143,7 +168,10 @@ export type BattleEvent =
   | {
       type: "skill";
       unitId: string;
-      targetId: string;
+      /** The aimed cell. */
+      cell: Cell;
+      /** Every cell the skill covers (the aimed cell for single target). */
+      area: Cell[];
       skillId: string;
       skillName: string;
       /** The caster's MP after paying for the skill. */

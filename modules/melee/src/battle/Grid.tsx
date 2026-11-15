@@ -2,6 +2,10 @@ import {
   GAUGE_FULL,
   GRID_COLUMNS,
   isAlive,
+  sameCell,
+  unitAt,
+  type BattleState,
+  type Cell,
   type Side,
   type Unit,
 } from "../../shared";
@@ -9,14 +13,18 @@ import type { Hit } from "./useBattle";
 
 interface GridProps {
   side: Side;
-  units: Unit[];
+  state: BattleState;
   hits: Hit[];
   activeId: string | null;
   actorId: string | null;
-  canTarget: (unit: Unit) => boolean;
-  onTarget: (unit: Unit) => void;
+  canTarget: (cell: Cell) => boolean;
+  onTarget: (cell: Cell) => void;
   /** What tapping a target does, for screen readers: "Attack", "Heal". */
   actionName: string;
+  /** Cells an area skill covers: the aimed preview, or the blast being shown. */
+  area: Cell[];
+  /** The aimed cell while previewing an area skill. */
+  aim: Cell | null;
 }
 
 // Enemies show their back row at the top; the party shows its front row at
@@ -26,28 +34,25 @@ const ROW_ORDER: Record<Side, number[]> = {
   player: [0, 1, 2],
 };
 const ROW_NAMES = ["Front", "Middle", "Back"];
+const SIDE_NAMES: Record<Side, string> = { player: "Party", enemy: "Enemies" };
 
 export function Grid({
   side,
-  units,
+  state,
   hits,
   activeId,
   actorId,
   canTarget,
   onTarget,
   actionName,
+  area,
+  aim,
 }: GridProps) {
-  const at = (col: number, row: number) =>
-    units.find(
-      (u) =>
-        u.side === side && u.position.col === col && u.position.row === row,
-    );
-
   return (
     <div
       className={`grid grid-${side}`}
       role="grid"
-      aria-label={side === "player" ? "Party" : "Enemies"}
+      aria-label={SIDE_NAMES[side]}
     >
       {ROW_ORDER[side].map((row) => (
         <div
@@ -57,9 +62,24 @@ export function Grid({
           aria-label={`${ROW_NAMES[row]} row`}
         >
           {Array.from({ length: GRID_COLUMNS }, (_, col) => {
-            const unit = at(col, row);
-            if (!unit)
-              return <div className="cell empty" role="gridcell" key={col} />;
+            const cell: Cell = { side, col, row };
+            const unit = unitAt(state, cell);
+            const targetable = canTarget(cell);
+            const inArea = area.some((c) => sameCell(c, cell));
+            const aimed = aim !== null && sameCell(aim, cell);
+            const onClick = () => onTarget(cell);
+            if (!unit) {
+              return (
+                <EmptyCell
+                  key={col}
+                  label={`${actionName} ${SIDE_NAMES[side]} column ${col + 1}, ${ROW_NAMES[row]?.toLowerCase()} row`}
+                  targetable={targetable}
+                  inArea={inArea}
+                  aimed={aimed}
+                  onClick={onClick}
+                />
+              );
+            }
             return (
               <UnitCell
                 key={col}
@@ -67,14 +87,23 @@ export function Grid({
                 hits={hits.filter((h) => h.unitId === unit.id)}
                 active={unit.id === activeId}
                 acting={unit.id === actorId}
-                targetable={canTarget(unit)}
+                targetable={targetable}
                 unreachable={
                   activeId !== null &&
                   side === "enemy" &&
                   isAlive(unit) &&
-                  !canTarget(unit)
+                  !targetable
                 }
-                onTarget={() => onTarget(unit)}
+                inArea={inArea}
+                // An ally caught in an aimed area: friendly fire warning.
+                danger={
+                  aim !== null &&
+                  inArea &&
+                  unit.side === "player" &&
+                  isAlive(unit)
+                }
+                aimed={aimed}
+                onClick={onClick}
                 actionName={actionName}
               />
             );
@@ -85,15 +114,55 @@ export function Grid({
   );
 }
 
+interface EmptyCellProps {
+  label: string;
+  targetable: boolean;
+  inArea: boolean;
+  aimed: boolean;
+  onClick: () => void;
+}
+
+function EmptyCell({
+  label,
+  targetable,
+  inArea,
+  aimed,
+  onClick,
+}: EmptyCellProps) {
+  const classes = [
+    "cell",
+    "empty",
+    targetable ? "targetable" : "",
+    inArea ? "in-area" : "",
+    aimed ? "aimed" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return targetable ? (
+    <button
+      type="button"
+      className={classes}
+      role="gridcell"
+      aria-label={label}
+      onClick={onClick}
+    />
+  ) : (
+    <div className={classes} role="gridcell" />
+  );
+}
+
 interface UnitCellProps {
   unit: Unit;
   hits: Hit[];
   active: boolean;
   acting: boolean;
   targetable: boolean;
-  /** An enemy the active party member's weapon cannot reach. */
+  /** An enemy the active party member cannot target right now. */
   unreachable: boolean;
-  onTarget: () => void;
+  inArea: boolean;
+  danger: boolean;
+  aimed: boolean;
+  onClick: () => void;
   actionName: string;
 }
 
@@ -104,7 +173,10 @@ function UnitCell({
   acting,
   targetable,
   unreachable,
-  onTarget,
+  inArea,
+  danger,
+  aimed,
+  onClick,
   actionName,
 }: UnitCellProps) {
   const alive = isAlive(unit);
@@ -117,6 +189,9 @@ function UnitCell({
     acting ? "acting" : "",
     targetable ? "targetable" : "",
     unreachable ? "unreachable" : "",
+    inArea ? "in-area" : "",
+    danger ? "danger" : "",
+    aimed ? "aimed" : "",
     hits.some((h) => h.kind === "damage") ? "hit" : "",
   ]
     .filter(Boolean)
@@ -164,7 +239,7 @@ function UnitCell({
       type="button"
       className={classes}
       role="gridcell"
-      onClick={onTarget}
+      onClick={onClick}
       aria-label={`${actionName} ${unit.name}`}
     >
       {content}

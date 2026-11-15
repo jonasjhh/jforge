@@ -100,9 +100,19 @@ dark, poison. Resistances are multipliers per element: 2 weak, 1 normal,
 
 ### Skills, as data
 
-Started: units have MP, a skill costs MP and targets an ally or an enemy,
-and the Healer has **Heal** (restores power x magic HP, never above max,
-never on a knocked-out ally). The full shape below is the goal.
+Started: units have MP; a skill costs MP and is aimed at a **cell**. Its
+`target` says where it may be aimed (a living ally, a living enemy, or any
+cell) and its `area` which cells it hits around the aimed one.
+
+- **Heal** (Healer): one living ally, restores power x magic HP, never
+  above max.
+- **Fireball** (Mage): any cell, hits a **plus** (the cell and its four
+  neighbours). The two grids form one battlefield 5 wide and 6 deep with
+  the front rows touching, so a blast aimed at the enemy front row also
+  burns your unit standing opposite. Aiming takes two taps: preview the
+  area (allies caught in it are flagged), then cast.
+
+The full shape below is the goal.
 
 ```
 Skill {
