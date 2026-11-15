@@ -99,6 +99,9 @@ unit is ready, a modifier expires) instead of ticking frame by frame.
 - Above the commands, a caption keeps the **latest action and its result**
   ("Wolf attacks Fighter — 12", "Mage casts Meteor at Slime A — 3 hit,
   Slime A KO") until the next action, so enemy turns aren't missed.
+- The player can **pause** (header button, or P / Space; tap the overlay or
+  Escape to resume). Leaving the app pauses too, so the battle doesn't carry
+  on the moment they return. Open unit details also hold time.
 
 ### Stats and modifiers
 

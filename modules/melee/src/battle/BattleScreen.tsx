@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   cellOf,
   getUnit,
@@ -75,8 +75,13 @@ export function BattleScreen({
 }: BattleScreenProps) {
   // The unit whose details are open; time stands still meanwhile.
   const [inspected, setInspected] = useState<string | null>(null);
+  // Paused by the player, or because they left the app.
+  const [paused, setPaused] = useState(false);
   const { state, log, hits, actorId, lastAction, actionArea, command } =
-    useBattle(setup, seed, inspected !== null);
+    useBattle(setup, seed, paused || inspected !== null);
+  const over = state.phase.kind === "over";
+  const showPaused = paused && !over;
+  usePauseControls(setPaused, over);
   const inspectedUnit = inspected ? getUnit(state, inspected) : null;
   const closeDetails = useCallback(() => setInspected(null), []);
   const { phase } = state;
@@ -185,7 +190,19 @@ export function BattleScreen({
         <button type="button" className="link" onClick={onExit}>
           ← Melee
         </button>
-        <span className="muted">Seed {seed}</span>
+        <span className="header-end">
+          <span className="muted">Seed {seed}</span>
+          {!over && (
+            <button
+              type="button"
+              className="pause-button"
+              aria-label="Pause"
+              onClick={() => setPaused(true)}
+            >
+              <span aria-hidden="true">⏸</span>
+            </button>
+          )}
+        </span>
       </header>
 
       <TurnOrder state={state} />
@@ -359,6 +376,17 @@ export function BattleScreen({
           <li key={log.length - i}>{line}</li>
         ))}
       </ol>
+      {showPaused && (
+        <button
+          type="button"
+          className="pause-overlay"
+          onClick={() => setPaused(false)}
+          autoFocus
+        >
+          <span className="pause-title">Paused</span>
+          <span className="pause-hint">Tap to resume</span>
+        </button>
+      )}
       {inspectedUnit && (
         <UnitDetails
           unit={inspectedUnit}
@@ -459,4 +487,39 @@ function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
       <span className="muted">Tap again to cast.</span>
     </p>
   );
+}
+
+/**
+ * Pausing from outside the screen's buttons: P or Space toggles it (Escape
+ * resumes) on a keyboard, and leaving the app pauses so the battle doesn't
+ * carry on the moment the player comes back.
+ */
+function usePauseControls(
+  setPaused: (update: (paused: boolean) => boolean) => void,
+  over: boolean,
+) {
+  useEffect(() => {
+    if (over) return;
+    const onVisibility = () => {
+      if (document.hidden) setPaused(() => true);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      // Space on a focused button presses it; leave that alone.
+      const target = e.target as HTMLElement | null;
+      const onControl = target?.closest("button, input, select, textarea");
+      if (e.key === "p" || e.key === "P" || (e.key === " " && !onControl)) {
+        e.preventDefault();
+        setPaused((paused) => !paused);
+      } else if (e.key === "Escape") {
+        setPaused(() => false);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [setPaused, over]);
 }

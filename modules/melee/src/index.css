@@ -806,3 +806,52 @@ button:disabled {
   color: #fbeee8;
   font-weight: 600;
 }
+
+/* Pause: a header button, and a dimmed overlay that resumes on tap. */
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pause-button {
+  display: grid;
+  place-items: center;
+  /* A full touch target around a small icon. */
+  width: 44px;
+  height: 44px;
+  margin: -6px -10px -6px 0;
+  border: none;
+  background: none;
+  color: #fbeee8;
+  font-size: 1.1rem;
+}
+
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  border: none;
+  background: rgba(10, 4, 4, 0.72);
+  color: #fbeee8;
+  font: inherit;
+  backdrop-filter: blur(2px);
+}
+
+.pause-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pause-hint {
+  color: #c9a9a1;
+  font-size: 0.9rem;
+}
