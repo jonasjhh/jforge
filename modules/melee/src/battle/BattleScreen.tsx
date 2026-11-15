@@ -37,13 +37,13 @@ const ATTACK: Menu = { kind: "attack" };
 
 const ROW_LABELS = ["front", "middle", "back"];
 
-/** "Blood Bolt · 15 HP", "Meteor · 24 MP · delayed". */
-function skillLabel(skill: Skill): string {
-  const costs = [
+/** "15 HP" for Blood Bolt, "24 MP · delayed" for Meteor. */
+function skillCost(skill: Skill): string {
+  return [
     skill.hpCost ? `${skill.hpCost} HP` : "",
     skill.mpCost || !skill.hpCost ? `${skill.mpCost} MP` : "",
-  ].filter(Boolean);
-  return [skill.name, ...costs, skill.castTime ? "delayed" : ""]
+    skill.castTime ? "delayed" : "",
+  ]
     .filter(Boolean)
     .join(" · ");
 }
@@ -233,17 +233,20 @@ export function BattleScreen({
                 MP {active.mp}/{active.base.maxMp}
               </span>
             </p>
-            <div className="command-list">
+            <div className="skill-list">
               {active.skills.map((skill) => (
                 <button
                   key={skill.id}
                   type="button"
-                  className="command"
-                  title={skill.description}
+                  className="skill-option"
                   disabled={!canAfford(active, skill)}
                   onClick={() => choose({ kind: "skill", skill, aim: null })}
                 >
-                  {skillLabel(skill)}
+                  <span className="skill-head">
+                    <span className="skill-name">{skill.name}</span>
+                    <span className="skill-cost">{skillCost(skill)}</span>
+                  </span>
+                  <span className="skill-description">{skill.description}</span>
                 </button>
               ))}
               <button
