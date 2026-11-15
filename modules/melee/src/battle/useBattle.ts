@@ -25,8 +25,8 @@ export interface Hit {
   unitId: string;
   amount: number;
   kind: "damage" | "heal";
-  /** How the target's resistance changed a damage hit. */
-  tag?: "weak" | "resist" | "immune";
+  /** How the target's resistance changed a damage hit, or a shield took it. */
+  tag?: "weak" | "resist" | "immune" | "shield";
   /** Damage from an effect over time, e.g. poison. */
   overTime?: boolean;
 }
@@ -168,7 +168,9 @@ function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
         unitId: e.unitId,
         amount: e.amount,
         kind: "damage",
-        tag: resistanceTag(e.multiplier),
+        // A hit fully soaked by a shield shows as SHIELD.
+        tag:
+          e.amount === 0 && e.absorbed ? "shield" : resistanceTag(e.multiplier),
       },
     ];
   });

@@ -143,6 +143,13 @@ cell) and its `area` which cells it hits around the aimed one.
   tick on game time (haste doesn't stretch them), recasting refreshes
   instead of stacking, and a knockout clears them. Ticks don't pause the
   battle; the unit shows a badge.
+- **Aegis / Last Rites** (Paladin): all damage (weapons, spells,
+  collisions, poison) goes through one function. A **shield** status
+  absorbs first (Aegis: 2 x magic, 150 game time, refreshes on recast); a
+  **ward** status keeps a lethal blow at 1 HP (Last Rites: 120 game time,
+  any number of hits). Drain only counts damage that got through. The AI
+  knows a shield soaks part of a hit and a warded unit can't be finished.
+  The Blessed Blade deals **holy** damage.
 - **Vanish / Shadowstep** (Rogue): **Stealth** is a timed status (one
   silent tick that just ends it). A stealthed unit can't be picked by
   enemies for weapon attacks or single-target skills (areas and poison
@@ -239,8 +246,8 @@ Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 16,
-Normal 18, Hard 19) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 92% / 68% / 52%
+Normal 18, Hard 20) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 88% / 70% / 41%
 party wins (real play also uses skills and movement);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
@@ -269,20 +276,21 @@ To decide before push/pull lands:
 
 ### Class roster plan (10 archetypes)
 
-Existing (8): **Fighter** (melee, front), **Archer** (ranged), **Mage**
+Existing (9): **Fighter** (melee, front), **Archer** (ranged), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
-side, ambush from stealth for x2).
+side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields
+an ally, Last Rites keeps an ally from being knocked out).
 
 Planned, in rough order (names and kits are proposals):
 
 | Class    | Role                                                | Signature mechanics        |
 | -------- | --------------------------------------------------- | -------------------------- |
 | Guardian | Tank (on hold: needs a mechanic no other class has) | To be designed             |
-| Bard     | Support through buffs                               | Party-wide buffs over time |
+| Bard     | Support through songs (on hold)                     | Channeled party-wide auras |
 
 With more than five classes, random encounters pick a seeded party of up
 to five from the roster (kept in roster order) instead of every class.

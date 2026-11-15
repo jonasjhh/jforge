@@ -97,7 +97,12 @@ export interface StatusDef {
   id: string;
   name: string;
   /** What each tick does to the unit carrying it. */
-  effect: "heal" | "damage" | "stealth";
+  /**
+   * heal / damage: HP per tick. stealth: hidden until it ends. shield:
+   * absorbs `power x stat` damage before HP. ward: can't be knocked out
+   * (a lethal hit leaves 1 HP). The last three just last until they end.
+   */
+  effect: "heal" | "damage" | "stealth" | "shield" | "ward";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */
@@ -343,6 +348,8 @@ export type BattleEvent =
       damageType: DamageType;
       /** The target's resistance multiplier: above 1 weak, below 1 resisted. */
       multiplier: number;
+      /** Damage a shield took instead of HP (`amount` is the HP lost). */
+      absorbed?: number;
     }
   | {
       type: "skill";
@@ -389,6 +396,8 @@ export type BattleEvent =
       /** For damage ticks: the type and the target's multiplier for it. */
       damageType?: DamageType;
       multiplier?: number;
+      /** Damage a shield took instead of HP. */
+      absorbed?: number;
     }
   | { type: "statusExpired"; unitId: string; statusId: string; name: string }
   | { type: "statusRemoved"; unitId: string; statusId: string; name: string }
@@ -404,6 +413,8 @@ export type BattleEvent =
   | { type: "summoned"; unitId: string; byId: string; cell: Cell }
   | { type: "vanished"; unitId: string }
   | { type: "ambush"; unitId: string }
+  | { type: "shieldBroken"; unitId: string; name: string }
+  | { type: "warded"; unitId: string; name: string }
   | { type: "teleported"; unitId: string; from: Position; to: Position }
   | {
       type: "collided";

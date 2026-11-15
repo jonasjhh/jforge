@@ -374,6 +374,23 @@ button:disabled {
   border-style: dashed;
 }
 
+.status-shield {
+  background: #5a6474;
+  color: #f2f5fa;
+}
+
+.status-ward {
+  background: #8a6a1f;
+  color: #fff4d6;
+}
+
+.damage.shield {
+  color: #dfe5ee;
+  text-shadow:
+    0 0 4px #7d8aa0,
+    0 1px 0 #000;
+}
+
 .status-buff {
   background: #24508f;
   color: #dceaff;

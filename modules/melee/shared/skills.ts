@@ -282,11 +282,12 @@ function applySkill(
           effect.power * ambush,
           effect.element,
         );
-        applyDamage(state, target, hit, events);
+        const suffered = applyDamage(state, target, hit, events);
         if (effect.drain && isAlive(unit)) {
           const amount = Math.min(
             unit.base.maxHp - unit.hp,
-            Math.floor(hit.amount * effect.drain),
+            // Only damage that got through (not into a shield) is drained.
+            Math.floor(suffered.lost * effect.drain),
           );
           if (amount > 0) {
             unit.hp += amount;

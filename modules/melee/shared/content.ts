@@ -119,6 +119,16 @@ export const daggers: Weapon = {
   kind: "melee",
 };
 
+/** Paladin: a sword that deals holy damage. */
+export const blessedBlade: Weapon = {
+  id: "blessed-blade",
+  name: "Blessed Blade",
+  columns: 1,
+  depth: 1,
+  damageType: "holy",
+  kind: "melee",
+};
+
 export const weapons = [
   sword,
   spear,
@@ -131,6 +141,7 @@ export const weapons = [
   grimoire,
   claws,
   daggers,
+  blessedBlade,
 ];
 
 export const heal: Skill = {
@@ -397,6 +408,54 @@ export const shadowstep: Skill = {
   effect: { type: "teleport" },
 };
 
+/** Paladin: a shield that absorbs damage before HP. */
+export const aegis: Skill = {
+  id: "aegis",
+  name: "Aegis",
+  description:
+    "Shields one ally: absorbs damage (2 x your magic) before HP, for a while.",
+  mpCost: 8,
+  target: "ally",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "aegis",
+      name: "Aegis",
+      effect: "shield",
+      harmful: false,
+      stat: "magic",
+      power: 2,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
+/** Paladin: for a while, the ally can't be knocked out. */
+export const lastRites: Skill = {
+  id: "last-rites",
+  name: "Last Rites",
+  description:
+    "For a while, one ally can't be knocked out: a lethal blow leaves 1 HP.",
+  mpCost: 12,
+  target: "ally",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "last-rites",
+      name: "Last Rites",
+      effect: "ward",
+      harmful: false,
+      stat: "magic",
+      power: 0,
+      interval: 120,
+      ticks: 1,
+    },
+  },
+};
+
 export const skills = [
   heal,
   fireball,
@@ -414,6 +473,8 @@ export const skills = [
   summonImp,
   vanish,
   shadowstep,
+  aegis,
+  lastRites,
 ];
 
 export const fighter: CombatantDef = {
@@ -606,6 +667,28 @@ export const rogue: CombatantDef = {
   preferredRow: 1,
 };
 
+/**
+ * Holy warrior: fights in front with a holy blade and protects allies
+ * before harm lands, with shields (Aegis) and a ward against knockouts
+ * (Last Rites).
+ */
+export const paladin: CombatantDef = {
+  id: "paladin",
+  name: "Paladin",
+  stats: {
+    maxHp: 115,
+    maxMp: 24,
+    attack: 18,
+    magic: 14,
+    defense: 20,
+    spirit: 16,
+    speed: 9,
+  },
+  weapon: blessedBlade,
+  skills: [aegis, lastRites],
+  preferredRow: 0,
+};
+
 export const playerTypes = [
   fighter,
   lancer,
@@ -615,6 +698,7 @@ export const playerTypes = [
   chronomancer,
   warlock,
   rogue,
+  paladin,
 ];
 /** Fast and frail; its bite poisons. Likes soft targets. */
 export const viper: CombatantDef = {

@@ -211,7 +211,10 @@ function UnitCell({
   // Effects over time and timed modifiers (Haste, Slow) as small badges.
   const badges = [
     ...(unit.summonedBy ? [{ name: "Summon", kind: "summon" }] : []),
-    ...unit.statuses.map((st) => ({ name: st.name, kind: st.effect })),
+    ...unit.statuses.map((st) => ({
+      name: st.effect === "shield" ? `${st.name} ${st.amount}` : st.name,
+      kind: st.effect,
+    })),
     ...unit.modifiers
       .filter((mod) => mod.expiresAt !== undefined)
       .map((mod) => ({

@@ -19,6 +19,10 @@ export function describeEvent(
       return event.effect === "heal"
         ? `${name(event.unitId)} regains ${event.amount} HP (${event.name})`
         : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
+    case "shieldBroken":
+      return `${name(event.unitId)}'s ${event.name} breaks`;
+    case "warded":
+      return `${name(event.unitId)} is held by ${event.name}!`;
     case "ambush":
       return `${name(event.unitId)} strikes from the shadows!`;
     case "teleported":
@@ -91,7 +95,11 @@ export function describeEvent(
             : event.multiplier < 1
               ? " (resisted)"
               : "";
-      return `${name(event.unitId)} takes ${event.amount} ${event.damageType} damage${note}`;
+      if (event.amount === 0 && event.absorbed) {
+        return `${name(event.unitId)}'s shield absorbs ${event.absorbed} ${event.damageType} damage`;
+      }
+      const shield = event.absorbed ? `, ${event.absorbed} absorbed` : "";
+      return `${name(event.unitId)} takes ${event.amount} ${event.damageType} damage${note}${shield}`;
     }
     case "knockedOut":
       return `${name(event.unitId)} is knocked out`;

@@ -119,17 +119,79 @@ export function applyDamage(
   target: Unit,
   hit: Hit,
   events: BattleEvent[],
-): void {
-  target.hp = Math.max(0, target.hp - hit.amount);
+): Suffered {
+  const suffered = sufferDamage(target, hit.amount);
   events.push({
     type: "damage",
     unitId: target.id,
-    amount: hit.amount,
+    amount: suffered.lost,
     hp: target.hp,
     damageType: hit.damageType,
     multiplier: hit.multiplier,
+    ...(suffered.absorbed ? { absorbed: suffered.absorbed } : {}),
   });
+  reportDefenses(target, suffered, events);
   knockOutIfDown(state, target, events);
+  return suffered;
+}
+
+/** What happened to a unit's damage: HP lost, shield used, ward saved it. */
+export interface Suffered {
+  lost: number;
+  absorbed: number;
+  shieldName?: string;
+  shieldBroken: boolean;
+  wardName?: string;
+}
+
+/**
+ * The one place damage meets a unit: a shield absorbs first, the rest
+ * comes off HP, and a ward keeps a lethal blow at 1 HP. Every source
+ * (weapons, spells, collisions, poison) goes through here.
+ */
+export function sufferDamage(target: Unit, amount: number): Suffered {
+  let rest = amount;
+  let absorbed = 0;
+  let shieldBroken = false;
+  const shield = target.statuses.find((s) => s.effect === "shield");
+  if (shield && rest > 0) {
+    absorbed = Math.min(shield.amount, rest);
+    shield.amount -= absorbed;
+    rest -= absorbed;
+    if (shield.amount <= 0) {
+      target.statuses = target.statuses.filter((s) => s !== shield);
+      shieldBroken = true;
+    }
+  }
+  const ward = target.statuses.find((s) => s.effect === "ward");
+  const saved = ward !== undefined && rest >= target.hp && target.hp > 0;
+  const lost = saved ? target.hp - 1 : Math.min(target.hp, rest);
+  target.hp -= lost;
+  return {
+    lost,
+    absorbed,
+    shieldBroken,
+    ...(shield ? { shieldName: shield.name } : {}),
+    ...(saved && ward ? { wardName: ward.name } : {}),
+  };
+}
+
+/** Log events for a shield breaking or a ward holding. */
+export function reportDefenses(
+  target: Unit,
+  suffered: Suffered,
+  events: BattleEvent[],
+): void {
+  if (suffered.shieldBroken && suffered.shieldName) {
+    events.push({
+      type: "shieldBroken",
+      unitId: target.id,
+      name: suffered.shieldName,
+    });
+  }
+  if (suffered.wardName) {
+    events.push({ type: "warded", unitId: target.id, name: suffered.wardName });
+  }
 }
 
 /** At 0 HP: clear the unit's turn, statuses and cast, and report it. */

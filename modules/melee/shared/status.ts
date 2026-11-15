@@ -1,4 +1,9 @@
-import { knockOutIfDown, resistance } from "./damage";
+import {
+  knockOutIfDown,
+  reportDefenses,
+  resistance,
+  sufferDamage,
+} from "./damage";
 import { effectiveStat, isAlive } from "./stats";
 import type {
   BattleEvent,
@@ -101,25 +106,31 @@ function tick(
 ): void {
   switch (status.effect) {
     case "stealth":
-      // Nothing happens on its single tick: it just ends.
+    case "shield":
+    case "ward":
+      // Nothing happens on their single tick: they just end.
       break;
     case "damage": {
       const multiplier = status.damageType
         ? resistance(unit, status.damageType)
         : 1;
-      const amount = Math.min(unit.hp, Math.round(status.amount * multiplier));
-      unit.hp -= amount;
+      const suffered = sufferDamage(
+        unit,
+        Math.round(status.amount * multiplier),
+      );
       events.push({
         type: "statusTick",
         unitId: unit.id,
         statusId: status.id,
         name: status.name,
         effect: status.effect,
-        amount,
+        amount: suffered.lost,
         hp: unit.hp,
         ...(status.damageType ? { damageType: status.damageType } : {}),
         multiplier,
+        ...(suffered.absorbed ? { absorbed: suffered.absorbed } : {}),
       });
+      reportDefenses(unit, suffered, events);
       knockOutIfDown(state, unit, events);
       break;
     }
