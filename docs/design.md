@@ -62,7 +62,14 @@ side (knocked-out units still block their cell). It costs half a turn: the
 gauge drops to half instead of empty. Reach, cover and area spill follow
 the new position at once. Monsters don't move yet.
 
-Planned: the attacker's own row matters; some skills push or pull. Area effects are **targeting shapes**:
+**Rows matter for melee** (done). Every weapon is melee or ranged; spells
+count as ranged. Melee damage dealt is x1 / x0.75 / x0.5 from the front /
+middle / back row, and melee damage taken is x1 / x0.75 / x0.5 in those
+rows; they stack (back row hitting back row: x0.25). Ranged weapons and
+spells ignore rows. Reach is unchanged. The AI's expected damage includes
+it.
+
+Planned: some skills push or pull. Area effects are **targeting shapes**:
 single, row, column, line, cross, 3x3 blast, whole side, N random.
 
 ### Time
@@ -203,9 +210,9 @@ for venom, magic for Regen).
 Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
-until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 11,
-Normal 12, Hard 13) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 93% / 76% / 48%
+until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 13,
+Normal 15, Hard 16) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 92% / 66% / 47%
 party wins;
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
@@ -221,7 +228,6 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **A new class** with its own skills; **a new skill for an existing
   class**.
 - **Casting monsters**: monsters that use skills, not just weapons.
-- The attacker's own row matters for melee.
 
 ## char (phase 4)
 

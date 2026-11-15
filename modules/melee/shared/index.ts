@@ -22,6 +22,9 @@ export {
   magicalHit,
   physicalHit,
   resistance,
+  rowFactor,
+  ROW_DEALT,
+  ROW_TAKEN,
   type Hit,
 } from "./damage";
 export {

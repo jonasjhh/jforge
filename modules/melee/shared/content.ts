@@ -11,6 +11,7 @@ export const sword: Weapon = {
   columns: 1,
   depth: 1,
   damageType: "slash",
+  kind: "melee",
 };
 /** Longer melee: like a sword, but also reaches the unit behind. */
 export const spear: Weapon = {
@@ -19,6 +20,7 @@ export const spear: Weapon = {
   columns: 1,
   depth: 2,
   damageType: "pierce",
+  kind: "melee",
 };
 /** Any column, but cannot shoot past the front-most unit. */
 export const bow: Weapon = {
@@ -27,6 +29,7 @@ export const bow: Weapon = {
   columns: "any",
   depth: 1,
   damageType: "pierce",
+  kind: "ranged",
 };
 /** Magic ignores cover: any enemy. */
 export const staff: Weapon = {
@@ -35,6 +38,7 @@ export const staff: Weapon = {
   columns: "any",
   depth: "any",
   damageType: "blunt",
+  kind: "ranged",
 };
 /** Natural melee weapons of monsters. */
 export const slam: Weapon = {
@@ -43,6 +47,7 @@ export const slam: Weapon = {
   columns: 1,
   depth: 1,
   damageType: "blunt",
+  kind: "melee",
 };
 export const fangs: Weapon = {
   id: "fangs",
@@ -50,6 +55,7 @@ export const fangs: Weapon = {
   columns: 1,
   depth: 1,
   damageType: "pierce",
+  kind: "melee",
 };
 
 /** A bite that leaves venom: poisons whoever it wounds. */
@@ -59,6 +65,7 @@ export const venomFangs: Weapon = {
   columns: 1,
   depth: 1,
   damageType: "pierce",
+  kind: "melee",
   onHit: {
     id: "poison",
     name: "Poison",

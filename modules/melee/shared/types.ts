@@ -68,6 +68,11 @@ export interface Weapon {
    */
   depth: number | "any";
   damageType: DamageType;
+  /**
+   * Melee hits depend on rows (weaker from and into the back); ranged
+   * weapons ignore rows.
+   */
+  kind: "melee" | "ranged";
   /** A status every damaging hit puts on the target, e.g. venom. */
   onHit?: StatusDef;
 }

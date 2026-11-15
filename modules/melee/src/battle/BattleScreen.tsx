@@ -3,6 +3,7 @@ import {
   areaCells,
   getUnit,
   isAlive,
+  ROW_DEALT,
   sameCell,
   skillVictims,
   unitAt,
@@ -32,6 +33,17 @@ type Menu =
   | { kind: "skill"; skill: Skill; aim: Cell | null };
 
 const ATTACK: Menu = { kind: "attack" };
+
+const ROW_LABELS = ["front", "middle", "back"];
+
+/** ", front row: full damage" for melee; ranged weapons ignore rows. */
+function rowHint(unit: Unit): string {
+  if (unit.weapon.kind !== "melee") return "";
+  const row = unit.position.row;
+  const dealt = ROW_DEALT[row] ?? 1;
+  const effect = dealt === 1 ? "full damage" : `×${dealt} damage`;
+  return `, ${ROW_LABELS[row]} row: ${effect}`;
+}
 
 export function BattleScreen({
   setup,
@@ -146,8 +158,8 @@ export function BattleScreen({
         {active && menu.kind === "attack" && (
           <>
             <p>
-              <strong>{active.name}</strong>'s turn ({active.weapon.name}) — tap
-              a highlighted enemy.
+              <strong>{active.name}</strong>'s turn ({active.weapon.name}
+              {rowHint(active)}) — tap a highlighted enemy.
             </p>
             <div className="command-list">
               <button

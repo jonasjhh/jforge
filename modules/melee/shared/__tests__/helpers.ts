@@ -7,6 +7,7 @@ export const anywhere: Weapon = {
   columns: "any",
   depth: "any",
   damageType: "slash",
+  kind: "ranged",
 };
 
 export function def(

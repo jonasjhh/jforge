@@ -46,18 +46,40 @@ function mitigate(
   return { amount, damageType, multiplier };
 }
 
+/** Melee damage dealt from each row (front, middle, back). */
+export const ROW_DEALT = [1, 0.75, 0.5];
+/** Melee damage taken in each row (front, middle, back). */
+export const ROW_TAKEN = [1, 0.75, 0.5];
+
+/**
+ * How rows scale a weapon hit: for melee, the attacker's row times the
+ * target's row (a back-row swordsman hitting the back row deals x0.25).
+ * Ranged weapons ignore rows.
+ */
+export function rowFactor(attacker: Unit, target: Unit): number {
+  if (attacker.weapon.kind !== "melee") return 1;
+  return (
+    (ROW_DEALT[attacker.position.row] ?? 1) *
+    (ROW_TAKEN[target.position.row] ?? 1)
+  );
+}
+
 /** A weapon hit without the random spread, for the AI to plan with. */
 export function expectedPhysicalDamage(attacker: Unit, target: Unit): number {
   const multiplier = resistance(target, attacker.weapon.damageType);
   if (multiplier === 0) return 0;
   const raw =
     effectiveStat(attacker, "attack") *
+    rowFactor(attacker, target) *
     defenseFactor(effectiveStat(target, "defense")) *
     multiplier;
   return Math.max(1, Math.round(raw));
 }
 
-/** Basic weapon attack: attack against defense, typed by the weapon. */
+/**
+ * Basic weapon attack: attack (scaled by rows for melee) against defense,
+ * typed by the weapon.
+ */
 export function physicalHit(
   state: BattleState,
   attacker: Unit,
@@ -65,7 +87,7 @@ export function physicalHit(
 ): Hit {
   return mitigate(
     state,
-    effectiveStat(attacker, "attack"),
+    effectiveStat(attacker, "attack") * rowFactor(attacker, target),
     effectiveStat(target, "defense"),
     target,
     attacker.weapon.damageType,
