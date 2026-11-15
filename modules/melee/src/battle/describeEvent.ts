@@ -30,8 +30,17 @@ export function describeEvent(
     }
     case "heal":
       return `${name(event.unitId)} recovers ${event.amount} HP`;
-    case "damage":
-      return `${name(event.unitId)} takes ${event.amount} damage`;
+    case "damage": {
+      const note =
+        event.multiplier === 0
+          ? " (immune)"
+          : event.multiplier > 1
+            ? " (weak)"
+            : event.multiplier < 1
+              ? " (resisted)"
+              : "";
+      return `${name(event.unitId)} takes ${event.amount} ${event.damageType} damage${note}`;
+    }
     case "knockedOut":
       return `${name(event.unitId)} is knocked out`;
     case "modifierExpired":

@@ -10,6 +10,7 @@ export const sword: Weapon = {
   name: "Sword",
   columns: 1,
   depth: 1,
+  damageType: "slash",
 };
 /** Longer melee: like a sword, but also reaches the unit behind. */
 export const spear: Weapon = {
@@ -17,23 +18,38 @@ export const spear: Weapon = {
   name: "Spear",
   columns: 1,
   depth: 2,
+  damageType: "pierce",
 };
 /** Any column, but cannot shoot past the front-most unit. */
-export const bow: Weapon = { id: "bow", name: "Bow", columns: "any", depth: 1 };
+export const bow: Weapon = {
+  id: "bow",
+  name: "Bow",
+  columns: "any",
+  depth: 1,
+  damageType: "pierce",
+};
 /** Magic ignores cover: any enemy. */
 export const staff: Weapon = {
   id: "staff",
   name: "Staff",
   columns: "any",
   depth: "any",
+  damageType: "blunt",
 };
 /** Natural melee weapons of monsters. */
-export const slam: Weapon = { id: "slam", name: "Slam", columns: 1, depth: 1 };
+export const slam: Weapon = {
+  id: "slam",
+  name: "Slam",
+  columns: 1,
+  depth: 1,
+  damageType: "blunt",
+};
 export const fangs: Weapon = {
   id: "fangs",
   name: "Fangs",
   columns: 1,
   depth: 1,
+  damageType: "pierce",
 };
 
 export const weapons = [sword, spear, bow, staff, slam, fangs];
@@ -59,7 +75,7 @@ export const fireball: Skill = {
   mpCost: 12,
   target: "any",
   area: "plus",
-  effect: { type: "damage", kind: "magical", power: 1.2 },
+  effect: { type: "damage", kind: "magical", element: "fire", power: 1.2 },
 };
 
 export const skills = [heal, fireball];
@@ -146,6 +162,8 @@ export const slime: CombatantDef = {
   // Clumsy: mostly flails at whatever is in reach.
   targeting: { finish: 1, wounded: 0.5, soft: 0.5, noise: 2 },
   threat: 2,
+  // Melts in fire; blunt blows just squish it.
+  resistances: { fire: 2, blunt: 0.5 },
 };
 
 export const wolf: CombatantDef = {
@@ -164,6 +182,8 @@ export const wolf: CombatantDef = {
   // A finisher: goes for the wounded and the kill.
   targeting: { finish: 5, wounded: 3, soft: 1, noise: 0.3 },
   threat: 3,
+  // Arrows and spears find its flanks.
+  resistances: { pierce: 1.5 },
 };
 
 export const playerTypes = [fighter, archer, mage, healer];

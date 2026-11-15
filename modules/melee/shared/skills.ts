@@ -1,4 +1,4 @@
-import { applyDamage, magicalDamage } from "./damage";
+import { applyDamage, magicalHit } from "./damage";
 import {
   GRID_COLUMNS,
   GRID_ROWS,
@@ -101,7 +101,7 @@ export function resolveSkill(
         applyDamage(
           state,
           target,
-          magicalDamage(state, unit, target, effect.power),
+          magicalHit(state, unit, target, effect.power, effect.element),
           events,
         );
         break;

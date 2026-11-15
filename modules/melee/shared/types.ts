@@ -33,6 +33,16 @@ export interface Modifier {
   expiresAt?: number;
 }
 
+/** What kind of damage a weapon or spell deals; resistances key on this. */
+export const DAMAGE_TYPES = ["slash", "pierce", "blunt", "fire"] as const;
+export type DamageType = (typeof DAMAGE_TYPES)[number];
+
+/**
+ * Damage multipliers per type: 2 weak, 1 normal (the default for any type
+ * not listed), 0.5 resistant, 0 immune.
+ */
+export type Resistances = Partial<Record<DamageType, number>>;
+
 /**
  * What a combatant attacks with; decides which enemies it can reach.
  * Columns line up across the two grids: column 2 faces enemy column 2.
@@ -51,6 +61,7 @@ export interface Weapon {
    * one behind it, or "any" to ignore cover.
    */
   depth: number | "any";
+  damageType: DamageType;
 }
 
 /** One cell of the battlefield, on either side. */
@@ -70,6 +81,7 @@ export type SkillEffect =
   | {
       type: "damage";
       kind: "magical";
+      element: DamageType;
       /** Damage = power x magic x K / (K + target's spirit), +-10%. */
       power: number;
     };
@@ -120,6 +132,7 @@ export interface CombatantDef {
   skills?: Skill[];
   /** How it picks targets when AI-controlled; a sensible default if absent. */
   targeting?: TargetingProfile;
+  resistances?: Resistances;
   /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
   preferredRow?: number;
   /** How dangerous a monster is, for building encounters to a budget. */
@@ -158,6 +171,7 @@ export interface Unit {
   weapon: Weapon;
   skills: Skill[];
   targeting: TargetingProfile;
+  resistances: Resistances;
   hp: number;
   mp: number;
   /** 0..GAUGE_FULL; the unit acts when it is full. */
@@ -191,7 +205,15 @@ export type BattleEvent =
   | { type: "timeAdvanced"; time: number }
   | { type: "turnReady"; unitId: string }
   | { type: "attack"; unitId: string; targetId: string }
-  | { type: "damage"; unitId: string; amount: number; hp: number }
+  | {
+      type: "damage";
+      unitId: string;
+      amount: number;
+      hp: number;
+      damageType: DamageType;
+      /** The target's resistance multiplier: above 1 weak, below 1 resisted. */
+      multiplier: number;
+    }
   | {
       type: "skill";
       unitId: string;

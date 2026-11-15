@@ -24,6 +24,8 @@ export interface Hit {
   unitId: string;
   amount: number;
   kind: "damage" | "heal";
+  /** How the target's resistance changed a damage hit. */
+  tag?: "weak" | "resist" | "immune";
 }
 
 export interface BattleView {
@@ -83,18 +85,28 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
       );
       frozenUntil.current = performance.now() + ACTION_MS;
       setHits(
-        step.events.flatMap((e) =>
-          e.type === "damage" || e.type === "heal"
-            ? [
-                {
-                  key: ++hitKey.current,
-                  unitId: e.unitId,
-                  amount: e.amount,
-                  kind: e.type,
-                },
-              ]
-            : [],
-        ),
+        step.events.flatMap((e): Hit[] => {
+          if (e.type === "heal") {
+            return [
+              {
+                key: ++hitKey.current,
+                unitId: e.unitId,
+                amount: e.amount,
+                kind: "heal",
+              },
+            ];
+          }
+          if (e.type !== "damage") return [];
+          return [
+            {
+              key: ++hitKey.current,
+              unitId: e.unitId,
+              amount: e.amount,
+              kind: "damage",
+              tag: resistanceTag(e.multiplier),
+            },
+          ];
+        }),
       );
     }
   }, []);
@@ -136,4 +148,11 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
   );
 
   return { state, log, hits, actorId, actionText, actionArea, command };
+}
+
+function resistanceTag(multiplier: number): Hit["tag"] {
+  if (multiplier === 0) return "immune";
+  if (multiplier > 1) return "weak";
+  if (multiplier < 1) return "resist";
+  return undefined;
 }

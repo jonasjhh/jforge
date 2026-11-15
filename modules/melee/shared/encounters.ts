@@ -8,7 +8,7 @@ export const DIFFICULTIES: Difficulty[] = ["easy", "normal", "hard"];
 
 /**
  * Total monster threat per difficulty (Slime 2, Wolf 3). Tuned with
- * auto-played battles where both sides only attack: about 92% / 75% / 45%
+ * auto-played battles where both sides only attack: about 89% / 76% / 55%
  * party wins. Using skills and movement well should do better. The
  * encounter tests check each difficulty stays in its band.
  */

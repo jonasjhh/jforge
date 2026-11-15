@@ -98,9 +98,14 @@ Dividing by defense means damage never hits zero and scales smoothly with
 player-designed skills. Physical uses attack vs defense, magical uses magic
 vs spirit.
 
-Elements (phase 2): none, fire, ice, lightning, water, earth, wind, holy,
-dark, poison. Resistances are multipliers per element: 2 weak, 1 normal,
-0.5 resist, 0 immune, -1 absorb.
+**Damage types** (done): every weapon and damaging spell has one: slash
+(sword), pierce (bow, spear, fangs), blunt (staff, slam), fire
+(Fireball). Each combatant has **resistances**: a multiplier per type, 2
+weak, 1 normal (the default), 0.5 resistant, 0 immune. Slimes are weak to
+fire and resist blunt; Wolves are weak to pierce. The multiplier applies
+after defense, the AI's expected damage includes it, and hits show a WEAK
+or RESIST tag. More elements (ice, lightning, holy, ...) and absorb (-1)
+can be added the same way.
 
 ### Skills, as data
 
@@ -172,7 +177,7 @@ types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3; Easy 12, Normal 13,
 Hard 14) and lean toward the front. Budgets are tuned with auto-played
-battles where both sides only attack, to about 92% / 75% / 45% party wins;
+battles where both sides only attack, to about 89% / 76% / 55% party wins;
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
@@ -180,8 +185,6 @@ automatically once they have a `threat`.
 
 Ideas to build in small steps, roughly in this order when they fit:
 
-- **Damage types on weapons and spells** (slash, pierce, blunt, fire, ...)
-  with resistances and weaknesses per combatant.
 - **Drain spells** that heal the caster by part of the damage dealt.
 - **Damage and healing over time** (poison, burn, regen).
 - **Delayed spells**: a cast time before they fire, in exchange for more

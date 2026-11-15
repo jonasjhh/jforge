@@ -1,5 +1,5 @@
 import { DEFAULT_TARGETING, chooseCommand } from "./ai";
-import { applyDamage, physicalDamage } from "./damage";
+import { applyDamage, physicalHit } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
 import { resolveMove, validateMove } from "./move";
@@ -36,6 +36,7 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
       weapon: { ...p.def.weapon },
       skills: (p.def.skills ?? []).map((s) => structuredClone(s)),
       targeting: { ...(p.def.targeting ?? DEFAULT_TARGETING) },
+      resistances: { ...p.def.resistances },
       hp: p.def.stats.maxHp,
       mp: p.def.stats.maxMp,
       gauge: 0,
@@ -203,7 +204,7 @@ function resolve(
   }
   const target = getUnit(state, command.targetId);
   events.push({ type: "attack", unitId: unit.id, targetId: target.id });
-  applyDamage(state, target, physicalDamage(state, unit, target), events);
+  applyDamage(state, target, physicalHit(state, unit, target), events);
   finishTurn(state, unit);
 }
 
