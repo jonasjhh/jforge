@@ -65,6 +65,12 @@ export function Grid({
                 active={unit.id === activeId}
                 acting={unit.id === actorId}
                 targetable={canTarget(unit)}
+                unreachable={
+                  activeId !== null &&
+                  side === "enemy" &&
+                  isAlive(unit) &&
+                  !canTarget(unit)
+                }
                 onTarget={() => onTarget(unit)}
               />
             );
@@ -81,6 +87,8 @@ interface UnitCellProps {
   active: boolean;
   acting: boolean;
   targetable: boolean;
+  /** An enemy the active party member's weapon cannot reach. */
+  unreachable: boolean;
   onTarget: () => void;
 }
 
@@ -90,6 +98,7 @@ function UnitCell({
   active,
   acting,
   targetable,
+  unreachable,
   onTarget,
 }: UnitCellProps) {
   const alive = isAlive(unit);
@@ -101,6 +110,7 @@ function UnitCell({
     active ? "active" : "",
     acting ? "acting" : "",
     targetable ? "targetable" : "",
+    unreachable ? "unreachable" : "",
     hits.length ? "hit" : "",
   ]
     .filter(Boolean)

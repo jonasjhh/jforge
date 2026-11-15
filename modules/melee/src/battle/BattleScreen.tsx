@@ -67,7 +67,8 @@ export function BattleScreen({
         {active && (
           <>
             <p>
-              <strong>{active.name}</strong>'s turn — tap an enemy to attack.
+              <strong>{active.name}</strong>'s turn ({active.weapon.name}) — tap
+              a highlighted enemy.
             </p>
             <div className="command-list">
               <button

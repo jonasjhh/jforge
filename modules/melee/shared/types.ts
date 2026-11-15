@@ -33,11 +33,32 @@ export interface Modifier {
   expiresAt?: number;
 }
 
+/**
+ * What a combatant attacks with; decides which enemies it can reach.
+ * Columns line up across the two grids: column 2 faces enemy column 2.
+ */
+export interface Weapon {
+  id: string;
+  name: string;
+  /**
+   * Enemy columns it reaches: this many on each side of the attacker's own
+   * column (1 = its own column and both neighbours), or "any".
+   */
+  columns: number | "any";
+  /**
+   * How deep into a column it reaches, counting living units from the
+   * front: 1 = only the front-most (cover blocks the rest), 2 = also the
+   * one behind it, or "any" to ignore cover.
+   */
+  depth: number | "any";
+}
+
 /** What a combatant is, independent of any battle. */
 export interface CombatantDef {
   id: string;
   name: string;
   stats: Stats;
+  weapon: Weapon;
 }
 
 /** Puts a combatant on the grid for one battle. */
@@ -66,6 +87,7 @@ export interface Unit {
   control: Control;
   position: Position;
   base: Stats;
+  weapon: Weapon;
   hp: number;
   mp: number;
   /** 0..GAUGE_FULL; the unit acts when it is full. */

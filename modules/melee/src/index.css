@@ -231,6 +231,11 @@ button:disabled {
   border-color: #ff6b5a;
 }
 
+.unit.unreachable {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
 .unit.targetable {
   border-color: #ff6b5a;
   animation: target-pulse 1s ease-in-out infinite;

@@ -1,6 +1,7 @@
 import { chooseCommand } from "./ai";
 import { physicalDamage } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
+import { canReach } from "./reach";
 import { isAlive } from "./stats";
 import { advanceTime, timeToNextEvent } from "./timeline";
 import type {
@@ -30,6 +31,7 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
       control: p.control ?? (p.side === "player" ? "player" : "ai"),
       position: { ...p.position },
       base: { ...p.def.stats },
+      weapon: { ...p.def.weapon },
       hp: p.def.stats.maxHp,
       mp: p.def.stats.maxMp,
       gauge: 0,
@@ -148,6 +150,7 @@ export function validateCommand(
   if (!target) return "Unknown target";
   if (target.side === unit.side) return "Cannot attack an ally";
   if (!isAlive(target)) return "Target is already knocked out";
+  if (!canReach(state, unit, target)) return "Target is out of reach";
   return null;
 }
 

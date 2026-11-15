@@ -41,11 +41,25 @@ Each side has **5 columns x 3 rows** (row 0 front, 1 middle, 2 back). One
 unit per cell (multi-cell bosses later). **Up to 5 player characters**;
 enemies may fill more cells.
 
-Planned (phase 2): melee attacks from or into the back row deal half
-damage; melee skills reach only the front-most occupied enemy row unless
-they have reach; ranged and magic ignore rows; moving uses a turn; some
-skills push or pull. Area effects are **targeting shapes**: single, row,
-column, line, cross, 3x3 blast, whole side, N random.
+**Reach comes from the weapon** (done). Columns line up across the two
+grids: column 2 faces enemy column 2. Within a column, living units are
+counted from the front; a unit is covered by the units in front of it, and
+an empty front cell leaves the unit behind it exposed.
+
+| Weapon       | Columns                        | Depth                         |
+| ------------ | ------------------------------ | ----------------------------- |
+| Sword, claws | Own column and both neighbours | Front-most unit only          |
+| Spear        | Own column and both neighbours | Front-most and the one behind |
+| Bow          | Any                            | Front-most unit only          |
+| Staff/magic  | Any                            | Any unit, ignores cover       |
+
+A weapon is data (`columns`, `depth`), so equipment can swap it and char
+can design new ones. Until units can move, a melee unit with no enemy in
+range attacks the nearest occupied column instead.
+
+Planned: the attacker's own row matters (with movement); moving uses a
+turn; some skills push or pull. Area effects are **targeting shapes**:
+single, row, column, line, cross, 3x3 blast, whole side, N random.
 
 ### Time
 

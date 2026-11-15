@@ -1,9 +1,22 @@
-import type { CombatantDef, Placement, Side, Stats } from "../types";
+import type { CombatantDef, Placement, Side, Stats, Weapon } from "../types";
 
-export function def(id: string, stats: Partial<Stats> = {}): CombatantDef {
+/** Reaches every enemy, so tests about other rules ignore reach. */
+export const anywhere: Weapon = {
+  id: "anywhere",
+  name: "Anywhere",
+  columns: "any",
+  depth: "any",
+};
+
+export function def(
+  id: string,
+  stats: Partial<Stats> = {},
+  weapon: Weapon = anywhere,
+): CombatantDef {
   return {
     id,
     name: id,
+    weapon,
     stats: {
       maxHp: 100,
       maxMp: 0,

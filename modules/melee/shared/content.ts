@@ -1,8 +1,42 @@
-import type { BattleSetup, CombatantDef } from "./types";
+import type { BattleSetup, CombatantDef, Weapon } from "./types";
 
 // Starter content so melee can set up a fight on its own. The four player
-// types become class templates in char later. All attack with a basic
-// physical attack until skills arrive in phase 2.
+// types become class templates in char later. Everyone uses a basic attack
+// until skills arrive; their weapon decides whom they can reach.
+
+/** Normal melee: own column and both neighbours, front-most unit only. */
+export const sword: Weapon = {
+  id: "sword",
+  name: "Sword",
+  columns: 1,
+  depth: 1,
+};
+/** Longer melee: like a sword, but also reaches the unit behind. */
+export const spear: Weapon = {
+  id: "spear",
+  name: "Spear",
+  columns: 1,
+  depth: 2,
+};
+/** Any column, but cannot shoot past the front-most unit. */
+export const bow: Weapon = { id: "bow", name: "Bow", columns: "any", depth: 1 };
+/** Magic ignores cover: any enemy. */
+export const staff: Weapon = {
+  id: "staff",
+  name: "Staff",
+  columns: "any",
+  depth: "any",
+};
+/** Natural melee weapons of monsters. */
+export const slam: Weapon = { id: "slam", name: "Slam", columns: 1, depth: 1 };
+export const fangs: Weapon = {
+  id: "fangs",
+  name: "Fangs",
+  columns: 1,
+  depth: 1,
+};
+
+export const weapons = [sword, spear, bow, staff, slam, fangs];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -16,6 +50,7 @@ export const fighter: CombatantDef = {
     spirit: 8,
     speed: 10,
   },
+  weapon: sword,
 };
 
 export const archer: CombatantDef = {
@@ -30,6 +65,7 @@ export const archer: CombatantDef = {
     spirit: 10,
     speed: 13,
   },
+  weapon: bow,
 };
 
 export const mage: CombatantDef = {
@@ -44,6 +80,7 @@ export const mage: CombatantDef = {
     spirit: 18,
     speed: 9,
   },
+  weapon: staff,
 };
 
 export const healer: CombatantDef = {
@@ -58,6 +95,7 @@ export const healer: CombatantDef = {
     spirit: 20,
     speed: 11,
   },
+  weapon: staff,
 };
 
 export const slime: CombatantDef = {
@@ -72,6 +110,7 @@ export const slime: CombatantDef = {
     spirit: 4,
     speed: 7,
   },
+  weapon: slam,
 };
 
 export const wolf: CombatantDef = {
@@ -86,6 +125,7 @@ export const wolf: CombatantDef = {
     spirit: 4,
     speed: 15,
   },
+  weapon: fangs,
 };
 
 export const playerTypes = [fighter, archer, mage, healer];
