@@ -18,6 +18,11 @@ import {
   type Skill,
   type Unit,
 } from "../../shared";
+import {
+  loadBattleSpeed,
+  saveBattleSpeed,
+  type BattleSpeed,
+} from "./battleSpeed";
 import { Grid } from "./Grid";
 import { TurnOrder } from "./TurnOrder";
 import { UnitDetails } from "./UnitDetails";
@@ -77,8 +82,14 @@ export function BattleScreen({
   const [inspected, setInspected] = useState<string | null>(null);
   // Paused by the player, or because they left the app.
   const [paused, setPaused] = useState(false);
+  const [speed, setSpeed] = useState<BattleSpeed>(loadBattleSpeed);
+  const toggleSpeed = () => {
+    const next: BattleSpeed = speed === 1 ? 2 : 1;
+    setSpeed(next);
+    saveBattleSpeed(next);
+  };
   const { state, log, hits, actorId, lastAction, actionArea, command } =
-    useBattle(setup, seed, paused || inspected !== null);
+    useBattle(setup, seed, paused || inspected !== null, speed);
   const over = state.phase.kind === "over";
   const showPaused = paused && !over;
   usePauseControls(setPaused, over);
@@ -195,11 +206,21 @@ export function BattleScreen({
           {!over && (
             <button
               type="button"
+              className="speed-button"
+              aria-label={`Battle speed ${speed}×, tap for ${speed === 1 ? 2 : 1}×`}
+              onClick={toggleSpeed}
+            >
+              {speed}×
+            </button>
+          )}
+          {!over && (
+            <button
+              type="button"
               className="pause-button"
               aria-label="Pause"
               onClick={() => setPaused(true)}
             >
-              <span aria-hidden="true">⏸</span>
+              <span className="pause-icon" aria-hidden="true" />
             </button>
           )}
         </span>
@@ -391,6 +412,7 @@ export function BattleScreen({
         <UnitDetails
           unit={inspectedUnit}
           time={state.time}
+          speed={speed}
           onClose={closeDetails}
         />
       )}

@@ -13,9 +13,9 @@ import {
 import { findAction, summarizeAction } from "./actionSummary";
 import { describeEvent } from "./describeEvent";
 
-/** Game time per real second. Speed 10 fills a gauge in about 1.7 s. */
+/** Game time per real second at 1×. Speed 10 fills a gauge in about 1.7 s. */
 export const TIME_SCALE = 60;
-/** How long time stays frozen to show an action. */
+/** How long time stays frozen to show an action, at 1×. */
 export const ACTION_MS = 700;
 /** Longest frame step, so a background tab doesn't jump time ahead. */
 const MAX_FRAME_MS = 100;
@@ -50,12 +50,14 @@ export interface BattleView {
  * Plays a battle in real time: gauges fill frame by frame, AI units act
  * when ready, and time freezes while a player unit waits for a command and
  * while each action is shown. `paused` stops time too (e.g. while the
- * player reads a unit's details).
+ * player reads a unit's details). `speed` multiplies how fast time runs
+ * and shortens the action pauses to match.
  */
 export function useBattle(
   setup: BattleSetup,
   seed: number,
   paused = false,
+  speed = 1,
 ): BattleView {
   const [state, setState] = useState(() => createBattle(setup, seed));
   const [log, setLog] = useState<string[]>([]);
@@ -68,6 +70,8 @@ export function useBattle(
   const hitKey = useRef(0);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
+  const speedRef = useRef(speed);
+  speedRef.current = speed;
 
   const apply = useCallback((step: StepResult) => {
     stateRef.current = step.state;
@@ -90,7 +94,7 @@ export function useBattle(
           ? action.area
           : [],
       );
-      frozenUntil.current = performance.now() + ACTION_MS;
+      frozenUntil.current = performance.now() + ACTION_MS / speedRef.current;
     }
     // Numbers to float up: from the action, or from effects over time,
     // which tick without pausing the battle.
@@ -115,7 +119,7 @@ export function useBattle(
         const current = stateRef.current;
         apply(
           advance(current, {
-            until: current.time + (dt / 1000) * TIME_SCALE,
+            until: current.time + (dt / 1000) * TIME_SCALE * speedRef.current,
             stopAfterAction: true,
           }),
         );

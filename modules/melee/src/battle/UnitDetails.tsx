@@ -14,6 +14,8 @@ interface UnitDetailsProps {
   unit: Unit;
   /** Game time now, for how long effects have left. */
   time: number;
+  /** Battle speed, to give times left in real seconds. */
+  speed: number;
   onClose: () => void;
 }
 
@@ -25,13 +27,13 @@ const STATS: [StatName, string][] = [
   ["speed", "Speed"],
 ];
 
-/** Game time as real seconds at normal pace: "4s". */
-function seconds(gameTime: number): string {
-  return `${Math.max(1, Math.ceil(gameTime / TIME_SCALE))}s`;
+/** Game time as real seconds at the battle's speed: "4s". */
+function seconds(gameTime: number, speed: number): string {
+  return `${Math.max(1, Math.ceil(gameTime / (TIME_SCALE * speed)))}s`;
 }
 
-function statusText(status: Status): string {
-  const every = seconds(status.interval);
+function statusText(status: Status, speed: number): string {
+  const every = seconds(status.interval, speed);
   switch (status.effect) {
     case "heal":
       return `Regains ${status.amount} HP every ${every}.`;
@@ -65,7 +67,7 @@ function resistanceList(unit: Unit, keep: (m: number) => boolean): string {
 }
 
 /** A unit's stats, weapon, resistances and running effects. */
-export function UnitDetails({ unit, time, onClose }: UnitDetailsProps) {
+export function UnitDetails({ unit, time, speed, onClose }: UnitDetailsProps) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -139,14 +141,14 @@ export function UnitDetails({ unit, time, onClose }: UnitDetailsProps) {
             {unit.casting && (
               <li>
                 <strong>Casting {unit.casting.skillName}</strong> — lands in{" "}
-                {seconds(unit.casting.readyAt - time)}.
+                {seconds(unit.casting.readyAt - time, speed)}.
               </li>
             )}
             {unit.statuses.map((s) => (
               <li key={s.id}>
-                <strong>{s.name}</strong> {statusText(s)}{" "}
+                <strong>{s.name}</strong> {statusText(s, speed)}{" "}
                 <span className="muted">
-                  {seconds(statusEnds(s) - time)} left.
+                  {seconds(statusEnds(s) - time, speed)} left.
                 </span>
               </li>
             ))}
@@ -154,7 +156,7 @@ export function UnitDetails({ unit, time, onClose }: UnitDetailsProps) {
               <li key={m.source}>
                 <strong>{m.source}</strong> {modifierText(m)}{" "}
                 <span className="muted">
-                  {seconds((m.expiresAt ?? time) - time)} left.
+                  {seconds((m.expiresAt ?? time) - time, speed)} left.
                 </span>
               </li>
             ))}

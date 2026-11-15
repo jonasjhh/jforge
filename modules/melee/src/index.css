@@ -824,7 +824,15 @@ button:disabled {
   border: none;
   background: none;
   color: #fbeee8;
-  font-size: 1.1rem;
+}
+
+/* Two bars, drawn rather than the ⏸ glyph, which renders tiny on some devices. */
+.pause-icon {
+  width: 4px;
+  height: 14px;
+  border-left: 4px solid currentColor;
+  border-right: 4px solid currentColor;
+  border-radius: 1px;
 }
 
 .pause-overlay {
@@ -854,4 +862,17 @@ button:disabled {
 .pause-hint {
   color: #c9a9a1;
   font-size: 0.9rem;
+}
+
+/* Battle speed: 1× or 2×, a full touch target like pause. */
+.speed-button {
+  min-width: 44px;
+  height: 44px;
+  margin: -6px 0;
+  border: none;
+  background: none;
+  color: #fbeee8;
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }

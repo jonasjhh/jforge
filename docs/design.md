@@ -102,6 +102,9 @@ unit is ready, a modifier expires) instead of ticking frame by frame.
 - The player can **pause** (header button, or P / Space; tap the overlay or
   Escape to resume). Leaving the app pauses too, so the battle doesn't carry
   on the moment they return. Open unit details also hold time.
+- A **battle speed** toggle (1× / 2×, remembered on the device) speeds up
+  gauges and action pauses together. Player turns still wait, so speed
+  never rushes a decision; the engine itself is unaffected.
 
 ### Stats and modifiers
 
