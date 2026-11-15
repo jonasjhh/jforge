@@ -217,6 +217,22 @@ party wins;
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
+## Open questions
+
+**Knocked-out units.** Today a knocked-out unit stays in its cell for the
+rest of the battle. It no longer counts for cover, reach, area effects or
+targeting (the unit behind it is exposed at once), but it still **blocks
+movement** into its cell. Its turn, statuses and any cast are cleared.
+
+To decide before push/pull lands:
+
+- Keep bodies (needed for a later Revive) and let them block movement and
+  pushes (bashing into a body is a collision) but never attacks, reach or
+  areas. **Recommended.**
+- Or remove bodies when a unit falls: simpler, but no Revive.
+- Also open: Revive itself, and whether a row emptied by deaths changes
+  anything beyond cover.
+
 ## Roadmap rules
 
 - **No new skills for existing classes until there are at least 10
