@@ -12,6 +12,7 @@ import {
   type Unit,
 } from "../../shared";
 import type { Hit } from "./useBattle";
+import { useLongPress } from "./useLongPress";
 
 function castProgress(casting: Casting, time: number): number {
   const total = casting.readyAt - casting.startedAt;
@@ -36,6 +37,8 @@ interface GridProps {
   incoming: Cell[];
   /** Units the chosen skill is most useful on, e.g. poisoned allies for Cure. */
   emphasize: (unit: Unit) => boolean;
+  /** Long press (or right-click) on a unit: show its details. */
+  onInspect: (unit: Unit) => void;
 }
 
 // Enemies show their back row at the top; the party shows its front row at
@@ -60,6 +63,7 @@ export function Grid({
   aim,
   incoming,
   emphasize,
+  onInspect,
 }: GridProps) {
   return (
     <div
@@ -122,6 +126,7 @@ export function Grid({
                 emphasized={emphasize(unit)}
                 time={state.time}
                 onClick={onClick}
+                onInspect={() => onInspect(unit)}
                 actionName={actionName}
               />
             );
@@ -188,6 +193,7 @@ interface UnitCellProps {
   /** Game time now, for the cast bar of a casting unit. */
   time: number;
   onClick: () => void;
+  onInspect: () => void;
   actionName: string;
 }
 
@@ -205,8 +211,10 @@ function UnitCell({
   emphasized,
   time,
   onClick,
+  onInspect,
   actionName,
 }: UnitCellProps) {
+  const { consumeClick, ...press } = useLongPress(onInspect);
   const alive = isAlive(unit);
   const hp = unit.hp / unit.base.maxHp;
   // Effects over time and timed modifiers (Haste, Slow) as small badges.
@@ -321,13 +329,17 @@ function UnitCell({
       type="button"
       className={classes}
       role="gridcell"
-      onClick={onClick}
+      onClick={() => {
+        // The click that ends a long press only opened the details.
+        if (!consumeClick()) onClick();
+      }}
       aria-label={`${actionName} ${unit.name}`}
+      {...press}
     >
       {content}
     </button>
   ) : (
-    <div className={classes} role="gridcell">
+    <div className={classes} role="gridcell" {...press}>
       {content}
     </div>
   );

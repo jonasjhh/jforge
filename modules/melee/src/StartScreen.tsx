@@ -108,7 +108,8 @@ export function StartScreen({
 
       <p className="muted small">
         Gauges fill with speed. When one of your units is ready, time stops
-        until you choose its action. The enemies act on their own.
+        until you choose its action. The enemies act on their own. Hold a unit
+        (or right-click it) to see its details.
       </p>
       <p className="muted small">
         API:{" "}

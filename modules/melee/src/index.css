@@ -197,6 +197,9 @@ button:disabled {
 
 .unit {
   container-type: inline-size;
+  /* Holding a unit opens its details, not the browser's callout. */
+  -webkit-touch-callout: none;
+  user-select: none;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -644,4 +647,71 @@ button:disabled {
   .damage {
     animation: none;
   }
+}
+
+/* Unit details: a sheet over the battle while time stands still. */
+.details-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(10, 4, 4, 0.6);
+}
+
+.details {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 1rem 1rem 1.5rem;
+  border-radius: 16px 16px 0 0;
+  border: 1px solid #4d2a27;
+  background: #2a1716;
+  color: #fbeee8;
+}
+
+.details p {
+  margin: 0.5rem 0;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.details-header h2 {
+  margin: 0;
+}
+
+.details-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.25rem;
+  margin: 0.75rem 0;
+  text-align: center;
+}
+
+.details-stats dt {
+  font-size: 0.7rem;
+  color: #c9a9a1;
+}
+
+.details-stats dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.details-list {
+  margin: 0.5rem 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.details-list li + li {
+  margin-top: 0.25rem;
 }

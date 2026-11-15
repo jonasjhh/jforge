@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   getUnit,
   isAlive,
@@ -16,6 +16,7 @@ import {
   type Unit,
 } from "../../shared";
 import { Grid } from "./Grid";
+import { UnitDetails } from "./UnitDetails";
 import { useBattle } from "./useBattle";
 
 interface BattleScreenProps {
@@ -68,8 +69,12 @@ export function BattleScreen({
   onRestart,
   onExit,
 }: BattleScreenProps) {
+  // The unit whose details are open; time stands still meanwhile.
+  const [inspected, setInspected] = useState<string | null>(null);
   const { state, log, hits, actorId, actionText, actionArea, command } =
-    useBattle(setup, seed);
+    useBattle(setup, seed, inspected !== null);
+  const inspectedUnit = inspected ? getUnit(state, inspected) : null;
+  const closeDetails = useCallback(() => setInspected(null), []);
   const { phase } = state;
   const active =
     phase.kind === "awaitingCommand" ? getUnit(state, phase.unitId) : null;
@@ -150,6 +155,7 @@ export function BattleScreen({
       isAlive(unit) &&
       unit.side === active?.side &&
       unit.statuses.some((s) => s.harmful),
+    onInspect: (unit: Unit) => setInspected(unit.id),
   };
 
   return (
@@ -330,6 +336,13 @@ export function BattleScreen({
           <li key={log.length - i}>{line}</li>
         ))}
       </ol>
+      {inspectedUnit && (
+        <UnitDetails
+          unit={inspectedUnit}
+          time={state.time}
+          onClose={closeDetails}
+        />
+      )}
     </main>
   );
 }

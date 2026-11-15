@@ -13,7 +13,7 @@ import {
 import { describeEvent } from "./describeEvent";
 
 /** Game time per real second. Speed 10 fills a gauge in about 1.7 s. */
-const TIME_SCALE = 60;
+export const TIME_SCALE = 60;
 /** How long time stays frozen to show an action. */
 export const ACTION_MS = 700;
 /** Longest frame step, so a background tab doesn't jump time ahead. */
@@ -48,9 +48,14 @@ export interface BattleView {
 /**
  * Plays a battle in real time: gauges fill frame by frame, AI units act
  * when ready, and time freezes while a player unit waits for a command and
- * while each action is shown.
+ * while each action is shown. `paused` stops time too (e.g. while the
+ * player reads a unit's details).
  */
-export function useBattle(setup: BattleSetup, seed: number): BattleView {
+export function useBattle(
+  setup: BattleSetup,
+  seed: number,
+  paused = false,
+): BattleView {
   const [state, setState] = useState(() => createBattle(setup, seed));
   const [log, setLog] = useState<string[]>([]);
   const [hits, setHits] = useState<Hit[]>([]);
@@ -60,6 +65,8 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
   const stateRef = useRef(state);
   const frozenUntil = useRef(0);
   const hitKey = useRef(0);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   const apply = useCallback((step: StepResult) => {
     stateRef.current = step.state;
@@ -110,7 +117,10 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
     const tick = (now: number) => {
       const dt = Math.min(now - last, MAX_FRAME_MS);
       last = now;
-      if (now >= frozenUntil.current) {
+      if (pausedRef.current) {
+        // Hold any action being shown until time runs again.
+        frozenUntil.current = Math.max(frozenUntil.current, now);
+      } else if (now >= frozenUntil.current) {
         setActorId(null);
         setActionText(null);
         setActionArea([]);
