@@ -128,11 +128,12 @@ melee's format to a storage key melee defines, then opens `/melee/`.
 
 ## Phases
 
-1. **Engine core**: types, seeded RNG, stats and modifiers, time and
+1. **Engine core** (done): types, seeded RNG, stats and modifiers, time and
    gauges, basic attack, KO, victory, defeat, draw. Tests, no new screens.
 2. **Grid and skills**: rows and reach, targeting shapes, elements and
    resistances, statuses, skills as data, the 4 types' skills, monsters.
-3. **melee screens**: battle screen, sandbox, auto-battle, simulation.
+3. **melee screens**: battle screen (playable: you control the party, AI
+   the enemies), sandbox, auto-battle, simulation.
 4. **char**: character builder, storage, export/import, Test in melee.
 5. **Skill designer**: form editor, validation, power budget.
 6. **jrpg**: wired to char's roster and melee battles.

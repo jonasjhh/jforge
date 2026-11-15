@@ -142,3 +142,50 @@ describe("simulate", () => {
     expect(summary.winner).toBeNull();
   });
 });
+
+describe("advance options", () => {
+  const setup: BattleSetup = {
+    placements: [
+      place(def("hero", { speed: 10 }), "player", 0),
+      place(def("wolf", { speed: 20, attack: 1 }), "enemy", 0),
+    ],
+  };
+
+  it("stops at the requested game time with gauges partly filled", () => {
+    const { state, events } = advance(createBattle(setup, 1), { until: 25 });
+    expect(state.time).toBe(25);
+    expect(state.phase.kind).toBe("running");
+    expect(state.units.map((u) => u.gauge)).toEqual([250, 500]);
+    expect(events).toEqual([{ type: "timeAdvanced", time: 25 }]);
+  });
+
+  it("stops right after an AI unit acts", () => {
+    const { state, events } = advance(createBattle(setup, 1), {
+      stopAfterAction: true,
+    });
+    expect(state.time).toBe(50);
+    expect(events.filter((e) => e.type === "attack")).toHaveLength(1);
+    expect(state.phase.kind).toBe("running");
+  });
+});
+
+describe("unit names", () => {
+  it("adds letters to duplicate names on the same side", () => {
+    const slime = def("Slime");
+    const state = createBattle(
+      {
+        placements: [
+          place(def("Slime"), "player", 0),
+          place(slime, "enemy", 0),
+          place(slime, "enemy", 1),
+        ],
+      },
+      1,
+    );
+    expect(state.units.map((u) => u.name)).toEqual([
+      "Slime",
+      "Slime A",
+      "Slime B",
+    ]);
+  });
+});

@@ -37,6 +37,8 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
     };
   });
 
+  nameDuplicates(units);
+
   const ids = new Set<string>();
   for (const unit of units) {
     if (ids.has(unit.id)) throw new Error(`Two units share cell ${unit.id}`);
@@ -60,11 +62,22 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
   };
 }
 
+export interface AdvanceOptions {
+  /** Stop when game time reaches this, so a UI can show gauges filling. */
+  until?: number;
+  /** Stop right after an AI unit acts, so a UI can show the action. */
+  stopAfterAction?: boolean;
+}
+
 /**
  * Runs the battle until a player-controlled unit needs a command or the
- * battle ends. AI units act on their own along the way.
+ * battle ends (or earlier, see `options`). AI units act on their own along
+ * the way.
  */
-export function advance(state: BattleState): StepResult {
+export function advance(
+  state: BattleState,
+  options: AdvanceOptions = {},
+): StepResult {
   if (state.phase.kind !== "running") return { state, events: [] };
   const next = structuredClone(state);
   const events: BattleEvent[] = [];
@@ -83,6 +96,10 @@ export function advance(state: BattleState): StepResult {
       const command = chooseCommand(next, unit);
       if (command) resolve(next, unit, command, events);
       else finishTurn(next, unit);
+      if (options.stopAfterAction) {
+        endIfDecided(next, events);
+        break;
+      }
       continue;
     }
 
@@ -91,6 +108,14 @@ export function advance(state: BattleState): StepResult {
       next.phase = { kind: "over", winner: null };
       events.push({ type: "battleOver", winner: null });
       break;
+    }
+    if (options.until !== undefined) {
+      const remaining = options.until - next.time;
+      if (remaining <= 0) break;
+      if (dt > remaining) {
+        advanceTime(next, remaining, events);
+        break;
+      }
     }
     advanceTime(next, dt, events);
   }
@@ -124,6 +149,21 @@ export function validateCommand(
   if (target.side === unit.side) return "Cannot attack an ally";
   if (!isAlive(target)) return "Target is already knocked out";
   return null;
+}
+
+/** "Slime", "Slime" on one side become "Slime A", "Slime B". */
+function nameDuplicates(units: Unit[]): void {
+  const groups = new Map<string, Unit[]>();
+  for (const unit of units) {
+    const key = `${unit.side}:${unit.name}`;
+    groups.set(key, [...(groups.get(key) ?? []), unit]);
+  }
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    group.forEach((unit, i) => {
+      unit.name = `${unit.name} ${String.fromCharCode(65 + i)}`;
+    });
+  }
 }
 
 export function getUnit(state: BattleState, id: string): Unit {

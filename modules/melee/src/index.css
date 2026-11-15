@@ -54,3 +54,301 @@ h2 {
 .bad {
   color: #ff8a7a;
 }
+
+.small {
+  font-size: 0.85rem;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.primary {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  background: #ff6b5a;
+  color: #1c0f0f;
+}
+
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #ff6b5a;
+  font-size: 1rem;
+}
+
+/* Battle */
+
+.battle {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0.75rem 0.5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.battle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.25rem;
+  font-size: 0.85rem;
+}
+
+.side-label {
+  margin: 0.5rem 0.25rem 0.3rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c9a9a1;
+}
+
+.grid {
+  display: grid;
+  gap: 4px;
+}
+
+.grid-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.frontline {
+  height: 2px;
+  margin: 8px 0;
+  background: linear-gradient(90deg, transparent, #ff6b5a, transparent);
+  opacity: 0.6;
+}
+
+.cell {
+  position: relative;
+  min-height: 50px;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.cell.empty {
+  border: 1px dashed #3a2220;
+}
+
+.unit {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 5px 6px;
+  border: 1px solid #4d2a27;
+  background: #2a1716;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  transition:
+    transform 120ms ease,
+    opacity 300ms ease;
+}
+
+.grid-enemy .unit {
+  background: #33201a;
+  border-color: #5c3a2a;
+}
+
+.unit-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.unit-name {
+  min-width: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unit-hp {
+  font-size: 0.65rem;
+  color: #c9a9a1;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  display: block;
+  height: 5px;
+  border-radius: 3px;
+  background: #140909;
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.bar.hp > span {
+  background: #5fd38d;
+  transition: width 300ms ease;
+}
+
+.bar.hp > span.low {
+  background: #ff8a7a;
+}
+
+.bar.gauge > span {
+  background: #8fb6ff;
+}
+
+.bar.gauge > span.full {
+  background: #ffd166;
+}
+
+.unit.down {
+  opacity: 0.35;
+}
+
+.unit.active {
+  border-color: #ffd166;
+  box-shadow: 0 0 0 2px #ffd166;
+}
+
+.unit.acting {
+  transform: scale(1.08);
+  border-color: #ff6b5a;
+}
+
+.unit.targetable {
+  border-color: #ff6b5a;
+  animation: target-pulse 1s ease-in-out infinite;
+}
+
+.unit.hit {
+  animation: shake 300ms ease;
+}
+
+.damage {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #fff3e8;
+  text-shadow:
+    0 0 4px #ff3d3d,
+    0 1px 0 #000;
+  pointer-events: none;
+  animation: damage-float 700ms ease-out forwards;
+}
+
+@keyframes damage-float {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -26px);
+    opacity: 0;
+  }
+}
+
+@keyframes shake {
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes target-pulse {
+  50% {
+    box-shadow: 0 0 0 3px rgba(255, 107, 90, 0.45);
+  }
+}
+
+.commands {
+  margin-top: 0.9rem;
+  min-height: 84px;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: #2a1716;
+  border: 1px solid #4d2a27;
+}
+
+.commands p {
+  margin: 0 0 0.6rem;
+}
+
+.command-list {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.command {
+  flex: 1;
+  padding: 0.65rem;
+  border-radius: 999px;
+  border: 1px solid #4d2a27;
+  background: transparent;
+  color: #fbeee8;
+  font-size: 1rem;
+}
+
+.command.selected {
+  background: #ff6b5a;
+  border-color: #ff6b5a;
+  color: #1c0f0f;
+  font-weight: 700;
+}
+
+.result {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.result-player {
+  color: #ffd166;
+}
+
+.result-enemy {
+  color: #ff8a7a;
+}
+
+.log {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0 0.25rem;
+  font-size: 0.8rem;
+  color: #c9a9a1;
+  line-height: 1.5;
+}
+
+.log li:first-child {
+  color: #fbeee8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unit,
+  .bar.hp > span {
+    transition: none;
+  }
+  .unit.targetable,
+  .unit.hit,
+  .damage {
+    animation: none;
+  }
+}
