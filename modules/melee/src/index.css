@@ -177,11 +177,48 @@ button:disabled {
   gap: 4px;
 }
 
+/* The battlefield: a sunken stone board, enemy half warmer than the
+   party's, split by a glowing front line. Cells are floor tiles. */
+.board {
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid #2e1b19;
+  background:
+    radial-gradient(
+      120% 60% at 50% 50%,
+      rgba(255, 107, 90, 0.07),
+      transparent 70%
+    ),
+    linear-gradient(180deg, #1d1110, #160d0c);
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.grid-enemy {
+  --tile-top: #2b1a17;
+  --tile-bottom: #221412;
+}
+
+.grid-player {
+  --tile-top: #241b1b;
+  --tile-bottom: #1c1415;
+}
+
 .frontline {
+  position: relative;
   height: 2px;
-  margin: 8px 0;
-  background: linear-gradient(90deg, transparent, #ff6b5a, transparent);
-  opacity: 0.6;
+  margin: 9px 4px;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 107, 90, 0.9) 30%,
+    #ffb199 50%,
+    rgba(255, 107, 90, 0.9) 70%,
+    transparent
+  );
+  box-shadow: 0 0 10px 1px rgba(255, 107, 90, 0.45);
 }
 
 .cell {
@@ -191,8 +228,12 @@ button:disabled {
   box-sizing: border-box;
 }
 
+/* A floor tile: lit from above, with a darker lip at the bottom. */
 .cell.empty {
-  border: 1px dashed #3a2220;
+  background: linear-gradient(180deg, var(--tile-top), var(--tile-bottom));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.35);
 }
 
 .unit {
@@ -205,17 +246,23 @@ button:disabled {
   gap: 3px;
   padding: 5px 5px 6px;
   border: 1px solid #4d2a27;
-  background: #2a1716;
+  background: linear-gradient(180deg, #34201e, #271615);
   color: inherit;
   font: inherit;
   text-align: left;
+  /* A piece standing on the board: a highlight on top, a shadow beneath.
+     Highlight states set --ring instead of replacing the shadow. */
+  --lift:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 2px 0 rgba(0, 0, 0, 0.45),
+    0 5px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--ring, 0 0 #0000), var(--lift);
   transition:
     transform 120ms ease,
     opacity 300ms ease;
 }
 
 .grid-enemy .unit {
-  background: #33201a;
+  background: linear-gradient(180deg, #3d2620, #2e1b17);
   border-color: #5c3a2a;
 }
 
@@ -299,7 +346,7 @@ button:disabled {
 
 .unit.active {
   border-color: #ffd166;
-  box-shadow: 0 0 0 2px #ffd166;
+  --ring: 0 0 0 2px #ffd166;
 }
 
 .unit.acting {
@@ -308,8 +355,13 @@ button:disabled {
 }
 
 .cell.empty.targetable {
-  border: 1px dashed #ff6b5a;
-  background: rgba(255, 107, 90, 0.14);
+  border: none;
+  background:
+    linear-gradient(rgba(255, 107, 90, 0.12), rgba(255, 107, 90, 0.12)),
+    linear-gradient(180deg, var(--tile-top), var(--tile-bottom));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 107, 90, 0.5),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.35);
   padding: 0;
 }
 
@@ -326,7 +378,7 @@ button:disabled {
 
 .unit.danger {
   border-color: #ff3d3d;
-  box-shadow: 0 0 0 2px #ff3d3d;
+  --ring: 0 0 0 2px #ff3d3d;
   background: rgba(255, 61, 61, 0.22);
 }
 
@@ -437,7 +489,7 @@ button:disabled {
 
 .unit.emphasized {
   border-color: #b98cff;
-  box-shadow: 0 0 0 3px #b98cff;
+  --ring: 0 0 0 3px #b98cff;
   animation: none;
 }
 
@@ -531,7 +583,9 @@ button:disabled {
 
 @keyframes target-pulse {
   50% {
-    box-shadow: 0 0 0 3px rgba(255, 107, 90, 0.45);
+    box-shadow:
+      0 0 0 3px rgba(255, 107, 90, 0.45),
+      var(--lift);
   }
 }
 

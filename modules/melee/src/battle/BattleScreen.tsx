@@ -228,9 +228,11 @@ export function BattleScreen({
 
       <TurnOrder state={state} />
       <p className="side-label">Enemies</p>
-      <Grid side="enemy" {...gridProps} />
-      <div className="frontline" aria-hidden="true" />
-      <Grid side="player" {...gridProps} />
+      <div className="board">
+        <Grid side="enemy" {...gridProps} />
+        <div className="frontline" aria-hidden="true" />
+        <Grid side="player" {...gridProps} />
+      </div>
       <p className="side-label">Party</p>
 
       <section className="commands">
