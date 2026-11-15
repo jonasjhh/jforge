@@ -69,7 +69,13 @@ rows; they stack (back row hitting back row: x0.25). Ranged weapons and
 spells ignore rows. Reach is unchanged. The AI's expected damage includes
 it.
 
-Planned: some skills push or pull. Area effects are **targeting shapes**:
+**Push and pull** (done, Lancer's Hook): a `strike` skill effect is a
+weapon attack (reach, rows, damage type) at a power, with an optional
+`push` (negative pulls). If the destination is off the grid or occupied
+(knocked-out units count), the target doesn't move and takes a collision
+instead: x1.5 damage, reported before the blow.
+
+Area effects are **targeting shapes**:
 single, row, column, line, cross, 3x3 blast, whole side, N random.
 
 ### Time
@@ -210,10 +216,10 @@ for venom, magic for Regen).
 Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
-until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 13,
-Normal 15, Hard 16) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 92% / 66% / 47%
-party wins;
+until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 17,
+Normal 19, Hard 21) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 94% / 70% / 35%
+party wins (Hard lower on purpose: real play uses skills);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
@@ -241,19 +247,19 @@ To decide before push/pull lands:
 
 ### Class roster plan (10 archetypes)
 
-Existing: **Fighter** (melee, front), **Archer** (ranged), **Mage** (area
-magic), **Healer** (support).
+Existing (5): **Fighter** (melee, front), **Archer** (ranged), **Mage**
+(area magic), **Healer** (support), **Lancer** (spear: reaches behind the
+front unit; Skewer hits a line of two, Hook pulls an enemy forward).
 
 Planned, in rough order (names and kits are proposals):
 
-| Class        | Role                                      | Signature mechanics         |
-| ------------ | ----------------------------------------- | --------------------------- |
-| Lancer       | Spear user: reaches behind the front unit | Line strike, pull           |
-| Guardian     | Tank: protects allies                     | Taunt, cover an ally        |
-| Rogue        | Fast skirmisher                           | Bleed/poison, repositioning |
-| Warlock      | Dark caster                               | Drain (heals the caster)    |
-| Chronomancer | Time control                              | Haste, slow, stop           |
-| Bard         | Support through buffs                     | Party-wide buffs over time  |
+| Class        | Role                  | Signature mechanics         |
+| ------------ | --------------------- | --------------------------- |
+| Guardian     | Tank: protects allies | Taunt, cover an ally        |
+| Rogue        | Fast skirmisher       | Bleed/poison, repositioning |
+| Warlock      | Dark caster           | Drain (heals the caster)    |
+| Chronomancer | Time control          | Haste, slow, stop           |
+| Bard         | Support through buffs | Party-wide buffs over time  |
 
 With more than five classes, random encounters will pick a party of up to
 five from the roster instead of using every class.
@@ -265,7 +271,8 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **Drain spells** that heal the caster by part of the damage dealt, for a
   future dark-caster class (not the Mage).
 - **Burn** (fire damage over time), e.g. on Fireball.
-- **Push and pull**: movement as a skill effect, also as part of spells.
+- **Push on spells**: reuse the strike push on a spell (e.g. a blast that
+  knocks enemies back).
 - **Casting monsters**: monsters that use skills, not just weapons.
 
 ## char (phase 4)
