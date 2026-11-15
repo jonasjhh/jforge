@@ -139,6 +139,8 @@ export const slime: CombatantDef = {
     speed: 7,
   },
   weapon: slam,
+  // Clumsy: mostly flails at whatever is in reach.
+  targeting: { finish: 1, wounded: 0.5, soft: 0.5, noise: 2 },
 };
 
 export const wolf: CombatantDef = {
@@ -154,6 +156,8 @@ export const wolf: CombatantDef = {
     speed: 15,
   },
   weapon: fangs,
+  // A finisher: goes for the wounded and the kill.
+  targeting: { finish: 5, wounded: 3, soft: 1, noise: 0.3 },
 };
 
 export const playerTypes = [fighter, archer, mage, healer];

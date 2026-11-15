@@ -147,8 +147,41 @@ Generic types, kept as presets in melee so it can set up fights on its own
 | Mage    | Magic damage, area attacks |
 | Healer  | Healing and support        |
 
-Monsters use the same combatant definition plus AI (weighted rules, later
-editable as data).
+Monsters use the same combatant definition plus AI.
+
+### Enemy AI
+
+AI units attack the reachable enemy with the highest **target score**
+(done). Each factor is weighted by the unit's `targeting` profile (data, so
+char can edit it later):
+
+- **finish**: the expected hit (the damage formula without the random
+  spread) would knock the target out;
+- **wounded**: how much HP the target has lost;
+- **soft**: how little the target's defense blocks;
+- **noise**: seeded randomness, so enemies aren't fully predictable but
+  battles still replay exactly.
+
+The Wolf is a finisher; the Slime is clumsy. Monsters don't use skills or
+move yet.
+
+## Backlog
+
+Ideas to build in small steps, roughly in this order when they fit:
+
+- **Random encounters**: set up battles from the classes and monsters that
+  exist (the sample battle is currently won 100% of the time).
+- **Damage types on weapons and spells** (slash, pierce, blunt, fire, ...)
+  with resistances and weaknesses per combatant.
+- **Drain spells** that heal the caster by part of the damage dealt.
+- **Damage and healing over time** (poison, burn, regen).
+- **Delayed spells**: a cast time before they fire, in exchange for more
+  power; interrupted if the caster is knocked out.
+- **Push and pull**: movement as a skill effect, also as part of spells.
+- **A new class** with its own skills; **a new skill for an existing
+  class**.
+- **A new monster**, and **skills for monsters** (casting enemies).
+- The attacker's own row matters for melee.
 
 ## char (phase 4)
 

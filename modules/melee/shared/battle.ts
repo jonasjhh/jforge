@@ -1,4 +1,4 @@
-import { chooseCommand } from "./ai";
+import { DEFAULT_TARGETING, chooseCommand } from "./ai";
 import { applyDamage, physicalDamage } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
@@ -35,6 +35,7 @@ export function createBattle(setup: BattleSetup, seed: number): BattleState {
       base: { ...p.def.stats },
       weapon: { ...p.def.weapon },
       skills: (p.def.skills ?? []).map((s) => structuredClone(s)),
+      targeting: { ...(p.def.targeting ?? DEFAULT_TARGETING) },
       hp: p.def.stats.maxHp,
       mp: p.def.stats.maxMp,
       gauge: 0,

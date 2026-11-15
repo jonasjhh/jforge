@@ -6,11 +6,23 @@ import type { BattleEvent, BattleState, Unit } from "./types";
 export const DEFENSE_K = 50;
 const VARIANCE = 0.1;
 
+/** Share of raw damage that gets through `defense`: K / (K + defense). */
+export function defenseFactor(defense: number): number {
+  return DEFENSE_K / (DEFENSE_K + defense);
+}
+
 /** raw x K / (K + defense) x random(0.9..1.1), at least 1. */
 function mitigate(state: BattleState, raw: number, defense: number): number {
   const variance = 1 - VARIANCE + nextRandom(state) * VARIANCE * 2;
-  const amount = raw * (DEFENSE_K / (DEFENSE_K + defense)) * variance;
-  return Math.max(1, Math.round(amount));
+  return Math.max(1, Math.round(raw * defenseFactor(defense) * variance));
+}
+
+/** A weapon hit without the random spread, for the AI to plan with. */
+export function expectedPhysicalDamage(attacker: Unit, target: Unit): number {
+  const raw =
+    effectiveStat(attacker, "attack") *
+    defenseFactor(effectiveStat(target, "defense"));
+  return Math.max(1, Math.round(raw));
 }
 
 /** Basic weapon attack: attack against defense. */

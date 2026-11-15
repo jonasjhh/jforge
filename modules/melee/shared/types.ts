@@ -96,6 +96,21 @@ export interface Skill {
   effect: SkillEffect;
 }
 
+/**
+ * How an AI-controlled unit weighs the targets it can reach. Each factor
+ * scores 0..1 and is multiplied by its weight; the highest total wins.
+ */
+export interface TargetingProfile {
+  /** Bonus when the expected hit would knock the target out. */
+  finish: number;
+  /** Bonus scaled by how much HP the target has lost. */
+  wounded: number;
+  /** Bonus scaled by how little the target's defense blocks. */
+  soft: number;
+  /** Random spread (seeded), so the AI is not fully predictable. */
+  noise: number;
+}
+
 /** What a combatant is, independent of any battle. */
 export interface CombatantDef {
   id: string;
@@ -103,6 +118,8 @@ export interface CombatantDef {
   stats: Stats;
   weapon: Weapon;
   skills?: Skill[];
+  /** How it picks targets when AI-controlled; a sensible default if absent. */
+  targeting?: TargetingProfile;
 }
 
 /** Puts a combatant on the grid for one battle. */
@@ -136,6 +153,7 @@ export interface Unit {
   base: Stats;
   weapon: Weapon;
   skills: Skill[];
+  targeting: TargetingProfile;
   hp: number;
   mp: number;
   /** 0..GAUGE_FULL; the unit acts when it is full. */

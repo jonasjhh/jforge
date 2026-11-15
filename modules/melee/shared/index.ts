@@ -26,4 +26,5 @@ export {
   type AdvanceOptions,
 } from "./battle";
 export { simulate, type BattleSummary } from "./simulate";
+export { DEFAULT_TARGETING, targetScore } from "./ai";
 export * as content from "./content";
