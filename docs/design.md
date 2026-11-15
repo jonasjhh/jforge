@@ -57,8 +57,12 @@ A weapon is data (`columns`, `depth`), so equipment can swap it and char
 can design new ones. Until units can move, a melee unit with no enemy in
 range attacks the nearest occupied column instead.
 
-Planned: the attacker's own row matters (with movement); moving uses a
-turn; some skills push or pull. Area effects are **targeting shapes**:
+**Moving** (done): a unit may step to an adjacent empty cell on its own
+side (knocked-out units still block their cell). It costs half a turn: the
+gauge drops to half instead of empty. Reach, cover and area spill follow
+the new position at once. Monsters don't move yet.
+
+Planned: the attacker's own row matters; some skills push or pull. Area effects are **targeting shapes**:
 single, row, column, line, cross, 3x3 blast, whole side, N random.
 
 ### Time

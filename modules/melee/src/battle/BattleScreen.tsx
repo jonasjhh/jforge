@@ -24,6 +24,7 @@ interface BattleScreenProps {
 /** What the active party member is choosing. */
 type Menu =
   | { kind: "attack" }
+  | { kind: "move" }
   | { kind: "skills" }
   /** `aim` is the previewed cell of an area skill, before it is cast. */
   | { kind: "skill"; skill: Skill; aim: Cell | null };
@@ -59,6 +60,9 @@ export function BattleScreen({
     }
     if (menu.kind === "skill") {
       return { type: "skill", skillId: menu.skill.id, cell };
+    }
+    if (menu.kind === "move" && active && cell.side === active.side) {
+      return { type: "move", to: { col: cell.col, row: cell.row } };
     }
     return null;
   };
@@ -98,7 +102,9 @@ export function BattleScreen({
         ? menu.skill.area === "single"
           ? menu.skill.name
           : `Aim ${menu.skill.name} at`
-        : "Attack",
+        : menu.kind === "move"
+          ? "Move to"
+          : "Attack",
     area,
     aim,
   };
@@ -146,6 +152,31 @@ export function BattleScreen({
                 onClick={() => choose({ kind: "skills" })}
               >
                 Skill
+              </button>
+              <button
+                type="button"
+                className="command"
+                onClick={() => choose({ kind: "move" })}
+              >
+                Move
+              </button>
+            </div>
+          </>
+        )}
+
+        {active && menu.kind === "move" && (
+          <>
+            <p>
+              <strong>{active.name}</strong> — tap a highlighted cell to step
+              there. <span className="muted">Moving costs half a turn.</span>
+            </p>
+            <div className="command-list">
+              <button
+                type="button"
+                className="command"
+                onClick={() => choose(ATTACK)}
+              >
+                Back
               </button>
             </div>
           </>

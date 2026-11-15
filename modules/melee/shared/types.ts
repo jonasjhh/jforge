@@ -123,7 +123,10 @@ export interface BattleSetup {
 
 /** A combatant during a battle. */
 export interface Unit {
-  /** Unique within the battle: "<side>-<col>-<row>". */
+  /**
+   * Unique within the battle: "<side>-<col>-<row>" of its starting cell.
+   * It does not change when the unit moves; use `position` for where it is.
+   */
   id: string;
   defId: string;
   name: string;
@@ -158,7 +161,9 @@ export interface BattleState {
 
 export type Command =
   | { type: "attack"; targetId: string }
-  | { type: "skill"; skillId: string; cell: Cell };
+  | { type: "skill"; skillId: string; cell: Cell }
+  /** Step to an adjacent empty cell on the unit's own side. */
+  | { type: "move"; to: Position };
 
 export type BattleEvent =
   | { type: "timeAdvanced"; time: number }
@@ -178,6 +183,7 @@ export type BattleEvent =
       mp: number;
     }
   | { type: "heal"; unitId: string; amount: number; hp: number }
+  | { type: "moved"; unitId: string; from: Position; to: Position }
   | { type: "knockedOut"; unitId: string }
   | { type: "modifierExpired"; unitId: string; source: string }
   | { type: "battleOver"; winner: Side | null };

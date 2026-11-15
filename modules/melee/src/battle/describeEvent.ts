@@ -17,6 +17,17 @@ export function describeEvent(
         ? `${caster} at ${aimed.name}`
         : `${caster} on ${aimed.name}`;
     }
+    case "moved": {
+      const direction =
+        event.to.row < event.from.row
+          ? "forward"
+          : event.to.row > event.from.row
+            ? "back"
+            : event.to.col < event.from.col
+              ? "left"
+              : "right";
+      return `${name(event.unitId)} steps ${direction}`;
+    }
     case "heal":
       return `${name(event.unitId)} recovers ${event.amount} HP`;
     case "damage":

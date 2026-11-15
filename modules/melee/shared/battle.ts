@@ -2,6 +2,7 @@ import { chooseCommand } from "./ai";
 import { applyDamage, physicalDamage } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
+import { resolveMove, validateMove } from "./move";
 import { resolveSkill, validateSkill } from "./skills";
 import { isAlive } from "./stats";
 import { advanceTime, timeToNextEvent } from "./timeline";
@@ -148,6 +149,7 @@ export function validateCommand(
   unit: Unit,
   command: Command,
 ): string | null {
+  if (command.type === "move") return validateMove(state, unit, command.to);
   if (command.type === "skill") {
     const skill = unit.skills.find((s) => s.id === command.skillId);
     return validateSkill(state, unit, skill, command.cell);
@@ -187,6 +189,10 @@ function resolve(
   command: Command,
   events: BattleEvent[],
 ): void {
+  if (command.type === "move") {
+    resolveMove(state, unit, command.to, events);
+    return;
+  }
   if (command.type === "skill") {
     const skill = unit.skills.find((s) => s.id === command.skillId);
     if (!skill) throw new Error(`Unknown skill ${command.skillId}`);

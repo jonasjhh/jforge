@@ -68,9 +68,14 @@ export function useBattle(setup: BattleSetup, seed: number): BattleView {
       setLog((old) => [...lines.reverse(), ...old].slice(0, LOG_LINES));
 
     const action = step.events.find(
-      (e) => e.type === "attack" || e.type === "skill",
+      (e) => e.type === "attack" || e.type === "skill" || e.type === "moved",
     );
-    if (action && (action.type === "attack" || action.type === "skill")) {
+    if (
+      action &&
+      (action.type === "attack" ||
+        action.type === "skill" ||
+        action.type === "moved")
+    ) {
       setActorId(action.unitId);
       setActionText(describeEvent(step.state, action));
       setActionArea(
