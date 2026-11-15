@@ -1,5 +1,5 @@
 import { monsters, playerTypes } from "./content";
-import { GRID_COLUMNS, GRID_ROWS } from "./grid";
+import { GRID_COLUMNS, GRID_ROWS, MAX_PARTY_SIZE } from "./grid";
 import { createRandom } from "./rng";
 import type { BattleSetup, CombatantDef, Placement, Side } from "./types";
 
@@ -8,15 +8,14 @@ export const DIFFICULTIES: Difficulty[] = ["easy", "normal", "hard"];
 
 /**
  * Total monster threat per difficulty (Slime 2, Wolf 3, Viper 2). Tuned
- * with auto-played battles where both sides only attack: about 94% / 70% /
- * 35% party wins. Hard is set below the 45% target on purpose: skills and
- * movement, which auto-play doesn't use, help a real player. The
- * encounter tests check each difficulty stays in its band.
+ * with auto-played battles where both sides only attack: about 91% / 72% /
+ * 41% party wins. Skills and movement, which auto-play doesn't use, help a
+ * real player. The encounter tests check each difficulty stays in its band.
  */
 export const THREAT_BUDGET: Record<Difficulty, number> = {
-  easy: 17,
-  normal: 19,
-  hard: 21,
+  easy: 16,
+  normal: 18,
+  hard: 20,
 };
 
 /** Monsters lean toward the front: weights for rows 0, 1, 2. */
@@ -54,7 +53,14 @@ export function randomEncounter(
     placements.push({ def, side, position: { col, row } });
   };
 
-  for (const def of pools.party) {
+  // With more classes than party slots, a seeded pick (kept in roster order).
+  let party = pools.party;
+  while (party.length > MAX_PARTY_SIZE) {
+    const drop = Math.floor(random() * party.length);
+    party = party.filter((_, i) => i !== drop);
+  }
+
+  for (const def of party) {
     // The preferred row, or the nearest row with room.
     const preferred = def.preferredRow ?? 0;
     const rows = [0, 1, 2].sort(

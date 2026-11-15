@@ -208,6 +208,16 @@ function UnitCell({
 }: UnitCellProps) {
   const alive = isAlive(unit);
   const hp = unit.hp / unit.base.maxHp;
+  // Effects over time and timed modifiers (Haste, Slow) as small badges.
+  const badges = [
+    ...unit.statuses.map((st) => ({ name: st.name, kind: st.effect })),
+    ...unit.modifiers
+      .filter((mod) => mod.expiresAt !== undefined)
+      .map((mod) => ({
+        name: mod.source,
+        kind: mod.harmful ? "debuff" : "buff",
+      })),
+  ];
   const classes = [
     "cell",
     "unit",
@@ -233,15 +243,15 @@ function UnitCell({
         <span className="unit-name">{unit.name}</span>
         <span className="unit-hp">{alive ? unit.hp : "KO"}</span>
       </span>
-      {unit.statuses.length > 0 && (
+      {badges.length > 0 && (
         <span className="statuses">
-          {unit.statuses.map((s) => (
+          {badges.map((b) => (
             <span
-              key={s.id}
-              className={`status status-${s.effect}`}
-              title={s.name}
+              key={b.name}
+              className={`status status-${b.kind}`}
+              title={b.name}
             >
-              {s.name}
+              {b.name}
             </span>
           ))}
         </span>

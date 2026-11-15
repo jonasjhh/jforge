@@ -1,6 +1,12 @@
 import { knockOutIfDown, resistance } from "./damage";
 import { effectiveStat, isAlive } from "./stats";
-import type { BattleEvent, BattleState, StatusDef, Unit } from "./types";
+import type {
+  BattleEvent,
+  BattleState,
+  SkillEffect,
+  StatusDef,
+  Unit,
+} from "./types";
 
 // Float tolerance for "a tick is due".
 const EPSILON = 1e-9;
@@ -131,7 +137,10 @@ function tick(
   }
 }
 
-/** Removes every harmful status from `target`, reporting each one. */
+/**
+ * Removes every harmful status (Poison) and harmful timed modifier (Slow)
+ * from `target`, reporting each one.
+ */
 export function cleanse(target: Unit, events: BattleEvent[]): void {
   for (const status of target.statuses.filter((s) => s.harmful)) {
     events.push({
@@ -142,4 +151,40 @@ export function cleanse(target: Unit, events: BattleEvent[]): void {
     });
   }
   target.statuses = target.statuses.filter((s) => !s.harmful);
+  for (const modifier of target.modifiers.filter((m) => m.harmful)) {
+    events.push({
+      type: "statusRemoved",
+      unitId: target.id,
+      statusId: modifier.source,
+      name: modifier.source,
+    });
+  }
+  target.modifiers = target.modifiers.filter((m) => !m.harmful);
+}
+
+/**
+ * Puts a timed modifier on `target`. Reapplying the same one (same name)
+ * refreshes its duration instead of stacking.
+ */
+export function applyModifier(
+  state: BattleState,
+  target: Unit,
+  def: Extract<SkillEffect, { type: "modify" }>["modifier"],
+  events: BattleEvent[],
+): void {
+  target.modifiers = target.modifiers.filter((m) => m.source !== def.name);
+  target.modifiers.push({
+    stat: def.stat,
+    op: def.op,
+    value: def.value,
+    source: def.name,
+    expiresAt: state.time + def.duration,
+    harmful: def.harmful,
+  });
+  events.push({
+    type: "modifierApplied",
+    unitId: target.id,
+    source: def.name,
+    harmful: def.harmful,
+  });
 }

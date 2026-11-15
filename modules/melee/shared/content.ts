@@ -79,7 +79,26 @@ export const venomFangs: Weapon = {
   },
 };
 
-export const weapons = [sword, spear, bow, staff, slam, fangs, venomFangs];
+/** A weak ranged poke: any column, front-most unit only. */
+export const hourglass: Weapon = {
+  id: "hourglass",
+  name: "Hourglass",
+  columns: "any",
+  depth: 1,
+  damageType: "blunt",
+  kind: "ranged",
+};
+
+export const weapons = [
+  sword,
+  spear,
+  bow,
+  staff,
+  slam,
+  fangs,
+  venomFangs,
+  hourglass,
+];
 
 export const heal: Skill = {
   id: "heal",
@@ -180,7 +199,72 @@ export const hook: Skill = {
   effect: { type: "strike", power: 0.6, push: -1 },
 };
 
-export const skills = [heal, fireball, meteor, regen, cure, skewer, hook];
+/** Chronomancer: an ally's gauge fills 50% faster for a while. */
+export const haste: Skill = {
+  id: "haste",
+  name: "Haste",
+  description: "One ally acts more often for a while (speed x1.5).",
+  mpCost: 8,
+  target: "ally",
+  area: "single",
+  effect: {
+    type: "modify",
+    modifier: {
+      name: "Haste",
+      stat: "speed",
+      op: "mul",
+      value: 1.5,
+      duration: 150,
+      harmful: false,
+    },
+  },
+};
+
+/** Chronomancer: an enemy's gauge fills at half speed for a while. */
+export const slow: Skill = {
+  id: "slow",
+  name: "Slow",
+  description: "One enemy acts less often for a while (speed x0.5).",
+  mpCost: 8,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "modify",
+    modifier: {
+      name: "Slow",
+      stat: "speed",
+      op: "mul",
+      value: 0.5,
+      duration: 150,
+      harmful: true,
+    },
+  },
+};
+
+/** Chronomancer: fills another ally's gauge, so it acts right away. */
+export const quicken: Skill = {
+  id: "quicken",
+  name: "Quicken",
+  description: "Another ally acts right away.",
+  mpCost: 12,
+  target: "ally",
+  area: "single",
+  notSelf: true,
+  effect: { type: "gauge", to: 1 },
+};
+
+export const skills = [
+  heal,
+  fireball,
+  meteor,
+  regen,
+  cure,
+  skewer,
+  hook,
+  haste,
+  slow,
+  quicken,
+];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -309,7 +393,35 @@ export const lancer: CombatantDef = {
   preferredRow: 0,
 };
 
-export const playerTypes = [fighter, lancer, archer, mage, healer];
+/**
+ * Controls time instead of dealing damage: speeds allies up, slows enemies
+ * down, and can give an ally its turn right now.
+ */
+export const chronomancer: CombatantDef = {
+  id: "chronomancer",
+  name: "Chronomancer",
+  stats: {
+    maxHp: 75,
+    maxMp: 50,
+    attack: 8,
+    magic: 18,
+    defense: 8,
+    spirit: 18,
+    speed: 12,
+  },
+  weapon: hourglass,
+  skills: [haste, slow, quicken],
+  preferredRow: 2,
+};
+
+export const playerTypes = [
+  fighter,
+  lancer,
+  archer,
+  mage,
+  healer,
+  chronomancer,
+];
 /** Fast and frail; its bite poisons. Likes soft targets. */
 export const viper: CombatantDef = {
   id: "viper",

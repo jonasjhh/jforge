@@ -46,14 +46,25 @@ describe("randomEncounter", () => {
     }
   });
 
-  it("puts the whole party in its preferred rows", () => {
+  it("picks a party of up to five from the roster, in preferred rows", () => {
+    const parties = new Set<string>();
     for (let seed = 0; seed < 50; seed++) {
       const party = randomEncounter(seed, "normal").placements.filter(
         (p) => p.side === "player",
       );
-      expect(party.map((p) => p.def.id)).toEqual(playerTypes.map((t) => t.id));
+      const ids = party.map((p) => p.def.id);
+      expect(ids).toHaveLength(Math.min(5, playerTypes.length));
+      expect(new Set(ids).size).toBe(ids.length);
+      // Kept in roster order.
+      const order = playerTypes.map((t) => t.id);
+      expect(
+        [...ids].sort((a, b) => order.indexOf(a) - order.indexOf(b)),
+      ).toEqual(ids);
       for (const p of party) expect(p.position.row).toBe(p.def.preferredRow);
+      parties.add(ids.join(","));
     }
+    // Different seeds give different line-ups.
+    expect(parties.size).toBeGreaterThan(1);
   });
 
   it("can use a custom monster pool", () => {

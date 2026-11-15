@@ -8,7 +8,8 @@ import {
   isCellOnGrid,
   unitAt,
 } from "./grid";
-import { applyStatus, cleanse } from "./status";
+import { applyModifier, applyStatus, cleanse } from "./status";
+import { GAUGE_FULL } from "./timeline";
 import { effectiveStat, isAlive } from "./stats";
 import type { BattleEvent, BattleState, Cell, Skill, Unit } from "./types";
 
@@ -34,6 +35,14 @@ export function validateSkill(
     return `${skill.name} targets an enemy`;
   }
   if (!isAlive(target)) return "Target is knocked out";
+  if (skill.notSelf && target.id === unit.id) {
+    return `${skill.name} can't target its caster`;
+  }
+  if (skill.effect.type === "gauge") {
+    if (target.casting) return `${target.name} is busy casting`;
+    if (state.ready.includes(target.id))
+      return `${target.name} is already ready`;
+  }
   if (skill.effect.type === "strike" && !canReach(state, unit, target)) {
     return "Target is out of reach";
   }
@@ -162,6 +171,21 @@ function applySkill(
         break;
       case "cleanse":
         cleanse(target, events);
+        break;
+      case "modify":
+        applyModifier(state, target, effect.modifier, events);
+        break;
+      case "gauge":
+        target.gauge = effect.to * GAUGE_FULL;
+        events.push({
+          type: "gaugeChanged",
+          unitId: target.id,
+          gauge: target.gauge,
+        });
+        // A full gauge means it acts next, right after this turn ends.
+        if (target.gauge >= GAUGE_FULL && !state.ready.includes(target.id)) {
+          state.ready.splice(state.ready[0] === unit.id ? 1 : 0, 0, target.id);
+        }
         break;
       case "strike": {
         // Decide the move first: a blocked push hits harder instead, and

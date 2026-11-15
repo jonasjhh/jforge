@@ -359,6 +359,16 @@ button:disabled {
   color: #d9ffe6;
 }
 
+.status-buff {
+  background: #24508f;
+  color: #dceaff;
+}
+
+.status-debuff {
+  background: #7a3b1f;
+  color: #ffe2d1;
+}
+
 .status-damage {
   background: #5b2a86;
   color: #f0dcff;

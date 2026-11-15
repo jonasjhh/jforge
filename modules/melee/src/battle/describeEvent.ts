@@ -1,4 +1,9 @@
-import { unitAt, type BattleEvent, type BattleState } from "../../shared";
+import {
+  GAUGE_FULL,
+  unitAt,
+  type BattleEvent,
+  type BattleState,
+} from "../../shared";
 
 /** One battle log line for an event, or null for events not worth showing. */
 export function describeEvent(
@@ -19,6 +24,14 @@ export function describeEvent(
       return event.effect === "heal"
         ? `${name(event.unitId)} regains ${event.amount} HP (${event.name})`
         : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
+    case "modifierApplied":
+      return event.harmful
+        ? `${name(event.unitId)} suffers ${event.source}`
+        : `${name(event.unitId)} gains ${event.source}`;
+    case "gaugeChanged":
+      return event.gauge >= GAUGE_FULL
+        ? `${name(event.unitId)} acts now`
+        : null;
     case "pushed":
       return event.to.row < event.from.row
         ? `${name(event.unitId)} is pulled forward`

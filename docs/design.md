@@ -143,6 +143,11 @@ cell) and its `area` which cells it hits around the aimed one.
   tick on game time (haste doesn't stretch them), recasting refreshes
   instead of stacking, and a knockout clears them. Ticks don't pause the
   battle; the unit shows a badge.
+- **Haste / Slow / Quicken** (Chronomancer): Haste and Slow are timed
+  speed modifiers (x1.5 / x0.5 for 150 game time) applied by a `modify`
+  skill effect; Slow is harmful, so Cure removes it. Quicken (a `gauge`
+  effect) fills another ally's gauge so it acts right after this turn;
+  not on the caster, a unit already ready, or one that is casting.
 - **Cure** (Healer): 5 MP, one living ally, removes every **harmful**
   status (Poison) and keeps helpful ones (Regen). Statuses carry a
   harmful flag, so a cleanse needs no list of what to remove. While
@@ -216,10 +221,10 @@ for venom, magic for Regen).
 Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
-until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 17,
-Normal 19, Hard 21) and lean toward the front. Budgets are tuned with
-auto-played battles where both sides only attack, to about 94% / 70% / 35%
-party wins (Hard lower on purpose: real play uses skills);
+until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 16,
+Normal 18, Hard 20) and lean toward the front. Budgets are tuned with
+auto-played battles where both sides only attack, to about 91% / 72% / 41%
+party wins (real play also uses skills and movement);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
@@ -247,22 +252,22 @@ To decide before push/pull lands:
 
 ### Class roster plan (10 archetypes)
 
-Existing (5): **Fighter** (melee, front), **Archer** (ranged), **Mage**
+Existing (6): **Fighter** (melee, front), **Archer** (ranged), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
-front unit; Skewer hits a line of two, Hook pulls an enemy forward).
+front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
+Haste, Slow, and Quicken to give an ally its turn now).
 
 Planned, in rough order (names and kits are proposals):
 
-| Class        | Role                  | Signature mechanics         |
-| ------------ | --------------------- | --------------------------- |
-| Guardian     | Tank: protects allies | Taunt, cover an ally        |
-| Rogue        | Fast skirmisher       | Bleed/poison, repositioning |
-| Warlock      | Dark caster           | Drain (heals the caster)    |
-| Chronomancer | Time control          | Haste, slow, stop           |
-| Bard         | Support through buffs | Party-wide buffs over time  |
+| Class    | Role                                                | Signature mechanics         |
+| -------- | --------------------------------------------------- | --------------------------- |
+| Guardian | Tank (on hold: needs a mechanic no other class has) | To be designed              |
+| Rogue    | Fast skirmisher                                     | Bleed/poison, repositioning |
+| Warlock  | Dark caster                                         | Drain (heals the caster)    |
+| Bard     | Support through buffs                               | Party-wide buffs over time  |
 
-With more than five classes, random encounters will pick a party of up to
-five from the roster instead of using every class.
+With more than five classes, random encounters pick a seeded party of up
+to five from the roster (kept in roster order) instead of every class.
 
 ## Backlog
 

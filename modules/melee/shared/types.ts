@@ -31,6 +31,8 @@ export interface Modifier {
   source: string;
   /** Game time at which it ends; absent means permanent. */
   expiresAt?: number;
+  /** Harmful modifiers (Slow) are removed by Cure; helpful ones are not. */
+  harmful?: boolean;
 }
 
 /** What kind of damage a weapon or spell deals; resistances key on this. */
@@ -128,8 +130,26 @@ export type SkillEffect =
       type: "status";
       status: StatusDef;
     }
-  /** Removes every harmful status from the target. */
+  /** Removes every harmful status and modifier from the target. */
   | { type: "cleanse" }
+  /** A timed stat modifier, e.g. Haste (speed x1.5) or Slow (x0.5). */
+  | {
+      type: "modify";
+      modifier: {
+        name: string;
+        stat: StatName;
+        op: "add" | "mul";
+        value: number;
+        /** Game time it lasts. */
+        duration: number;
+        harmful: boolean;
+      };
+    }
+  /**
+   * Sets the target's turn gauge to `to` (a share of full): 1 means it acts
+   * right away. Not on a unit that is already ready or casting.
+   */
+  | { type: "gauge"; to: number }
   /**
    * A weapon attack: uses the attacker's weapon (reach, rows, damage type)
    * at `power` times normal. `push` moves the target that many rows back
@@ -177,6 +197,8 @@ export interface Skill {
    * instant.
    */
   castTime?: number;
+  /** True if the caster may not target itself (e.g. Quicken). */
+  notSelf?: boolean;
 }
 
 /** A delayed skill on its way: aimed, paid for, landing at `readyAt`. */
@@ -349,6 +371,13 @@ export type BattleEvent =
   | { type: "statusExpired"; unitId: string; statusId: string; name: string }
   | { type: "statusRemoved"; unitId: string; statusId: string; name: string }
   | { type: "pushed"; unitId: string; from: Position; to: Position }
+  | {
+      type: "modifierApplied";
+      unitId: string;
+      source: string;
+      harmful: boolean;
+    }
+  | { type: "gaugeChanged"; unitId: string; gauge: number }
   | {
       type: "collided";
       unitId: string;
