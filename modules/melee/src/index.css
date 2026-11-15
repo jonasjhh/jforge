@@ -377,6 +377,12 @@ button:disabled {
   font-weight: 700;
 }
 
+.unit.emphasized {
+  border-color: #b98cff;
+  box-shadow: 0 0 0 3px #b98cff;
+  animation: none;
+}
+
 .unit.unreachable {
   opacity: 0.45;
   filter: grayscale(0.6);

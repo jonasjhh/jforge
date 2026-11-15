@@ -63,6 +63,7 @@ export const venomFangs: Weapon = {
     id: "poison",
     name: "Poison",
     effect: "damage",
+    harmful: true,
     damageType: "poison",
     stat: "attack",
     power: 0.4,
@@ -129,6 +130,7 @@ export const regen: Skill = {
       id: "regen",
       name: "Regen",
       effect: "heal",
+      harmful: false,
       stat: "magic",
       power: 0.4,
       interval: 30,
@@ -137,7 +139,18 @@ export const regen: Skill = {
   },
 };
 
-export const skills = [heal, fireball, meteor, regen];
+/** Removes poison and other harmful effects; leaves Regen alone. */
+export const cure: Skill = {
+  id: "cure",
+  name: "Cure",
+  description: "Removes harmful effects such as poison from one ally.",
+  mpCost: 5,
+  target: "ally",
+  area: "single",
+  effect: { type: "cleanse" },
+};
+
+export const skills = [heal, fireball, meteor, regen, cure];
 
 export const fighter: CombatantDef = {
   id: "fighter",
@@ -201,7 +214,7 @@ export const healer: CombatantDef = {
     speed: 11,
   },
   weapon: staff,
-  skills: [heal, regen],
+  skills: [heal, regen, cure],
   preferredRow: 2,
 };
 

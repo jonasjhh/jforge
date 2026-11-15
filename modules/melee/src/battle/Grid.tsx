@@ -33,6 +33,8 @@ interface GridProps {
   aim: Cell | null;
   /** Cells a delayed skill will hit when it lands. */
   incoming: Cell[];
+  /** Units the chosen skill is most useful on, e.g. poisoned allies for Cure. */
+  emphasize: (unit: Unit) => boolean;
 }
 
 // Enemies show their back row at the top; the party shows its front row at
@@ -56,6 +58,7 @@ export function Grid({
   area,
   aim,
   incoming,
+  emphasize,
 }: GridProps) {
   return (
     <div
@@ -115,6 +118,7 @@ export function Grid({
                 }
                 aimed={aimed}
                 incoming={threatened}
+                emphasized={emphasize(unit)}
                 time={state.time}
                 onClick={onClick}
                 actionName={actionName}
@@ -179,6 +183,7 @@ interface UnitCellProps {
   danger: boolean;
   aimed: boolean;
   incoming: boolean;
+  emphasized: boolean;
   /** Game time now, for the cast bar of a casting unit. */
   time: number;
   onClick: () => void;
@@ -196,6 +201,7 @@ function UnitCell({
   danger,
   aimed,
   incoming,
+  emphasized,
   time,
   onClick,
   actionName,
@@ -215,6 +221,7 @@ function UnitCell({
     aimed ? "aimed" : "",
     incoming ? "incoming" : "",
     unit.casting ? "casting" : "",
+    emphasized ? "emphasized" : "",
     hits.some((h) => h.kind === "damage") ? "hit" : "",
   ]
     .filter(Boolean)

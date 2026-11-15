@@ -28,6 +28,7 @@ export function applyStatus(
     name: def.name,
     effect: def.effect,
     ...(def.damageType ? { damageType: def.damageType } : {}),
+    harmful: def.harmful,
     amount,
     interval: def.interval,
     nextTickAt: state.time + def.interval,
@@ -128,4 +129,17 @@ function tick(
       break;
     }
   }
+}
+
+/** Removes every harmful status from `target`, reporting each one. */
+export function cleanse(target: Unit, events: BattleEvent[]): void {
+  for (const status of target.statuses.filter((s) => s.harmful)) {
+    events.push({
+      type: "statusRemoved",
+      unitId: target.id,
+      statusId: status.id,
+      name: status.name,
+    });
+  }
+  target.statuses = target.statuses.filter((s) => !s.harmful);
 }

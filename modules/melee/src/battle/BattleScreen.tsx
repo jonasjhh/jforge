@@ -11,6 +11,7 @@ import {
   type Cell,
   type Command,
   type Skill,
+  type Unit,
 } from "../../shared";
 import { Grid } from "./Grid";
 import { useBattle } from "./useBattle";
@@ -111,6 +112,13 @@ export function BattleScreen({
     incoming: state.units.flatMap((u) =>
       u.casting && isAlive(u) ? u.casting.area : [],
     ),
+    // While choosing a cleanse target, point at the allies who need it.
+    emphasize: (unit: Unit) =>
+      menu.kind === "skill" &&
+      menu.skill.effect.type === "cleanse" &&
+      isAlive(unit) &&
+      unit.side === active?.side &&
+      unit.statuses.some((s) => s.harmful),
   };
 
   return (

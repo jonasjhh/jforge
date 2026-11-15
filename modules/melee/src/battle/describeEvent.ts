@@ -19,6 +19,8 @@ export function describeEvent(
       return event.effect === "heal"
         ? `${name(event.unitId)} regains ${event.amount} HP (${event.name})`
         : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
+    case "statusRemoved":
+      return `${name(event.unitId)} is cured of ${event.name}`;
     case "statusExpired":
       return `${name(event.unitId)}'s ${event.name} wears off`;
     case "castFizzled":

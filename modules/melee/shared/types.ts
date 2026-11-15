@@ -89,6 +89,8 @@ export interface StatusDef {
   name: string;
   /** What each tick does to the unit carrying it. */
   effect: "heal" | "damage";
+  /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
+  harmful: boolean;
   /** For damage ticks: the type resistances apply to. */
   damageType?: DamageType;
   /** Which of the applier's stats scales it. */
@@ -105,6 +107,7 @@ export interface Status {
   name: string;
   effect: StatusDef["effect"];
   damageType?: DamageType;
+  harmful: boolean;
   /** HP per tick before resistances, fixed when it was applied. */
   amount: number;
   interval: number;
@@ -120,6 +123,8 @@ export type SkillEffect =
       type: "status";
       status: StatusDef;
     }
+  /** Removes every harmful status from the target. */
+  | { type: "cleanse" }
   | {
       type: "heal";
       /** HP restored = power x the caster's magic. */
@@ -327,6 +332,7 @@ export type BattleEvent =
       multiplier?: number;
     }
   | { type: "statusExpired"; unitId: string; statusId: string; name: string }
+  | { type: "statusRemoved"; unitId: string; statusId: string; name: string }
   | { type: "heal"; unitId: string; amount: number; hp: number }
   | { type: "moved"; unitId: string; from: Position; to: Position }
   | { type: "knockedOut"; unitId: string }
