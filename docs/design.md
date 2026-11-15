@@ -217,6 +217,31 @@ party wins;
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
+## Roadmap rules
+
+- **No new skills for existing classes until there are at least 10
+  distinct class archetypes.** Each new class ships with its own starting
+  skills; after that it counts as existing too.
+
+### Class roster plan (10 archetypes)
+
+Existing: **Fighter** (melee, front), **Archer** (ranged), **Mage** (area
+magic), **Healer** (support).
+
+Planned, in rough order (names and kits are proposals):
+
+| Class        | Role                                      | Signature mechanics         |
+| ------------ | ----------------------------------------- | --------------------------- |
+| Lancer       | Spear user: reaches behind the front unit | Line strike, pull           |
+| Guardian     | Tank: protects allies                     | Taunt, cover an ally        |
+| Rogue        | Fast skirmisher                           | Bleed/poison, repositioning |
+| Warlock      | Dark caster                               | Drain (heals the caster)    |
+| Chronomancer | Time control                              | Haste, slow, stop           |
+| Bard         | Support through buffs                     | Party-wide buffs over time  |
+
+With more than five classes, random encounters will pick a party of up to
+five from the roster instead of using every class.
+
 ## Backlog
 
 Ideas to build in small steps, roughly in this order when they fit:
@@ -225,8 +250,6 @@ Ideas to build in small steps, roughly in this order when they fit:
   future dark-caster class (not the Mage).
 - **Burn** (fire damage over time), e.g. on Fireball.
 - **Push and pull**: movement as a skill effect, also as part of spells.
-- **A new class** with its own skills; **a new skill for an existing
-  class**.
 - **Casting monsters**: monsters that use skills, not just weapons.
 
 ## char (phase 4)
