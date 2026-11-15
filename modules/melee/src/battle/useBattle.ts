@@ -10,6 +10,7 @@ import {
   type Command,
   type StepResult,
 } from "../../shared";
+import { findAction, summarizeAction } from "./actionSummary";
 import { describeEvent } from "./describeEvent";
 
 /** Game time per real second. Speed 10 fills a gauge in about 1.7 s. */
@@ -38,8 +39,8 @@ export interface BattleView {
   hits: Hit[];
   /** The unit that acted last, while its action is being shown. */
   actorId: string | null;
-  /** Log line for the action being shown. */
-  actionText: string | null;
+  /** The latest action and its result, kept until the next action. */
+  lastAction: string | null;
   /** Cells covered by the area skill being shown, for the blast effect. */
   actionArea: Cell[];
   command: (command: Command) => void;
@@ -60,7 +61,7 @@ export function useBattle(
   const [log, setLog] = useState<string[]>([]);
   const [hits, setHits] = useState<Hit[]>([]);
   const [actorId, setActorId] = useState<string | null>(null);
-  const [actionText, setActionText] = useState<string | null>(null);
+  const [lastAction, setLastAction] = useState<string | null>(null);
   const [actionArea, setActionArea] = useState<Cell[]>([]);
   const stateRef = useRef(state);
   const frozenUntil = useRef(0);
@@ -79,22 +80,10 @@ export function useBattle(
     if (lines.length)
       setLog((old) => [...lines.reverse(), ...old].slice(0, LOG_LINES));
 
-    const action = step.events.find(
-      (e) =>
-        e.type === "attack" ||
-        e.type === "skill" ||
-        e.type === "moved" ||
-        e.type === "castStarted",
-    );
-    if (
-      action &&
-      (action.type === "attack" ||
-        action.type === "skill" ||
-        action.type === "moved" ||
-        action.type === "castStarted")
-    ) {
+    const action = findAction(step.events);
+    if (action) {
       setActorId(action.unitId);
-      setActionText(describeEvent(step.state, action));
+      setLastAction(summarizeAction(step.state, step.events));
       setActionArea(
         (action.type === "skill" || action.type === "castStarted") &&
           action.area.length > 1
@@ -122,7 +111,6 @@ export function useBattle(
         frozenUntil.current = Math.max(frozenUntil.current, now);
       } else if (now >= frozenUntil.current) {
         setActorId(null);
-        setActionText(null);
         setActionArea([]);
         const current = stateRef.current;
         apply(
@@ -148,7 +136,7 @@ export function useBattle(
     [apply],
   );
 
-  return { state, log, hits, actorId, actionText, actionArea, command };
+  return { state, log, hits, actorId, lastAction, actionArea, command };
 }
 
 function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {

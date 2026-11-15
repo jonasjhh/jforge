@@ -96,6 +96,9 @@ unit is ready, a modifier expires) instead of ticking frame by frame.
 - The battle screen shows a **turn order forecast** (`turnOrder`): the next
   5 turns at today's speeds, a caster's after its spell lands. Expiring
   modifiers, Quicken, half turns and knockouts can change it.
+- Above the commands, a caption keeps the **latest action and its result**
+  ("Wolf attacks Fighter — 12", "Mage casts Meteor at Slime A — 3 hit,
+  Slime A KO") until the next action, so enemy turns aren't missed.
 
 ### Stats and modifiers
 

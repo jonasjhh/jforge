@@ -786,3 +786,23 @@ button:disabled {
   border-color: #ff3d3d;
   color: #fff;
 }
+
+/* The latest action and its result, above the current prompt. */
+.commands .last-action {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #4d2a27;
+  color: #b49c97;
+  font-size: 0.85rem;
+  transition: color 0.3s;
+}
+
+.commands .last-action:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.commands .last-action.fresh {
+  color: #fbeee8;
+  font-weight: 600;
+}

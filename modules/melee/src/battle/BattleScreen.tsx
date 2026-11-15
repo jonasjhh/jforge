@@ -75,7 +75,7 @@ export function BattleScreen({
 }: BattleScreenProps) {
   // The unit whose details are open; time stands still meanwhile.
   const [inspected, setInspected] = useState<string | null>(null);
-  const { state, log, hits, actorId, actionText, actionArea, command } =
+  const { state, log, hits, actorId, lastAction, actionArea, command } =
     useBattle(setup, seed, inspected !== null);
   const inspectedUnit = inspected ? getUnit(state, inspected) : null;
   const closeDetails = useCallback(() => setInspected(null), []);
@@ -195,12 +195,13 @@ export function BattleScreen({
       <Grid side="player" {...gridProps} />
       <p className="side-label">Party</p>
 
-      <section className="commands" aria-live="polite">
-        {phase.kind === "running" && (
-          <p className={actionText ? "" : "muted"}>
-            {actionText ?? "Time is moving…"}
-          </p>
-        )}
+      <section className="commands">
+        <p
+          className={`last-action${actorId ? " fresh" : ""}`}
+          aria-live="polite"
+        >
+          {lastAction ?? "Time is moving…"}
+        </p>
 
         {active && menu.kind === "attack" && (
           <>
