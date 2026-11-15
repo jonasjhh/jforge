@@ -27,4 +27,11 @@ export {
 } from "./battle";
 export { simulate, type BattleSummary } from "./simulate";
 export { DEFAULT_TARGETING, targetScore } from "./ai";
+export {
+  DIFFICULTIES,
+  THREAT_BUDGET,
+  randomEncounter,
+  type Difficulty,
+  type EncounterPools,
+} from "./encounters";
 export * as content from "./content";

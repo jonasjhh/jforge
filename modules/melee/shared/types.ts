@@ -120,6 +120,10 @@ export interface CombatantDef {
   skills?: Skill[];
   /** How it picks targets when AI-controlled; a sensible default if absent. */
   targeting?: TargetingProfile;
+  /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
+  preferredRow?: number;
+  /** How dangerous a monster is, for building encounters to a budget. */
+  threat?: number;
 }
 
 /** Puts a combatant on the grid for one battle. */

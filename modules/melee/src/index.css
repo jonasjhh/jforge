@@ -82,6 +82,57 @@ button:disabled {
   color: #1c0f0f;
 }
 
+.secondary {
+  flex: 1;
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  font-size: 1.05rem;
+  border-radius: 999px;
+  border: 1px solid #4d2a27;
+  background: transparent;
+  color: #fbeee8;
+}
+
+.secondary.wide {
+  width: 100%;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button-row .primary {
+  flex: 1;
+  width: auto;
+}
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 0.75rem;
+  border-radius: 999px;
+  background: #1c0f0f;
+  border: 1px solid #4d2a27;
+}
+
+.segmented button {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #c9a9a1;
+  font-size: 0.95rem;
+}
+
+.segmented button.selected {
+  background: #ff6b5a;
+  color: #1c0f0f;
+  font-weight: 700;
+}
+
 .link {
   background: none;
   border: none;

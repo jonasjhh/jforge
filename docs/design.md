@@ -165,12 +165,21 @@ char can edit it later):
 The Wolf is a finisher; the Slime is clumsy. Monsters don't use skills or
 move yet.
 
+### Random encounters
+
+Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
+types and monsters; the same seed gives the same encounter. The party
+stands in each type's `preferredRow` in random columns. Monsters are drawn
+until a **threat budget** is spent (Slime 2, Wolf 3; Easy 12, Normal 13,
+Hard 14) and lean toward the front. Budgets are tuned with auto-played
+battles where both sides only attack, to about 92% / 75% / 45% party wins;
+a test keeps each difficulty in its band. New monsters join the pool
+automatically once they have a `threat`.
+
 ## Backlog
 
 Ideas to build in small steps, roughly in this order when they fit:
 
-- **Random encounters**: set up battles from the classes and monsters that
-  exist (the sample battle is currently won 100% of the time).
 - **Damage types on weapons and spells** (slash, pierce, blunt, fire, ...)
   with resistances and weaknesses per combatant.
 - **Drain spells** that heal the caster by part of the damage dealt.

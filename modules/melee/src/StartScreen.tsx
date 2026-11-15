@@ -1,16 +1,48 @@
-import type { BattleSetup } from "../shared";
+import {
+  DIFFICULTIES,
+  content,
+  randomEncounter,
+  type BattleSetup,
+  type Difficulty,
+} from "../shared";
 import { meta } from "../meta";
 import { useApiHealth } from "./useApiHealth";
 
 interface StartScreenProps {
-  setup: BattleSetup;
-  onStart: () => void;
+  difficulty: Difficulty;
+  encounterSeed: number;
+  onDifficulty: (difficulty: Difficulty) => void;
+  onReroll: () => void;
+  onStart: (setup: BattleSetup) => void;
 }
 
-export function StartScreen({ setup, onStart }: StartScreenProps) {
+const LABELS: Record<Difficulty, string> = {
+  easy: "Easy",
+  normal: "Normal",
+  hard: "Hard",
+};
+
+/** "Slime ×2, Wolf" for one side of a setup. */
+function roster(setup: BattleSetup, side: "player" | "enemy"): string {
+  const counts = new Map<string, number>();
+  for (const p of setup.placements) {
+    if (p.side === side)
+      counts.set(p.def.name, (counts.get(p.def.name) ?? 0) + 1);
+  }
+  return [...counts]
+    .map(([name, n]) => (n > 1 ? `${name} ×${n}` : name))
+    .join(", ");
+}
+
+export function StartScreen({
+  difficulty,
+  encounterSeed,
+  onDifficulty,
+  onReroll,
+  onStart,
+}: StartScreenProps) {
   const health = useApiHealth<{ status: string }>("/api/melee/health");
-  const names = (side: "player" | "enemy") =>
-    setup.placements.filter((p) => p.side === side).map((p) => p.def.name);
+  const encounter = randomEncounter(encounterSeed, difficulty);
 
   return (
     <main className="page">
@@ -21,22 +53,63 @@ export function StartScreen({ setup, onStart }: StartScreenProps) {
       <p className="muted">{meta.description}</p>
 
       <section className="panel">
+        <h2>Random encounter</h2>
+        <div className="segmented" role="radiogroup" aria-label="Difficulty">
+          {DIFFICULTIES.map((d) => (
+            <button
+              key={d}
+              type="button"
+              role="radio"
+              aria-checked={d === difficulty}
+              className={d === difficulty ? "selected" : ""}
+              onClick={() => onDifficulty(d)}
+            >
+              {LABELS[d]}
+            </button>
+          ))}
+        </div>
+        <p>
+          <strong>Your party:</strong> {roster(encounter, "player")}
+        </p>
+        <p>
+          <strong>Enemies:</strong> {roster(encounter, "enemy")}
+        </p>
+        <div className="button-row">
+          <button type="button" className="secondary" onClick={onReroll}>
+            Reroll
+          </button>
+          <button
+            type="button"
+            className="primary"
+            onClick={() => onStart(encounter)}
+          >
+            Start
+          </button>
+        </div>
+        <p className="muted small">Encounter #{encounterSeed}</p>
+      </section>
+
+      <section className="panel">
         <h2>Sample battle</h2>
         <p>
-          <strong>Your party:</strong> {names("player").join(", ")}
+          <strong>Your party:</strong> {roster(content.sampleBattle, "player")}
         </p>
         <p>
-          <strong>Enemies:</strong> {names("enemy").join(", ")}
+          <strong>Enemies:</strong> {roster(content.sampleBattle, "enemy")}
         </p>
-        <p className="muted">
-          Gauges fill with speed. When one of your units is ready, time stops
-          until you choose its action. The enemies act on their own.
-        </p>
-        <button type="button" className="primary" onClick={onStart}>
-          Start battle
+        <button
+          type="button"
+          className="secondary wide"
+          onClick={() => onStart(content.sampleBattle)}
+        >
+          Start sample battle
         </button>
       </section>
 
+      <p className="muted small">
+        Gauges fill with speed. When one of your units is ready, time stops
+        until you choose its action. The enemies act on their own.
+      </p>
       <p className="muted small">
         API:{" "}
         {health.state === "ok" ? (

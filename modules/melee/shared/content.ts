@@ -77,6 +77,7 @@ export const fighter: CombatantDef = {
     speed: 10,
   },
   weapon: sword,
+  preferredRow: 0,
 };
 
 export const archer: CombatantDef = {
@@ -92,6 +93,7 @@ export const archer: CombatantDef = {
     speed: 13,
   },
   weapon: bow,
+  preferredRow: 1,
 };
 
 export const mage: CombatantDef = {
@@ -108,6 +110,7 @@ export const mage: CombatantDef = {
   },
   weapon: staff,
   skills: [fireball],
+  preferredRow: 2,
 };
 
 export const healer: CombatantDef = {
@@ -124,6 +127,7 @@ export const healer: CombatantDef = {
   },
   weapon: staff,
   skills: [heal],
+  preferredRow: 2,
 };
 
 export const slime: CombatantDef = {
@@ -141,6 +145,7 @@ export const slime: CombatantDef = {
   weapon: slam,
   // Clumsy: mostly flails at whatever is in reach.
   targeting: { finish: 1, wounded: 0.5, soft: 0.5, noise: 2 },
+  threat: 2,
 };
 
 export const wolf: CombatantDef = {
@@ -158,6 +163,7 @@ export const wolf: CombatantDef = {
   weapon: fangs,
   // A finisher: goes for the wounded and the kill.
   targeting: { finish: 5, wounded: 3, soft: 1, noise: 0.3 },
+  threat: 3,
 };
 
 export const playerTypes = [fighter, archer, mage, healer];
