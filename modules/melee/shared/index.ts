@@ -37,6 +37,7 @@ export {
   validateCommand,
   type AdvanceOptions,
 } from "./battle";
+export { previewDamage, type DamagePreview } from "./preview";
 export { simulate, type BattleSummary } from "./simulate";
 export { DEFAULT_TARGETING, targetScore } from "./ai";
 export {

@@ -753,3 +753,36 @@ button:disabled {
   border-color: #ffd166;
   color: #ffd166;
 }
+
+/* Expected damage on a unit while choosing a target. */
+.preview {
+  position: absolute;
+  top: -8px;
+  right: 3px;
+  z-index: 1;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid #4d2a27;
+  background: #140909;
+  color: #fbeee8;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.preview.weak {
+  color: #ffd166;
+  border-color: #ffd166;
+}
+
+.preview.resist {
+  color: #c9c9d6;
+}
+
+.preview.ko {
+  background: #ff3d3d;
+  border-color: #ff3d3d;
+  color: #fff;
+}

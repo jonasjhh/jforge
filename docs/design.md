@@ -114,6 +114,11 @@ Dividing by defense means damage never hits zero and scales smoothly with
 player-designed skills. Physical uses attack vs defense, magical uses magic
 vs spirit.
 
+While aiming, each unit the action would hit shows its **expected damage**
+(`previewDamage`): the formula without the random spread, gold if weak, grey
+if resisted, red "KO" if it would empty their HP past any shield. Healing
+and status skills show no preview.
+
 ### Damage types
 
 Two separate axes:

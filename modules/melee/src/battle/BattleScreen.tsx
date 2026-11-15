@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import {
+  cellOf,
   getUnit,
+  previewDamage,
   isAlive,
   ROW_DEALT,
   sameCell,
@@ -12,6 +14,7 @@ import {
   type BattleState,
   type Cell,
   type Command,
+  type DamagePreview,
   type Skill,
   type Unit,
 } from "../../shared";
@@ -157,6 +160,23 @@ export function BattleScreen({
       unit.side === active?.side &&
       unit.statuses.some((s) => s.harmful),
     onInspect: (unit: Unit) => setInspected(unit.id),
+    preview: (unit: Unit): DamagePreview | null => {
+      if (!active || !isAlive(unit)) return null;
+      if (menu.kind === "attack") {
+        return canTarget(cellOf(unit)) ? previewDamage(active, unit) : null;
+      }
+      if (menu.kind !== "skill") return null;
+      // An aimed area: everyone it would hit, allies included.
+      if (menu.aim) {
+        const victims = previewVictims(state, active, menu.skill, menu.aim);
+        return victims.includes(unit)
+          ? previewDamage(active, unit, menu.skill)
+          : null;
+      }
+      return menu.skill.area === "single" && canTarget(cellOf(unit))
+        ? previewDamage(active, unit, menu.skill)
+        : null;
+    },
   };
 
   return (

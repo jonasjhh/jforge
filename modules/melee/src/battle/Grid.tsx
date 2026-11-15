@@ -8,6 +8,7 @@ import {
   type BattleState,
   type Casting,
   type Cell,
+  type DamagePreview,
   type Side,
   type Unit,
 } from "../../shared";
@@ -39,6 +40,8 @@ interface GridProps {
   emphasize: (unit: Unit) => boolean;
   /** Long press (or right-click) on a unit: show its details. */
   onInspect: (unit: Unit) => void;
+  /** Expected damage on a unit the current action would hit, if any. */
+  preview: (unit: Unit) => DamagePreview | null;
 }
 
 // Enemies show their back row at the top; the party shows its front row at
@@ -64,6 +67,7 @@ export function Grid({
   incoming,
   emphasize,
   onInspect,
+  preview,
 }: GridProps) {
   return (
     <div
@@ -127,6 +131,7 @@ export function Grid({
                 time={state.time}
                 onClick={onClick}
                 onInspect={() => onInspect(unit)}
+                preview={preview(unit)}
                 actionName={actionName}
               />
             );
@@ -194,6 +199,7 @@ interface UnitCellProps {
   time: number;
   onClick: () => void;
   onInspect: () => void;
+  preview: DamagePreview | null;
   actionName: string;
 }
 
@@ -212,6 +218,7 @@ function UnitCell({
   time,
   onClick,
   onInspect,
+  preview,
   actionName,
 }: UnitCellProps) {
   const { consumeClick, ...press } = useLongPress(onInspect);
@@ -312,6 +319,7 @@ function UnitCell({
           />
         </span>
       )}
+      {preview && <PreviewBadge preview={preview} />}
       {hits.map((h) => (
         <span
           className={`damage ${h.kind} ${h.tag ?? ""} ${h.overTime ? "over-time" : ""}`}
@@ -333,7 +341,7 @@ function UnitCell({
         // The click that ends a long press only opened the details.
         if (!consumeClick()) onClick();
       }}
-      aria-label={`${actionName} ${unit.name}`}
+      aria-label={`${actionName} ${unit.name}${preview ? `, ${previewText(preview)}` : ""}`}
       {...press}
     >
       {content}
@@ -342,5 +350,40 @@ function UnitCell({
     <div className={classes} role="gridcell" {...press}>
       {content}
     </div>
+  );
+}
+
+/** "about 24 damage, weak, knocks out" for screen readers. */
+function previewText(p: DamagePreview): string {
+  return [
+    `about ${p.amount} damage`,
+    p.multiplier === 0
+      ? "immune"
+      : p.multiplier > 1
+        ? "weak"
+        : p.multiplier < 1
+          ? "resists"
+          : "",
+    p.knocksOut ? "knocks out" : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+/** Expected damage on a target: gold if weak, grey if resisted, red if KO. */
+function PreviewBadge({ preview: p }: { preview: DamagePreview }) {
+  const classes = [
+    "preview",
+    p.multiplier > 1 ? "weak" : "",
+    p.multiplier < 1 ? "resist" : "",
+    p.knocksOut ? "ko" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <span className={classes} aria-hidden="true">
+      {p.multiplier === 0 ? "Immune" : `~${p.amount}`}
+      {p.knocksOut && " KO"}
+    </span>
   );
 }

@@ -65,16 +65,38 @@ export function rowFactor(attacker: Unit, target: Unit): number {
   );
 }
 
-/** A weapon hit without the random spread, for the AI to plan with. */
-export function expectedPhysicalDamage(attacker: Unit, target: Unit): number {
-  const multiplier = resistance(target, attacker.weapon.damageType);
+/**
+ * A hit without the random spread: weapon hits (physical, scaled by rows)
+ * use attack against defense, spells (magical) magic against spirit.
+ */
+export function expectedDamage(
+  attacker: Unit,
+  target: Unit,
+  delivery: "physical" | "magical",
+  power: number,
+  damageType: DamageType,
+): number {
+  const multiplier = resistance(target, damageType);
   if (multiplier === 0) return 0;
   const raw =
-    effectiveStat(attacker, "attack") *
-    rowFactor(attacker, target) *
-    defenseFactor(effectiveStat(target, "defense")) *
-    multiplier;
-  return Math.max(1, Math.round(raw));
+    delivery === "physical"
+      ? effectiveStat(attacker, "attack") *
+        rowFactor(attacker, target) *
+        defenseFactor(effectiveStat(target, "defense"))
+      : effectiveStat(attacker, "magic") *
+        defenseFactor(effectiveStat(target, "spirit"));
+  return Math.max(1, Math.round(raw * power * multiplier));
+}
+
+/** A weapon attack without the random spread, for the AI to plan with. */
+export function expectedPhysicalDamage(attacker: Unit, target: Unit): number {
+  return expectedDamage(
+    attacker,
+    target,
+    "physical",
+    1,
+    attacker.weapon.damageType,
+  );
 }
 
 /**
