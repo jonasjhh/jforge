@@ -87,3 +87,39 @@
 .panel a {
   color: var(--ally);
 }
+
+.ways,
+.pieces {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ways .secondary {
+  text-align: left;
+  border-radius: 14px;
+  margin-top: 0;
+}
+
+.piece {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.piece[aria-checked="true"] {
+  border-color: var(--action);
+  background: var(--raised);
+}
+
+.stop {
+  font-size: 0.9rem;
+  border-radius: 8px;
+}
+
+.path {
+  gap: 3px;
+}

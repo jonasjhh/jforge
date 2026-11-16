@@ -521,37 +521,51 @@ import.
 
 ## The run (`modules/jrpg`)
 
-Jrpg is a run through **levels**, each a fixed sequence of 8 encounters
+Jrpg is a run through **levels**, each a sequence of 12 to 15 encounters
 generated from the run's seed (`shared/run.ts`, pure like the engine):
 
-- **Battle**: melee's battle screen (`@jforge/melee/battle`). The first is
-  Easy, the first half Easy, the second Normal, the last a Hard final
-  battle. Winning gives every member `40 x enemy threat / party size`
-  experience and sometimes gear (40%; the final battle always), which
-  goes in the bag. Losing or drawing **ends the run**. Retreating returns
-  to the map with nothing lost.
-- **Ally**: a class character from the library that isn't in the party
-  (else a fresh one of a random class) offers to join, at the level of the
-  party's weakest member if that is higher. The party holds five.
-- **Gear**: a piece from the library; give it to a member (what they wore
-  goes in the bag) or keep it in the bag.
+- **Battle**: melee's battle screen (`@jforge/melee/battle`). The first
+  third are Easy, the rest Normal. One battle past the middle is an
+  **elite** (Hard, enemies 2 levels up) and the last is the **final
+  battle** (Hard, 3 levels up). Each battle fields a **pack** of 1 to 3
+  kinds of enemy drawn from the pool by its seed. Winning gives every
+  member `40 x enemy threat / party size` experience and sometimes gear
+  (40%; elites and the final battle always), which goes in the bag. Losing
+  or drawing **ends the run**. Retreating returns to the map with nothing
+  lost.
+- **Ally**: a traveller who isn't in the party offers to join, at the
+  level of the party's weakest member if that is higher. The party holds
+  five.
+- **Gear**: three different pieces; take one, for a member (what they wore
+  goes in the bag) or for the bag.
+- **Training**: one member gains a level.
+- **Fork**: two ways, each one of ally, gear, training or an elite battle;
+  the party meets the one it picks.
 
-One ally and up to two gear finds per level, between the first and last
-battle, never two finds in a row. Between encounters gear can be swapped
-with the bag. A cleared level leads to the next, deeper one.
+Every level has an ally, gear and training, plus two more finds drawn at
+random (gear, forks, another ally or training), between the first and
+last battle and never two in a row. Between encounters gear can be
+swapped with the bag. A cleared level leads to the next, deeper one.
 
-The run copies char's library when it starts (the starter library if no
-class character exists), so later edits don't break it. The party is the
-library's first two class characters. Enemies are the library's enemy
-characters (melee's monsters if none), levelled up by the party's average
-levels gained plus one per depth. The **threat budget** of a battle is a
-share of the party's own estimated threat (Easy 1, Normal 1.25, Hard
-1.55), so encounters keep pace with levels, gear and party size; with the
-starter library auto-played parties win about 100% / 90% / 70% of them.
-The run is saved in the browser after every encounter.
+**The world** (`shared/world.ts`): the run plays with char's library (the
+starter library if it has no class character) plus jrpg's own content,
+copied when the run starts so later edits don't break it: 9 enemy types
+(Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
+Imp, Raider), 6 classes (Ranger, Cleric, Rogue, Lancer, Timekeeper,
+Warder) with 8 named travellers, and 16 pieces of gear. All gear exists
+at four **tiers** (plain, Fine, Superior, Masterwork: each adds half again
+to what the piece adds); finds are a tier better per depth, with some
+luck. The party is the library's first two class characters.
 
-Not yet: HP carrying over between battles, branching paths, shops, rest
-stops, replacing a member when the party is full.
+Enemies gain the party's average levels gained plus one per depth. The
+**threat budget** of a battle is a share of the party's own estimated
+threat (Easy 0.6, Normal 0.8, Hard 1), so encounters keep pace with
+levels, gear and party size; auto-played parties win about 100% / 90% /
+80% of them at every depth. The run is saved in the browser after every
+encounter.
+
+Not yet: HP carrying over between battles, shops, rest stops, replacing a
+member when the party is full.
 
 Still to come: a live damage preview and power budget in the skill
 designer, the remaining effect types (statuses, summons), resistances per

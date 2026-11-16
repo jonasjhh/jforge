@@ -1,5 +1,5 @@
 import type { Library } from "@jforge/char/shared";
-import { LEVEL_LENGTH, runLibrary, startRun } from "../shared";
+import { MIN_LEVEL_LENGTH, runLibrary, startRun } from "../shared";
 import { meta } from "../meta";
 
 interface StartScreenProps {
@@ -19,9 +19,9 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
       </a>
       <h1>{meta.title}</h1>
       <p className="muted">
-        Travel a level of {LEVEL_LENGTH} encounters: battles, allies to find and
-        gear lying about. Battles pay experience and sometimes gear. Lose one
-        and the run is over.
+        Travel levels of {MIN_LEVEL_LENGTH} or more encounters: battles, allies
+        to meet, gear to find, places to train and forks in the road. Battles
+        pay experience and sometimes gear. Lose one and the run is over.
       </p>
 
       <section className="panel">
@@ -33,8 +33,8 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
           {own ? (
             <>
               From your library in <a href="/char/">Char</a>: its first class
-              characters set out, its other classes can be found as allies, its
-              enemies and gear fill the level.
+              characters set out, and its other classes, enemies and gear join
+              the world's own.
             </>
           ) : (
             <>

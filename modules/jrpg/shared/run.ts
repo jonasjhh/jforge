@@ -1,5 +1,6 @@
 import {
   blankCharacter,
+  clampLevel,
   equip,
   gainXp,
   parseLibrary,
@@ -21,10 +22,14 @@ import {
   type CombatantDef,
   type Difficulty,
 } from "@jforge/melee/shared";
+import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
 
 // A run: the party travels through levels, each a fixed sequence of
 // encounters generated from a seed. Everything here is pure; the screens
 // only show a run and call these functions.
+
+/** An ordinary fight, a tougher one mid-level, or the level's last. */
+export type BattleRank = "normal" | "elite" | "boss";
 
 export type Encounter =
   | {
@@ -32,16 +37,20 @@ export type Encounter =
       difficulty: Difficulty;
       /** Seed of the encounter (who the enemies are and where they stand). */
       seed: number;
-      /** The last battle of a level. */
-      boss: boolean;
+      rank: BattleRank;
       /** Gear the enemies drop, if any. */
       loot?: string;
     }
   | { kind: "ally"; character: Character }
-  | { kind: "gear"; gearId: string };
+  /** Gear lying about: take one piece of these. */
+  | { kind: "gear"; gearIds: string[] }
+  /** A place to train: one member gains a level. */
+  | { kind: "training" }
+  /** A fork in the road: the party picks which of these it meets. */
+  | { kind: "fork"; options: Encounter[] };
 
 export interface Run {
-  version: 1;
+  version: 2;
   seed: number;
   /** The level the party is on, from 1. Enemies grow with it. */
   depth: number;
@@ -66,9 +75,21 @@ export interface Reward {
   loot?: Gear;
 }
 
-export const LEVEL_LENGTH = 8;
+/** A level is this long, give or take: MIN to MIN + SPREAD encounters. */
+export const MIN_LEVEL_LENGTH = 12;
+export const LEVEL_LENGTH_SPREAD = 3;
+/** Pieces to choose from where gear lies about. */
+export const GEAR_CHOICES = 3;
+/** Kinds of enemy in one battle, at most. */
+export const MAX_PACK_KINDS = 3;
+/** Levels the enemies of a tougher battle have on ordinary ones. */
+export const RANK_LEVELS: Record<BattleRank, number> = {
+  normal: 0,
+  elite: 2,
+  boss: 3,
+};
 export const START_PARTY_SIZE = 2;
-/** Chance that an ordinary battle drops gear; the last one always does. */
+/** Chance that an ordinary battle drops gear; elites and the last always do. */
 export const LOOT_CHANCE = 0.4;
 /** Experience per point of enemy threat, shared out over the party. */
 export const XP_PER_THREAT = 40;
@@ -79,9 +100,9 @@ export const ENEMY_LEVELS_PER_DEPTH = 1;
  * threat, so encounters keep pace with levels, gear and party size.
  */
 export const BUDGET_SHARE: Record<Difficulty, number> = {
-  easy: 1,
-  normal: 1.25,
-  hard: 1.55,
+  easy: 0.6,
+  normal: 0.8,
+  hard: 1.0,
 };
 
 const isClass = (library: Library, character: Character) =>
@@ -101,15 +122,17 @@ export function runLibrary(library: Library | null): Library {
 
 /** A new run: the library's first class characters at the first level. */
 export function startRun(source: Library | null, seed: number): Run {
-  const library = runLibrary(source);
-  const party = library.characters
-    .filter((c) => isClass(library, c))
+  const designed = runLibrary(source);
+  const party = designed.characters
+    .filter((c) => isClass(designed, c))
     .slice(0, START_PARTY_SIZE);
+  const baseLevel = averageLevel(party);
+  const library = withWorld(designed, baseLevel);
   return {
-    version: 1,
+    version: 2,
     seed,
     depth: 1,
-    baseLevel: averageLevel(party),
+    baseLevel,
     library,
     party,
     bag: [],
@@ -119,10 +142,24 @@ export function startRun(source: Library | null, seed: number): Run {
   };
 }
 
+type Find = "ally" | "gear" | "training" | "fork";
+/** Every level has these; two more are drawn from EXTRA_FINDS. */
+const SURE_FINDS: Find[] = ["ally", "gear", "training"];
+const EXTRA_FINDS: Find[] = [
+  "gear",
+  "gear",
+  "fork",
+  "fork",
+  "ally",
+  "training",
+];
+/** What a fork can lead to. */
+const FORK_KINDS = ["ally", "gear", "training", "elite"] as const;
+
 /**
- * A level: battles from easy to a hard last one, with an ally to find and
- * gear lying about in between (never two finds in a row). The same seed
- * and depth give the same level.
+ * A level: battles from easy to a hard last one, a tougher battle past
+ * the middle, and finds in between (an ally, gear, training, forks; never
+ * two in a row). The same seed and depth give the same level.
  */
 export function generateLevel(
   library: Library,
@@ -131,55 +168,106 @@ export function generateLevel(
   depth: number,
 ): Encounter[] {
   const random = createRandom(seed + depth * 7919);
-  const pick = <T>(items: T[]): T =>
-    items[Math.floor(random() * items.length)]!;
-  const gear = library.gear;
+  const roll = (n: number) => Math.floor(random() * n);
+  const pick = <T>(items: readonly T[]): T => items[roll(items.length)]!;
+  const take = <T>(items: T[]): T => items.splice(roll(items.length), 1)[0]!;
+  const length = MIN_LEVEL_LENGTH + roll(LEVEL_LENGTH_SPREAD + 1);
 
-  // Finds go between the first and the last battle, never side by side.
-  const finds = new Map<number, "ally" | "gear">();
-  const wanted: ("ally" | "gear")[] = ["ally", "gear", "gear"];
-  const open = Array.from({ length: LEVEL_LENGTH - 2 }, (_, i) => i + 1);
-  while (open.length > 0 && wanted.length > 0) {
-    const at = open.splice(Math.floor(random() * open.length), 1)[0]!;
-    if (finds.has(at - 1) || finds.has(at + 1)) continue;
-    const kind = wanted.shift()!;
-    if (kind === "gear" && gear.length === 0) continue;
-    finds.set(at, kind);
-  }
+  // Gear is stored at every tier; the plain pieces are the ones to draw.
+  const plain = library.gear.filter((g) => !/\+\d$/.test(g.id));
+  const has = new Set(library.gear.map((g) => g.id));
+  const gearId = (): string => {
+    const base = pick(plain).id;
+    const luck = random();
+    const tier = Math.min(
+      GEAR_TIERS.length - 1,
+      depth - 1 + (luck < 0.7 ? 0 : luck < 0.95 ? 1 : 2),
+    );
+    const id = tierId(base, tier);
+    return has.has(id) ? id : base;
+  };
 
   const offered = new Set(party.map((c) => c.id));
+  const names = new Set(library.characters.map((c) => c.name));
   const classes = library.archetypes.filter((a) => a.kind === "class");
-  const newAlly = (index: number): Character => {
+  let fresh = 0;
+  const ally = (): Encounter => {
     const known = library.characters.filter(
       (c) => isClass(library, c) && !offered.has(c.id),
     );
-    const ally =
-      known.length > 0
-        ? pick(known)
-        : blankCharacter(`ally-${depth}-${index}`, pick(classes));
-    offered.add(ally.id);
-    return ally;
+    let character: Character;
+    if (known.length > 0) character = pick(known);
+    else {
+      const unused = TRAVELLER_NAMES.filter((n) => !names.has(n));
+      const type = pick(classes);
+      character = {
+        ...blankCharacter(`ally-${depth}-${++fresh}`, type),
+        name: unused.length > 0 ? pick(unused) : type.name,
+      };
+      names.add(character.name);
+    }
+    offered.add(character.id);
+    return { kind: "ally", character };
   };
-
-  return Array.from({ length: LEVEL_LENGTH }, (_, index): Encounter => {
-    const find = finds.get(index);
-    if (find === "ally") return { kind: "ally", character: newAlly(index) };
-    if (find === "gear") return { kind: "gear", gearId: pick(gear).id };
-    const boss = index === LEVEL_LENGTH - 1;
-    const difficulty: Difficulty = boss
-      ? "hard"
-      : index < LEVEL_LENGTH / 2
-        ? "easy"
-        : "normal";
-    const seedHere = Math.floor(random() * 1_000_000);
-    const drops = gear.length > 0 && (random() < LOOT_CHANCE || boss);
+  const gear = (): Encounter => {
+    const gearIds: string[] = [];
+    for (
+      let i = 0;
+      i < GEAR_CHOICES * 3 && gearIds.length < GEAR_CHOICES;
+      i++
+    ) {
+      const id = gearId();
+      if (!gearIds.includes(id)) gearIds.push(id);
+    }
+    return { kind: "gear", gearIds };
+  };
+  const battle = (rank: BattleRank, early: boolean): Encounter => {
+    const seedHere = roll(1_000_000);
+    const drops =
+      plain.length > 0 && (random() < LOOT_CHANCE || rank !== "normal");
     return {
       kind: "battle",
-      difficulty,
+      difficulty: rank !== "normal" ? "hard" : early ? "easy" : "normal",
       seed: seedHere,
-      boss,
-      ...(drops ? { loot: pick(gear).id } : {}),
+      rank,
+      ...(drops ? { loot: gearId() } : {}),
     };
+  };
+  const found = (kind: Find | "elite"): Encounter => {
+    if (kind === "ally") return ally();
+    if (kind === "gear" && plain.length > 0) return gear();
+    if (kind === "elite") return battle("elite", false);
+    if (kind === "fork") {
+      const kinds = [...FORK_KINDS];
+      return {
+        kind: "fork",
+        options: [found(take(kinds)), found(take(kinds))],
+      };
+    }
+    return { kind: "training" };
+  };
+
+  // Finds go between the first and the last battle, never side by side.
+  const finds = new Map<number, Find>();
+  const wanted = [...SURE_FINDS, pick(EXTRA_FINDS), pick(EXTRA_FINDS)];
+  const open = Array.from({ length: length - 2 }, (_, i) => i + 1);
+  while (open.length > 0 && wanted.length > 0) {
+    const at = take(open);
+    if (finds.has(at - 1) || finds.has(at + 1)) continue;
+    finds.set(at, wanted.shift()!);
+  }
+  // One battle past the middle is a tougher one.
+  const later = Array.from({ length }, (_, i) => i).filter(
+    (i) => i >= length / 2 && i < length - 1 && !finds.has(i),
+  );
+  const elite = later.length > 0 ? pick(later) : -1;
+
+  return Array.from({ length }, (_, index): Encounter => {
+    const find = finds.get(index);
+    if (find) return found(find);
+    const rank: BattleRank =
+      index === length - 1 ? "boss" : index === elite ? "elite" : "normal";
+    return battle(rank, index < length / 3);
   });
 }
 
@@ -211,8 +299,8 @@ export function enemyLevelBonus(run: Run): number {
  * and the run's depth grow, or melee's own monsters when none were
  * designed.
  */
-export function monsterPool(run: Run): CombatantDef[] {
-  const extra = enemyLevelBonus(run);
+export function monsterPool(run: Run, tougher = 0): CombatantDef[] {
+  const extra = enemyLevelBonus(run) + tougher;
   const designed = run.library.characters
     .filter((c) => !isClass(run.library, c))
     .flatMap(
@@ -228,14 +316,30 @@ export function threatBudget(run: Run, difficulty: Difficulty): number {
   return party * BUDGET_SHARE[difficulty];
 }
 
+/**
+ * The kinds of enemy in the battle with this seed: up to MAX_PACK_KINDS
+ * of the pool, so one battle is wolves and vipers, the next a golem.
+ */
+export function packFor(pool: CombatantDef[], seed: number): CombatantDef[] {
+  const random = createRandom(seed ^ 0x5eed);
+  const left = [...pool];
+  const kinds = 1 + Math.floor(random() * MAX_PACK_KINDS);
+  const pack: CombatantDef[] = [];
+  while (left.length > 0 && pack.length < kinds) {
+    pack.push(left.splice(Math.floor(random() * left.length), 1)[0]!);
+  }
+  return pack;
+}
+
 /** The battle at the party's position; null when it isn't one. */
 export function battleFor(run: Run): BattleSetup | null {
   const encounter = currentEncounter(run);
   if (run.defeated || encounter?.kind !== "battle") return null;
+  const pool = monsterPool(run, RANK_LEVELS[encounter.rank]);
   return randomEncounter(
     encounter.seed,
     encounter.difficulty,
-    { party: partyDefs(run), monsters: monsterPool(run) },
+    { party: partyDefs(run), monsters: packFor(pool, encounter.seed) },
     threatBudget(run, encounter.difficulty),
   );
 }
@@ -300,19 +404,51 @@ export function resolveAlly(run: Run, recruit: boolean): Run {
 }
 
 /**
- * Leaves a gear encounter with the find: on `characterId` (what they wore
- * in that slot goes in the bag), or in the bag.
+ * Leaves a gear encounter with one of its pieces (`gearId`; null takes
+ * none): on `characterId` (what they wore in that slot goes in the bag),
+ * or in the bag.
  */
-export function resolveGear(run: Run, characterId: string | null): Run {
+export function resolveGear(
+  run: Run,
+  gearId: string | null,
+  characterId: string | null,
+): Run {
   const encounter = currentEncounter(run);
   if (run.defeated || encounter?.kind !== "gear") return run;
-  const found = gearOf(run, encounter.gearId);
   const next = { ...run, position: run.position + 1 };
+  const found =
+    gearId !== null && encounter.gearIds.includes(gearId)
+      ? gearOf(run, gearId)
+      : undefined;
   if (!found) return next;
   const stowed = { ...next, bag: [...next.bag, found.id] };
   return characterId === null
     ? stowed
     : changeGear(stowed, characterId, found.slot, found.id);
+}
+
+/** Leaves a training encounter; `characterId` (if any) gains a level. */
+export function resolveTraining(run: Run, characterId: string | null): Run {
+  const encounter = currentEncounter(run);
+  if (run.defeated || encounter?.kind !== "training") return run;
+  return {
+    ...run,
+    position: run.position + 1,
+    party: run.party.map((c) =>
+      c.id === characterId ? { ...c, level: clampLevel(c.level + 1) } : c,
+    ),
+  };
+}
+
+/** At a fork: the party takes option `index`, which it then stands at. */
+export function chooseFork(run: Run, index: number): Run {
+  const encounter = currentEncounter(run);
+  const chosen = encounter?.kind === "fork" ? encounter.options[index] : null;
+  if (run.defeated || !chosen) return run;
+  return {
+    ...run,
+    encounters: run.encounters.map((e, i) => (i === run.position ? chosen : e)),
+  };
 }
 
 /**
@@ -375,7 +511,7 @@ export function parseRun(text: string | null): Run | null {
   const library = parseLibrary(JSON.stringify(run.library ?? null));
   const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
   if (
-    run.version !== 1 ||
+    run.version !== 2 ||
     !library ||
     !whole(run.seed) ||
     !whole(run.depth) ||
@@ -401,12 +537,25 @@ function isEncounter(v: unknown): boolean {
   if (e.kind === "battle") {
     return (
       typeof e.seed === "number" &&
-      typeof e.boss === "boolean" &&
+      (e.rank === "normal" || e.rank === "elite" || e.rank === "boss") &&
       (e.difficulty === "easy" ||
         e.difficulty === "normal" ||
         e.difficulty === "hard")
     );
   }
-  if (e.kind === "gear") return typeof e.gearId === "string";
+  if (e.kind === "gear") {
+    return (
+      Array.isArray(e.gearIds) &&
+      e.gearIds.every((id) => typeof id === "string")
+    );
+  }
+  if (e.kind === "fork") {
+    return (
+      Array.isArray(e.options) &&
+      e.options.length > 0 &&
+      e.options.every((o) => isEncounter(o) && o.kind !== "fork")
+    );
+  }
+  if (e.kind === "training") return true;
   return e.kind === "ally" && typeof e.character === "object" && !!e.character;
 }

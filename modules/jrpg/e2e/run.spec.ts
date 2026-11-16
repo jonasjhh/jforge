@@ -13,7 +13,7 @@ test("sets out, meets the first battle and can retreat to the map", async ({
     "Aldric",
   );
   await expect(page.getByRole("region", { name: "Encounter" })).toContainText(
-    "Goblin",
+    "Battle",
   );
 
   await page.getByRole("button", { name: "Fight" }).click();

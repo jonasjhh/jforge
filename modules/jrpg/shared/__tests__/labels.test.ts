@@ -24,9 +24,14 @@ describe("gearSummary", () => {
 describe("encounterLabel", () => {
   it("names each kind of stop", () => {
     const battle = { kind: "battle", difficulty: "easy", seed: 1 } as const;
-    expect(encounterLabel({ ...battle, boss: false })).toBe("Battle");
-    expect(encounterLabel({ ...battle, boss: true })).toBe("Final battle");
-    expect(encounterLabel({ kind: "gear", gearId: "x" })).toBe("Gear");
+    expect(encounterLabel({ ...battle, rank: "normal" })).toBe("Battle");
+    expect(encounterLabel({ ...battle, rank: "elite" })).toBe("Elite battle");
+    expect(encounterLabel({ ...battle, rank: "boss" })).toBe("Final battle");
+    expect(encounterLabel({ kind: "gear", gearIds: ["x"] })).toBe("Gear");
+    expect(encounterLabel({ kind: "training" })).toBe("Training");
+    expect(encounterLabel({ kind: "fork", options: [] })).toBe(
+      "Fork in the road",
+    );
     expect(
       encounterLabel({
         kind: "ally",

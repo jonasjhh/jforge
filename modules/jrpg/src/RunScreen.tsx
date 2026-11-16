@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { archetypeOf } from "@jforge/char/shared";
 import {
   battleFor,
   canRecruit,
+  chooseFork,
   currentEncounter,
   encounterLabel,
   enemySummary,
@@ -11,6 +13,7 @@ import {
   nextLevel,
   resolveAlly,
   resolveGear,
+  resolveTraining,
   type Encounter,
   type Reward,
   type Run,
@@ -22,6 +25,24 @@ const ICONS: Record<Encounter["kind"], string> = {
   battle: "⚔",
   ally: "☺",
   gear: "◆",
+  training: "▲",
+  fork: "⑂",
+};
+const iconOf = (encounter: Encounter) =>
+  encounter.kind !== "battle"
+    ? ICONS[encounter.kind]
+    : encounter.rank === "boss"
+      ? "♛"
+      : encounter.rank === "elite"
+        ? "☠"
+        : ICONS.battle;
+/** What a fork's signpost says about each way. */
+const WAY_WORDS: Record<Encounter["kind"], string> = {
+  battle: "A dangerous road: a hard fight, sure to drop gear",
+  ally: "Smoke from a campfire: someone to meet",
+  gear: "An overgrown ruin: gear to find",
+  training: "A quiet clearing: a place to train",
+  fork: "Another fork",
 };
 
 interface RunScreenProps {
@@ -71,7 +92,7 @@ export function RunScreen({
               aria-label={`${index + 1}: ${encounterLabel(encounter)}`}
               title={encounterLabel(encounter)}
             >
-              {ICONS[encounter.kind]}
+              {iconOf(encounter)}
             </li>
           );
         })}
@@ -203,27 +224,113 @@ function EncounterPanel({
     );
   }
 
-  const found = gearOf(run, encounter.gearId);
+  if (encounter.kind === "training") {
+    return (
+      <section className="panel" aria-label="Encounter">
+        <h2>
+          A quiet clearing <span className="muted small">{step}</span>
+        </h2>
+        <p>Time to train: one of you gains a level.</p>
+        <div className="choices">
+          {run.party.map((member) => (
+            <button
+              key={member.id}
+              type="button"
+              className="secondary"
+              onClick={() => onChange(resolveTraining(run, member.id))}
+            >
+              Train {member.name}
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (encounter.kind === "fork") {
+    return (
+      <section className="panel" aria-label="Encounter">
+        <h2>
+          A fork in the road <span className="muted small">{step}</span>
+        </h2>
+        <div className="ways">
+          {encounter.options.map((option, index) => (
+            <button
+              key={index}
+              type="button"
+              className="secondary"
+              onClick={() => onChange(chooseFork(run, index))}
+            >
+              {iconOf(option)} {WAY_WORDS[option.kind]}
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <GearFind
+      key={run.position}
+      run={run}
+      gearIds={encounter.gearIds}
+      step={step}
+      onChange={onChange}
+    />
+  );
+}
+
+/** Gear lying about: pick one piece, then who gets it. */
+function GearFind({
+  run,
+  gearIds,
+  step,
+  onChange,
+}: {
+  run: Run;
+  gearIds: string[];
+  step: string;
+  onChange: (run: Run) => void;
+}) {
+  const pieces = gearIds.flatMap((id) => gearOf(run, id) ?? []);
+  const [chosen, setChosen] = useState(pieces[0]?.id ?? null);
   return (
     <section className="panel" aria-label="Encounter">
       <h2>
         Something in the grass <span className="muted small">{step}</span>
       </h2>
-      {found ? (
-        <p>
-          <strong>{found.name}</strong> ({found.slot}): {gearSummary(found)}
-        </p>
+      {pieces.length > 0 ? (
+        <>
+          <p className="muted small">Take one.</p>
+          <div className="pieces" role="radiogroup" aria-label="Gear">
+            {pieces.map((piece) => (
+              <button
+                key={piece.id}
+                type="button"
+                role="radio"
+                aria-checked={piece.id === chosen}
+                className="piece"
+                onClick={() => setChosen(piece.id)}
+              >
+                <strong>{piece.name}</strong>{" "}
+                <span className="muted small">
+                  {piece.slot} · {gearSummary(piece)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
       ) : (
         <p>Nothing of use.</p>
       )}
       <div className="choices">
-        {found &&
+        {chosen !== null &&
           run.party.map((member) => (
             <button
               key={member.id}
               type="button"
               className="secondary"
-              onClick={() => onChange(resolveGear(run, member.id))}
+              onClick={() => onChange(resolveGear(run, chosen, member.id))}
             >
               Give to {member.name}
             </button>
@@ -231,9 +338,9 @@ function EncounterPanel({
         <button
           type="button"
           className="secondary"
-          onClick={() => onChange(resolveGear(run, null))}
+          onClick={() => onChange(resolveGear(run, chosen, null))}
         >
-          {found ? "Keep in the bag" : "Move on"}
+          {chosen !== null ? "Keep in the bag" : "Move on"}
         </button>
       </div>
     </section>

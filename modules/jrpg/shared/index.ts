@@ -64,3 +64,4 @@ export function previewOpeningBattle(
 
 export * from "./run";
 export * from "./labels";
+export { GEAR_TIERS, atTier, withWorld } from "./world";

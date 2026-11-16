@@ -26,9 +26,22 @@ export function gearSummary(gear: Gear): string {
 
 /** A short name for a stop on the map. */
 export function encounterLabel(encounter: Encounter): string {
-  if (encounter.kind === "ally") return "Ally";
-  if (encounter.kind === "gear") return "Gear";
-  return encounter.boss ? "Final battle" : "Battle";
+  switch (encounter.kind) {
+    case "ally":
+      return "Ally";
+    case "gear":
+      return "Gear";
+    case "training":
+      return "Training";
+    case "fork":
+      return "Fork in the road";
+    case "battle":
+      return encounter.rank === "boss"
+        ? "Final battle"
+        : encounter.rank === "elite"
+          ? "Elite battle"
+          : "Battle";
+  }
 }
 
 /** Who waits in a battle: "3 × Goblin, Wolf". */

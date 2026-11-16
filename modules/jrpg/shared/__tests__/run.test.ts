@@ -3,11 +3,15 @@ import { starterLibrary, type Library } from "@jforge/char/shared";
 import { MAX_PARTY_SIZE, content, createBattle } from "@jforge/melee/shared";
 import {
   BUDGET_SHARE,
-  LEVEL_LENGTH,
+  GEAR_CHOICES,
+  LEVEL_LENGTH_SPREAD,
+  MAX_PACK_KINDS,
+  MIN_LEVEL_LENGTH,
   START_PARTY_SIZE,
   battleFor,
   canRecruit,
   changeGear,
+  chooseFork,
   currentEncounter,
   enemyLevelBonus,
   generateLevel,
@@ -15,9 +19,11 @@ import {
   loseBattle,
   monsterPool,
   nextLevel,
+  packFor,
   parseRun,
   resolveAlly,
   resolveGear,
+  resolveTraining,
   runLibrary,
   startRun,
   threatBudget,
@@ -41,7 +47,7 @@ const battle: Encounter = {
   kind: "battle",
   difficulty: "easy",
   seed: 5,
-  boss: false,
+  rank: "normal",
 };
 const ally: Encounter = {
   kind: "ally",
@@ -54,7 +60,11 @@ const ally: Encounter = {
     gear: {},
   },
 };
-const ring: Encounter = { kind: "gear", gearId: "gear-ring" };
+const ring: Encounter = { kind: "gear", gearIds: ["gear-ring", "gear-bow"] };
+const training: Encounter = { kind: "training" };
+/** Every encounter of a level, with the ways of its forks. */
+const everything = (encounters: Encounter[]): Encounter[] =>
+  encounters.flatMap((e) => (e.kind === "fork" ? [e, ...e.options] : [e]));
 
 describe("startRun", () => {
   it("sets out with the library's first class characters", () => {
@@ -76,56 +86,168 @@ describe("startRun", () => {
   });
 });
 
+describe("startRun and the world", () => {
+  const run = startRun(library, 1);
+
+  it("adds the world's enemies, classes, travellers and gear", () => {
+    const kinds = (kind: string) =>
+      run.library.archetypes.filter((a) => a.kind === kind).length;
+    expect(kinds("enemy")).toBeGreaterThan(5);
+    expect(kinds("class")).toBeGreaterThan(5);
+    expect(run.library.gear.length).toBeGreaterThan(library.gear.length * 4);
+    expect(parseRun(JSON.stringify(run))).toEqual(run);
+  });
+
+  it("keeps what was designed", () => {
+    for (const key of ["gear", "archetypes", "characters", "skills"] as const) {
+      const ids = new Set(run.library[key].map((x) => x.id));
+      expect(library[key].every((x) => ids.has(x.id))).toBe(true);
+    }
+  });
+});
+
 describe("generateLevel", () => {
-  const level = (seed: number, depth = 1) =>
-    generateLevel(library, startRun(library, seed).party, seed, depth);
+  const level = (seed: number, depth = 1) => {
+    const run = startRun(library, seed);
+    return generateLevel(run.library, run.party, seed, depth);
+  };
 
   it("is the same for the same seed and depth, and differs otherwise", () => {
     expect(level(3)).toEqual(level(3));
     expect(level(3)).not.toEqual(level(3, 2));
   });
 
+  it("varies in length within its bounds", () => {
+    const lengths = new Set(SEEDS.map((seed) => level(seed).length));
+    expect(lengths.size).toBeGreaterThan(1);
+    for (const length of lengths) {
+      expect(length).toBeGreaterThanOrEqual(MIN_LEVEL_LENGTH);
+      expect(length).toBeLessThanOrEqual(
+        MIN_LEVEL_LENGTH + LEVEL_LENGTH_SPREAD,
+      );
+    }
+  });
+
   it("opens with an easy battle and ends with a hard one that drops gear", () => {
     for (const seed of SEEDS) {
       const encounters = level(seed);
-      expect(encounters).toHaveLength(LEVEL_LENGTH);
       expect(encounters[0]).toMatchObject({
         kind: "battle",
         difficulty: "easy",
+        rank: "normal",
       });
-      const last = encounters[LEVEL_LENGTH - 1]!;
-      expect(last).toMatchObject({ kind: "battle", boss: true });
+      const last = encounters.at(-1)!;
+      expect(last).toMatchObject({ kind: "battle", rank: "boss" });
       expect(last.kind === "battle" && last.loot).toBeTruthy();
     }
   });
 
-  it("always has an ally to find, and never two finds in a row", () => {
+  it("has an elite battle past the middle that drops gear", () => {
+    for (const seed of SEEDS) {
+      const encounters = level(seed);
+      const at = encounters.findIndex(
+        (e) => e.kind === "battle" && e.rank === "elite",
+      );
+      expect(at).toBeGreaterThanOrEqual(encounters.length / 2);
+      expect(encounters[at]).toMatchObject({ difficulty: "hard" });
+      expect((encounters[at] as { loot?: string }).loot).toBeTruthy();
+    }
+  });
+
+  it("always has an ally, gear and training, and never two finds in a row", () => {
     for (const seed of SEEDS) {
       const kinds = level(seed).map((e) => e.kind);
-      expect(kinds).toContain("ally");
+      expect(kinds).toEqual(
+        expect.arrayContaining(["ally", "gear", "training"]),
+      );
       for (let i = 1; i < kinds.length; i++) {
         expect(kinds[i] !== "battle" && kinds[i - 1] !== "battle").toBe(false);
       }
     }
   });
 
-  it("offers a fresh character of a class, not one already in the party", () => {
+  it("brings every kind of encounter across seeds", () => {
+    const all = SEEDS.flatMap((seed) => everything(level(seed)));
+    expect(new Set(all.map((e) => e.kind))).toEqual(
+      new Set(["battle", "ally", "gear", "training", "fork"]),
+    );
+  });
+
+  it("forks into two different ways, never into another fork", () => {
     for (const seed of SEEDS) {
-      const found = level(seed).flatMap((e) =>
-        e.kind === "ally" ? [e.character] : [],
-      );
-      for (const character of found) {
-        expect(["unit-1", "unit-2"]).not.toContain(character.id);
-        expect(["type-knight", "type-sage"]).toContain(character.archetypeId);
+      for (const e of level(seed)) {
+        if (e.kind !== "fork") continue;
+        expect(e.options).toHaveLength(2);
+        expect(e.options.every((o) => o.kind !== "fork")).toBe(true);
+        expect(e.options[0]!.kind === e.options[1]!.kind).toBe(
+          e.options[0]!.kind === "battle" && e.options[1]!.kind === "battle",
+        );
       }
     }
   });
 
-  it("has no gear to find or drop when the library has none", () => {
-    const bare = { ...library, gear: [] };
-    const encounters = generateLevel(bare, [], 1, 1);
-    expect(encounters.some((e) => e.kind === "gear")).toBe(false);
-    expect(encounters.some((e) => e.kind === "battle" && e.loot)).toBe(false);
+  it("offers different travellers, none already in the party", () => {
+    for (const seed of SEEDS) {
+      const found = everything(level(seed)).flatMap((e) =>
+        e.kind === "ally" ? [e.character] : [],
+      );
+      expect(new Set(found.map((c) => c.id)).size).toBe(found.length);
+      for (const character of found) {
+        expect(["unit-1", "unit-2"]).not.toContain(character.id);
+      }
+    }
+  });
+
+  it("offers a choice of different gear that exists", () => {
+    const run = startRun(library, 1);
+    const known = new Set(run.library.gear.map((g) => g.id));
+    for (const seed of SEEDS) {
+      for (const e of everything(level(seed))) {
+        if (e.kind !== "gear") continue;
+        expect(e.gearIds.length).toBeGreaterThan(1);
+        expect(e.gearIds.length).toBeLessThanOrEqual(GEAR_CHOICES);
+        expect(new Set(e.gearIds).size).toBe(e.gearIds.length);
+        expect(e.gearIds.every((id) => known.has(id))).toBe(true);
+      }
+    }
+  });
+
+  it("finds better gear deeper in", () => {
+    const tiers = (depth: number) =>
+      SEEDS.flatMap((seed) => everything(level(seed, depth)))
+        .flatMap((e) => (e.kind === "gear" ? e.gearIds : []))
+        .map((id) => Number(/\+(\d)$/.exec(id)?.[1] ?? 0));
+    const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    expect(mean(tiers(3))).toBeGreaterThan(mean(tiers(1)) + 1);
+    expect(Math.max(...tiers(1))).toBeLessThan(3);
+  });
+});
+
+describe("packFor", () => {
+  const pool = monsterPool(startRun(library, 1));
+
+  it("picks a few different kinds, the same for the same seed", () => {
+    const sizes = new Set<number>();
+    for (const seed of SEEDS) {
+      const pack = packFor(pool, seed);
+      expect(pack).toEqual(packFor(pool, seed));
+      expect(new Set(pack).size).toBe(pack.length);
+      expect(pack.length).toBeGreaterThan(0);
+      expect(pack.length).toBeLessThanOrEqual(MAX_PACK_KINDS);
+      sizes.add(pack.length);
+    }
+    expect(sizes.size).toBe(MAX_PACK_KINDS);
+  });
+
+  it("meets every enemy sooner or later", () => {
+    const met = new Set(
+      SEEDS.flatMap((seed) => packFor(pool, seed).map((d) => d.name)),
+    );
+    expect(met.size).toBe(pool.length);
+  });
+
+  it("is the whole pool when it is small", () => {
+    expect(packFor(pool.slice(0, 1), 3)).toEqual(pool.slice(0, 1));
   });
 });
 
@@ -137,13 +259,20 @@ describe("battleFor", () => {
       setup.placements.filter((p) => p.side === side).map((p) => p.def.name);
     expect(names("player").sort()).toEqual(["Aldric", "Mira"]);
     expect(names("enemy").length).toBeGreaterThan(0);
-    expect(new Set(names("enemy"))).toEqual(new Set(["Goblin"]));
+    expect(new Set(names("enemy")).size).toBeLessThanOrEqual(MAX_PACK_KINDS);
   });
 
   it("is null off a battle or after a defeat", () => {
     expect(battleFor(at([ally]))).toBeNull();
     expect(battleFor(at([battle], { defeated: true }))).toBeNull();
     expect(battleFor(at([]))).toBeNull();
+  });
+
+  it("fields stronger enemies in elite and final battles", () => {
+    const run = at([battle]);
+    expect(monsterPool(run, 3)[0]!.stats.maxHp).toBeGreaterThan(
+      monsterPool(run)[0]!.stats.maxHp,
+    );
   });
 
   it("spends more threat on harder battles and stronger parties", () => {
@@ -179,14 +308,18 @@ describe("monsterPool", () => {
     );
   });
 
-  it("is melee's monsters when no enemy was designed", () => {
-    const noEnemies = {
-      ...library,
-      characters: library.characters.filter((c) => c.name !== "Goblin"),
-    };
-    expect(monsterPool({ ...at([battle]), library: noEnemies })).toBe(
-      content.monsters,
+  it("is melee's monsters when the library has no enemy at all", () => {
+    const run = at([battle]);
+    const classes = new Set(
+      run.library.archetypes.filter((a) => a.kind === "class").map((a) => a.id),
     );
+    const noEnemies = {
+      ...run.library,
+      characters: run.library.characters.filter((c) =>
+        classes.has(c.archetypeId),
+      ),
+    };
+    expect(monsterPool({ ...run, library: noEnemies })).toBe(content.monsters);
   });
 });
 
@@ -278,22 +411,65 @@ describe("resolveAlly", () => {
 });
 
 describe("resolveGear", () => {
-  it("stows the find in the bag", () => {
-    const run = resolveGear(at([ring]), null);
+  it("stows the chosen piece in the bag", () => {
+    const run = resolveGear(at([ring]), "gear-ring", null);
     expect(run.bag).toEqual(["gear-ring"]);
     expect(run.position).toBe(1);
   });
 
   it("puts it on a character, whose old gear goes in the bag", () => {
-    const sword: Encounter = { kind: "gear", gearId: "gear-bow" };
-    const run = resolveGear(at([sword]), "unit-1");
+    const run = resolveGear(at([ring]), "gear-bow", "unit-1");
     expect(run.party[0]!.gear.weapon).toBe("gear-bow");
     expect(run.bag).toEqual(["gear-sword"]);
   });
 
+  it("moves on with nothing for no piece or one that isn't on offer", () => {
+    for (const id of [null, "gear-mail"]) {
+      const run = resolveGear(at([ring]), id, "unit-1");
+      expect(run.bag).toEqual([]);
+      expect(run.position).toBe(1);
+    }
+  });
+
   it("does nothing off a gear encounter", () => {
     const run = at([battle]);
-    expect(resolveGear(run, null)).toBe(run);
+    expect(resolveGear(run, "gear-ring", null)).toBe(run);
+  });
+});
+
+describe("resolveTraining", () => {
+  it("gives the chosen member a level and moves on", () => {
+    const run = resolveTraining(at([training]), "unit-2");
+    expect(run.party.map((c) => c.level)).toEqual([3, 4]);
+    expect(run.position).toBe(1);
+  });
+
+  it("moves on without training anyone unknown", () => {
+    const run = resolveTraining(at([training]), null);
+    expect(run.party.map((c) => c.level)).toEqual([3, 3]);
+    expect(run.position).toBe(1);
+  });
+
+  it("does nothing off a training encounter", () => {
+    const run = at([battle]);
+    expect(resolveTraining(run, "unit-1")).toBe(run);
+  });
+});
+
+describe("chooseFork", () => {
+  const fork: Encounter = { kind: "fork", options: [ally, training] };
+
+  it("puts the chosen way where the party stands", () => {
+    const run = chooseFork(at([fork, battle]), 1);
+    expect(run.position).toBe(0);
+    expect(run.encounters).toEqual([training, battle]);
+  });
+
+  it("does nothing for a way that isn't there, or off a fork", () => {
+    const run = at([fork]);
+    expect(chooseFork(run, 2)).toBe(run);
+    const fight = at([battle]);
+    expect(chooseFork(fight, 0)).toBe(fight);
   });
 });
 
@@ -333,7 +509,7 @@ describe("nextLevel", () => {
     const next = nextLevel(done);
     expect(next).toMatchObject({ depth: 2, position: 0, bag: ["gear-ring"] });
     expect(next.party).toBe(done.party);
-    expect(next.encounters).toHaveLength(LEVEL_LENGTH);
+    expect(next.encounters.length).toBeGreaterThanOrEqual(MIN_LEVEL_LENGTH);
   });
 
   it("stays put before that", () => {
@@ -353,7 +529,11 @@ describe("parseRun", () => {
     expect(parseRun(null)).toBeNull();
     expect(parseRun("{")).toBeNull();
     expect(parseRun("3")).toBeNull();
-    expect(parseRun(JSON.stringify({ ...run, version: 2 }))).toBeNull();
+    expect(parseRun(JSON.stringify({ ...run, version: 1 }))).toBeNull();
+    const nested = { kind: "fork", options: [{ kind: "fork", options: [] }] };
+    expect(
+      parseRun(JSON.stringify({ ...run, encounters: [nested] })),
+    ).toBeNull();
     expect(parseRun(JSON.stringify({ ...run, party: [] }))).toBeNull();
     expect(parseRun(JSON.stringify({ ...run, library: {} }))).toBeNull();
     expect(
@@ -369,7 +549,10 @@ describe("a whole level", () => {
       const encounter = currentEncounter(run)!;
       if (encounter.kind === "battle") run = winBattle(run)!.run;
       else if (encounter.kind === "ally") run = resolveAlly(run, true);
-      else run = resolveGear(run, run.party[0]!.id);
+      else if (encounter.kind === "fork") run = chooseFork(run, 0);
+      else if (encounter.kind === "training") {
+        run = resolveTraining(run, run.party[0]!.id);
+      } else run = resolveGear(run, encounter.gearIds[0]!, run.party[0]!.id);
     }
     expect(run.party.length).toBeGreaterThan(START_PARTY_SIZE);
     expect(nextLevel(run).depth).toBe(2);
