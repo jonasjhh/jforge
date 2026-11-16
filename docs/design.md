@@ -17,7 +17,7 @@ melee  <-  char  <-  jrpg
 | ------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `melee` | Battle engine and rules: what combatants, stats, damage types, statuses and skills are. Starter content. Runs any fight. |
 | `char`  | Character creator and skill designer. Builds on melee's definitions. Stores the roster. "Test in melee".                 |
-| `jrpg`  | The game. Uses melee for battles and char for the party (later).                                                         |
+| `jrpg`  | The game: runs through levels of encounters. Uses melee for battles and char for the party, enemies and gear.            |
 
 **melee never depends on char.** It accepts plain data (a party and an
 encounter); char converts its characters into that format. Otherwise the
@@ -519,10 +519,43 @@ on melee, never the other way round.
 The library is saved in the browser (localStorage), with JSON export and
 import.
 
+## The run (`modules/jrpg`)
+
+Jrpg is a run through **levels**, each a fixed sequence of 8 encounters
+generated from the run's seed (`shared/run.ts`, pure like the engine):
+
+- **Battle**: melee's battle screen (`@jforge/melee/battle`). The first is
+  Easy, the first half Easy, the second Normal, the last a Hard final
+  battle. Winning gives every member `40 x enemy threat / party size`
+  experience and sometimes gear (40%; the final battle always), which
+  goes in the bag. Losing or drawing **ends the run**. Retreating returns
+  to the map with nothing lost.
+- **Ally**: a class character from the library that isn't in the party
+  (else a fresh one of a random class) offers to join, at the level of the
+  party's weakest member if that is higher. The party holds five.
+- **Gear**: a piece from the library; give it to a member (what they wore
+  goes in the bag) or keep it in the bag.
+
+One ally and up to two gear finds per level, between the first and last
+battle, never two finds in a row. Between encounters gear can be swapped
+with the bag. A cleared level leads to the next, deeper one.
+
+The run copies char's library when it starts (the starter library if no
+class character exists), so later edits don't break it. The party is the
+library's first two class characters. Enemies are the library's enemy
+characters (melee's monsters if none), levelled up by the party's average
+levels gained plus one per depth. The **threat budget** of a battle is a
+share of the party's own estimated threat (Easy 1, Normal 1.25, Hard
+1.55), so encounters keep pace with levels, gear and party size; with the
+starter library auto-played parties win about 100% / 90% / 70% of them.
+The run is saved in the browser after every encounter.
+
+Not yet: HP carrying over between battles, branching paths, shops, rest
+stops, replacing a member when the party is full.
+
 Still to come: a live damage preview and power budget in the skill
 designer, the remaining effect types (statuses, summons), resistances per
-type, AI targeting profiles, IndexedDB or cloud saves, and jrpg awarding
-experience.
+type, AI targeting profiles, IndexedDB or cloud saves.
 
 ## Phases
 

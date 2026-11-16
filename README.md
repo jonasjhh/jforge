@@ -10,11 +10,11 @@ credentials, deploys and secrets are set up once, not per module.
 
 ## Modules
 
-| Module  | Path      | Depends on | What it is                                |
-| ------- | --------- | ---------- | ----------------------------------------- |
-| `melee` | `/melee/` | —          | Battle engine: time-based turns, 5x3 grid |
-| `jrpg`  | `/jrpg/`  | `melee`    | Turn-based adventure (placeholder)        |
-| `char`  | `/char/`  | `melee`    | Designer: classes, enemies, skills, gear  |
+| Module  | Path      | Depends on      | What it is                                |
+| ------- | --------- | --------------- | ----------------------------------------- |
+| `melee` | `/melee/` | —               | Battle engine: time-based turns, 5x3 grid |
+| `jrpg`  | `/jrpg/`  | `melee`, `char` | Runs through levels of encounters         |
+| `char`  | `/char/`  | `melee`         | Designer: classes, enemies, skills, gear  |
 
 ## Layout
 
@@ -37,8 +37,10 @@ wrangler.toml         the one Worker's config
 Modules depend on each other through pnpm workspace packages: `jrpg`
 lists `"@jforge/melee": "workspace:*"` and imports
 `@jforge/melee/shared`. `char` publishes the characters designed in it as a
-roster in melee's format (browser storage, one origin), which `melee` and
-`jrpg` read: so both import from char without depending on it. A module exposes what others may import through
+roster in melee's format (browser storage, one origin), which `melee`
+reads without depending on char. `jrpg` depends on both: it reads char's
+library (`@jforge/char/shared`) and shows melee's battle screen
+(`@jforge/melee/battle`). A module exposes what others may import through
 the `exports` field of its `package.json`.
 
 ## Development

@@ -31,11 +31,13 @@ export interface EncounterPools {
  * difficulty always give the same encounter. Party members stand in their
  * preferred row (in a random column); monsters are drawn at random until
  * the threat budget is spent and placed with a bias toward the front.
+ * `budget` replaces the difficulty's own (jrpg scales it with the party).
  */
 export function randomEncounter(
   seed: number,
   difficulty: Difficulty,
   pools: EncounterPools = { party: playerTypes, monsters },
+  budget: number = THREAT_BUDGET[difficulty],
 ): BattleSetup {
   const random = createRandom(seed);
   const pick = <T>(items: T[]): T =>
@@ -73,12 +75,12 @@ export function randomEncounter(
     put(def, "player", row, pick(freeCells("player", row)));
   }
 
-  let budget = THREAT_BUDGET[difficulty];
+  let placed = 0;
   const cost = (def: CombatantDef) => def.threat ?? 1;
   for (;;) {
     let affordable = pools.monsters.filter((m) => cost(m) <= budget);
     // A pool of only big monsters still gets one: the cheapest.
-    if (affordable.length === 0 && budget === THREAT_BUDGET[difficulty]) {
+    if (affordable.length === 0 && placed === 0) {
       const cheapest = Math.min(...pools.monsters.map(cost));
       affordable = pools.monsters.filter((m) => cost(m) === cheapest);
     }
@@ -88,6 +90,7 @@ export function randomEncounter(
     const row = weightedRow(rows, random());
     put(monster, "enemy", row, pick(freeCells("enemy", row)));
     budget -= cost(monster);
+    placed++;
   }
 
   return { placements };

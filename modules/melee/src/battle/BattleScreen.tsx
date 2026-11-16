@@ -47,14 +47,35 @@ interface BattleScreenProps {
   /** After a battle: `won` starts a new encounter, otherwise a retry. */
   onRestart: (won: boolean) => void;
   onExit: () => void;
+  /** Wording for a host other than melee's own start screen (jrpg). */
+  labels?: Partial<BattleLabels>;
 }
+
+export interface BattleLabels {
+  /** The way out, in the header. */
+  exit: string;
+  /** The main button after a victory, and after a defeat or draw. */
+  won: string;
+  lost: string;
+  /** The second button once the battle is over; null leaves it out. */
+  back: string | null;
+}
+
+const MELEE_LABELS: BattleLabels = {
+  exit: "← Melee",
+  won: "Next battle",
+  lost: "Try again",
+  back: "Back",
+};
 
 export function BattleScreen({
   setup,
   seed,
   onRestart,
   onExit,
+  labels,
 }: BattleScreenProps) {
+  const text = { ...MELEE_LABELS, ...labels };
   // The unit whose details are open; time stands still meanwhile.
   const [inspected, setInspected] = useState<string | null>(null);
   // Paused by the player, or because they left the app.
@@ -112,7 +133,7 @@ export function BattleScreen({
     <main className="battle">
       <header className="battle-header">
         <button type="button" className="link" onClick={onExit}>
-          ← Melee
+          {text.exit}
         </button>
         <span className="header-end">
           <span className="muted">Seed {seed}</span>
@@ -278,11 +299,13 @@ export function BattleScreen({
                 className="command action"
                 onClick={() => onRestart(phase.winner === "player")}
               >
-                {phase.winner === "player" ? "Next battle" : "Try again"}
+                {phase.winner === "player" ? text.won : text.lost}
               </button>
-              <button type="button" className="command" onClick={onExit}>
-                Back
-              </button>
+              {text.back !== null && (
+                <button type="button" className="command" onClick={onExit}>
+                  {text.back}
+                </button>
+              )}
             </div>
           </>
         )}

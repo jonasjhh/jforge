@@ -1,97 +1,82 @@
+import { useState } from "react";
+import { BattleScreen } from "@jforge/melee/battle";
 import {
-  EMPTY_ROSTER,
-  readRoster,
-  type BattleSummary,
-  type Roster,
-} from "@jforge/melee/shared";
-import { meta } from "../meta";
-import { partyFrom, previewOpeningBattle } from "../shared";
-import { useApiHealth } from "./useApiHealth";
+  battleFor,
+  loseBattle,
+  startRun,
+  winBattle,
+  type Reward,
+  type Run,
+} from "../shared";
+import { RunScreen } from "./RunScreen";
+import { StartScreen } from "./StartScreen";
+import { loadLibrary, loadRun, saveRun } from "./storage";
 
-interface Health {
-  module: string;
-  status: string;
-  uses: string[];
-  demo: BattleSummary;
-}
+const newSeed = () => Math.floor(Math.random() * 1_000_000);
 
-/** The party published by the char module on this device, if any. */
-function loadRoster(): Roster {
-  try {
-    return readRoster(localStorage);
-  } catch {
-    return EMPTY_ROSTER;
-  }
-}
-
-function describeBattle(summary: BattleSummary): string {
-  const result =
-    summary.winner === null
-      ? "Draw"
-      : summary.winner === "player"
-        ? "Party wins"
-        : "Enemies win";
-  return `${result} after ${summary.actions} actions`;
-}
+const BATTLE_LABELS = {
+  exit: "← Retreat",
+  won: "Collect rewards",
+  lost: "End of the run",
+  back: null,
+};
 
 export function App() {
-  const health = useApiHealth<Health>("/api/jrpg/health");
-  const roster = loadRoster();
-  const party = partyFrom(roster);
-  const local = previewOpeningBattle(1, party);
+  const [run, setRun] = useState<Run | null>(loadRun);
+  // The battle being fought, by its battle seed; null on the map.
+  const [fighting, setFighting] = useState<number | null>(null);
+  // What the last battle paid, shown until the party moves on.
+  const [reward, setReward] = useState<Reward | null>(null);
+
+  const update = (next: Run | null) => {
+    saveRun(next);
+    setRun(next);
+  };
+
+  if (run === null) {
+    return (
+      <StartScreen
+        library={loadLibrary()}
+        onStart={(library) => update(startRun(library, newSeed()))}
+      />
+    );
+  }
+
+  const setup = fighting === null ? null : battleFor(run);
+  if (fighting !== null && setup) {
+    return (
+      <BattleScreen
+        key={fighting}
+        setup={setup}
+        seed={fighting}
+        labels={BATTLE_LABELS}
+        onRestart={(won) => {
+          const result = won ? winBattle(run) : null;
+          setReward(result?.reward ?? null);
+          update(result ? result.run : loseBattle(run));
+          setFighting(null);
+        }}
+        onExit={() => setFighting(null)}
+      />
+    );
+  }
+
   return (
-    <main className="page">
-      <a className="back" href="/">
-        ← jforge
-      </a>
-      <h1>{meta.title}</h1>
-      <p className="muted">{meta.description}</p>
-
-      <section className="panel">
-        <h2>Setup check</h2>
-        <ul>
-          <li>
-            Module: <code>modules/{meta.name}</code>, served at{" "}
-            <code>/{meta.name}/</code>
-          </li>
-          <li>
-            Party{" "}
-            {roster.party.length > 0 ? (
-              <>
-                (from <a href="/char/">Char</a>)
-              </>
-            ) : (
-              <>
-                (default; design your own in <a href="/char/">Char</a>)
-              </>
-            )}
-            : <strong>{party.map((def) => def.name).join(", ")}</strong>
-          </li>
-          <li>
-            Opening battle with melee in the browser:{" "}
-            <span className="good">{describeBattle(local)}</span>
-          </li>
-          <li>
-            API <code>/api/{meta.name}/health</code>:{" "}
-            {health.state === "loading" && "checking…"}
-            {health.state === "error" && (
-              <span className="bad">unreachable ({health.message})</span>
-            )}
-            {health.state === "ok" && (
-              <span className="good">
-                {health.body.status}, uses {health.body.uses.join(", ")} —{" "}
-                {describeBattle(health.body.demo)}
-              </span>
-            )}
-          </li>
-        </ul>
-      </section>
-
-      <p className="muted">
-        <a className="back" href="/melee/">
-          Open melee →
-        </a>
-      </p>
-    </main>
+    <RunScreen
+      run={run}
+      reward={reward}
+      onChange={(next) => {
+        setReward(null);
+        update(next);
+      }}
+      onFight={() => {
+        setReward(null);
+        setFighting(newSeed());
+      }}
+      onAbandon={() => {
+        setReward(null);
+        update(null);
+      }}
+    />
   );
 }

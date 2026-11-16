@@ -1,56 +1,89 @@
-body {
-  margin: 0;
-  background: #0e1020;
-  color: #eceefe;
-  font-family: system-ui, sans-serif;
-  -webkit-tap-highlight-color: transparent;
+/* The look (colours, buttons, the battle screen) is melee's, imported in
+   main.tsx; these are only the run's own screens. */
+
+.run-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.page {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 1.25rem 1rem 2rem;
-  box-sizing: border-box;
+.path {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
 }
 
-h1 {
-  font-size: 2.4rem;
-  margin: 1.5rem 0 0.25rem;
-  color: #8f9bff;
+.stop {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 1.1rem;
 }
 
-h2 {
-  font-size: 1rem;
-  margin: 0 0 0.5rem;
+.stop-done {
+  opacity: 0.45;
 }
 
-.muted {
-  color: #a7acd0;
+.stop-here {
+  border-color: var(--turn);
+  color: var(--turn);
+  background: var(--raised);
 }
 
-.back {
-  color: #8f9bff;
-  text-decoration: none;
+.stop-lost {
+  border-color: var(--danger);
+  color: var(--danger-soft);
 }
 
-.panel {
-  margin-top: 1.5rem;
-  background: #181b33;
-  border: 1px solid #2d3360;
-  border-radius: 16px;
-  padding: 1rem;
+.reward {
+  border-color: var(--good);
 }
 
-.panel ul {
-  margin: 0;
-  padding-left: 1.1rem;
-  line-height: 1.6;
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.5rem;
 }
 
-.good {
-  color: #5fd38d;
+.member {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line-soft);
 }
 
-.bad {
-  color: #ff8a7a;
+.member-name {
+  margin: 0 0 0.4rem;
+}
+
+.member-gear {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.gear-slot {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gear-slot select {
+  min-width: 0;
+  padding: 0.45rem 0.3rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.panel a {
+  color: var(--ally);
 }

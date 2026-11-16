@@ -1,17 +1,19 @@
 import { writeRoster } from "@jforge/melee/shared";
 import {
+  LIBRARY_STORAGE_KEY,
   compileRoster,
   parseLibrary,
   starterLibrary,
   type Library,
 } from "../shared";
 
-const LIBRARY_KEY = "jforge.char.library";
-
 /** The library saved on this device, or the starter one. */
 export function loadLibrary(): Library {
   try {
-    return parseLibrary(localStorage.getItem(LIBRARY_KEY)) ?? starterLibrary();
+    return (
+      parseLibrary(localStorage.getItem(LIBRARY_STORAGE_KEY)) ??
+      starterLibrary()
+    );
   } catch {
     return starterLibrary();
   }
@@ -23,7 +25,7 @@ export function loadLibrary(): Library {
  */
 export function saveLibrary(library: Library): boolean {
   try {
-    localStorage.setItem(LIBRARY_KEY, JSON.stringify(library));
+    localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(library));
     return writeRoster(localStorage, compileRoster(library));
   } catch {
     return false;

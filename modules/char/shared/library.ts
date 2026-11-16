@@ -215,6 +215,9 @@ function isCharacter(v: unknown): boolean {
   );
 }
 
+/** Where the library is saved in the browser (jrpg reads it too). */
+export const LIBRARY_STORAGE_KEY = "jforge.char.library";
+
 /**
  * Reads an exported or saved library. Null unless it is well formed and
  * every character in it compiles into a combatant melee accepts.

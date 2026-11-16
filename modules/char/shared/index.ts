@@ -33,6 +33,7 @@ export {
   blankGear,
   blankSkill,
   emptyLibrary,
+  LIBRARY_STORAGE_KEY,
   flatStats,
   nextId,
   parseLibrary,

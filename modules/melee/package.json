@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     "./shared": "./shared/index.ts",
+    "./battle": "./src/battle/index.ts",
+    "./battle.css": "./src/index.css",
     "./worker": "./worker/index.ts"
   },
   "scripts": {
