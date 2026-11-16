@@ -100,6 +100,24 @@ function statusValue(
   return (status.harmful ? -sign : sign) * SUPPORT_VALUE;
 }
 
+/**
+ * Drawing the enemies' attacks is worth as much as the allies it shields
+ * are frail next to the taunter: nothing alone, little for a hurt taunter.
+ */
+function tauntValue(state: BattleState, taunter: Unit): number {
+  if (taunter.statuses.some((s) => s.effect === "taunt")) return 0;
+  const allies = state.units.filter(
+    (u) =>
+      u.side === taunter.side &&
+      u.id !== taunter.id &&
+      !u.obstacle &&
+      isAlive(u),
+  );
+  if (allies.length === 0) return 0;
+  const health = taunter.hp / taunter.base.maxHp;
+  return SUPPORT_VALUE * health;
+}
+
 /** What the skill's effect on one victim is worth to the caster's side. */
 function victimValue(
   state: BattleState,
@@ -125,6 +143,7 @@ function victimValue(
         sign * healValue(victim, effect.power * effectiveStat(unit, "magic"))
       );
     case "status":
+      if (effect.status.effect === "taunt") return tauntValue(state, victim);
       return statusValue(p, unit, victim, effect.status, friend);
     case "modify": {
       const { modifier } = effect;

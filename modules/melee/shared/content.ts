@@ -273,6 +273,33 @@ export const cleave: Skill = {
   effect: { type: "strike", power: 0.7 },
 };
 
+/**
+ * Fighter: for a while, enemies that single out a target must pick the
+ * Fighter while they can reach it. Area attacks still go where they like.
+ */
+export const provoke: Skill = {
+  id: "provoke",
+  name: "Provoke",
+  description:
+    "Dares the enemies: for a while, any enemy that can single you out must target you.",
+  mpCost: 5,
+  target: "self",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "taunt",
+      name: "Provoke",
+      effect: "taunt",
+      harmful: false,
+      stat: "attack",
+      power: 0,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
 /** Archer: a careful shot over the front line at a covered enemy. */
 export const aimedShot: Skill = {
   id: "aimed-shot",
@@ -575,6 +602,7 @@ export const skills = [
   regen,
   cure,
   cleave,
+  provoke,
   aimedShot,
   skewer,
   hook,
@@ -607,7 +635,7 @@ export const fighter: CombatantDef = {
     speed: 10,
   },
   weapon: sword,
-  skills: [cleave],
+  skills: [cleave, provoke],
   preferredRow: 0,
 };
 

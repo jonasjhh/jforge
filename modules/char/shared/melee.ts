@@ -219,13 +219,34 @@ function withCategories(library: Library): Library {
 }
 
 /**
+ * `library` with each saved melee class given the skills melee has added
+ * to it since, at the level the class learns them. Skills it already has
+ * keep their level. The library itself if nothing was missing.
+ */
+function withNewSkills(library: Library): Library {
+  const classes = new Map(meleeClasses().map((a) => [a.id, a]));
+  let changed = false;
+  const archetypes = library.archetypes.map((a) => {
+    const known = classes.get(a.id);
+    if (!known) return a;
+    const has = new Set(a.skills.map((s) => s.skillId));
+    const added = known.skills.filter((s) => !has.has(s.skillId));
+    if (added.length === 0) return a;
+    changed = true;
+    return { ...a, skills: [...a.skills, ...added.map((s) => ({ ...s }))] };
+  });
+  return changed ? { ...library, archetypes } : library;
+}
+
+/**
  * `library` with every melee class, the skills they learn, the basic gear
  * and a hero of each class wearing it. What the library already has under
  * the same id (an edited copy, say) is kept, given the proficiencies or
- * category it was saved without.
+ * category it was saved without, and a melee class the skills melee has
+ * added to it since.
  */
 export function withMeleeClasses(saved: Library): Library {
-  const library = withCategories(saved);
+  const library = withNewSkills(withCategories(saved));
   const types = new Set(library.archetypes.map((a) => a.id));
   const skills = new Set(library.skills.map((s) => s.id));
   const gearIds = new Set(library.gear.map((g) => g.id));

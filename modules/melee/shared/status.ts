@@ -109,6 +109,7 @@ function tick(
     case "stealth":
     case "shield":
     case "ward":
+    case "taunt":
       // Nothing happens on their single tick: they just end.
       break;
     case "damage": {

@@ -130,9 +130,10 @@ export interface StatusDef {
   /**
    * heal / damage: HP per tick. stealth: hidden until it ends. shield:
    * absorbs `power x stat` damage before HP. ward: can't be knocked out
-   * (a lethal hit leaves 1 HP). The last three just last until they end.
+   * (a lethal hit leaves 1 HP). taunt: enemies that single out a target
+   * must pick it while they can. The last four just last until they end.
    */
-  effect: "heal" | "damage" | "stealth" | "shield" | "ward";
+  effect: "heal" | "damage" | "stealth" | "shield" | "ward" | "taunt";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */

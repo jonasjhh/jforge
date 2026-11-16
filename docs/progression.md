@@ -126,7 +126,8 @@ party size` (`XP_PER_THREAT`, `xpFor`).
   - Battles get somewhat harder with depth on purpose: +1 enemy level and
     +6% budget per level of the run.
 - **Real advantages come from what the threat estimate misses:**
-  - skills unlocked by level;
+  - skills unlocked by level, especially those threat barely counts,
+    such as Provoke pulling attacks off frail allies;
   - speed, which counts for more than its threat;
   - a party that works together: healing, buffs, area attacks on clumped
     enemies;

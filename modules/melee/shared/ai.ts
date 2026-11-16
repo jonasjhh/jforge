@@ -1,7 +1,7 @@
 import { defenseFactor, expectedPhysicalDamage, wouldKnockOut } from "./damage";
 import { bestMove } from "./aiMove";
 import { bestSkill } from "./aiSkills";
-import { reachableTargets } from "./reach";
+import { attackTargets } from "./reach";
 import { nextRandom } from "./rng";
 import { effectiveStat } from "./stats";
 import type { BattleState, Command, TargetingProfile, Unit } from "./types";
@@ -49,7 +49,7 @@ export function chooseCommand(state: BattleState, unit: Unit): Command | null {
   if (move) return move.command;
 
   let best: { command: Command; score: number } | null = null;
-  for (const target of reachableTargets(state, unit)) {
+  for (const target of attackTargets(state, unit)) {
     const score = targetScore(state, unit, target);
     if (!best || score > best.score) {
       best = { command: { type: "attack", targetId: target.id }, score };

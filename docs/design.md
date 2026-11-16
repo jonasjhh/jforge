@@ -245,6 +245,14 @@ cell) and its `area` which cells it hits around the aimed one.
   right now, so covered units are safe and the aimed cell only picks the
   swing), 5 MP. Reusable for any weapon: a spear's reach is deeper, a
   bow's covers every column.
+- **Provoke** (Fighter): a **taunt** status on the Fighter itself (150
+  game time, 5 MP). While it lasts, an enemy that singles out a target (a
+  weapon attack, or a skill with a `single` area aimed at an enemy) must
+  pick a taunting unit among those it could pick: for attacks and
+  strikes, those in reach; for spells, every visible enemy. An enemy that
+  can't reach the Fighter is free; area skills are free; stealth wins
+  over taunt (a hidden taunter binds no one). The AI casts it only with
+  allies to cover, and less the more the Fighter is hurt.
 - **Aimed Shot** (Archer): a bow strike at x1.0 that **ignores cover**
   (`ignoreCover` on a strike), so it reaches any visible enemy, back row
   included, 6 MP. Its job is picking off casters and the wounded behind a
@@ -456,10 +464,15 @@ Still open:
 - **No new skills for existing classes until there are at least 10
   distinct class archetypes.** Reached with the Geomancer (10 classes):
   new skills for existing classes may now be proposed.
+- **Five unique skills per class.** Every player class gets five skills
+  that no other class has, mixing roles (a Fighter deals damage and
+  tanks), learned at levels 1, 2, 4, 6 and 8. They are added one skill at
+  a time, each reviewed first. A saved melee class in char gets the
+  skills melee adds to it; a class designed in char is left alone.
 
 ### Class roster plan (10 archetypes)
 
-Existing (10): **Fighter** (melee, front; Cleave hits all in reach), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
+Existing (10): **Fighter** (melee, front; Cleave hits all in reach, Provoke draws single-target attacks), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:

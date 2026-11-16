@@ -1,4 +1,5 @@
 import { isStealthed } from "./stealth";
+import { forcedTargets } from "./taunt";
 import { isAlive } from "./stats";
 import type { BattleState, Unit } from "./types";
 
@@ -60,4 +61,16 @@ export function canReach(
   return reachableTargets(state, attacker, options).some(
     (u) => u.id === target.id,
   );
+}
+
+/**
+ * The enemies `attacker` may single out with a weapon attack: those it can
+ * reach, narrowed to the taunting ones while any of them is in reach.
+ */
+export function attackTargets(
+  state: BattleState,
+  attacker: Unit,
+  options: ReachOptions = {},
+): Unit[] {
+  return forcedTargets(reachableTargets(state, attacker, options));
 }

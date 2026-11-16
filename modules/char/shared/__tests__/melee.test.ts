@@ -91,6 +91,38 @@ describe("withMeleeClasses", () => {
     expect(withMeleeClasses(library)).toBe(library);
   });
 
+  it("gives a saved melee class the skills melee has added since", () => {
+    const current = classFromMelee(fighter);
+    const [first, ...added] = current.skills;
+    const saved = {
+      ...current,
+      name: "Sellsword",
+      skills: [{ ...first!, level: 5 }],
+    };
+    const library = withMeleeClasses({
+      ...emptyLibrary(),
+      archetypes: [saved],
+    });
+    const updated = library.archetypes.find((a) => a.id === current.id)!;
+    expect(updated.name).toBe("Sellsword");
+    expect(updated.skills).toEqual([{ ...first!, level: 5 }, ...added]);
+    expect(added.length).toBeGreaterThan(0);
+    expect(withMeleeClasses(library)).toBe(library);
+  });
+
+  it("leaves a designed class's skills alone", () => {
+    const designed = {
+      ...classFromMelee(fighter),
+      id: "sellsword",
+      skills: [],
+    };
+    const library = withMeleeClasses({
+      ...emptyLibrary(),
+      archetypes: [designed],
+    });
+    expect(library.archetypes.find((a) => a.id === "sellsword")).toBe(designed);
+  });
+
   it("is part of the starter library, which still saves and loads", () => {
     const starter = starterLibrary();
     expect(withMeleeClasses(starter)).toBe(starter);

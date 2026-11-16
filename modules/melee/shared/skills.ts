@@ -2,6 +2,7 @@ import { applyDamage, magicalHit, physicalHit } from "./damage";
 import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
 import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isStealthed } from "./stealth";
+import { tauntBlock } from "./taunt";
 import {
   GRID_COLUMNS,
   GRID_ROWS,
@@ -119,6 +120,18 @@ export function validateSkill(
     !canReach(state, unit, target, { ignoreCover: skill.effect.ignoreCover })
   ) {
     return "Target is out of reach";
+  }
+  if (!sameSide && skill.area === "single") {
+    // Taunting enemies must be singled out while they can be.
+    const candidates =
+      skill.effect.type === "strike"
+        ? reachableTargets(state, unit, {
+            ignoreCover: skill.effect.ignoreCover,
+          })
+        : state.units.filter(
+            (u) => u.side !== unit.side && isAlive(u) && !isStealthed(u),
+          );
+    return tauntBlock(candidates, target);
   }
   return null;
 }

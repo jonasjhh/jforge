@@ -12,7 +12,7 @@ export {
   unitAt,
 } from "./grid";
 export { effectiveStat, isAlive } from "./stats";
-export { canReach, reachableTargets } from "./reach";
+export { attackTargets, canReach, reachableTargets } from "./reach";
 export {
   canAfford,
   skillArea,
@@ -23,6 +23,7 @@ export {
 export { MOVE_GAUGE_LEFT, validateMove } from "./move";
 export { DEFEND_FACTOR, WAIT_GAUGE_LEFT } from "./stance";
 export { AMBUSH_POWER, isStealthed } from "./stealth";
+export { isTaunting } from "./taunt";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";
 export { applyStatus } from "./status";
 export { GAUGE_FULL, fillRate, turnOrder } from "./timeline";

@@ -46,6 +46,8 @@ function statusText(status: Status, speed: number): string {
       return `Absorbs the next ${status.amount} damage.`;
     case "ward":
       return "Can't be knocked out: a fatal hit leaves 1 HP.";
+    case "taunt":
+      return "Provoking: enemies that single out a target must pick it.";
   }
 }
 

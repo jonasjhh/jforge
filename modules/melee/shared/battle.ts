@@ -2,7 +2,8 @@ import { chooseCommand } from "./ai";
 import { dropReady, findSkill, makeUnit } from "./units";
 import { applyDamage, physicalHit } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
-import { canReach } from "./reach";
+import { canReach, reachableTargets } from "./reach";
+import { tauntBlock } from "./taunt";
 import { MOVE_GAUGE_LEFT, resolveMove, validateMove } from "./move";
 import { dropGuard, resolveDefend, resolveWait } from "./stance";
 import { breakStealth } from "./stealth";
@@ -174,7 +175,7 @@ export function validateCommand(
   if (target.side === unit.side) return "Cannot attack an ally";
   if (!isAlive(target)) return "Target is already knocked out";
   if (!canReach(state, unit, target)) return "Target is out of reach";
-  return null;
+  return tauntBlock(reachableTargets(state, unit), target);
 }
 
 /** "Slime", "Slime" on one side become "Slime A", "Slime B". */
