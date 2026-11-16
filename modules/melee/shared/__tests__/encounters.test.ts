@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createBattle } from "../battle";
-import { monsters, playerTypes, slime, wolf } from "../content";
+import { playerTypes, slime, wolf } from "../content";
 import {
   DIFFICULTIES,
   THREAT_BUDGET,
@@ -77,29 +77,24 @@ describe("randomEncounter", () => {
     expect(enemies).toHaveLength(Math.floor(THREAT_BUDGET.easy / wolf.threat!));
   });
 
-  it("keeps each difficulty in its win-rate band (attacks only)", () => {
-    // The party's skills are taken away: the budgets are tuned for a party
-    // that only attacks (and moves), as monsters do.
-    const pools = {
-      party: playerTypes.map((d) => ({ ...d, skills: [] })),
-      monsters,
-    };
+  it("keeps each difficulty in its win-rate band", () => {
     const winRate = (difficulty: Difficulty) => {
       const runs = 300;
       let wins = 0;
       for (let seed = 0; seed < runs; seed++) {
         if (
-          simulate(randomEncounter(seed, difficulty, pools), seed + 1000)
-            .winner === "player"
+          simulate(randomEncounter(seed, difficulty), seed + 1000).winner ===
+          "player"
         )
           wins++;
       }
       return wins / runs;
     };
-    expect(winRate("easy")).toBeGreaterThanOrEqual(0.85);
-    expect(winRate("normal")).toBeGreaterThanOrEqual(0.6);
-    expect(winRate("normal")).toBeLessThanOrEqual(0.88);
-    expect(winRate("hard")).toBeGreaterThanOrEqual(0.3);
-    expect(winRate("hard")).toBeLessThanOrEqual(0.6);
-  });
+    expect(winRate("easy")).toBeGreaterThanOrEqual(0.95);
+    expect(winRate("normal")).toBeGreaterThanOrEqual(0.8);
+    expect(winRate("normal")).toBeLessThanOrEqual(0.95);
+    expect(winRate("hard")).toBeGreaterThanOrEqual(0.45);
+    expect(winRate("hard")).toBeLessThanOrEqual(0.7);
+    // 900 whole battles with skills on both sides take a few seconds.
+  }, 30_000);
 });
