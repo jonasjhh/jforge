@@ -29,6 +29,12 @@ Object bindings and classes with the module name.
 
 (`pnpm check` runs all of them.)
 
+## Saved data
+
+Saved data (char's library, the roster, jrpg's run) may be invalidated at
+any time for now: raise `SAVE_VERSION` in `modules/melee/shared/save.ts`
+when a change makes old saves stale, instead of writing a migration.
+
 ## Workflow
 
 The rules are this file, `docs/design.md` and `docs/progression.md`.

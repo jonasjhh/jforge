@@ -60,7 +60,7 @@ export function effectSummary(skill: Skill): string {
     case "strike":
       return `weapon strike ×${effect.power}${shape}`;
     case "heal":
-      return `heals ×${effect.power} magic${shape}`;
+      return `heals ×${effect.power} ${effect.of === "maxHp" ? "max HP" : "magic"}${shape}`;
     case "modify": {
       const m = effect.modifier;
       const change = m.op === "mul" ? `×${m.value}` : signed(m.value);

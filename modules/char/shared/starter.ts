@@ -1,4 +1,4 @@
-import { content } from "@jforge/melee/shared";
+import { SAVE_VERSION, content } from "@jforge/melee/shared";
 import { withMeleeClasses } from "./melee";
 import type { Library } from "./types";
 
@@ -15,7 +15,7 @@ export function starterLibrary(): Library {
 
 function starterDesigns(): Library {
   return {
-    version: 1,
+    version: SAVE_VERSION,
     skills: [cleave, firebolt, fireball, heal].map((s) => structuredClone(s)),
     gear: [
       {

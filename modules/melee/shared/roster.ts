@@ -1,4 +1,5 @@
 import { monsters, playerTypes } from "./content";
+import { SAVE_VERSION } from "./save";
 import type { EncounterPools } from "./encounters";
 import { DAMAGE_TYPES, STAT_NAMES, type CombatantDef } from "./types";
 
@@ -70,7 +71,8 @@ export function isCombatantDef(v: unknown): v is CombatantDef {
 
 /**
  * Reads a saved roster. Anything that is not a well-formed roster (no
- * text, broken JSON, a combatant missing a stat) gives null: melee then
+ * text, broken JSON, another SAVE_VERSION, a combatant missing a stat)
+ * gives null: melee then
  * plays with its built-in types.
  */
 export function parseRoster(text: string | null): Roster | null {
@@ -81,7 +83,7 @@ export function parseRoster(text: string | null): Roster | null {
   } catch {
     return null;
   }
-  if (!isRecord(data)) return null;
+  if (!isRecord(data) || data.version !== SAVE_VERSION) return null;
   const { party, monsters: pool } = data;
   if (!Array.isArray(party) || !Array.isArray(pool)) return null;
   if (![...party, ...pool].every(isCombatantDef)) return null;
@@ -100,7 +102,8 @@ export function readRoster(store: Pick<RosterStore, "getItem">): Roster {
 /** Saves a roster for melee and jrpg. False if the store refused it. */
 export function writeRoster(store: RosterStore, roster: Roster): boolean {
   try {
-    store.setItem(ROSTER_STORAGE_KEY, JSON.stringify(roster));
+    const saved = { version: SAVE_VERSION, ...roster };
+    store.setItem(ROSTER_STORAGE_KEY, JSON.stringify(saved));
     return true;
   } catch {
     return false;

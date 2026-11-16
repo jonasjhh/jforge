@@ -9,8 +9,8 @@ import {
 } from "../shared";
 
 /**
- * The library saved on this device, or the starter one. A library saved
- * before melee's classes came to char gets them now.
+ * The library saved on this device, with any melee class or hero it lacks,
+ * or the starter one. A save of another SAVE_VERSION counts as none.
  */
 export function loadLibrary(): Library {
   try {

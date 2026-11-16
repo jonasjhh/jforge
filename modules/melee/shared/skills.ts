@@ -24,6 +24,22 @@ import type {
   Unit,
 } from "./types";
 
+/**
+ * The HP a heal restores to `target`: power x the caster's magic, or power
+ * x the target's max HP for a heal `of` max HP. At least 1.
+ */
+export function healAmount(
+  caster: Unit,
+  target: Unit,
+  effect: Extract<SkillEffect, { type: "heal" }>,
+): number {
+  const scale =
+    effect.of === "maxHp"
+      ? effectiveStat(target, "maxHp")
+      : effectiveStat(caster, "magic");
+  return Math.max(1, Math.round(effect.power * scale));
+}
+
 /** Enough MP, and more HP than an HP cost (it may never be fatal). */
 export function canAfford(unit: Unit, skill: Skill): boolean {
   return unit.mp >= skill.mpCost && unit.hp > (skill.hpCost ?? 0);
@@ -332,8 +348,7 @@ function applySkill(
     const effect = skill.effect;
     switch (effect.type) {
       case "heal": {
-        const power = effect.power * effectiveStat(unit, "magic");
-        const amount = restoreHp(target, Math.max(1, Math.round(power)));
+        const amount = restoreHp(target, healAmount(unit, target, effect));
         events.push({ type: "heal", unitId: target.id, amount, hp: target.hp });
         break;
       }

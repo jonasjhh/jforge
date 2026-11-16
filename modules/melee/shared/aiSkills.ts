@@ -6,7 +6,7 @@ import {
 } from "./damage";
 import { previewDamage } from "./preview";
 import { pushDestination } from "./push";
-import { skillCells, skillVictims } from "./skills";
+import { healAmount, skillCells, skillVictims } from "./skills";
 import { unitAt } from "./grid";
 import { effectiveStat, isAlive } from "./stats";
 import { GAUGE_FULL } from "./timeline";
@@ -139,9 +139,7 @@ function victimValue(
       return -sign * hitValue(p, unit, victim, amount);
     }
     case "heal":
-      return (
-        sign * healValue(victim, effect.power * effectiveStat(unit, "magic"))
-      );
+      return sign * healValue(victim, healAmount(unit, victim, effect));
     case "status":
       if (effect.status.effect === "taunt") return tauntValue(state, victim);
       return statusValue(p, unit, victim, effect.status, friend);

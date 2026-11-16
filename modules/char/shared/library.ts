@@ -1,4 +1,5 @@
 import {
+  SAVE_VERSION,
   STAT_NAMES,
   TRAITS,
   isCombatantDef,
@@ -23,7 +24,13 @@ export type Collection = "skills" | "gear" | "archetypes" | "characters";
 type Item<K extends Collection> = Library[K][number];
 
 export function emptyLibrary(): Library {
-  return { version: 1, skills: [], gear: [], archetypes: [], characters: [] };
+  return {
+    version: SAVE_VERSION,
+    skills: [],
+    gear: [],
+    archetypes: [],
+    characters: [],
+  };
 }
 
 /** The same value for every stat. */
@@ -240,7 +247,7 @@ export function parseLibrary(text: string | null): Library | null {
   } catch {
     return null;
   }
-  if (!isRecord(data) || data.version !== 1) return null;
+  if (!isRecord(data) || data.version !== SAVE_VERSION) return null;
   const { skills, gear, archetypes, characters } = data;
   if (
     !Array.isArray(skills) ||
@@ -255,7 +262,7 @@ export function parseLibrary(text: string | null): Library | null {
     return null;
   }
   const library = {
-    version: 1,
+    version: SAVE_VERSION,
     skills,
     gear,
     archetypes,

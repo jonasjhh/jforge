@@ -253,6 +253,15 @@ cell) and its `area` which cells it hits around the aimed one.
   can't reach the Fighter is free; area skills are free; stealth wins
   over taunt (a hidden taunter binds no one). The AI casts it only with
   allies to cover, and less the more the Fighter is hurt.
+- **Iron Stance** (Fighter): the Fighter's own defense x2 for 150 game
+  time, 4 MP. With Provoke it soaks the weapon hits it draws; it stacks
+  with Shield Wall.
+- **Second Wind** (Fighter): heals the Fighter by a quarter of its max HP,
+  6 MP. A heal `of` max HP, so it doesn't depend on the Fighter's poor
+  magic; the AI casts it only when hurt.
+- **War Cry** (Fighter): a `self` skill with the row area: the Fighter and
+  every ally in its row get attack x1.3 for 150 game time, 5 MP. Weapon
+  hits and strikes only; spells use magic.
 - **Shield Wall** (Knight): a `self` skill with the **row** area (the
   aimed cell's whole row, on its own side only): the Knight and every
   ally in its row get defense x1.5 for 150 game time, 6 MP. It hardens
@@ -351,7 +360,8 @@ Effect = damage { kind, element, power, stat } | heal { power } | drain
 ```
 
 Skills are built from a fixed set of effect blocks, no scripting. Saved
-data is validated and carries a `schemaVersion` so it can be upgraded.
+data is validated and carries a version (`SAVE_VERSION`); a save of any
+other version is dropped (see "Saved data" under the roadmap rules).
 char computes a **power budget** per skill to flag overpowered designs.
 
 ### Starting types
@@ -477,12 +487,18 @@ Still open:
 - **Five unique skills per class.** Every player class gets five skills
   that no other class has, mixing roles (a Fighter deals damage and
   tanks), learned at levels 1, 2, 4, 6 and 8. They are added one skill at
-  a time, each reviewed first. A saved melee class in char gets the
-  skills melee adds to it; a class designed in char is left alone.
+  a time, each reviewed first.
+- **Saved data.** For now, every save may be invalidated: the library,
+  the roster char publishes to melee and the run in progress all carry
+  `SAVE_VERSION` (`melee/shared/save.ts`), and a save of any other version
+  is ignored as if there were none (char starts from the starter library,
+  jrpg has no run). Raise it whenever a change makes old saves stale,
+  such as a class gaining a skill; saves are never migrated. Exported
+  library files of an older version no longer import.
 
 ### Class roster plan (12 archetypes)
 
-Existing (12): **Fighter** (melee, front; Cleave hits all in reach, Provoke draws single-target attacks), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
+Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
@@ -497,10 +513,9 @@ tome of arcane words; Expose makes an enemy take more of everything).
 
 Planned, in rough order (names and kits are proposals):
 
-| Class    | Role                                                | Signature mechanics        |
-| -------- | --------------------------------------------------- | -------------------------- |
-| Guardian | Tank (on hold: needs a mechanic no other class has) | To be designed             |
-| Bard     | Support through songs (on hold)                     | Channeled party-wide auras |
+| Class | Role                            | Signature mechanics        |
+| ----- | ------------------------------- | -------------------------- |
+| Bard  | Support through songs (on hold) | Channeled party-wide auras |
 
 With more than five classes, random encounters pick a seeded party of up
 to five from the roster (kept in roster order) instead of every class.
@@ -566,17 +581,6 @@ category:
 | Knight             | polearm, blade | heavy, light |
 | Sage               | focus, staff   | robe         |
 
-A melee class or basic piece saved before categories gets its
-proficiencies or category filled in when the library loads. A saved melee
-class gets the skills melee has added to it since.
-
-The Knight and Sage were once designed in the starter library
-(`type-knight`, `type-sage`). A saved library that still has them loses
-them when it loads: their characters move to `melee-knight` and
-`melee-sage`, and the one named after the class's hero (the starter's
-Aldric and Mira) becomes that hero, keeping level, experience and gear.
-A run already under way keeps its own copy of the library.
-
 **Heroes and basic gear**: with the classes come a named hero of each
 (`melee-hero-fighter`, ...: Brann, Isolde, Vex, Tamsin, Orrin, Hale, Wren,
 Cade, Sable, Lucan, Aldric, Mira) and basic gear: each class's own weapon as a piece
@@ -603,7 +607,7 @@ party. All modules share one origin, so no server is involved. Char depends
 on melee, never the other way round.
 
 The library is saved in the browser (localStorage), with JSON export and
-import.
+import, both of the current `SAVE_VERSION` only.
 
 ## The run (`modules/jrpg`)
 
@@ -684,7 +688,7 @@ levels are harder. Auto-played parties win about 94% / 76% / 56% of the
 first level's battles and 84% / 61% / 36% of the fifth's (every battle
 counted, not only those of parties that got that far); a test keeps the
 first level in its bands. The run is saved in the browser after every
-encounter.
+encounter, with `SAVE_VERSION`; a run of another version is dropped.
 
 Not yet: shops.
 

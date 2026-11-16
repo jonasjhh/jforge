@@ -11,6 +11,7 @@ import {
   writeRoster,
   type Roster,
 } from "../roster";
+import { SAVE_VERSION } from "../save";
 import { place } from "./helpers";
 
 const roster: Roster = { party: [fighter], monsters: [slime] };
@@ -69,9 +70,13 @@ describe("isCombatantDef", () => {
   });
 });
 
+/** A roster as writeRoster saves it. */
+const saved = (data: object) =>
+  JSON.stringify({ version: SAVE_VERSION, ...data });
+
 describe("parseRoster", () => {
   it("reads back what was written", () => {
-    expect(parseRoster(JSON.stringify(roster))).toEqual(roster);
+    expect(parseRoster(saved(roster))).toEqual(roster);
   });
 
   it.each([
@@ -79,17 +84,16 @@ describe("parseRoster", () => {
     ["empty text", ""],
     ["broken JSON", "{"],
     ["a list", "[]"],
-    ["a missing side", JSON.stringify({ party: [] })],
-    [
-      "a broken combatant",
-      JSON.stringify({ party: [{ id: "x" }], monsters: [] }),
-    ],
+    ["a missing side", saved({ party: [] })],
+    ["a broken combatant", saved({ party: [{ id: "x" }], monsters: [] })],
+    ["no version", JSON.stringify(roster)],
+    ["another version", saved({ ...roster, version: SAVE_VERSION - 1 })],
   ])("gives null for %s", (_, text) => {
     expect(parseRoster(text)).toBeNull();
   });
 
   it("gives combatants a battle can use", () => {
-    const parsed = parseRoster(JSON.stringify(roster))!;
+    const parsed = parseRoster(saved(roster))!;
     expect(() =>
       createBattle(
         {

@@ -1,4 +1,5 @@
 import type {
+  SAVE_VERSION,
   Skill,
   StatName,
   Stats,
@@ -106,7 +107,7 @@ export interface Character {
 
 /** Everything designed on this device. */
 export interface Library {
-  version: 1;
+  version: typeof SAVE_VERSION;
   skills: Skill[];
   gear: Gear[];
   archetypes: Archetype[];

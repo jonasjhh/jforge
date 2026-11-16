@@ -20,7 +20,7 @@ import {
 } from "../melee";
 import { statsAtLevel } from "../progression";
 import { starterLibrary } from "../starter";
-import { DESIGNED_CLASSES, designedLibrary } from "./designed";
+import { designedLibrary } from "./designed";
 
 const { fighter, healer, mage, playerTypes } = content;
 
@@ -92,25 +92,6 @@ describe("withMeleeClasses", () => {
     expect(withMeleeClasses(library)).toBe(library);
   });
 
-  it("gives a saved melee class the skills melee has added since", () => {
-    const current = classFromMelee(fighter);
-    const [first, ...added] = current.skills;
-    const saved = {
-      ...current,
-      name: "Sellsword",
-      skills: [{ ...first!, level: 5 }],
-    };
-    const library = withMeleeClasses({
-      ...emptyLibrary(),
-      archetypes: [saved],
-    });
-    const updated = library.archetypes.find((a) => a.id === current.id)!;
-    expect(updated.name).toBe("Sellsword");
-    expect(updated.skills).toEqual([{ ...first!, level: 5 }, ...added]);
-    expect(added.length).toBeGreaterThan(0);
-    expect(withMeleeClasses(library)).toBe(library);
-  });
-
   it("leaves a designed class's skills alone", () => {
     const designed = {
       ...classFromMelee(fighter),
@@ -122,52 +103,6 @@ describe("withMeleeClasses", () => {
       archetypes: [designed],
     });
     expect(library.archetypes.find((a) => a.id === "sellsword")).toBe(designed);
-  });
-
-  it("turns the starter's former Knight and Sage into melee's", () => {
-    const former = (id: string, name: string) => ({
-      ...DESIGNED_CLASSES[0]!,
-      id,
-      name,
-    });
-    const person = (id: string, name: string, archetypeId: string) => ({
-      id,
-      name,
-      archetypeId,
-      level: 4,
-      xp: 20,
-      gear: { weapon: "gear-sword" },
-    });
-    const library = withMeleeClasses({
-      ...emptyLibrary(),
-      archetypes: [
-        former("type-knight", "Knight"),
-        former("type-sage", "Sage"),
-      ],
-      characters: [
-        person("unit-1", "Aldric", "type-knight"),
-        person("unit-2", "Mira", "type-sage"),
-        person("unit-7", "Gareth", "type-knight"),
-      ],
-    });
-    expect(library.archetypes.map((a) => a.id)).not.toContain("type-knight");
-    expect(library.archetypes.map((a) => a.id)).not.toContain("type-sage");
-    const of = (name: string) =>
-      library.characters.filter((c) => c.name === name);
-    expect(of("Aldric")).toEqual([
-      { ...person(meleeHeroId("knight"), "Aldric", meleeClassId("knight")) },
-    ]);
-    expect(of("Mira")).toHaveLength(1);
-    expect(of("Mira")[0]).toMatchObject({
-      id: meleeHeroId("sage"),
-      archetypeId: meleeClassId("sage"),
-      level: 4,
-    });
-    expect(of("Gareth")[0]).toMatchObject({
-      id: "unit-7",
-      archetypeId: meleeClassId("knight"),
-    });
-    expect(withMeleeClasses(library)).toBe(library);
   });
 
   it("is part of the starter library, which still saves and loads", () => {
@@ -311,23 +246,5 @@ describe("melee proficiencies", () => {
       (c) => c.id === meleeHeroId("archer"),
     )!;
     expect(archer.gear.armor).toBe("melee-gear-jerkin");
-  });
-
-  it("fills in what a library saved before categories lacks", () => {
-    const current = withMeleeClasses(emptyLibrary());
-    const old = {
-      ...current,
-      archetypes: current.archetypes.map((a) => {
-        const was = { ...a };
-        delete was.proficiencies;
-        return was;
-      }),
-      gear: current.gear.map((g) => {
-        const was = { ...g };
-        delete was.category;
-        return was;
-      }),
-    };
-    expect(withMeleeClasses(old)).toEqual(current);
   });
 });

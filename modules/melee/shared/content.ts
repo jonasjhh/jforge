@@ -668,6 +668,60 @@ export const expose: Skill = {
   },
 };
 
+/** Fighter: braces for a while; its own defense doubles. */
+export const ironStance: Skill = {
+  id: "iron-stance",
+  name: "Iron Stance",
+  description: "Brace yourself: your defense x2 for a while.",
+  mpCost: 4,
+  target: "self",
+  area: "single",
+  effect: {
+    type: "modify",
+    modifier: {
+      name: "Iron Stance",
+      stat: "defense",
+      op: "mul",
+      value: 2,
+      duration: 150,
+      harmful: false,
+    },
+  },
+};
+
+/** Fighter: catches its breath and heals a quarter of its max HP. */
+export const secondWind: Skill = {
+  id: "second-wind",
+  name: "Second Wind",
+  description: "Catch your breath: heal a quarter of your max HP.",
+  mpCost: 6,
+  target: "self",
+  area: "single",
+  effect: { type: "heal", power: 0.25, of: "maxHp" },
+};
+
+/** Fighter: rallies its row; it and every ally in it hit harder. */
+export const warCry: Skill = {
+  id: "war-cry",
+  name: "War Cry",
+  description:
+    "Rally your row: you and every ally in it get attack x1.3 for a while.",
+  mpCost: 5,
+  target: "self",
+  area: "row",
+  effect: {
+    type: "modify",
+    modifier: {
+      name: "War Cry",
+      stat: "attack",
+      op: "mul",
+      value: 1.3,
+      duration: 150,
+      harmful: false,
+    },
+  },
+};
+
 export const skills = [
   heal,
   revive,
@@ -677,6 +731,9 @@ export const skills = [
   cure,
   cleave,
   provoke,
+  ironStance,
+  secondWind,
+  warCry,
   aimedShot,
   skewer,
   hook,
@@ -711,7 +768,7 @@ export const fighter: CombatantDef = {
     speed: 10,
   },
   weapon: sword,
-  skills: [cleave, provoke],
+  skills: [cleave, provoke, ironStance, secondWind, warCry],
   preferredRow: 0,
 };
 

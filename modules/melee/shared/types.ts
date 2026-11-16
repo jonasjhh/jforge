@@ -203,8 +203,12 @@ export type SkillEffect =
   | { type: "strike"; power: number; push?: number; ignoreCover?: boolean }
   | {
       type: "heal";
-      /** HP restored = power x the caster's magic. */
+      /**
+       * HP restored = power x the caster's magic, or with `of: "maxHp"`
+       * power x the target's max HP (Second Wind: 0.25 is a quarter).
+       */
       power: number;
+      of?: "maxHp";
     }
   | {
       type: "damage";

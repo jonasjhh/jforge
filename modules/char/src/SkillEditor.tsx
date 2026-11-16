@@ -113,7 +113,9 @@ export function SkillEditor({ skill, onChange }: SkillEditorProps) {
                 label={
                   effect.type === "strike"
                     ? "Power (× attack)"
-                    : "Power (× magic)"
+                    : effect.type === "heal" && effect.of === "maxHp"
+                      ? "Power (× max HP)"
+                      : "Power (× magic)"
                 }
                 value={effect.power}
                 step={0.1}

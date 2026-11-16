@@ -17,6 +17,7 @@ import {
 } from "@jforge/char/shared";
 import {
   MAX_PARTY_SIZE,
+  SAVE_VERSION,
   content,
   createRandom,
   estimateThreat,
@@ -63,7 +64,7 @@ export interface Stop {
 }
 
 export interface Run {
-  version: 3;
+  version: typeof SAVE_VERSION;
   seed: number;
   /** The level the party is on, from 1. Enemies grow with it. */
   depth: number;
@@ -192,7 +193,7 @@ export function startRun(
   );
   const library = withWorld(runLibrary(source), baseLevel);
   return {
-    version: 3,
+    version: SAVE_VERSION,
     seed,
     depth: 1,
     baseLevel,
@@ -739,7 +740,7 @@ export function parseRun(text: string | null): Run | null {
   const library = parseLibrary(JSON.stringify(run.library ?? null));
   const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
   if (
-    run.version !== 3 ||
+    run.version !== SAVE_VERSION ||
     !library ||
     !whole(run.seed) ||
     !whole(run.depth) ||

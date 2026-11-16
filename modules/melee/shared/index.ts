@@ -69,4 +69,5 @@ export {
   type Roster,
   type RosterStore,
 } from "./roster";
+export { SAVE_VERSION } from "./save";
 export * as content from "./content";

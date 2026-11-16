@@ -201,94 +201,11 @@ export function meleeClasses(): Archetype[] {
 }
 
 /**
- * `library` with what came before gear had categories filled in: the
- * melee classes' proficiencies and the basic gear's categories, where they
- * have none. The library itself if nothing was missing.
- */
-function withCategories(library: Library): Library {
-  const basic = new Map(basicGear().map((g) => [g.id, g.category]));
-  let changed = false;
-  const archetypes = library.archetypes.map((a) => {
-    const id = a.id.startsWith("melee-") ? a.id.slice("melee-".length) : "";
-    const known = MELEE_PROFICIENCIES[id];
-    if (a.proficiencies !== undefined || !known) return a;
-    changed = true;
-    return { ...a, proficiencies: [...known] };
-  });
-  const gear = library.gear.map((g) => {
-    const category = basic.get(g.id);
-    if (g.category !== undefined || category === undefined) return g;
-    changed = true;
-    return { ...g, category };
-  });
-  return changed ? { ...library, archetypes, gear } : library;
-}
-
-/**
- * The classes the starter library once designed itself, by the melee type
- * that has replaced each.
- */
-const FORMER_CLASSES: Record<string, string> = {
-  "type-knight": "knight",
-  "type-sage": "sage",
-};
-
-/**
- * `library` with the starter's former Knight and Sage replaced by melee's:
- * their characters move to the melee class, and a character named after
- * the class's hero (the starter's Aldric and Mira) becomes that hero. The
- * library itself if it has neither class.
- */
-function withoutFormerClasses(library: Library): Library {
-  if (!library.archetypes.some((a) => FORMER_CLASSES[a.id])) return library;
-  const people = new Set(library.characters.map((c) => c.id));
-  return {
-    ...library,
-    archetypes: library.archetypes.filter((a) => !FORMER_CLASSES[a.id]),
-    characters: library.characters.map((c) => {
-      const type = FORMER_CLASSES[c.archetypeId];
-      if (!type) return c;
-      const hero = meleeHeroId(type);
-      const becomesHero = c.name === MELEE_HEROES[type] && !people.has(hero);
-      if (becomesHero) people.add(hero);
-      return {
-        ...c,
-        archetypeId: meleeClassId(type),
-        ...(becomesHero ? { id: hero } : {}),
-      };
-    }),
-  };
-}
-
-/**
- * `library` with each saved melee class given the skills melee has added
- * to it since, at the level the class learns them. Skills it already has
- * keep their level. The library itself if nothing was missing.
- */
-function withNewSkills(library: Library): Library {
-  const classes = new Map(meleeClasses().map((a) => [a.id, a]));
-  let changed = false;
-  const archetypes = library.archetypes.map((a) => {
-    const known = classes.get(a.id);
-    if (!known) return a;
-    const has = new Set(a.skills.map((s) => s.skillId));
-    const added = known.skills.filter((s) => !has.has(s.skillId));
-    if (added.length === 0) return a;
-    changed = true;
-    return { ...a, skills: [...a.skills, ...added.map((s) => ({ ...s }))] };
-  });
-  return changed ? { ...library, archetypes } : library;
-}
-
-/**
  * `library` with every melee class, the skills they learn, the basic gear
  * and a hero of each class wearing it. What the library already has under
- * the same id (an edited copy, say) is kept, given the proficiencies or
- * category it was saved without, and a melee class the skills melee has
- * added to it since. The starter's former Knight and Sage become melee's.
+ * the same id (an edited copy, say) is kept as it is.
  */
-export function withMeleeClasses(saved: Library): Library {
-  const library = withNewSkills(withCategories(withoutFormerClasses(saved)));
+export function withMeleeClasses(library: Library): Library {
   const types = new Set(library.archetypes.map((a) => a.id));
   const skills = new Set(library.skills.map((s) => s.id));
   const gearIds = new Set(library.gear.map((g) => g.id));

@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { chooseCommand } from "../ai";
 import { act, advance, createBattle, validateCommand } from "../battle";
-import { fighter, fireball, firebolt, provoke, vanish } from "../content";
+import { skillValue } from "../aiSkills";
+import {
+  cleave,
+  fighter,
+  fireball,
+  firebolt,
+  ironStance,
+  playerTypes,
+  provoke,
+  secondWind,
+  vanish,
+  warCry,
+} from "../content";
+import { effectiveStat } from "../stats";
 import { applyStatus } from "../status";
 import type { BattleState, CombatantDef, StatusDef, Unit } from "../types";
 import { def, place } from "./helpers";
@@ -157,5 +170,77 @@ describe("Provoke", () => {
     expect(chooseCommand(state, self)).not.toMatchObject({
       skillId: "provoke",
     });
+  });
+});
+
+const SELF = { side: "player", col: 1, row: 0 } as const;
+const cast = (skillId: string, state = fighterTurn()) =>
+  act(state, { type: "skill", skillId, cell: SELF }).state;
+
+describe("the Fighter's skills", () => {
+  it("are five, none of them another class's", () => {
+    expect(fighter.skills).toEqual([
+      cleave,
+      provoke,
+      ironStance,
+      secondWind,
+      warCry,
+    ]);
+    const others = playerTypes
+      .filter((t) => t !== fighter)
+      .flatMap((t) => t.skills ?? []);
+    for (const skill of fighter.skills!) expect(others).not.toContain(skill);
+  });
+});
+
+describe("Iron Stance", () => {
+  it("doubles the Fighter's own defense, no one else's", () => {
+    const state = cast(ironStance.id);
+    expect(effectiveStat(unit(state, FIGHTER), "defense")).toBe(
+      fighter.stats.defense * 2,
+    );
+    expect(effectiveStat(unit(state, ALLY), "defense")).toBe(0);
+    expect(unit(state, FIGHTER).mp).toBe(
+      fighter.stats.maxMp - ironStance.mpCost,
+    );
+  });
+});
+
+describe("Second Wind", () => {
+  const hurt = (hp: number) => {
+    const state = fighterTurn();
+    unit(state, FIGHTER).hp = hp;
+    return state;
+  };
+
+  it("heals a quarter of the Fighter's max HP, whatever its magic", () => {
+    const state = cast(secondWind.id, hurt(30));
+    expect(unit(state, FIGHTER).hp).toBe(30 + fighter.stats.maxHp / 4);
+  });
+
+  it("stops at max HP", () => {
+    const state = cast(secondWind.id, hurt(fighter.stats.maxHp - 5));
+    expect(unit(state, FIGHTER).hp).toBe(fighter.stats.maxHp);
+  });
+
+  it("is worth casting to the AI only when hurt", () => {
+    const value = (state: BattleState) =>
+      skillValue(state, unit(state, FIGHTER), secondWind, SELF);
+    expect(value(hurt(30))).toBeGreaterThan(0);
+    expect(value(fighterTurn())).toBeLessThanOrEqual(0);
+  });
+});
+
+describe("War Cry", () => {
+  it("raises the attack of the Fighter and its row by x1.3", () => {
+    const before = fighterTurn();
+    const after = cast(warCry.id, before);
+    for (const id of [FIGHTER, ALLY]) {
+      const was = effectiveStat(unit(before, id), "attack");
+      expect(effectiveStat(unit(after, id), "attack")).toBeCloseTo(was * 1.3);
+    }
+    expect(effectiveStat(unit(after, FOE), "attack")).toBe(
+      effectiveStat(unit(before, FOE), "attack"),
+    );
   });
 });
