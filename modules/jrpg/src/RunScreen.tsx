@@ -3,7 +3,7 @@ import { archetypeOf } from "@jforge/char/shared";
 import {
   battleFor,
   canRecruit,
-  chooseFork,
+  choices,
   currentEncounter,
   encounterLabel,
   enemySummary,
@@ -14,37 +14,28 @@ import {
   resolveAlly,
   resolveGear,
   resolveTraining,
+  travel,
   type Encounter,
   type Reward,
   type Run,
 } from "../shared";
 import { Formation } from "./Formation";
+import { iconOf } from "./icons";
+import { LevelMap } from "./LevelMap";
 import { PartyPanel } from "./PartyPanel";
 
 const DIFFICULTY_WORDS = { easy: "Easy", normal: "Normal", hard: "Hard" };
-const ICONS: Record<Encounter["kind"], string> = {
-  battle: "⚔",
-  ally: "☺",
-  gear: "◆",
-  training: "▲",
-  fork: "⑂",
-};
-const iconOf = (encounter: Encounter) =>
-  encounter.kind !== "battle"
-    ? ICONS[encounter.kind]
-    : encounter.rank === "boss"
-      ? "♛"
-      : encounter.rank === "elite"
-        ? "☠"
-        : ICONS.battle;
-/** What a fork's signpost says about each way. */
+/** What the signpost says about each road. */
 const WAY_WORDS: Record<Encounter["kind"], string> = {
-  battle: "A dangerous road: a hard fight, sure to drop gear",
+  battle: "Tracks in the mud: a fight",
   ally: "Smoke from a campfire: someone to meet",
   gear: "An overgrown ruin: gear to find",
   training: "A quiet clearing: a place to train",
-  fork: "Another fork",
 };
+const wayWords = (encounter: Encounter) =>
+  encounter.kind === "battle" && encounter.rank === "elite"
+    ? "A dangerous road: a hard fight, sure to drop gear"
+    : WAY_WORDS[encounter.kind];
 
 interface RunScreenProps {
   run: Run;
@@ -75,29 +66,7 @@ export function RunScreen({
       </header>
       <h1>Level {run.depth}</h1>
 
-      <ol className="path" aria-label="Encounters">
-        {run.encounters.map((encounter, index) => {
-          const state =
-            index < run.position
-              ? "done"
-              : index === run.position
-                ? run.defeated
-                  ? "lost"
-                  : "here"
-                : "ahead";
-          return (
-            <li
-              key={index}
-              className={`stop stop-${state}`}
-              aria-current={index === run.position ? "step" : undefined}
-              aria-label={`${index + 1}: ${encounterLabel(encounter)}`}
-              title={encounterLabel(encounter)}
-            >
-              {iconOf(encounter)}
-            </li>
-          );
-        })}
-      </ol>
+      <LevelMap run={run} onChange={onChange} />
 
       {reward && <RewardPanel reward={reward} />}
       <EncounterPanel
@@ -153,6 +122,32 @@ function EncounterPanel({
       </section>
     );
   }
+  const ways = choices(run);
+  if (ways.length > 0) {
+    const row = run.map[run.position]!;
+    return (
+      <section className="panel" aria-label="Encounter">
+        <h2>
+          The road splits{" "}
+          <span className="muted small">
+            {run.position + 1} of {run.map.length}
+          </span>
+        </h2>
+        <div className="ways">
+          {ways.map((index) => (
+            <button
+              key={index}
+              type="button"
+              className="secondary"
+              onClick={() => onChange(travel(run, index))}
+            >
+              {iconOf(row[index]!.encounter)} {wayWords(row[index]!.encounter)}
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
   if (levelCleared(run) || !encounter) {
     return (
       <section className="panel" aria-label="Encounter">
@@ -168,7 +163,7 @@ function EncounterPanel({
       </section>
     );
   }
-  const step = `${run.position + 1} of ${run.encounters.length}`;
+  const step = `${run.position + 1} of ${run.map.length}`;
 
   if (encounter.kind === "battle") {
     const setup = battleFor(run);
@@ -246,28 +241,6 @@ function EncounterPanel({
               onClick={() => onChange(resolveTraining(run, member.id))}
             >
               Train {member.name}
-            </button>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (encounter.kind === "fork") {
-    return (
-      <section className="panel" aria-label="Encounter">
-        <h2>
-          A fork in the road <span className="muted small">{step}</span>
-        </h2>
-        <div className="ways">
-          {encounter.options.map((option, index) => (
-            <button
-              key={index}
-              type="button"
-              className="secondary"
-              onClick={() => onChange(chooseFork(run, index))}
-            >
-              {iconOf(option)} {WAY_WORDS[option.kind]}
             </button>
           ))}
         </div>

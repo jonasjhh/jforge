@@ -25,9 +25,10 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
       </a>
       <h1>{meta.title}</h1>
       <p className="muted">
-        Travel levels of {MIN_LEVEL_LENGTH} or more encounters: battles, allies
-        to meet, gear to find, places to train and forks in the road. Battles
-        pay experience and sometimes gear. Lose one and the run is over.
+        Travel levels {MIN_LEVEL_LENGTH} or more stops long, choosing your road
+        where it splits: battles, allies to meet, gear to find and places to
+        train. Battles pay experience and sometimes gear. Lose one and the run
+        is over.
       </p>
 
       <section className="panel" aria-label="Setting out">

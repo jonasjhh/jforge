@@ -11,7 +11,7 @@ test("sets out, meets the first battle and can retreat to the map", async ({
   await page.getByRole("button", { name: "Set out" }).click();
 
   await expect(page.getByRole("heading", { name: "Level 1" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "Encounters" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Map" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Party" })).toContainText(
     "Level 3",
   );

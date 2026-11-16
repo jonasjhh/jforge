@@ -10,6 +10,7 @@ import {
   BUDGET_SHARE,
   DEPTH_GROWTH,
   GEAR_CHOICES,
+  LANES,
   LEVEL_LENGTH_SPREAD,
   MAX_PACK_KINDS,
   MIN_LEVEL_LENGTH,
@@ -19,9 +20,10 @@ import {
   battleSeed,
   canRecruit,
   changeGear,
-  chooseFork,
+  choices,
   commitBattle,
   currentEncounter,
+  currentStop,
   enemyLevelBonus,
   generateLevel,
   heroes,
@@ -35,13 +37,16 @@ import {
   resolveAlly,
   resolveGear,
   resolveTraining,
+  roadOf,
   runLibrary,
   startRun,
   threatBudget,
+  travel,
   winBattle,
   xpFor,
   type Encounter,
   type Run,
+  type Stop,
 } from "../run";
 
 const library = starterLibrary();
@@ -52,8 +57,9 @@ const at = (encounters: Encounter[], changes: Partial<Run> = {}): Run => ({
   ...startRun(library, 1),
   party: library.characters.slice(0, 2),
   baseLevel: 3,
-  encounters,
+  map: roadOf(encounters),
   position: 0,
+  path: [0],
   ...changes,
 });
 const battle: Encounter = {
@@ -75,9 +81,14 @@ const ally: Encounter = {
 };
 const ring: Encounter = { kind: "gear", gearIds: ["gear-ring", "gear-bow"] };
 const training: Encounter = { kind: "training" };
-/** Every encounter of a level, with the ways of its forks. */
-const everything = (encounters: Encounter[]): Encounter[] =>
-  encounters.flatMap((e) => (e.kind === "fork" ? [e, ...e.options] : [e]));
+/** Every encounter on a map. */
+const everything = (map: Stop[][]): Encounter[] =>
+  map.flat().map((stop) => stop.encounter);
+/** Takes the road to way `pick` (modulo the ways there are), if at one. */
+const walk = (run: Run, pick: number): Run => {
+  const ways = choices(run);
+  return ways.length > 0 ? travel(run, ways[pick % ways.length]!) : run;
+};
 
 describe("startRun", () => {
   it("draws a different party for different seeds, the same for one seed", () => {
@@ -166,6 +177,7 @@ describe("generateLevel", () => {
     const run = startRun(library, seed);
     return generateLevel(run.library, run.party, seed, depth);
   };
+  const isFind = (stop: Stop) => stop.encounter.kind !== "battle";
 
   it("is the same for the same seed and depth, and differs otherwise", () => {
     expect(level(3)).toEqual(level(3));
@@ -183,60 +195,100 @@ describe("generateLevel", () => {
     }
   });
 
-  it("opens with an easy battle and ends with a hard one that drops gear", () => {
+  it("starts at one easy battle and ends at one hard one that drops gear", () => {
     for (const seed of SEEDS) {
-      const encounters = level(seed);
-      expect(encounters[0]).toMatchObject({
+      const map = level(seed);
+      expect(map[0]).toHaveLength(1);
+      expect(map[0]![0]!.encounter).toMatchObject({
         kind: "battle",
         difficulty: "easy",
         rank: "normal",
       });
-      const last = encounters.at(-1)!;
+      expect(map.at(-1)).toHaveLength(1);
+      const last = map.at(-1)![0]!.encounter;
       expect(last).toMatchObject({ kind: "battle", rank: "boss" });
       expect(last.kind === "battle" && last.loot).toBeTruthy();
     }
   });
 
-  it("has an elite battle past the middle that drops gear", () => {
+  it("has two or three stops per row in between, each on its own lane", () => {
+    const widths = new Set<number>();
     for (const seed of SEEDS) {
-      const encounters = level(seed);
-      const at = encounters.findIndex(
-        (e) => e.kind === "battle" && e.rank === "elite",
-      );
-      expect(at).toBeGreaterThanOrEqual(encounters.length / 2);
-      expect(encounters[at]).toMatchObject({ difficulty: "hard" });
-      expect((encounters[at] as { loot?: string }).loot).toBeTruthy();
+      for (const row of level(seed).slice(1, -1)) {
+        widths.add(row.length);
+        const lanes = row.map((stop) => stop.lane);
+        expect(new Set(lanes).size).toBe(lanes.length);
+        expect(lanes.every((l) => l >= 0 && l < LANES)).toBe(true);
+        expect(lanes).toEqual([...lanes].sort((a, b) => a - b));
+      }
+    }
+    expect(widths).toEqual(new Set([2, 3]));
+  });
+
+  it("gives every stop a road on and a road in, to stops that exist", () => {
+    for (const seed of SEEDS) {
+      const map = level(seed);
+      map.forEach((row, index) => {
+        const next = map[index + 1];
+        for (const stop of row) {
+          if (!next) {
+            expect(stop.next).toEqual([]);
+            continue;
+          }
+          expect(stop.next.length).toBeGreaterThan(0);
+          expect(stop.next.every((i) => i >= 0 && i < next.length)).toBe(true);
+        }
+        next?.forEach((_, i) =>
+          expect(row.some((stop) => stop.next.includes(i))).toBe(true),
+        );
+      });
     }
   });
 
-  it("always has an ally, gear and training, and never two finds in a row", () => {
+  it("splits the road: most stops lead to more than one", () => {
+    const stops = SEEDS.flatMap((seed) => level(seed).slice(0, -2).flat());
+    const split = stops.filter((stop) => stop.next.length > 1).length;
+    expect(split / stops.length).toBeGreaterThan(0.6);
+  });
+
+  it("never has finds in two rows running", () => {
     for (const seed of SEEDS) {
-      const kinds = level(seed).map((e) => e.kind);
-      expect(kinds).toEqual(
-        expect.arrayContaining(["ally", "gear", "training"]),
-      );
-      for (let i = 1; i < kinds.length; i++) {
-        expect(kinds[i] !== "battle" && kinds[i - 1] !== "battle").toBe(false);
+      const finds = level(seed).map((row) => row.some(isFind));
+      for (let i = 1; i < finds.length; i++) {
+        expect(finds[i] && finds[i - 1]).toBe(false);
       }
     }
   });
 
-  it("brings every kind of encounter across seeds", () => {
-    const all = SEEDS.flatMap((seed) => everything(level(seed)));
-    expect(new Set(all.map((e) => e.kind))).toEqual(
-      new Set(["battle", "ally", "gear", "training", "fork"]),
-    );
+  it("always has an ally, gear, training and an elite battle on the map", () => {
+    for (const seed of SEEDS) {
+      const map = level(seed);
+      const all = everything(map);
+      expect(all.map((e) => e.kind)).toEqual(
+        expect.arrayContaining(["ally", "gear", "training"]),
+      );
+      const eliteRows = map.flatMap((row, i) =>
+        row.some(
+          (s) => s.encounter.kind === "battle" && s.encounter.rank === "elite",
+        )
+          ? [i]
+          : [],
+      );
+      expect(eliteRows.length).toBeGreaterThan(0);
+      expect(Math.min(...eliteRows)).toBeGreaterThanOrEqual(map.length / 2);
+      for (const e of all) {
+        if (e.kind !== "battle" || e.rank === "normal") continue;
+        expect(e.difficulty).toBe("hard");
+        expect(e.loot).toBeTruthy();
+      }
+    }
   });
 
-  it("forks into two different ways, never into another fork", () => {
+  it("puts different finds on the roads of a row", () => {
     for (const seed of SEEDS) {
-      for (const e of level(seed)) {
-        if (e.kind !== "fork") continue;
-        expect(e.options).toHaveLength(2);
-        expect(e.options.every((o) => o.kind !== "fork")).toBe(true);
-        expect(e.options[0]!.kind === e.options[1]!.kind).toBe(
-          e.options[0]!.kind === "battle" && e.options[1]!.kind === "battle",
-        );
+      for (const row of level(seed)) {
+        const kinds = row.filter(isFind).map((s) => s.encounter.kind);
+        expect(new Set(kinds).size).toBe(kinds.length);
       }
     }
   });
@@ -276,6 +328,85 @@ describe("generateLevel", () => {
     const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
     expect(mean(tiers(3))).toBeGreaterThan(mean(tiers(1)) + 1);
     expect(Math.max(...tiers(1))).toBeLessThan(3);
+  });
+});
+
+describe("travelling the map", () => {
+  const stop = (encounter: Encounter, lane: number, next: number[]): Stop => ({
+    encounter,
+    lane,
+    next,
+  });
+  // One battle, then three ways (the first battle's road reaches two of
+  // them... all three here), then one battle.
+  const map: Stop[][] = [
+    [stop(battle, 1, [0, 1, 2])],
+    [stop(ally, 0, [0]), stop(training, 1, [0, 1]), stop(ring, 2, [1])],
+    [stop(battle, 0, [0]), stop({ ...battle, seed: 9 }, 2, [0])],
+    [stop(battle, 1, [])],
+  ];
+  const start: Run = { ...at([]), map, position: 0, path: [0] };
+
+  it("stands at the first stop, with nowhere to choose", () => {
+    expect(currentStop(start)).toBe(map[0]![0]);
+    expect(choices(start)).toEqual([]);
+  });
+
+  it("stops at the roadside when the road splits", () => {
+    const run = winBattle(start)!.run;
+    expect(run.position).toBe(1);
+    expect(currentEncounter(run)).toBeNull();
+    expect(levelCleared(run)).toBe(false);
+    expect(choices(run)).toEqual([0, 1, 2]);
+  });
+
+  it("takes the chosen road", () => {
+    const run = travel(winBattle(start)!.run, 2);
+    expect(currentEncounter(run)).toBe(ring);
+    expect(run.path).toEqual([0, 2]);
+    expect(choices(run)).toEqual([]);
+  });
+
+  it("only offers the roads that lead on from where it stands", () => {
+    const viaAlly = resolveAlly(travel(winBattle(start)!.run, 0), false);
+    // The ally's road has one way on: the party walks straight to it.
+    expect(viaAlly.path).toEqual([0, 0, 0]);
+    expect(currentStop(viaAlly)).toBe(map[2]![0]);
+
+    const viaTraining = resolveTraining(travel(winBattle(start)!.run, 1), null);
+    expect(choices(viaTraining)).toEqual([0, 1]);
+    const viaGear = resolveGear(travel(winBattle(start)!.run, 2), null, null);
+    expect(viaGear.path).toEqual([0, 2, 1]);
+  });
+
+  it("refuses a road that isn't there or isn't open", () => {
+    const roadside = winBattle(start)!.run;
+    expect(travel(roadside, 3)).toBe(roadside);
+    expect(travel(start, 0)).toBe(start);
+    const lost = loseBattle(start);
+    expect(choices(lost)).toEqual([]);
+  });
+
+  it("clears the level past the last stop", () => {
+    let run = start;
+    for (let step = 0; step < 20 && !levelCleared(run); step++) {
+      run = walk(run, step);
+      const encounter = currentEncounter(run);
+      if (encounter?.kind === "battle") run = winBattle(run)!.run;
+      else if (encounter?.kind === "ally") run = resolveAlly(run, false);
+      else if (encounter?.kind === "training") {
+        run = resolveTraining(run, null);
+      } else if (encounter?.kind === "gear") run = resolveGear(run, null, null);
+    }
+    expect(levelCleared(run)).toBe(true);
+    expect(run.path).toHaveLength(map.length);
+    expect(choices(run)).toEqual([]);
+  });
+
+  it("is a single road for roadOf", () => {
+    const road = roadOf([battle, ally, training]);
+    expect(road.map((row) => row.length)).toEqual([1, 1, 1]);
+    expect(road.map((row) => row[0]!.next)).toEqual([[0], [0], []]);
   });
 });
 
@@ -362,10 +493,10 @@ describe("difficulty", () => {
     for (let seed = 0; seed < 60; seed++) {
       let run = startRun(null, seed);
       for (let step = 0; !levelCleared(run); step++) {
+        run = walk(run, step);
         const encounter = currentEncounter(run)!;
         const who = run.party[step % run.party.length]!.id;
         if (encounter.kind === "ally") run = resolveAlly(run, true);
-        else if (encounter.kind === "fork") run = chooseFork(run, step % 2);
         else if (encounter.kind === "training") {
           run = resolveTraining(run, who);
         } else if (encounter.kind === "gear") {
@@ -600,23 +731,6 @@ describe("resolveTraining", () => {
   });
 });
 
-describe("chooseFork", () => {
-  const fork: Encounter = { kind: "fork", options: [ally, training] };
-
-  it("puts the chosen way where the party stands", () => {
-    const run = chooseFork(at([fork, battle]), 1);
-    expect(run.position).toBe(0);
-    expect(run.encounters).toEqual([training, battle]);
-  });
-
-  it("does nothing for a way that isn't there, or off a fork", () => {
-    const run = at([fork]);
-    expect(chooseFork(run, 2)).toBe(run);
-    const fight = at([battle]);
-    expect(chooseFork(fight, 0)).toBe(fight);
-  });
-});
-
 describe("changeGear", () => {
   const run = at([battle], { bag: ["gear-ring", "gear-bow"] });
 
@@ -653,7 +767,8 @@ describe("nextLevel", () => {
     const next = nextLevel(done);
     expect(next).toMatchObject({ depth: 2, position: 0, bag: ["gear-ring"] });
     expect(next.party).toBe(done.party);
-    expect(next.encounters.length).toBeGreaterThanOrEqual(MIN_LEVEL_LENGTH);
+    expect(next.map.length).toBeGreaterThanOrEqual(MIN_LEVEL_LENGTH);
+    expect(next.path).toEqual([0]);
   });
 
   it("stays put before that", () => {
@@ -674,14 +789,11 @@ describe("parseRun", () => {
     expect(parseRun("{")).toBeNull();
     expect(parseRun("3")).toBeNull();
     expect(parseRun(JSON.stringify({ ...run, version: 1 }))).toBeNull();
-    const nested = { kind: "fork", options: [{ kind: "fork", options: [] }] };
+    expect(parseRun(JSON.stringify({ ...run, path: "0" }))).toBeNull();
     expect(
-      parseRun(JSON.stringify({ ...run, encounters: [nested] })),
-    ).toBeNull();
-    expect(parseRun(JSON.stringify({ ...run, party: [] }))).toBeNull();
-    expect(parseRun(JSON.stringify({ ...run, library: {} }))).toBeNull();
-    expect(
-      parseRun(JSON.stringify({ ...run, encounters: [{ kind: "shop" }] })),
+      parseRun(
+        JSON.stringify({ ...run, map: roadOf([{ kind: "shop" } as never]) }),
+      ),
     ).toBeNull();
   });
 });
@@ -690,10 +802,10 @@ describe("a whole level", () => {
   it("can be walked from the first encounter to the next level", () => {
     let run = startRun(library, 4);
     while (!levelCleared(run)) {
+      run = walk(run, 0);
       const encounter = currentEncounter(run)!;
       if (encounter.kind === "battle") run = winBattle(run)!.run;
       else if (encounter.kind === "ally") run = resolveAlly(run, true);
-      else if (encounter.kind === "fork") run = chooseFork(run, 0);
       else if (encounter.kind === "training") {
         run = resolveTraining(run, run.party[0]!.id);
       } else run = resolveGear(run, encounter.gearIds[0]!, run.party[0]!.id);

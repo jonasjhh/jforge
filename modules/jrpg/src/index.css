@@ -7,39 +7,71 @@
   align-items: center;
 }
 
-.path {
-  display: flex;
-  gap: 4px;
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
+.map {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
 }
 
-.stop {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text-muted);
-  font-size: 1.1rem;
+.road {
+  stroke: var(--line);
+  stroke-width: 1.5;
 }
 
-.stop-done {
+.road.walked {
+  stroke: var(--turn);
+  stroke-width: 2;
+}
+
+.stop circle {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1.2;
+}
+
+.stop text {
+  fill: var(--text-muted);
+  font-size: 11px;
+}
+
+.stop-done,
+.stop-missed {
   opacity: 0.45;
 }
 
-.stop-here {
-  border-color: var(--turn);
-  color: var(--turn);
-  background: var(--raised);
+.stop-missed {
+  opacity: 0.2;
 }
 
-.stop-lost {
-  border-color: var(--danger);
-  color: var(--danger-soft);
+.stop-here circle {
+  fill: var(--raised);
+  stroke: var(--turn);
+  stroke-width: 2;
+}
+
+.stop-here text {
+  fill: var(--turn);
+}
+
+.stop-open {
+  cursor: pointer;
+}
+
+.stop-open circle {
+  stroke: var(--action);
+  stroke-width: 2;
+}
+
+.stop-open text {
+  fill: var(--text);
+}
+
+.stop-lost circle {
+  stroke: var(--danger);
+}
+
+.stop-lost text {
+  fill: var(--danger-soft);
 }
 
 .reward {
@@ -113,15 +145,6 @@
 .piece[aria-checked="true"] {
   border-color: var(--action);
   background: var(--raised);
-}
-
-.stop {
-  font-size: 0.9rem;
-  border-radius: 8px;
-}
-
-.path {
-  gap: 3px;
 }
 
 .field {

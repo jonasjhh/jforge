@@ -27,8 +27,8 @@ import {
 import { formationOf } from "./formation";
 import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
 
-// A run: the party travels through levels, each a fixed sequence of
-// encounters generated from a seed. Everything here is pure; the screens
+// A run: the party travels through levels, each a map of encounters
+// generated from a seed, row by row along roads that split and merge. Everything here is pure; the screens
 // only show a run and call these functions.
 
 /** An ordinary fight, a tougher one mid-level, or the level's last. */
@@ -48,12 +48,19 @@ export type Encounter =
   /** Gear lying about: take one piece of these. */
   | { kind: "gear"; gearIds: string[] }
   /** A place to train: one member gains a level. */
-  | { kind: "training" }
-  /** A fork in the road: the party picks which of these it meets. */
-  | { kind: "fork"; options: Encounter[] };
+  | { kind: "training" };
+
+/** A place on the level's map. */
+export interface Stop {
+  encounter: Encounter;
+  /** Which of the LANES roads it lies on, for drawing the map. */
+  lane: number;
+  /** The stops of the next row its road leads to, by their index there. */
+  next: number[];
+}
 
 export interface Run {
-  version: 2;
+  version: 3;
   seed: number;
   /** The level the party is on, from 1. Enemies grow with it. */
   depth: number;
@@ -64,9 +71,16 @@ export interface Run {
   party: Character[];
   /** Gear ids nobody wears. */
   bag: string[];
-  encounters: Encounter[];
-  /** The encounter the party stands at; past the end, the level is cleared. */
+  /** The level's map: rows of stops, travelled first row to last. */
+  map: Stop[][];
+  /**
+   * The row the party is at; past the last, the level is cleared. It
+   * stands at a stop once `path` names one for this row; until then it is
+   * at the roadside, choosing where to go.
+   */
   position: number;
+  /** The stop taken in each row so far, by its index in the row. */
+  path: number[];
   defeated: boolean;
   /**
    * The party has acted in the battle it stands at. From then on there is
@@ -85,7 +99,9 @@ export interface Reward {
   loot?: Gear;
 }
 
-/** A level is this long, give or take: MIN to MIN + SPREAD encounters. */
+/** Roads side by side on the map. */
+export const LANES = 3;
+/** A level is this long, give or take: MIN to MIN + SPREAD rows. */
 export const MIN_LEVEL_LENGTH = 12;
 export const LEVEL_LENGTH_SPREAD = 3;
 /** Pieces to choose from where gear lies about. */
@@ -156,44 +172,42 @@ export function startRun(source: Library | null, seed: number): Run {
   );
   const library = withWorld(runLibrary(source), baseLevel);
   return {
-    version: 2,
+    version: 3,
     seed,
     depth: 1,
     baseLevel,
     library,
     party,
     bag: [],
-    encounters: generateLevel(library, party, seed, 1),
+    map: generateLevel(library, party, seed, 1),
     position: 0,
+    path: [0],
     defeated: false,
   };
 }
 
-type Find = "ally" | "gear" | "training" | "fork";
-/** Every level has these; two more are drawn from EXTRA_FINDS. */
-const SURE_FINDS: Find[] = ["ally", "gear", "training"];
-const EXTRA_FINDS: Find[] = [
-  "gear",
-  "gear",
-  "fork",
-  "fork",
-  "ally",
-  "training",
-];
-/** What a fork can lead to. */
-const FORK_KINDS = ["ally", "gear", "training", "elite"] as const;
+type Find = "ally" | "gear" | "training";
+const FINDS: Find[] = ["ally", "gear", "training"];
+/** Rows that offer finds, at most; never two such rows in a row. */
+const FIND_ROWS = 6;
+/** Chance that a battle row past the middle has a tougher fight on it. */
+const ELITE_CHANCE = 0.35;
 
 /**
- * A level: battles from easy to a hard last one, a tougher battle past
- * the middle, and finds in between (an ally, gear, training, forks; never
- * two in a row). The same seed and depth give the same level.
+ * A level's map. It starts at one easy battle and ends at one hard last
+ * one; in between each row has two or three stops on roads that lead to
+ * the neighbouring stops of the next row. Rows are either all battles
+ * (past the middle, sometimes with a tougher one that is sure to drop
+ * gear) or offer finds: an ally, gear, training, each on a different road
+ * and sometimes beside a battle. Find rows never follow each other. The
+ * same seed and depth give the same map.
  */
 export function generateLevel(
   library: Library,
   party: Character[],
   seed: number,
   depth: number,
-): Encounter[] {
+): Stop[][] {
   const random = createRandom(seed + depth * 7919);
   const roll = (n: number) => Math.floor(random() * n);
   const pick = <T>(items: readonly T[]): T => items[roll(items.length)]!;
@@ -260,50 +274,148 @@ export function generateLevel(
       ...(drops ? { loot: gearId() } : {}),
     };
   };
-  const found = (kind: Find | "elite"): Encounter => {
+  const found = (kind: Find): Encounter => {
     if (kind === "ally") return ally();
     if (kind === "gear" && plain.length > 0) return gear();
-    if (kind === "elite") return battle("elite", false);
-    if (kind === "fork") {
-      const kinds = [...FORK_KINDS];
-      return {
-        kind: "fork",
-        options: [found(take(kinds)), found(take(kinds))],
-      };
-    }
     return { kind: "training" };
   };
 
-  // Finds go between the first and the last battle, never side by side.
-  const finds = new Map<number, Find>();
-  const wanted = [...SURE_FINDS, pick(EXTRA_FINDS), pick(EXTRA_FINDS)];
+  // Which rows offer finds: between the first and the last, never two
+  // in a row.
+  const findRows = new Set<number>();
   const open = Array.from({ length: length - 2 }, (_, i) => i + 1);
-  while (open.length > 0 && wanted.length > 0) {
+  while (open.length > 0 && findRows.size < FIND_ROWS) {
     const at = take(open);
-    if (finds.has(at - 1) || finds.has(at + 1)) continue;
-    finds.set(at, wanted.shift()!);
+    if (!findRows.has(at - 1) && !findRows.has(at + 1)) findRows.add(at);
   }
-  // One battle past the middle is a tougher one.
+  // One battle row past the middle is sure to have a tougher fight.
   const later = Array.from({ length }, (_, i) => i).filter(
-    (i) => i >= length / 2 && i < length - 1 && !finds.has(i),
+    (i) => i >= length / 2 && i < length - 1 && !findRows.has(i),
   );
-  const elite = later.length > 0 ? pick(later) : -1;
+  const eliteRow = later.length > 0 ? pick(later) : -1;
 
-  return Array.from({ length }, (_, index): Encounter => {
-    const find = finds.get(index);
-    if (find) return found(find);
-    const rank: BattleRank =
-      index === length - 1 ? "boss" : index === elite ? "elite" : "normal";
-    return battle(rank, index < length / 3);
+  // Every find comes up before any comes up again.
+  let finds: Find[] = [];
+  const nextFind = (not: Find[]): Find => {
+    if (finds.every((f) => not.includes(f))) finds = [...finds, ...FINDS];
+    const fresh = finds.filter((f) => !not.includes(f));
+    const find = pick(fresh);
+    finds.splice(finds.indexOf(find), 1);
+    return find;
+  };
+
+  const rows = Array.from({ length }, (_, index): Stop[] => {
+    const stop = (encounter: Encounter, lane: number): Stop => ({
+      encounter,
+      lane,
+      next: [],
+    });
+    const middle = Math.floor(LANES / 2);
+    if (index === 0) return [stop(battle("normal", true), middle)];
+    if (index === length - 1) return [stop(battle("boss", false), middle)];
+    const lanes = Array.from({ length: LANES }, (_, lane) => lane);
+    if (random() < 0.5) take(lanes);
+    const early = index < length / 3;
+    if (findRows.has(index)) {
+      // Finds on all roads, or a battle on one of them.
+      const fight = random() < 0.5 ? pick(lanes) : -1;
+      // A different find on every road of the row.
+      const here: Find[] = [];
+      return lanes.map((lane) => {
+        if (lane === fight) return stop(battle("normal", early), lane);
+        const find = nextFind(here);
+        here.push(find);
+        return stop(found(find), lane);
+      });
+    }
+    const elite =
+      index === eliteRow || (index >= length / 2 && random() < ELITE_CHANCE)
+        ? pick(lanes)
+        : -1;
+    return lanes.map((lane) =>
+      stop(battle(lane === elite ? "elite" : "normal", early), lane),
+    );
   });
+
+  // Roads lead to the neighbouring lanes of the next row; every stop has
+  // a way on and a way in.
+  for (let index = 0; index < length - 1; index++) {
+    const here = rows[index]!;
+    const there = rows[index + 1]!;
+    const nearest = (lane: number, stops: Stop[]) =>
+      stops.reduce(
+        (best, s, i) =>
+          Math.abs(s.lane - lane) < Math.abs(stops[best]!.lane - lane)
+            ? i
+            : best,
+        0,
+      );
+    for (const from of here) {
+      from.next = there.flatMap((to, i) =>
+        here.length === 1 ||
+        there.length === 1 ||
+        Math.abs(to.lane - from.lane) <= 1
+          ? [i]
+          : [],
+      );
+      if (from.next.length === 0) from.next = [nearest(from.lane, there)];
+    }
+    there.forEach((to, i) => {
+      if (here.some((from) => from.next.includes(i))) return;
+      const from = here[nearest(to.lane, here)]!;
+      from.next = [...from.next, i].sort((a, b) => a - b);
+    });
+  }
+  return rows;
+}
+
+/** A map with no choices: these encounters one after another. */
+export function roadOf(encounters: Encounter[]): Stop[][] {
+  return encounters.map((encounter, i) => [
+    { encounter, lane: 0, next: i < encounters.length - 1 ? [0] : [] },
+  ]);
+}
+
+/** The stop the party stands at; null at the roadside or past the end. */
+export function currentStop(run: Run): Stop | null {
+  const at = run.path[run.position];
+  return at === undefined ? null : (run.map[run.position]?.[at] ?? null);
+}
+
+/**
+ * Where the party can go from the roadside: stops of the row it is at, by
+ * index. Empty while it stands at a stop, and when the level is cleared.
+ */
+export function choices(run: Run): number[] {
+  const row = run.map[run.position];
+  if (run.defeated || !row || run.path.length > run.position) return [];
+  if (run.position === 0) return row.map((_, i) => i);
+  const from = run.map[run.position - 1]?.[run.path[run.position - 1]!];
+  return (from?.next ?? []).filter((i) => i < row.length);
+}
+
+/** The party takes the road to stop `index` of the row it is at. */
+export function travel(run: Run, index: number): Run {
+  if (!choices(run).includes(index)) return run;
+  return { ...run, path: [...run.path.slice(0, run.position), index] };
+}
+
+/**
+ * Past the stop the party stood at, to the roadside of the next row; with
+ * only one way on, straight to that stop.
+ */
+function moveOn(run: Run): Run {
+  const onward: Run = { ...run, position: run.position + 1 };
+  const ways = choices(onward);
+  return ways.length === 1 ? travel(onward, ways[0]!) : onward;
 }
 
 export function currentEncounter(run: Run): Encounter | null {
-  return run.encounters[run.position] ?? null;
+  return currentStop(run)?.encounter ?? null;
 }
 
 export function levelCleared(run: Run): boolean {
-  return !run.defeated && run.position >= run.encounters.length;
+  return !run.defeated && run.position >= run.map.length;
 }
 
 export function gearOf(run: Run, id: string | undefined): Gear | undefined {
@@ -428,13 +540,12 @@ export function winBattle(run: Run): { run: Run; reward: Reward } | null {
   });
   const loot = gearOf(run, encounter.loot);
   return {
-    run: {
+    run: moveOn({
       ...run,
       party,
       bag: loot ? [...run.bag, loot.id] : run.bag,
-      position: run.position + 1,
       committed: false,
-    },
+    }),
     reward: { xp, levelUps, ...(loot ? { loot } : {}) },
   };
 }
@@ -455,7 +566,7 @@ export function canRecruit(run: Run): boolean {
 export function resolveAlly(run: Run, recruit: boolean): Run {
   const encounter = currentEncounter(run);
   if (run.defeated || encounter?.kind !== "ally") return run;
-  const next = { ...run, position: run.position + 1 };
+  const next = moveOn(run);
   if (!recruit || !canRecruit(run)) return next;
   const lowest = Math.min(...run.party.map((c) => c.level));
   const ally = encounter.character;
@@ -476,7 +587,7 @@ export function resolveGear(
 ): Run {
   const encounter = currentEncounter(run);
   if (run.defeated || encounter?.kind !== "gear") return run;
-  const next = { ...run, position: run.position + 1 };
+  const next = moveOn(run);
   const found =
     gearId !== null && encounter.gearIds.includes(gearId)
       ? gearOf(run, gearId)
@@ -492,24 +603,12 @@ export function resolveGear(
 export function resolveTraining(run: Run, characterId: string | null): Run {
   const encounter = currentEncounter(run);
   if (run.defeated || encounter?.kind !== "training") return run;
-  return {
+  return moveOn({
     ...run,
-    position: run.position + 1,
     party: run.party.map((c) =>
       c.id === characterId ? { ...c, level: clampLevel(c.level + 1) } : c,
     ),
-  };
-}
-
-/** At a fork: the party takes option `index`, which it then stands at. */
-export function chooseFork(run: Run, index: number): Run {
-  const encounter = currentEncounter(run);
-  const chosen = encounter?.kind === "fork" ? encounter.options[index] : null;
-  if (run.defeated || !chosen) return run;
-  return {
-    ...run,
-    encounters: run.encounters.map((e, i) => (i === run.position ? chosen : e)),
-  };
+  });
 }
 
 /**
@@ -553,7 +652,8 @@ export function nextLevel(run: Run): Run {
     ...run,
     depth,
     position: 0,
-    encounters: generateLevel(run.library, run.party, run.seed, depth),
+    path: [0],
+    map: generateLevel(run.library, run.party, run.seed, depth),
   };
 }
 
@@ -573,7 +673,7 @@ export function parseRun(text: string | null): Run | null {
   const library = parseLibrary(JSON.stringify(run.library ?? null));
   const whole = (n: unknown) => typeof n === "number" && Number.isInteger(n);
   if (
-    run.version !== 2 ||
+    run.version !== 3 ||
     !library ||
     !whole(run.seed) ||
     !whole(run.depth) ||
@@ -585,12 +685,25 @@ export function parseRun(text: string | null): Run | null {
     !run.party.every((c) => toCombatantDef(library, c)) ||
     !Array.isArray(run.bag) ||
     !run.bag.every((id) => typeof id === "string") ||
-    !Array.isArray(run.encounters) ||
-    !run.encounters.every(isEncounter)
+    !Array.isArray(run.path) ||
+    !run.path.every(whole) ||
+    !Array.isArray(run.map) ||
+    !run.map.every((row) => Array.isArray(row) && row.every(isStop))
   ) {
     return null;
   }
   return { ...(run as Run), library };
+}
+
+function isStop(v: unknown): boolean {
+  if (typeof v !== "object" || v === null) return false;
+  const stop = v as Record<string, unknown>;
+  return (
+    isEncounter(stop.encounter) &&
+    typeof stop.lane === "number" &&
+    Array.isArray(stop.next) &&
+    stop.next.every((i) => typeof i === "number")
+  );
 }
 
 function isEncounter(v: unknown): boolean {
@@ -609,13 +722,6 @@ function isEncounter(v: unknown): boolean {
     return (
       Array.isArray(e.gearIds) &&
       e.gearIds.every((id) => typeof id === "string")
-    );
-  }
-  if (e.kind === "fork") {
-    return (
-      Array.isArray(e.options) &&
-      e.options.length > 0 &&
-      e.options.every((o) => isEncounter(o) && o.kind !== "fork")
     );
   }
   if (e.kind === "training") return true;

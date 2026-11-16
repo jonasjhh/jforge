@@ -528,30 +528,41 @@ import.
 
 ## The run (`modules/jrpg`)
 
-Jrpg is a run through **levels**, each a sequence of 12 to 15 encounters
-generated from the run's seed (`shared/run.ts`, pure like the engine):
+Jrpg is a run through **levels**, each a **map** generated from the run's
+seed (`shared/run.ts`, pure like the engine): 12 to 15 rows of stops,
+travelled first to last. The first and last row have one stop; the rows
+between have two or three, on up to three lanes. A stop's roads lead to
+the stops of the next row on its own or a neighbouring lane, and every
+stop has a road in and a road on. After each encounter the party stands
+at the roadside and picks one of the stops its road leads to (with one
+way on, it walks straight there). The map shows every stop, so a route
+can be planned.
 
 - **Battle**: melee's battle screen (`@jforge/melee/battle`). The first
-  third are Easy, the rest Normal. One battle past the middle is an
-  **elite** (Hard, enemies 2 levels up) and the last is the **final
-  battle** (Hard, 3 levels up). Each battle fields a **pack** of 1 to 3
-  kinds of enemy drawn from the pool by its seed. Winning gives every
-  member `40 x enemy threat / party size` experience and sometimes gear
-  (40%; elites and the final battle always), which goes in the bag. Losing
-  or drawing **ends the run**. The party can **retreat** to the map (to
-  change gear, say) until it gives its first command; from then on the
-  fight is won or the run is over: giving up loses, gear is locked, and a
-  reload opens the same battle from its start. Starting a battle over is
-  allowed (the ↺ button, once the party has acted). An encounter is always
-  fought with the same battle seed, so coming back never rerolls its luck.
+  third of the rows are Easy, the rest Normal. Past the middle some battle
+  rows have an **elite** on one lane (Hard, enemies 2 levels up; at least
+  one row does), and the last stop is the **final battle** (Hard, 3 levels
+  up). Each battle fields a **pack** of 1 to 3 kinds of enemy drawn from
+  the pool by its seed. Winning gives every member `40 x enemy threat /
+party size` experience and sometimes gear (40%; elites and the final
+  battle always), which goes in the bag. Losing or drawing **ends the
+  run**. The party can **retreat** to the map (to change gear, say) until
+  it gives its first command; from then on the fight is won or the run is
+  over: giving up loses, gear is locked, and a reload opens the same
+  battle from its start. An encounter is always fought with the same
+  battle seed, so coming back never rerolls its luck. Starting a battle
+  over is allowed (the ↺ button, once the party has acted).
 - **Ally**: a traveller who isn't in the party offers to join, at the
   level of the party's weakest member if that is higher. The party holds
   five.
 - **Gear**: three different pieces; take one, for a member (what they wore
   goes in the bag) or for the bag.
 - **Training**: one member gains a level.
-- **Fork**: two ways, each one of ally, gear, training or an elite battle;
-  the party meets the one it picks.
+
+Up to six rows offer **finds** (never two such rows running): a different
+find on each lane, sometimes with a battle on one of them. Finds are
+dealt so that an ally, gear and training all come up before any repeats.
+A cleared level leads to the next, deeper one.
 
 **Formation** (`shared/formation.ts`): before a battle the map shows the
 field: the enemies where they will stand and the party, which the player
@@ -589,8 +600,7 @@ counted, not only those of parties that got that far); a test keeps the
 first level in its bands. The run is saved in the browser after every
 encounter.
 
-Not yet: HP carrying over between battles, shops, rest stops, replacing a
-member when the party is full.
+Not yet: shops, replacing a member when the party is full.
 
 Still to come: a live damage preview and power budget in the skill
 designer, the remaining effect types (statuses, summons), resistances per

@@ -33,8 +33,6 @@ export function encounterLabel(encounter: Encounter): string {
       return "Gear";
     case "training":
       return "Training";
-    case "fork":
-      return "Fork in the road";
     case "battle":
       return encounter.rank === "boss"
         ? "Final battle"

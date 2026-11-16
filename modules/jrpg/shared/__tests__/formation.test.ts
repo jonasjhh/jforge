@@ -7,6 +7,7 @@ import {
   commitBattle,
   parseRun,
   resolveAlly,
+  roadOf,
   startRun,
   type Encounter,
   type Run,
@@ -23,8 +24,9 @@ const battle: Encounter = {
 const run: Run = {
   ...startRun(library, 1),
   party: library.characters.slice(0, 2),
-  encounters: [battle],
+  map: roadOf([battle]),
   position: 0,
+  path: [0],
 };
 const [ALDRIC, MIRA] = ["unit-1", "unit-2"];
 
@@ -79,12 +81,12 @@ describe("formationOf", () => {
     const meeting: Run = {
       ...run,
       formation: { [ALDRIC]: { col: 2, row: 2 } },
-      encounters: [
+      map: roadOf([
         {
           kind: "ally",
           character: { ...run.party[1]!, id: "new", name: "Nell" },
         },
-      ],
+      ]),
     };
     const cells = formationOf(resolveAlly(meeting, true));
     expect(cells[ALDRIC]).toEqual({ col: 2, row: 2 });

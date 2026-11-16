@@ -29,9 +29,6 @@ describe("encounterLabel", () => {
     expect(encounterLabel({ ...battle, rank: "boss" })).toBe("Final battle");
     expect(encounterLabel({ kind: "gear", gearIds: ["x"] })).toBe("Gear");
     expect(encounterLabel({ kind: "training" })).toBe("Training");
-    expect(encounterLabel({ kind: "fork", options: [] })).toBe(
-      "Fork in the road",
-    );
     expect(
       encounterLabel({
         kind: "ally",
