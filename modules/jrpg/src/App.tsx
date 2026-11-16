@@ -34,10 +34,11 @@ export function App() {
   };
 
   if (run === null) {
+    const library = loadLibrary();
     return (
       <StartScreen
-        library={loadLibrary()}
-        onStart={(library) => update(startRun(library, newSeed()))}
+        library={library}
+        onStart={(seed) => update(startRun(library, seed))}
       />
     );
   }

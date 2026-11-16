@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { starterLibrary, type Library } from "@jforge/char/shared";
+import { starterLibrary } from "@jforge/char/shared";
 import { MAX_PARTY_SIZE, content, createBattle } from "@jforge/melee/shared";
 import {
   BUDGET_SHARE,
@@ -7,6 +7,7 @@ import {
   LEVEL_LENGTH_SPREAD,
   MAX_PACK_KINDS,
   MIN_LEVEL_LENGTH,
+  START_LEVEL,
   START_PARTY_SIZE,
   battleFor,
   canRecruit,
@@ -15,6 +16,7 @@ import {
   currentEncounter,
   enemyLevelBonus,
   generateLevel,
+  heroes,
   levelCleared,
   loseBattle,
   monsterPool,
@@ -39,6 +41,8 @@ const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
 /** A run standing at the given encounters. */
 const at = (encounters: Encounter[], changes: Partial<Run> = {}): Run => ({
   ...startRun(library, 1),
+  party: library.characters.slice(0, 2),
+  baseLevel: 3,
   encounters,
   position: 0,
   ...changes,
@@ -67,20 +71,62 @@ const everything = (encounters: Encounter[]): Encounter[] =>
   encounters.flatMap((e) => (e.kind === "fork" ? [e, ...e.options] : [e]));
 
 describe("startRun", () => {
-  it("sets out with the library's first class characters", () => {
-    const run = startRun(library, 1);
-    expect(run.party.map((c) => c.name)).toEqual(["Aldric", "Mira"]);
-    expect(run.party).toHaveLength(START_PARTY_SIZE);
-    expect(run).toMatchObject({ depth: 1, position: 0, defeated: false });
-    expect(run.baseLevel).toBe(3);
+  it("draws a different party for different seeds, the same for one seed", () => {
+    expect(startRun(library, 7).party).toEqual(startRun(library, 7).party);
+    const parties = new Set(
+      SEEDS.map((seed) =>
+        startRun(library, seed)
+          .party.map((c) => c.name)
+          .join("+"),
+      ),
+    );
+    expect(parties.size).toBeGreaterThan(10);
   });
 
-  it("falls back to the starter library without a party to field", () => {
-    const enemiesOnly: Library = {
+  it("draws two different heroes, designed ones among them", () => {
+    const drawn = new Set<string>();
+    for (const seed of SEEDS) {
+      const run = startRun(library, seed);
+      expect(run.party).toHaveLength(START_PARTY_SIZE);
+      expect(new Set(run.party.map((c) => c.id)).size).toBe(START_PARTY_SIZE);
+      expect(run).toMatchObject({ depth: 1, position: 0, defeated: false });
+      for (const member of run.party) drawn.add(member.name);
+    }
+    expect(drawn).toContain("Aldric");
+    expect(drawn.size).toBeGreaterThan(8);
+  });
+
+  it("raises the party to its highest level, at least the start level", () => {
+    for (const seed of SEEDS) {
+      const run = startRun(library, seed);
+      expect(run.party.every((c) => c.level === START_LEVEL)).toBe(true);
+      expect(run.baseLevel).toBe(START_LEVEL);
+    }
+    const veteran = {
       ...library,
-      characters: library.characters.filter((c) => c.name === "Goblin"),
+      characters: library.characters.map((c) =>
+        c.name === "Aldric" ? { ...c, level: 9, xp: 50 } : c,
+      ),
     };
-    expect(runLibrary(enemiesOnly)).toEqual(starterLibrary());
+    const withHim = SEEDS.map((seed) => startRun(veteran, seed)).find((run) =>
+      run.party.some((c) => c.name === "Aldric"),
+    )!;
+    expect(withHim.party.map((c) => c.level)).toEqual([9, 9]);
+    expect(withHim.baseLevel).toBe(9);
+    expect(withHim.party.find((c) => c.name === "Aldric")!.xp).toBe(50);
+  });
+
+  it("counts every melee class and designed class character as a hero", () => {
+    const names = heroes(library).map((c) => c.name);
+    expect(names).toEqual(expect.arrayContaining(["Aldric", "Mira", "Brann"]));
+    expect(names).not.toContain("Goblin");
+    const classes = new Set(heroes(null).map((c) => c.archetypeId));
+    for (const type of content.playerTypes) {
+      expect(classes).toContain(`melee-${type.id}`);
+    }
+  });
+
+  it("uses the starter library when nothing was designed", () => {
     expect(runLibrary(null)).toEqual(starterLibrary());
     expect(runLibrary(library)).toBe(library);
   });
@@ -192,8 +238,9 @@ describe("generateLevel", () => {
         e.kind === "ally" ? [e.character] : [],
       );
       expect(new Set(found.map((c) => c.id)).size).toBe(found.length);
+      const party = startRun(library, seed).party.map((c) => c.id);
       for (const character of found) {
-        expect(["unit-1", "unit-2"]).not.toContain(character.id);
+        expect(party).not.toContain(character.id);
       }
     }
   });

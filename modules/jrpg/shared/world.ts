@@ -1,4 +1,11 @@
-import type { Archetype, Character, Gear, Library } from "@jforge/char/shared";
+import {
+  meleeClassId,
+  withMeleeClasses,
+  type Archetype,
+  type Character,
+  type Gear,
+  type Library,
+} from "@jforge/char/shared";
 import { content, type Stats, type Weapon } from "@jforge/melee/shared";
 
 // The world a run travels through: enemies to meet, travellers to recruit
@@ -169,100 +176,18 @@ const ENEMY_TYPES: Archetype[] = [
   ),
 ];
 
-const CLASS_TYPES: Archetype[] = [
-  archetype(
-    "class",
-    "ranger",
-    "Ranger",
-    "archer",
-    [80, 15, 15, 4, 8, 8, 13],
-    [7, 2, 1.9, 0.2, 0.8, 0.6, 0.4],
-    c.bow,
-    2,
-    [[c.aimedShot.id, 2]],
-  ),
-  archetype(
-    "class",
-    "cleric",
-    "Cleric",
-    "healer",
-    [80, 45, 8, 14, 8, 16, 10],
-    [6, 5, 0.4, 1.6, 0.7, 1.6, 0.2],
-    c.staff,
-    2,
-    [
-      [c.heal.id, 1],
-      [c.cure.id, 3],
-      [c.regen.id, 4],
-      [c.revive.id, 6],
-    ],
-  ),
-  archetype(
-    "class",
-    "rogue",
-    "Rogue",
-    "rogue",
-    [75, 20, 15, 4, 7, 7, 16],
-    [6, 2, 1.8, 0.2, 0.6, 0.5, 0.5],
-    c.daggers,
-    0,
-    [
-      [c.shadowstep.id, 2],
-      [c.vanish.id, 4],
-    ],
-  ),
-  archetype(
-    "class",
-    "lancer",
-    "Lancer",
-    "lancer",
-    [100, 12, 16, 3, 10, 8, 11],
-    [9, 1, 2, 0.1, 1.2, 0.6, 0.2],
-    c.spear,
-    1,
-    [[c.skewer.id, 2]],
-  ),
-  archetype(
-    "class",
-    "timekeeper",
-    "Timekeeper",
-    "chronomancer",
-    [70, 45, 6, 13, 6, 13, 12],
-    [5, 5, 0.3, 1.5, 0.5, 1.3, 0.3],
-    c.hourglass,
-    2,
-    [
-      [c.haste.id, 1],
-      [c.slow.id, 3],
-      [c.quicken.id, 5],
-    ],
-  ),
-  archetype(
-    "class",
-    "warder",
-    "Warder",
-    "paladin",
-    [105, 25, 14, 9, 12, 12, 9],
-    [10, 3, 1.6, 0.9, 1.4, 1, 0.2],
-    c.blessedBlade,
-    0,
-    [
-      [c.aegis.id, 2],
-      [c.heal.id, 4],
-    ],
-  ),
-];
-
 /** Travellers who can be met; the level they join at is the party's. */
-const TRAVELLERS: [name: string, type: string][] = [
-  ["Brann", "ranger"],
-  ["Isolde", "cleric"],
+const TRAVELLERS: [name: string, meleeClass: string][] = [
+  ["Brann", "archer"],
+  ["Isolde", "healer"],
   ["Vex", "rogue"],
   ["Tamsin", "lancer"],
-  ["Orrin", "timekeeper"],
-  ["Hale", "warder"],
-  ["Wren", "ranger"],
-  ["Cade", "rogue"],
+  ["Orrin", "chronomancer"],
+  ["Hale", "paladin"],
+  ["Wren", "geomancer"],
+  ["Cade", "fighter"],
+  ["Sable", "warlock"],
+  ["Lucan", "mage"],
 ];
 
 /** Names for travellers of designed classes and when the list runs out. */
@@ -408,10 +333,11 @@ const enemy = (type: Archetype, level: number): Character => ({
 
 /**
  * The library a run plays with: `library` plus the world's enemies (at
- * `level`), classes, travellers and gear, and every piece of gear at every
+ * `level`), melee's classes, travellers and gear, and every piece of gear at every
  * tier. What was designed comes first, so it sets out and shows up first.
  */
-export function withWorld(library: Library, level: number): Library {
+export function withWorld(designed: Library, level: number): Library {
+  const library = withMeleeClasses(designed);
   const have = new Set(library.skills.map((s) => s.id));
   const gear = [...library.gear, ...GEAR];
   return {
@@ -423,13 +349,13 @@ export function withWorld(library: Library, level: number): Library {
       ),
     ],
     gear: GEAR_TIERS.flatMap((_, tier) => gear.map((g) => atTier(g, tier))),
-    archetypes: [...library.archetypes, ...CLASS_TYPES, ...ENEMY_TYPES],
+    archetypes: [...library.archetypes, ...ENEMY_TYPES],
     characters: [
       ...library.characters,
       ...TRAVELLERS.map(([name, type], i): Character => ({
         id: `world-traveller-${i + 1}`,
         name,
-        archetypeId: `world-${type}`,
+        archetypeId: meleeClassId(type),
         level: 1,
         xp: 0,
         gear: {},

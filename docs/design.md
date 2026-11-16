@@ -504,6 +504,13 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **Characters**: a type at a level (1 to 50), wearing gear. Characters of
   a class form the party; characters of an enemy type the monster pool.
 
+**Melee's classes** (`shared/melee.ts`): every melee class is also a char
+class (`melee-fighter`, ...), in the starter library and added to saved
+libraries when they load, so each can be levelled, geared, edited and
+used by jrpg. At level 3 it has exactly melee's stats; they grow 8% of the
+level-1 value per level (speed 2%). Skills are learned in melee's order at
+levels 1, 2, 4, 6, 8. An edited copy is kept; a deleted one comes back.
+
 **Stats**: `round(base + growth x (level - 1))`, then gear the way melee
 applies modifiers: `(stat + adds) x muls`, rounded. Experience: a level
 costs `100 x level`; `gainXp` levels up as often as it pays for.
@@ -551,17 +558,21 @@ swapped with the bag. A cleared level leads to the next, deeper one.
 starter library if it has no class character) plus jrpg's own content,
 copied when the run starts so later edits don't break it: 9 enemy types
 (Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
-Imp, Raider), 6 classes (Ranger, Cleric, Rogue, Lancer, Timekeeper,
-Warder) with 8 named travellers, and 16 pieces of gear. All gear exists
-at four **tiers** (plain, Fine, Superior, Masterwork: each adds half again
-to what the piece adds); finds are a tier better per depth, with some
-luck. The party is the library's first two class characters.
+Imp, Raider), 10 named travellers (one of each melee class, which char
+provides) and 16 pieces of gear. All gear exists at four **tiers** (plain,
+Fine, Superior, Masterwork: each adds half again to what the piece adds);
+finds are a tier better per depth, with some luck.
+
+**The party is drawn by lot**: two of the heroes (the travellers and every
+class character designed in char), by the run's seed, both raised to the
+level of the higher one and at least level 3. The start screen shows the
+draw and can draw again; whoever isn't drawn can be met as an ally.
 
 Enemies gain the party's average levels gained plus one per depth. The
 **threat budget** of a battle is a share of the party's own estimated
 threat (Easy 0.6, Normal 0.8, Hard 1), so encounters keep pace with
-levels, gear and party size; auto-played parties win about 100% / 90% /
-80% of them at every depth. The run is saved in the browser after every
+levels, gear and party size; auto-played parties win about 97% / 84% /
+70% of them on the first level. The run is saved in the browser after every
 encounter.
 
 Not yet: HP carrying over between battles, shops, rest stops, replacing a

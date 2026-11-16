@@ -42,3 +42,10 @@ export {
   type Collection,
 } from "./library";
 export { starterLibrary } from "./starter";
+export {
+  MELEE_CLASS_LEVEL,
+  classFromMelee,
+  meleeClassId,
+  meleeClasses,
+  withMeleeClasses,
+} from "./melee";

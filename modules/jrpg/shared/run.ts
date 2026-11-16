@@ -89,6 +89,8 @@ export const RANK_LEVELS: Record<BattleRank, number> = {
   boss: 3,
 };
 export const START_PARTY_SIZE = 2;
+/** The lowest level a party sets out at. */
+export const START_LEVEL = 3;
 /** Chance that an ordinary battle drops gear; elites and the last always do. */
 export const LOOT_CHANCE = 0.4;
 /** Experience per point of enemy threat, shared out over the party. */
@@ -113,21 +115,33 @@ const isClass = (library: Library, character: Character) =>
 const averageLevel = (party: Character[]) =>
   Math.round(party.reduce((sum, c) => sum + c.level, 0) / party.length);
 
-/** `library` if a party can set out from it, else the starter library. */
+/** The designs a run starts from: `library`, or the starter library. */
 export function runLibrary(library: Library | null): Library {
-  return library && library.characters.some((c) => isClass(library, c))
-    ? library
-    : starterLibrary();
+  return library ?? starterLibrary();
 }
 
-/** A new run: the library's first class characters at the first level. */
+/** Everyone who could set out: every class character of the run's world. */
+export function heroes(source: Library | null): Character[] {
+  const world = withWorld(runLibrary(source), 1);
+  return world.characters.filter((c) => isClass(world, c));
+}
+
+/**
+ * A new run. The party is drawn from the heroes by the seed, all raised
+ * to the level of the highest among them (START_LEVEL at least).
+ */
 export function startRun(source: Library | null, seed: number): Run {
-  const designed = runLibrary(source);
-  const party = designed.characters
-    .filter((c) => isClass(designed, c))
-    .slice(0, START_PARTY_SIZE);
-  const baseLevel = averageLevel(party);
-  const library = withWorld(designed, baseLevel);
+  const random = createRandom(seed ^ 0x9a27);
+  const left = heroes(source);
+  const drawn: Character[] = [];
+  while (left.length > 0 && drawn.length < START_PARTY_SIZE) {
+    drawn.push(left.splice(Math.floor(random() * left.length), 1)[0]!);
+  }
+  const baseLevel = Math.max(START_LEVEL, ...drawn.map((c) => c.level));
+  const party = drawn.map((c) =>
+    c.level >= baseLevel ? c : { ...c, level: baseLevel, xp: 0 },
+  );
+  const library = withWorld(runLibrary(source), baseLevel);
   return {
     version: 2,
     seed,

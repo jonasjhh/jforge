@@ -1,4 +1,5 @@
 import { content } from "@jforge/melee/shared";
+import { withMeleeClasses } from "./melee";
 import type { Library } from "./types";
 
 const { bow, cleave, fireball, firebolt, heal, staff, sword } = content;
@@ -6,9 +7,13 @@ const { bow, cleave, fireball, firebolt, heal, staff, sword } = content;
 /**
  * What a new device starts with: a few skills, gear and types lifted from
  * melee's own content, so there is something to edit and to send to melee
- * straight away.
+ * straight away, and every melee class.
  */
 export function starterLibrary(): Library {
+  return withMeleeClasses(starterDesigns());
+}
+
+function starterDesigns(): Library {
   return {
     version: 1,
     skills: [cleave, firebolt, fireball, heal].map((s) => structuredClone(s)),

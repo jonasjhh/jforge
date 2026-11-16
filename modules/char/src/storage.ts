@@ -4,16 +4,18 @@ import {
   compileRoster,
   parseLibrary,
   starterLibrary,
+  withMeleeClasses,
   type Library,
 } from "../shared";
 
-/** The library saved on this device, or the starter one. */
+/**
+ * The library saved on this device, or the starter one. A library saved
+ * before melee's classes came to char gets them now.
+ */
 export function loadLibrary(): Library {
   try {
-    return (
-      parseLibrary(localStorage.getItem(LIBRARY_STORAGE_KEY)) ??
-      starterLibrary()
-    );
+    const saved = parseLibrary(localStorage.getItem(LIBRARY_STORAGE_KEY));
+    return saved ? withMeleeClasses(saved) : starterLibrary();
   } catch {
     return starterLibrary();
   }

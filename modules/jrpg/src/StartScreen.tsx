@@ -1,17 +1,23 @@
-import type { Library } from "@jforge/char/shared";
-import { MIN_LEVEL_LENGTH, runLibrary, startRun } from "../shared";
+import { useState } from "react";
+import { archetypeOf, type Library } from "@jforge/char/shared";
+import { MIN_LEVEL_LENGTH, heroes, startRun } from "../shared";
 import { meta } from "../meta";
+
+const newSeed = () => Math.floor(Math.random() * 1_000_000);
 
 interface StartScreenProps {
   /** The library designed in char, if any. */
   library: Library | null;
-  onStart: (library: Library | null) => void;
+  onStart: (seed: number) => void;
 }
 
-/** Before a run: who sets out, and where they come from. */
+/** Before a run: who was drawn to set out, and who else is out there. */
 export function StartScreen({ library, onStart }: StartScreenProps) {
-  const own = library !== null && runLibrary(library) === library;
-  const party = startRun(library, 0).party;
+  const [seed, setSeed] = useState(newSeed);
+  const run = startRun(library, seed);
+  const others = heroes(library).filter(
+    (hero) => !run.party.some((member) => member.id === hero.id),
+  );
   return (
     <main className="page">
       <a className="back" href="/">
@@ -24,32 +30,38 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
         pay experience and sometimes gear. Lose one and the run is over.
       </p>
 
-      <section className="panel">
+      <section className="panel" aria-label="Setting out">
         <h2>Setting out</h2>
-        <p>
-          <strong>{party.map((c) => c.name).join(" and ")}</strong>
-        </p>
+        <ul>
+          {run.party.map((member) => (
+            <li key={member.id}>
+              <strong>{member.name}</strong>{" "}
+              <span className="muted small">
+                {archetypeOf(run.library, member)?.name} · Level {member.level}
+              </span>
+            </li>
+          ))}
+        </ul>
         <p className="muted small">
-          {own ? (
-            <>
-              From your library in <a href="/char/">Char</a>: its first class
-              characters set out, and its other classes, enemies and gear join
-              the world's own.
-            </>
-          ) : (
-            <>
-              The starter heroes. Design your own classes, enemies and gear in{" "}
-              <a href="/char/">Char</a>.
-            </>
-          )}
+          Drawn by lot. Out there to meet:{" "}
+          {others.map((hero) => hero.name).join(", ")}. Class characters you
+          design in <a href="/char/">Char</a> join the draw; your enemies and
+          gear join the world's own.
         </p>
         <div className="button-row">
           <button
             type="button"
             className="primary"
-            onClick={() => onStart(library)}
+            onClick={() => onStart(seed)}
           >
             Set out
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => setSeed(newSeed())}
+          >
+            Draw again
           </button>
         </div>
       </section>
