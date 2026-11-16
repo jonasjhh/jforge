@@ -5,6 +5,7 @@ import {
   sufferDamage,
 } from "./damage";
 import { effectiveStat, isAlive } from "./stats";
+import { restoreHp } from "./units";
 import type {
   BattleEvent,
   BattleState,
@@ -135,8 +136,7 @@ function tick(
       break;
     }
     case "heal": {
-      const amount = Math.min(unit.base.maxHp - unit.hp, status.amount);
-      unit.hp += amount;
+      const amount = restoreHp(unit, status.amount);
       events.push({
         type: "statusTick",
         unitId: unit.id,

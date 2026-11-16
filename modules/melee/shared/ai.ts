@@ -1,4 +1,4 @@
-import { defenseFactor, expectedPhysicalDamage } from "./damage";
+import { defenseFactor, expectedPhysicalDamage, wouldKnockOut } from "./damage";
 import { reachableTargets } from "./reach";
 import { nextRandom } from "./rng";
 import { effectiveStat } from "./stats";
@@ -22,14 +22,9 @@ export function targetScore(
   target: Unit,
 ): number {
   const p = unit.targeting;
-  // A shield soaks part of the hit; a ward means it can't be finished.
-  const shield =
-    target.statuses.find((s) => s.effect === "shield")?.amount ?? 0;
-  const warded = target.statuses.some((s) => s.effect === "ward");
-  const canFinish =
-    !warded && expectedPhysicalDamage(unit, target) - shield >= target.hp
-      ? 1
-      : 0;
+  const canFinish = wouldKnockOut(target, expectedPhysicalDamage(unit, target))
+    ? 1
+    : 0;
   const wounded = 1 - target.hp / target.base.maxHp;
   const soft = defenseFactor(effectiveStat(target, "defense"));
   return (

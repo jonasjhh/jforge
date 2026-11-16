@@ -24,8 +24,3 @@ function scramble(value: number): number {
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
-
-/** Random integer in [0, n). */
-export function randomIndex(state: BattleState, n: number): number {
-  return Math.floor(nextRandom(state) * n);
-}

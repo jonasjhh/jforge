@@ -3,6 +3,7 @@ import { act, advance, createBattle } from "../battle";
 import { geomancer, raiseBoulder, shatter, sword, upheaval } from "../content";
 import { unitAt } from "../grid";
 import { reachableTargets } from "../reach";
+import { skillVictims } from "../skills";
 import type { BattleEvent, BattleState, Cell, Placement } from "../types";
 import { def, place } from "./helpers";
 
@@ -179,6 +180,21 @@ describe("Shatter", () => {
     ).toBe("impact");
     expect(unitAt(state, E(2, 0))).toBeUndefined();
     expect(shatter.mpCost).toBe(8);
+  });
+
+  it("doesn't count its own boulder among the victims", () => {
+    const s = nextGeoTurn(
+      cast(
+        geoTurn([place(def("near", { maxHp: 1000, speed: 1 }), "enemy", 2, 1)]),
+        "raise-boulder",
+        E(2, 0),
+      ).state,
+    );
+    const caster = s.units.find((u) => u.id === "player-4-1")!;
+    const skill = caster.skills.find((k) => k.id === "shatter")!;
+    expect(skillVictims(s, caster, skill, E(2, 0)).map((u) => u.id)).toEqual([
+      "enemy-2-1",
+    ]);
   });
 
   it("needs one of the Geomancer's own boulders", () => {

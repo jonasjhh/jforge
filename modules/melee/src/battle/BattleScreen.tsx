@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  canAfford,
   cellOf,
   getUnit,
   previewDamage,
@@ -10,9 +11,9 @@ import {
   unitAt,
   validateCommand,
   type BattleSetup,
-  type BattleState,
   type Cell,
   type Command,
+  type Side,
   type DamagePreview,
   type Skill,
   type Unit,
@@ -23,7 +24,7 @@ import {
   type BattleSpeed,
 } from "./battleSpeed";
 import { Grid } from "./Grid";
-import { canAfford, rowHint, skillCost, targetHint } from "./labels";
+import { resultText, rowHint, skillCost, targetHint } from "./labels";
 import { TurnOrder } from "./TurnOrder";
 import { UnitDetails } from "./UnitDetails";
 import { useBattle } from "./useBattle";
@@ -158,7 +159,7 @@ export function BattleScreen({
       if (menu.kind !== "skill") return null;
       // An aimed area: everyone it would hit, allies included.
       if (menu.aim) {
-        const victims = previewVictims(state, active, menu.skill, menu.aim);
+        const victims = skillVictims(state, active, menu.skill, menu.aim);
         return victims.includes(unit)
           ? previewDamage(active, unit, menu.skill)
           : null;
@@ -274,7 +275,7 @@ export function BattleScreen({
               aim={menu.aim}
               victims={
                 menu.aim
-                  ? previewVictims(state, active, menu.skill, menu.aim)
+                  ? skillVictims(state, active, menu.skill, menu.aim)
                   : []
               }
               casterSide={active.side}
@@ -310,11 +311,7 @@ export function BattleScreen({
         {phase.kind === "over" && (
           <>
             <p className={`result result-${phase.winner ?? "draw"}`}>
-              {phase.winner === "player"
-                ? "Victory!"
-                : phase.winner === "enemy"
-                  ? "Defeat…"
-                  : "Draw"}
+              {resultText(phase.winner)}
             </p>
             <div className="command-list">
               <button
@@ -363,24 +360,8 @@ export function BattleScreen({
 interface SkillPromptProps {
   skill: Skill;
   aim: Cell | null;
-  victims: ReturnType<typeof skillVictims>;
-  casterSide: "player" | "enemy";
-}
-
-/**
- * Who an area skill would hit if cast now. Shatter destroys its boulder
- * before the blast, so the boulder itself isn't counted.
- */
-function previewVictims(
-  state: BattleState,
-  caster: Unit,
-  skill: Skill,
-  aim: Cell,
-): Unit[] {
-  const victims = skillVictims(state, caster, skill, aim);
-  if (skill.effect.type !== "shatter") return victims;
-  const rock = unitAt(state, aim);
-  return victims.filter((u) => u !== rock);
+  victims: Unit[];
+  casterSide: Side;
 }
 
 function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {

@@ -1,5 +1,5 @@
 import { nextRandom } from "./rng";
-import { vanish } from "./units";
+import { dropReady, vanish } from "./units";
 import { effectiveStat } from "./stats";
 import type { BattleEvent, BattleState, DamageType, Unit } from "./types";
 
@@ -218,6 +218,17 @@ export function reportDefenses(
   }
 }
 
+/**
+ * Whether an expected hit of `amount` would knock `target` out: its shield
+ * soaks part of it first, and a ward means it can't be finished.
+ */
+export function wouldKnockOut(target: Unit, amount: number): boolean {
+  const shield =
+    target.statuses.find((s) => s.effect === "shield")?.amount ?? 0;
+  const warded = target.statuses.some((s) => s.effect === "ward");
+  return !warded && amount > 0 && amount - shield >= target.hp;
+}
+
 /** At 0 HP: clear the unit's turn, statuses and cast, and report it. */
 export function knockOutIfDown(
   state: BattleState,
@@ -235,7 +246,7 @@ export function knockOutIfDown(
     });
     target.casting = undefined;
   }
-  state.ready = state.ready.filter((id) => id !== target.id);
+  dropReady(state, target.id);
   events.push({ type: "knockedOut", unitId: target.id });
   if (target.summonedBy) {
     vanish(target);

@@ -12,6 +12,7 @@ import {
 } from "../../shared";
 import { findAction, summarizeAction } from "./actionSummary";
 import { describeEvent } from "./describeEvent";
+import { resistanceKind } from "./labels";
 
 /** Game time per real second at 1×. Speed 10 fills a gauge in about 1.7 s. */
 export const TIME_SCALE = 60;
@@ -173,15 +174,10 @@ export function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
         kind: "damage",
         // A hit fully soaked by a shield shows as SHIELD.
         tag:
-          e.amount === 0 && e.absorbed ? "shield" : resistanceTag(e.multiplier),
+          e.amount === 0 && e.absorbed
+            ? "shield"
+            : resistanceKind(e.multiplier),
       },
     ];
   });
-}
-
-function resistanceTag(multiplier: number): Hit["tag"] {
-  if (multiplier === 0) return "immune";
-  if (multiplier > 1) return "weak";
-  if (multiplier < 1) return "resist";
-  return undefined;
 }

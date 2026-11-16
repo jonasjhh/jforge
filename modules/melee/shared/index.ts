@@ -13,7 +13,13 @@ export {
 } from "./grid";
 export { effectiveStat, isAlive } from "./stats";
 export { canReach, reachableTargets } from "./reach";
-export { skillArea, skillCells, skillVictims, validateSkill } from "./skills";
+export {
+  canAfford,
+  skillArea,
+  skillCells,
+  skillVictims,
+  validateSkill,
+} from "./skills";
 export { MOVE_GAUGE_LEFT, validateMove } from "./move";
 export { AMBUSH_POWER, isStealthed } from "./stealth";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";

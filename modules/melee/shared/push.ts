@@ -16,14 +16,7 @@ export function pushDestination(
 ): Position | null {
   const to = { col: unit.position.col, row: unit.position.row + rows };
   if (!isOnGrid(to)) return null;
-  const occupied = state.units.some(
-    (u) =>
-      u !== unit &&
-      u.side === unit.side &&
-      u.position.col === to.col &&
-      u.position.row === to.row,
-  );
-  return occupied ? null : to;
+  return pushBlocker(state, unit, rows) ? null : to;
 }
 
 /** The unit standing where `rows` of push would move `unit`, if any. */

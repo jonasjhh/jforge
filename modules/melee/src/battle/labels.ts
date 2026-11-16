@@ -1,6 +1,8 @@
 import {
   ROW_DEALT,
+  type BattleState,
   type DamagePreview,
+  type Side,
   type Skill,
   type Unit,
 } from "../../shared";
@@ -9,6 +11,37 @@ import {
 // they can be tested.
 
 const ROW_LABELS = ["front", "middle", "back"];
+
+/** What a damage multiplier means: none, weak (over 1), resist, immune (0). */
+export type ResistanceKind = "weak" | "resist" | "immune";
+
+export function resistanceKind(multiplier: number): ResistanceKind | undefined {
+  if (multiplier === 0) return "immune";
+  if (multiplier > 1) return "weak";
+  if (multiplier < 1) return "resist";
+  return undefined;
+}
+
+/** " (weak)" after a damage number in the log and the action caption. */
+export function resistanceNote(multiplier: number): string {
+  const kind = resistanceKind(multiplier);
+  if (kind === "immune") return " (immune)";
+  if (kind === "weak") return " (weak)";
+  if (kind === "resist") return " (resisted)";
+  return "";
+}
+
+/** "Victory!", "Defeat…" or "Draw", from the player's point of view. */
+export function resultText(winner: Side | null): string {
+  if (winner === "player") return "Victory!";
+  if (winner === "enemy") return "Defeat…";
+  return "Draw";
+}
+
+/** A unit's display name, or its id if it isn't in the battle. */
+export function unitName(state: BattleState, id: string): string {
+  return state.units.find((u) => u.id === id)?.name ?? id;
+}
 
 /** "15 HP" for Blood Bolt, "24 MP · delayed" for Meteor. */
 export function skillCost(skill: Skill): string {
@@ -19,11 +52,6 @@ export function skillCost(skill: Skill): string {
   ]
     .filter(Boolean)
     .join(" · ");
-}
-
-/** Enough MP, and more HP than an HP cost (it may never be fatal). */
-export function canAfford(unit: Unit, skill: Skill): boolean {
-  return unit.mp >= skill.mpCost && unit.hp > (skill.hpCost ?? 0);
 }
 
 /** ", front row: full damage" for melee; ranged weapons ignore rows. */
@@ -60,25 +88,22 @@ export function targetHint(skill: Skill): string {
 export function previewText(p: DamagePreview): string {
   return [
     `about ${p.amount} damage`,
-    p.multiplier === 0
-      ? "immune"
-      : p.multiplier > 1
-        ? "weak"
-        : p.multiplier < 1
-          ? "resists"
-          : "",
+    { immune: "immune", weak: "weak", resist: "resists", none: "" }[
+      resistanceKind(p.multiplier) ?? "none"
+    ],
     p.knocksOut ? "knocks out" : "",
   ]
     .filter(Boolean)
     .join(", ");
 }
 
-/** The badge's classes: gold if weak, grey if resisted, red if KO. */
+/** The badge's classes: gold if weak, grey if resisted or immune, red if KO. */
 export function previewClasses(p: DamagePreview): string {
+  const kind = resistanceKind(p.multiplier);
   return [
     "preview",
-    p.multiplier > 1 ? "weak" : "",
-    p.multiplier < 1 ? "resist" : "",
+    kind === "weak" ? "weak" : "",
+    kind === "resist" || kind === "immune" ? "resist" : "",
     p.knocksOut ? "ko" : "",
   ]
     .filter(Boolean)
@@ -87,5 +112,5 @@ export function previewClasses(p: DamagePreview): string {
 
 /** The badge's text: "~24", "~30 KO", "Immune". */
 export function previewLabel(p: DamagePreview): string {
-  return `${p.multiplier === 0 ? "Immune" : `~${p.amount}`}${p.knocksOut ? " KO" : ""}`;
+  return `${resistanceKind(p.multiplier) === "immune" ? "Immune" : `~${p.amount}`}${p.knocksOut ? " KO" : ""}`;
 }

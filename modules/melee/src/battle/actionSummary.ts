@@ -1,5 +1,6 @@
 import type { BattleEvent, BattleState } from "../../shared";
 import { describeEvent } from "./describeEvent";
+import { resistanceNote, unitName } from "./labels";
 
 type ActionEvent = Extract<
   BattleEvent,
@@ -36,7 +37,7 @@ export function summarizeAction(
 
 /** What the events after an action did to the units it touched. */
 function outcome(state: BattleState, events: BattleEvent[]): string | null {
-  const name = (id: string) => state.units.find((u) => u.id === id)?.name ?? id;
+  const name = (id: string) => unitName(state, id);
   const damaged = new Map<string, Extract<BattleEvent, { type: "damage" }>>();
   const healed = new Map<string, number>();
   const knockedOut: string[] = [];
@@ -72,7 +73,5 @@ function outcome(state: BattleState, events: BattleEvent[]): string | null {
 function hitText(hit: Extract<BattleEvent, { type: "damage" }>): string {
   if (hit.multiplier === 0) return "immune";
   if (hit.amount === 0 && hit.absorbed) return "absorbed";
-  const note =
-    hit.multiplier > 1 ? " (weak)" : hit.multiplier < 1 ? " (resisted)" : "";
-  return `${hit.amount}${note}`;
+  return `${hit.amount}${resistanceNote(hit.multiplier)}`;
 }

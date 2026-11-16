@@ -1,4 +1,4 @@
-import { expectedDamage, resistance } from "./damage";
+import { expectedDamage, resistance, wouldKnockOut } from "./damage";
 import { AMBUSH_POWER, isStealthed } from "./stealth";
 import type { DamageType, Skill, Unit } from "./types";
 
@@ -37,12 +37,9 @@ export function previewDamage(
 
   const [delivery, power, damageType] = hit;
   const amount = expectedDamage(attacker, target, delivery, power, damageType);
-  const shield =
-    target.statuses.find((s) => s.effect === "shield")?.amount ?? 0;
-  const warded = target.statuses.some((s) => s.effect === "ward");
   return {
     amount,
     multiplier: resistance(target, damageType),
-    knocksOut: !warded && amount > 0 && amount - shield >= target.hp,
+    knocksOut: wouldKnockOut(target, amount),
   };
 }

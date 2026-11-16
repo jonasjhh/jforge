@@ -1,5 +1,5 @@
 import { chooseCommand } from "./ai";
-import { makeUnit } from "./units";
+import { dropReady, findSkill, makeUnit } from "./units";
 import { applyDamage, physicalHit } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
@@ -164,7 +164,7 @@ export function validateCommand(
 ): string | null {
   if (command.type === "move") return validateMove(state, unit, command.to);
   if (command.type === "skill") {
-    const skill = unit.skills.find((s) => s.id === command.skillId);
+    const skill = findSkill(unit, command.skillId);
     return validateSkill(state, unit, skill, command.cell);
   }
   const target = state.units.find((u) => u.id === command.targetId);
@@ -207,7 +207,7 @@ function resolve(
     return;
   }
   if (command.type === "skill") {
-    const skill = unit.skills.find((s) => s.id === command.skillId);
+    const skill = findSkill(unit, command.skillId);
     if (!skill) throw new Error(`Unknown skill ${command.skillId}`);
     castSkill(state, unit, skill, command.cell, events);
     finishTurn(state, unit);
@@ -228,7 +228,7 @@ function resolve(
 
 function finishTurn(state: BattleState, unit: Unit): void {
   unit.gauge = 0;
-  state.ready = state.ready.filter((id) => id !== unit.id);
+  dropReady(state, unit.id);
 }
 
 /** Ends the battle if one side has no living units. */

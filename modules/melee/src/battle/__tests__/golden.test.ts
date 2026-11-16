@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { content, createBattle, type DamagePreview } from "../../../shared";
+import {
+  canAfford,
+  content,
+  createBattle,
+  type DamagePreview,
+} from "../../../shared";
 import { botBattles, digest } from "../../../shared/__tests__/bot";
 import { summarizeAction } from "../actionSummary";
 import { describeEvent } from "../describeEvent";
 import {
-  canAfford,
   previewClasses,
   previewLabel,
   previewText,

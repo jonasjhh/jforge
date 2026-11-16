@@ -13,7 +13,7 @@ import {
 import { applyModifier, applyStatus, cleanse } from "./status";
 import { GAUGE_FULL } from "./timeline";
 import { effectiveStat, isAlive } from "./stats";
-import { makeUnit, vanish } from "./units";
+import { dropReady, findSkill, makeUnit, restoreHp, vanish } from "./units";
 import type {
   BattleEvent,
   BattleState,
@@ -22,6 +22,11 @@ import type {
   SkillEffect,
   Unit,
 } from "./types";
+
+/** Enough MP, and more HP than an HP cost (it may never be fatal). */
+export function canAfford(unit: Unit, skill: Skill): boolean {
+  return unit.mp >= skill.mpCost && unit.hp > (skill.hpCost ?? 0);
+}
 
 /** Why `unit` cannot aim `skill` at `cell` right now, or null if it can. */
 export function validateSkill(
@@ -32,9 +37,7 @@ export function validateSkill(
 ): string | null {
   if (!skill) return "Unknown skill";
   if (unit.mp < skill.mpCost) return `Not enough MP for ${skill.name}`;
-  if (skill.hpCost && unit.hp <= skill.hpCost) {
-    return `Not enough HP for ${skill.name}`;
-  }
+  if (!canAfford(unit, skill)) return `Not enough HP for ${skill.name}`;
   if (!isCellOnGrid(cell)) return "That cell is off the battlefield";
   if (skill.effect.type === "teleport") {
     if (cell.side !== unit.side) return "Move within your own side";
@@ -148,16 +151,20 @@ export function skillArea(
   return areaCells(cell, skill.area);
 }
 
-/** The living units `unit`'s skill aimed at `cell` would hit, friend or foe. */
+/**
+ * The living units `unit`'s skill aimed at `cell` would hit, friend or foe.
+ * Shatter destroys its boulder before the blast, so the boulder isn't one.
+ */
 export function skillVictims(
   state: BattleState,
   unit: Unit,
   skill: Skill,
   cell: Cell,
 ): Unit[] {
+  const spared = skill.effect.type === "shatter" ? unitAt(state, cell) : null;
   return skillArea(state, unit, skill, cell).flatMap((c) => {
-    const unit = unitAt(state, c);
-    return unit && isAlive(unit) ? [unit] : [];
+    const victim = unitAt(state, c);
+    return victim && victim !== spared && isAlive(victim) ? [victim] : [];
   });
 }
 
@@ -217,7 +224,7 @@ export function landCast(
   const casting = unit.casting;
   if (!casting) return;
   unit.casting = undefined;
-  const skill = unit.skills.find((s) => s.id === casting.skillId);
+  const skill = findSkill(unit, casting.skillId);
   if (skill) applySkill(state, unit, skill, casting.cell, events, true);
 }
 
@@ -297,11 +304,7 @@ function applySkill(
     switch (effect.type) {
       case "heal": {
         const power = effect.power * effectiveStat(unit, "magic");
-        const amount = Math.min(
-          target.base.maxHp - target.hp,
-          Math.max(1, Math.round(power)),
-        );
-        target.hp += amount;
+        const amount = restoreHp(target, Math.max(1, Math.round(power)));
         events.push({ type: "heal", unitId: target.id, amount, hp: target.hp });
         break;
       }
@@ -368,13 +371,12 @@ function applySkill(
         );
         const suffered = applyDamage(state, target, hit, events);
         if (effect.drain && isAlive(unit)) {
-          const amount = Math.min(
-            unit.base.maxHp - unit.hp,
-            // Only damage that got through (not into a shield) is drained.
+          // Only damage that got through (not into a shield) is drained.
+          const amount = restoreHp(
+            unit,
             Math.floor(suffered.lost * effect.drain),
           );
           if (amount > 0) {
-            unit.hp += amount;
             events.push({ type: "heal", unitId: unit.id, amount, hp: unit.hp });
           }
         }
@@ -405,7 +407,7 @@ function summon(
     );
   const remove = (old: Unit) => {
     vanish(old);
-    state.ready = state.ready.filter((id) => id !== old.id);
+    dropReady(state, old.id);
     events.push({ type: "vanished", unitId: old.id });
   };
   const inCell = unitAt(state, cell);

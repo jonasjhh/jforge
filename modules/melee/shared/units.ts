@@ -1,11 +1,13 @@
 import { DEFAULT_TARGETING } from "./ai";
 import { resistancesFor } from "./traits";
 import type {
+  BattleState,
   CombatantDef,
   Control,
   Modifier,
   Position,
   Side,
+  Skill,
   Unit,
 } from "./types";
 
@@ -46,4 +48,21 @@ export function vanish(unit: Unit): void {
   unit.gauge = 0;
   unit.statuses = [];
   unit.position = { col: -1, row: -1 };
+}
+
+/** Takes a unit out of the queue of units waiting to act. */
+export function dropReady(state: BattleState, unitId: string): void {
+  state.ready = state.ready.filter((id) => id !== unitId);
+}
+
+/** Heals up to `amount`, never past max HP. Returns the HP gained. */
+export function restoreHp(unit: Unit, amount: number): number {
+  const gained = Math.min(unit.base.maxHp - unit.hp, amount);
+  unit.hp += gained;
+  return gained;
+}
+
+/** The unit's own copy of a skill, by id. */
+export function findSkill(unit: Unit, skillId: string): Skill | undefined {
+  return unit.skills.find((s) => s.id === skillId);
 }

@@ -1,4 +1,5 @@
 import { GAUGE_FULL, type BattleEvent, type BattleState } from "../../shared";
+import { resistanceNote, resultText, unitName } from "./labels";
 
 /** One battle log line for an event, or null for events not worth showing. */
 export function describeEvent(
@@ -6,7 +7,7 @@ export function describeEvent(
   event: BattleEvent,
 ): string | null {
   const unit = (id: string) => state.units.find((u) => u.id === id);
-  const name = (id: string) => unit(id)?.name ?? id;
+  const name = (id: string) => unitName(state, id);
   switch (event.type) {
     case "attack":
       return `${name(event.unitId)} attacks ${name(event.targetId)}`;
@@ -96,14 +97,7 @@ export function describeEvent(
     case "heal":
       return `${name(event.unitId)} recovers ${event.amount} HP`;
     case "damage": {
-      const note =
-        event.multiplier === 0
-          ? " (immune)"
-          : event.multiplier > 1
-            ? " (weak)"
-            : event.multiplier < 1
-              ? " (resisted)"
-              : "";
+      const note = resistanceNote(event.multiplier);
       if (event.amount === 0 && event.absorbed) {
         return `${name(event.unitId)}'s shield absorbs ${event.absorbed} ${event.damageType} damage`;
       }
@@ -115,11 +109,7 @@ export function describeEvent(
     case "modifierExpired":
       return `${name(event.unitId)}'s ${event.source} wears off`;
     case "battleOver":
-      return event.winner === "player"
-        ? "Victory!"
-        : event.winner === "enemy"
-          ? "Defeat…"
-          : "Draw";
+      return resultText(event.winner);
     case "timeAdvanced":
     case "turnReady":
       return null;
