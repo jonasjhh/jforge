@@ -1,30 +1,42 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   canAfford,
-  cellOf,
   getUnit,
-  previewDamage,
-  isAlive,
-  sameCell,
-  skillArea,
   skillVictims,
-  unitAt,
-  validateCommand,
   type BattleSetup,
   type Cell,
-  type Command,
   type Side,
-  type DamagePreview,
   type Skill,
   type Unit,
 } from "../../shared";
 import {
   loadBattleSpeed,
+  nextSpeed,
   saveBattleSpeed,
   type BattleSpeed,
 } from "./battleSpeed";
 import { Grid } from "./Grid";
-import { resultText, rowHint, skillCost, targetHint } from "./labels";
+import {
+  aimHint,
+  resultText,
+  rowHint,
+  skillCost,
+  targetHint,
+  victimSummary,
+} from "./labels";
+import { pauseKeyAction } from "./pauseKeys";
+import {
+  actionName,
+  aimedArea,
+  ATTACK,
+  canTarget,
+  emphasized,
+  incomingCells,
+  previewFor,
+  tap,
+  turnKey,
+  type Menu,
+} from "./turnMenu";
 import { TurnOrder } from "./TurnOrder";
 import { UnitDetails } from "./UnitDetails";
 import { useBattle } from "./useBattle";
@@ -36,16 +48,6 @@ interface BattleScreenProps {
   onRestart: (won: boolean) => void;
   onExit: () => void;
 }
-
-/** What the active party member is choosing. */
-type Menu =
-  | { kind: "attack" }
-  | { kind: "move" }
-  | { kind: "skills" }
-  /** `aim` is the previewed cell of an area skill, before it is cast. */
-  | { kind: "skill"; skill: Skill; aim: Cell | null };
-
-const ATTACK: Menu = { kind: "attack" };
 
 export function BattleScreen({
   setup,
@@ -59,7 +61,7 @@ export function BattleScreen({
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState<BattleSpeed>(loadBattleSpeed);
   const toggleSpeed = () => {
-    const next: BattleSpeed = speed === 1 ? 2 : 1;
+    const next = nextSpeed(speed);
     setSpeed(next);
     saveBattleSpeed(next);
   };
@@ -74,100 +76,36 @@ export function BattleScreen({
   const active =
     phase.kind === "awaitingCommand" ? getUnit(state, phase.unitId) : null;
 
-  // The menu belongs to one turn; every turn starts on Attack. Game time
-  // stands still during a turn and always differs between two turns of the
-  // same unit, so unit + time identifies the turn.
-  const turn = active ? `${active.id}@${state.time}` : null;
+  // The menu belongs to one turn; every turn starts on Attack.
+  const turn = turnKey(state, active);
   const [chosen, setChosen] = useState<{ turn: string; menu: Menu } | null>(
     null,
   );
   const menu = turn && chosen?.turn === turn ? chosen.menu : ATTACK;
   const choose = (next: Menu) => turn && setChosen({ turn, menu: next });
 
-  const commandFor = (cell: Cell): Command | null => {
-    if (menu.kind === "attack") {
-      const target = unitAt(state, cell);
-      return target ? { type: "attack", targetId: target.id } : null;
-    }
-    if (menu.kind === "skill") {
-      return { type: "skill", skillId: menu.skill.id, cell };
-    }
-    if (menu.kind === "move" && active && cell.side === active.side) {
-      return { type: "move", to: { col: cell.col, row: cell.row } };
-    }
-    return null;
-  };
-  const canTarget = (cell: Cell) => {
-    const c = commandFor(cell);
-    return (
-      active !== null &&
-      c !== null &&
-      validateCommand(state, active, c) === null
-    );
-  };
   const onTarget = (cell: Cell) => {
-    const c = commandFor(cell);
-    if (!c) return;
-    // Area skills take two taps: the first aims and previews, a second tap
-    // on the same cell casts.
-    if (menu.kind === "skill" && menu.skill.area !== "single") {
-      if (menu.aim && sameCell(menu.aim, cell)) command(c);
-      else choose({ ...menu, aim: cell });
-      return;
-    }
-    command(c);
+    if (!active) return;
+    const result = tap(state, active, menu, cell);
+    if (result?.type === "aim") choose(result.menu);
+    else if (result) command(result.command);
   };
 
   const aim = menu.kind === "skill" ? menu.aim : null;
-  const area =
-    menu.kind === "skill" && aim && active
-      ? skillArea(state, active, menu.skill, aim)
-      : actionArea;
   const gridProps = {
     state,
     hits,
     activeId: active?.id ?? null,
     actorId,
-    canTarget,
+    canTarget: (cell: Cell) => canTarget(state, active, menu, cell),
     onTarget,
-    actionName:
-      menu.kind === "skill"
-        ? menu.skill.area === "single"
-          ? menu.skill.name
-          : `Aim ${menu.skill.name} at`
-        : menu.kind === "move"
-          ? "Move to"
-          : "Attack",
-    area,
+    actionName: actionName(menu),
+    area: aimedArea(state, active, menu) ?? actionArea,
     aim,
-    incoming: state.units.flatMap((u) =>
-      u.casting && isAlive(u) ? u.casting.area : [],
-    ),
-    // While choosing a cleanse target, point at the allies who need it.
-    emphasize: (unit: Unit) =>
-      menu.kind === "skill" &&
-      menu.skill.effect.type === "cleanse" &&
-      isAlive(unit) &&
-      unit.side === active?.side &&
-      unit.statuses.some((s) => s.harmful),
+    incoming: incomingCells(state),
+    emphasize: (unit: Unit) => emphasized(active, menu, unit),
     onInspect: (unit: Unit) => setInspected(unit.id),
-    preview: (unit: Unit): DamagePreview | null => {
-      if (!active || !isAlive(unit)) return null;
-      if (menu.kind === "attack") {
-        return canTarget(cellOf(unit)) ? previewDamage(active, unit) : null;
-      }
-      if (menu.kind !== "skill") return null;
-      // An aimed area: everyone it would hit, allies included.
-      if (menu.aim) {
-        const victims = skillVictims(state, active, menu.skill, menu.aim);
-        return victims.includes(unit)
-          ? previewDamage(active, unit, menu.skill)
-          : null;
-      }
-      return menu.skill.area === "single" && canTarget(cellOf(unit))
-        ? previewDamage(active, unit, menu.skill)
-        : null;
-    },
+    preview: (unit: Unit) => previewFor(state, active, menu, unit),
   };
 
   return (
@@ -182,7 +120,7 @@ export function BattleScreen({
             <button
               type="button"
               className="speed-button"
-              aria-label={`Battle speed ${speed}×, tap for ${speed === 1 ? 2 : 1}×`}
+              aria-label={`Battle speed ${speed}×, tap for ${nextSpeed(speed)}×`}
               onClick={toggleSpeed}
             >
               {speed}×
@@ -375,13 +313,7 @@ function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
   if (!aim) {
     return (
       <p>
-        <strong>{skill.name}</strong> —{" "}
-        {skill.effect.type === "shatter"
-          ? "tap one of your boulders to aim"
-          : skill.area === "reach"
-            ? "tap a highlighted enemy to aim"
-            : "tap any cell to aim"}
-        .
+        <strong>{skill.name}</strong> — {aimHint(skill)}.
         {skill.castTime && (
           <span className="muted">
             {" "}
@@ -391,19 +323,12 @@ function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {
       </p>
     );
   }
-  const foes = victims.filter((u) => u.side !== casterSide);
-  const friends = victims.filter((u) => u.side === casterSide);
+  const { hits, friends } = victimSummary(victims, casterSide);
   return (
     <p>
-      <strong>{skill.name}</strong>{" "}
-      {victims.length === 0
-        ? "would hit nothing."
-        : `hits ${foes.length} ${foes.length === 1 ? "enemy" : "enemies"}`}
+      <strong>{skill.name}</strong> {hits}
       {friends.length > 0 && (
-        <span className="warn">
-          {" "}
-          and {friends.map((u) => u.name).join(", ")}!
-        </span>
+        <span className="warn"> and {friends.join(", ")}!</span>
       )}
       {victims.length > 0 && friends.length === 0 && "."}{" "}
       <span className="muted">Tap again to cast.</span>
@@ -426,14 +351,19 @@ function usePauseControls(
       if (document.hidden) setPaused(() => true);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      // Space on a focused button presses it; leave that alone.
       const target = e.target as HTMLElement | null;
-      const onControl = target?.closest("button, input, select, textarea");
-      if (e.key === "p" || e.key === "P" || (e.key === " " && !onControl)) {
+      const action = pauseKeyAction({
+        key: e.key,
+        repeat: e.repeat,
+        ctrlKey: e.ctrlKey,
+        metaKey: e.metaKey,
+        altKey: e.altKey,
+        onControl: !!target?.closest?.("button, input, select, textarea"),
+      });
+      if (action === "toggle") {
         e.preventDefault();
         setPaused((paused) => !paused);
-      } else if (e.key === "Escape") {
+      } else if (action === "resume") {
         setPaused(() => false);
       }
     };

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadBattleSpeed, saveBattleSpeed } from "../battleSpeed";
+import { loadBattleSpeed, nextSpeed, saveBattleSpeed } from "../battleSpeed";
 
 function memoryStorage() {
   const items = new Map<string, string>();
@@ -34,5 +34,12 @@ describe("battle speed", () => {
     vi.stubGlobal("localStorage", broken);
     expect(() => saveBattleSpeed(2)).not.toThrow();
     expect(loadBattleSpeed()).toBe(1);
+  });
+});
+
+describe("nextSpeed", () => {
+  it("toggles between 1× and 2×", () => {
+    expect(nextSpeed(1)).toBe(2);
+    expect(nextSpeed(2)).toBe(1);
   });
 });

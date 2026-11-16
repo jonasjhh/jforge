@@ -7,6 +7,7 @@ import {
   type Unit,
 } from "../../../shared";
 import {
+  aimHint,
   previewClasses,
   previewLabel,
   previewText,
@@ -17,6 +18,7 @@ import {
   skillCost,
   targetHint,
   unitName,
+  victimSummary,
 } from "../labels";
 
 const at = (def: Placement["def"], row: number): Unit =>
@@ -152,5 +154,40 @@ describe("damage preview badge", () => {
     );
     expect(previewText(preview(0.5))).toBe("about 24 damage, resists");
     expect(previewText(preview(0))).toBe("about 24 damage, immune");
+  });
+});
+
+describe("aimHint", () => {
+  it("says where to tap to aim each kind of area skill", () => {
+    expect(aimHint(content.shatter)).toBe("tap one of your boulders to aim");
+    expect(aimHint(content.cleave)).toBe("tap a highlighted enemy to aim");
+    expect(aimHint(content.fireball)).toBe("tap any cell to aim");
+  });
+});
+
+describe("victimSummary", () => {
+  const foe = at(content.slime, 0);
+  const enemy = { ...foe, side: "enemy" as const };
+  const ally = { ...at(content.fighter, 0), name: "Ada" };
+  const ally2 = { ...ally, name: "Bo" };
+
+  it("says when nothing would be hit", () => {
+    expect(victimSummary([], "player")).toEqual({
+      hits: "would hit nothing.",
+      friends: [],
+    });
+  });
+
+  it("counts enemies from the caster's side", () => {
+    expect(victimSummary([enemy], "player").hits).toBe("hits 1 enemy");
+    expect(victimSummary([enemy, enemy], "player").hits).toBe("hits 2 enemies");
+  });
+
+  it("names the allies caught in the blast", () => {
+    expect(victimSummary([enemy, ally, ally2], "player")).toEqual({
+      hits: "hits 1 enemy",
+      friends: ["Ada", "Bo"],
+    });
+    expect(victimSummary([ally], "player").hits).toBe("hits 0 enemies");
   });
 });

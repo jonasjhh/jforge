@@ -114,3 +114,28 @@ export function previewClasses(p: DamagePreview): string {
 export function previewLabel(p: DamagePreview): string {
   return `${resistanceKind(p.multiplier) === "immune" ? "Immune" : `~${p.amount}`}${p.knocksOut ? " KO" : ""}`;
 }
+
+/** What to tap to aim an area skill. */
+export function aimHint(skill: Skill): string {
+  if (skill.effect.type === "shatter") return "tap one of your boulders to aim";
+  if (skill.area === "reach") return "tap a highlighted enemy to aim";
+  return "tap any cell to aim";
+}
+
+/**
+ * Who an aimed area skill would hit, from the caster's side: "hits 2
+ * enemies" (or "would hit nothing."), and the names of allies in the blast.
+ */
+export function victimSummary(
+  victims: Unit[],
+  casterSide: Side,
+): { hits: string; friends: string[] } {
+  const foes = victims.filter((u) => u.side !== casterSide).length;
+  return {
+    hits:
+      victims.length === 0
+        ? "would hit nothing."
+        : `hits ${foes} ${foes === 1 ? "enemy" : "enemies"}`,
+    friends: victims.filter((u) => u.side === casterSide).map((u) => u.name),
+  };
+}

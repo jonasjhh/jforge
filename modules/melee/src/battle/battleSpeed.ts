@@ -3,6 +3,11 @@ export type BattleSpeed = 1 | 2;
 
 const KEY = "melee.battleSpeed";
 
+/** The speed the speed button switches to. */
+export function nextSpeed(speed: BattleSpeed): BattleSpeed {
+  return speed === 1 ? 2 : 1;
+}
+
 /** The speed chosen on this device, or 1. Storage may be unavailable. */
 export function loadBattleSpeed(): BattleSpeed {
   try {
