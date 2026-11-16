@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle, validateCommand } from "../battle";
 import {
+  charge,
   expose,
   fireball,
   firebolt,
@@ -13,6 +14,7 @@ import {
 } from "../content";
 import { EXPOSE_FACTOR, resistance } from "../damage";
 import { skillValue } from "../aiSkills";
+import { previewDamage } from "../preview";
 import { skillArea } from "../skills";
 import { effectiveStat } from "../stats";
 import type { BattleState, CombatantDef, Unit } from "../types";
@@ -51,7 +53,7 @@ describe("Knight and Sage", () => {
   it("are melee player types with skills of their own", () => {
     expect(playerTypes).toContain(knight);
     expect(playerTypes).toContain(sage);
-    expect(knight.skills).toEqual([shieldWall, guard, shieldBash]);
+    expect(knight.skills).toEqual([shieldWall, guard, shieldBash, charge]);
     expect(sage.skills).toEqual([expose]);
     const others = playerTypes
       .filter((t) => t !== knight && t !== sage)
@@ -249,6 +251,69 @@ describe("Shield Bash", () => {
     expect(events.some((e) => e.type === "pushed")).toBe(true);
     expect(unit(state, "player-2-0").mp).toBe(
       knight.stats.maxMp - shieldBash.mpCost,
+    );
+  });
+});
+
+describe("Charge", () => {
+  /** The Knight (fast) at player 2,`row`, `blocker` ahead of it if given. */
+  const knightAt = (row: number, blocker?: number) =>
+    advance(
+      createBattle(
+        {
+          placements: [
+            place(fast(knight), "player", 2, row),
+            ...(blocker === undefined
+              ? []
+              : [place(def("ally", { speed: 1 }), "player", 2, blocker)]),
+            place(def("foe", { speed: 1 }), "enemy", 2, 0),
+          ],
+        },
+        1,
+      ),
+    ).state;
+  const command = {
+    type: "skill",
+    skillId: charge.id,
+    cell: { side: "enemy", col: 2, row: 0 },
+  } as const;
+  const knightIn = (s: BattleState) =>
+    s.units.find((u) => u.defId === "knight")!;
+
+  it("runs the Knight to the front of its column and strikes", () => {
+    const { state, events } = act(knightAt(2), command);
+    const self = knightIn(state);
+    expect(self.position).toEqual({ col: 2, row: 0 });
+    expect(events).toContainEqual({
+      type: "moved",
+      unitId: "player-2-2",
+      from: { col: 2, row: 2 },
+      to: { col: 2, row: 0 },
+    });
+    expect(unit(state, "enemy-2-0").hp).toBeLessThan(100);
+    expect(self.mp).toBe(knight.stats.maxMp - charge.mpCost);
+  });
+
+  it("hits as hard as a weapon attack from the front row", () => {
+    const back = knightAt(2);
+    const front = knightAt(0);
+    const foe = unit(back, "enemy-2-0");
+    expect(previewDamage(knightIn(back), foe, charge)!.amount).toBe(
+      previewDamage(knightIn(front), foe)!.amount,
+    );
+    expect(previewDamage(knightIn(back), foe)!.amount).toBeLessThan(
+      previewDamage(knightIn(front), foe)!.amount,
+    );
+  });
+
+  it("needs a clear way and a Knight not at the front already", () => {
+    const blocked = knightAt(2, 1);
+    expect(validateCommand(blocked, knightIn(blocked), command)).toMatch(
+      /blocked/,
+    );
+    const front = knightAt(0);
+    expect(validateCommand(front, knightIn(front), command)).toMatch(
+      /front row/,
     );
   });
 });

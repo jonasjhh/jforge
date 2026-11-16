@@ -280,6 +280,13 @@ cell) and its `area` which cells it hits around the aimed one.
 - **Shield Bash** (Knight): a lance strike at x0.8 that pushes the enemy
   one row back (5 MP); blocked, it crashes for x1.5 impact instead (the
   same rule as other pushes).
+- **Charge** (Knight): a lance strike at x1.0 that first runs the Knight
+  to the **front row of its own column** (`advance` on a strike), 6 MP.
+  The way there must be clear (no unit, standing or knocked out, in the
+  cells ahead) and the Knight must not be in the front row already. Reach
+  and damage count from the front row, so a Knight pushed or placed back
+  hits at the full front-row factor; the preview and the AI see it that
+  way. Moving this way is part of the action: no extra half turn.
 - **Expose** (Sage): an **expose** status on one enemy (150 game time,
   8 MP): it takes x1.3 from every damage type (`EXPOSE_FACTOR`, applied
   in `resistance`, so previews and the AI see it). Resisted types stay
@@ -522,7 +529,8 @@ an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield
 Wall hardens its whole row, Guard takes the hits meant for an ally next
-to it, Shield Bash knocks an enemy a row back), **Sage** (knowledge and counter-magic, with a
+to it, Shield Bash knocks an enemy a row back, Charge runs it back into the
+front row with a strike), **Sage** (knowledge and counter-magic, with a
 tome of arcane words; Expose makes an enemy take more of everything).
 
 Planned, in rough order (names and kits are proposals):

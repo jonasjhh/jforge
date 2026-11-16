@@ -1,3 +1,4 @@
+import { charged } from "./charge";
 import { expectedDamage, resistance, wouldKnockOut } from "./damage";
 import { AMBUSH_POWER, isStealthed } from "./stealth";
 import type { DamageType, Skill, Unit } from "./types";
@@ -15,7 +16,8 @@ export interface DamagePreview {
 /**
  * The expected damage of `attacker`'s weapon attack (no skill) or damaging
  * skill on `target`, or null for skills that deal no damage. Leaves out
- * the random spread and collisions from pushes.
+ * the random spread and collisions from pushes. A charge is previewed from
+ * the front row.
  */
 export function previewDamage(
   attacker: Unit,
@@ -36,7 +38,10 @@ export function previewDamage(
   } else return null;
 
   const [delivery, power, damageType] = hit;
-  const amount = expectedDamage(attacker, target, delivery, power, damageType);
+  // A charge strikes from the front row it runs to.
+  const from =
+    effect?.type === "strike" && effect.advance ? charged(attacker) : attacker;
+  const amount = expectedDamage(from, target, delivery, power, damageType);
   return {
     amount,
     multiplier: resistance(target, damageType),

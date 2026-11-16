@@ -686,6 +686,21 @@ export const shieldBash: Skill = {
 };
 
 /**
+ * Knight: runs to the front row of its column and strikes from there, so
+ * a Knight pushed or placed back gets back into the line in one action.
+ */
+export const charge: Skill = {
+  id: "charge",
+  name: "Charge",
+  description:
+    "Run to the front of your column and strike an enemy within reach from there. The way must be clear.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 1, advance: true },
+};
+
+/**
  * Sage: lays bare one enemy's weak points; for a while it takes x1.3 from
  * every damage type (EXPOSE_FACTOR). Immune stays immune.
  */
@@ -798,6 +813,7 @@ export const skills = [
   shieldWall,
   guard,
   shieldBash,
+  charge,
   expose,
 ];
 
@@ -1053,7 +1069,7 @@ export const knight: CombatantDef = {
     speed: 8,
   },
   weapon: lance,
-  skills: [shieldWall, guard, shieldBash],
+  skills: [shieldWall, guard, shieldBash, charge],
   preferredRow: 0,
 };
 

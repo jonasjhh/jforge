@@ -208,8 +208,17 @@ export type SkillEffect =
    * out or not) or the edge of the grid, it doesn't move and takes a
    * collision instead: x1.5 damage. `ignoreCover` lets it reach units
    * behind others in their column (the weapon's column limit still holds).
+   * `advance` first runs the attacker to the front row of its column (the
+   * way there must be clear, and it must not be there already), and it
+   * strikes from there (see charge.ts).
    */
-  | { type: "strike"; power: number; push?: number; ignoreCover?: boolean }
+  | {
+      type: "strike";
+      power: number;
+      push?: number;
+      ignoreCover?: boolean;
+      advance?: boolean;
+    }
   | {
       type: "heal";
       /**

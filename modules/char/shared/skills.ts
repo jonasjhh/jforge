@@ -58,7 +58,7 @@ export function effectSummary(skill: Skill): string {
     case "damage":
       return `${effect.element} damage ×${effect.power}${shape}`;
     case "strike":
-      return `weapon strike ×${effect.power}${shape}`;
+      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${shape}`;
     case "heal":
       return `heals ×${effect.power} ${effect.of === "maxHp" ? "max HP" : "magic"}${shape}`;
     case "modify": {

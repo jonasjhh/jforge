@@ -2,6 +2,7 @@ import { applyDamage, magicalHit, physicalHit } from "./damage";
 import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
 import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isStealthed } from "./stealth";
+import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
 import { tauntBlock } from "./taunt";
 import {
@@ -139,9 +140,20 @@ export function validateSkill(
     if (state.ready.includes(target.id))
       return `${target.name} is already ready`;
   }
+  // A charge reaches from the front row it runs to.
+  const striker =
+    skill.effect.type === "strike" && skill.effect.advance
+      ? charged(unit)
+      : unit;
+  if (striker !== unit) {
+    const blocked = chargeBlock(state, unit);
+    if (blocked) return blocked;
+  }
   if (
     skill.effect.type === "strike" &&
-    !canReach(state, unit, target, { ignoreCover: skill.effect.ignoreCover })
+    !canReach(state, striker, target, {
+      ignoreCover: skill.effect.ignoreCover,
+    })
   ) {
     return "Target is out of reach";
   }
@@ -149,7 +161,7 @@ export function validateSkill(
     // Taunting enemies must be singled out while they can be.
     const candidates =
       skill.effect.type === "strike"
-        ? reachableTargets(state, unit, {
+        ? reachableTargets(state, striker, {
             ignoreCover: skill.effect.ignoreCover,
           })
         : state.units.filter(
@@ -371,6 +383,9 @@ function applySkill(
       ? breakStealth(unit, events)
       : 1;
 
+  if (skill.effect.type === "strike" && skill.effect.advance) {
+    charge(unit, events);
+  }
   // Victims are fixed before any effect lands, so order doesn't matter.
   const victims = skillVictims(state, unit, skill, cell);
   const guardian = victims[0];
