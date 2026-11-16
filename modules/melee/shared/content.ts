@@ -1,4 +1,4 @@
-import type { BattleSetup, CombatantDef, Skill, Weapon } from "./types";
+import type { CombatantDef, Skill, Weapon } from "./types";
 
 // Starter content so melee can set up a fight on its own. The four player
 // types become class templates in char later. Everyone uses a basic attack
@@ -852,16 +852,3 @@ export const viper: CombatantDef = {
 };
 
 export const monsters = [slime, wolf, viper];
-
-/** The four player types against a small mixed pack. */
-export const sampleBattle: BattleSetup = {
-  placements: [
-    { def: fighter, side: "player", position: { col: 1, row: 0 } },
-    { def: archer, side: "player", position: { col: 3, row: 1 } },
-    { def: mage, side: "player", position: { col: 1, row: 2 } },
-    { def: healer, side: "player", position: { col: 3, row: 2 } },
-    { def: slime, side: "enemy", position: { col: 1, row: 0 } },
-    { def: slime, side: "enemy", position: { col: 3, row: 0 } },
-    { def: wolf, side: "enemy", position: { col: 2, row: 1 } },
-  ],
-};

@@ -1,6 +1,5 @@
 import {
   DIFFICULTIES,
-  content,
   randomEncounter,
   type BattleSetup,
   type Difficulty,
@@ -88,23 +87,6 @@ export function StartScreen({
           </button>
         </div>
         <p className="muted small">Encounter #{encounterSeed}</p>
-      </section>
-
-      <section className="panel">
-        <h2>Sample battle</h2>
-        <p>
-          <strong>Your party:</strong> {roster(content.sampleBattle, "player")}
-        </p>
-        <p>
-          <strong>Enemies:</strong> {roster(content.sampleBattle, "enemy")}
-        </p>
-        <button
-          type="button"
-          className="secondary wide"
-          onClick={() => onStart(content.sampleBattle)}
-        >
-          Start sample battle
-        </button>
       </section>
 
       <p className="muted small">

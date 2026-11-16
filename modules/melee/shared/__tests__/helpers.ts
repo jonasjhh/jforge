@@ -1,4 +1,25 @@
-import type { CombatantDef, Placement, Side, Stats, Weapon } from "../types";
+import { archer, fighter, healer, mage, slime, wolf } from "../content";
+import type {
+  BattleSetup,
+  CombatantDef,
+  Placement,
+  Side,
+  Stats,
+  Weapon,
+} from "../types";
+
+/** A fixed battle of real content: four party types against a small pack. */
+export const sampleBattle: BattleSetup = {
+  placements: [
+    { def: fighter, side: "player", position: { col: 1, row: 0 } },
+    { def: archer, side: "player", position: { col: 3, row: 1 } },
+    { def: mage, side: "player", position: { col: 1, row: 2 } },
+    { def: healer, side: "player", position: { col: 3, row: 2 } },
+    { def: slime, side: "enemy", position: { col: 1, row: 0 } },
+    { def: slime, side: "enemy", position: { col: 3, row: 0 } },
+    { def: wolf, side: "enemy", position: { col: 2, row: 1 } },
+  ],
+};
 
 /** Reaches every enemy, so tests about other rules ignore reach. */
 export const anywhere: Weapon = {

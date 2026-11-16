@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { sampleBattle } from "../content";
 import { DEFENSE_K } from "../damage";
 import { simulate } from "../simulate";
 import type { BattleSetup } from "../types";
-import { def, place } from "./helpers";
+import { def, place, sampleBattle } from "./helpers";
 
 describe("createBattle", () => {
   const enemy = place(def("e"), "enemy", 0);

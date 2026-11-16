@@ -140,10 +140,6 @@ button:disabled {
   color: var(--text);
 }
 
-.secondary.wide {
-  width: 100%;
-}
-
 .button-row {
   display: flex;
   gap: 0.5rem;

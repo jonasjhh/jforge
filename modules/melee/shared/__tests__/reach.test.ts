@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { bow, sampleBattle, spear, staff, sword } from "../content";
+import { bow, spear, staff, sword } from "../content";
 import { reachableTargets } from "../reach";
 import { simulate } from "../simulate";
 import type { BattleState, Placement, Weapon } from "../types";
-import { def, place } from "./helpers";
+import { def, place, sampleBattle } from "./helpers";
 
 const foe = (col: number, row: number) =>
   place(def(`foe${col}${row}`), "enemy", col, row);
