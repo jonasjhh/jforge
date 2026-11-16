@@ -32,6 +32,30 @@
   --magic: #b98cff;
   --good: #5fd38d;
   --resist: #c9c9d6;
+
+  --font-display: "Oxanium Variable", system-ui, sans-serif;
+}
+
+/*
+ * The display face gives the game its voice: titles, names and numbers.
+ * Sentences stay in the system font, which reads better at small sizes.
+ */
+h1,
+h2,
+.primary,
+.side-label,
+.unit-name,
+.unit-hp,
+.damage,
+.preview,
+.turn,
+.skill-name,
+.skill-cost,
+.result,
+.pause-title,
+.speed-button,
+.details-stats dd {
+  font-family: var(--font-display);
 }
 
 body {

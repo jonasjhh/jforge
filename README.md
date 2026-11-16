@@ -68,6 +68,11 @@ in use are bundled: `pnpm portraits` regenerates
 `modules/melee/src/battle/portraitIcons.ts` from the list in
 `modules/melee/scripts/portraits.mjs`.
 
+melee's display font is [Oxanium](https://fonts.google.com/specimen/Oxanium)
+by Severin Meyer, under the
+[SIL Open Font License](https://openfontlicense.org), bundled from
+`@fontsource-variable/oxanium` so it works offline.
+
 ## Testing
 
 Mostly unit tests, each isolating one rule or helper (Vitest, in

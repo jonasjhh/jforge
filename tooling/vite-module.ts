@@ -67,7 +67,7 @@ export function moduleViteConfig(meta: ModuleMeta) {
           ],
         },
         workbox: {
-          globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest}"],
+          globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest,woff2}"],
           // The API and WebSocket upgrades must always reach the Worker.
           navigateFallbackDenylist: [/^\/api\//],
         },
