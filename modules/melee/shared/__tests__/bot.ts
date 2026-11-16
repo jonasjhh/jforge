@@ -1,5 +1,4 @@
 import { act, advance, createBattle, validateCommand } from "../battle";
-import { randomEncounter, DIFFICULTIES } from "../encounters";
 import { GRID_COLUMNS, GRID_ROWS } from "../grid";
 import { reachableTargets } from "../reach";
 import { skillCells } from "../skills";
@@ -73,31 +72,4 @@ function getActive(state: BattleState): Unit {
   if (state.phase.kind !== "awaitingCommand") throw new Error("No turn");
   const id = state.phase.unitId;
   return state.units.find((u) => u.id === id)!;
-}
-
-/** Random encounters across difficulties, played by the bot. */
-export function botBattles(count: number): {
-  name: string;
-  steps: StepResult[];
-}[] {
-  return DIFFICULTIES.flatMap((difficulty) =>
-    Array.from({ length: count }, (_, i) => {
-      const seed = 1000 + i * 7919;
-      return {
-        name: `${difficulty} #${seed}`,
-        steps: playWithBot(randomEncounter(seed, difficulty), seed),
-      };
-    }),
-  );
-}
-
-/** A short, stable fingerprint of any JSON-able value (FNV-1a). */
-export function digest(value: unknown): string {
-  const text = JSON.stringify(value);
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
 }

@@ -85,6 +85,12 @@ describe("player commands", () => {
     );
   });
 
+  it("rejects a command when no unit is waiting for one", () => {
+    expect(() =>
+      act(createBattle(setup, 1), { type: "attack", targetId: "enemy-0-0" }),
+    ).toThrow(/No unit is waiting/);
+  });
+
   it("does not change the state it was given", () => {
     const start = createBattle(setup, 1);
     const copy = structuredClone(start);

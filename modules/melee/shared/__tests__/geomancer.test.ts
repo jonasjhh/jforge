@@ -1,13 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { geomancer, raiseBoulder, shatter, sword, upheaval } from "../content";
+import {
+  geomancer,
+  raiseBoulder,
+  shatter,
+  sword,
+  upheaval,
+  vanish,
+} from "../content";
 import { unitAt } from "../grid";
 import { reachableTargets } from "../reach";
 import { skillVictims } from "../skills";
-import type { BattleEvent, BattleState, Cell, Placement } from "../types";
+import { applyStatus } from "../status";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Placement,
+  StatusDef,
+} from "../types";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;
+const statusOf = (skill: { effect: unknown }) =>
+  (skill.effect as { status: StatusDef }).status;
 
 /** The Geomancer (speed 50, player 4,1; MP raised to 100) is waiting. */
 function geoTurn(extra: Placement[] = []): BattleState {
@@ -233,6 +249,13 @@ describe("Upheaval", () => {
       col: 0,
       row: 0,
     });
+  });
+
+  it("can't heave an enemy it can't see", () => {
+    const s = geoTurn();
+    const foe = s.units.find((u) => u.id === "enemy-0-0")!;
+    applyStatus(s, foe, foe, statusOf(vanish), []);
+    expect(() => cast(s, "upheaval", E(0, 0))).toThrow(/can't be seen/);
   });
 
   it("needs a unit in the cell", () => {

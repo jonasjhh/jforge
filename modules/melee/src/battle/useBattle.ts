@@ -3,7 +3,6 @@ import {
   act,
   advance,
   createBattle,
-  type BattleEvent,
   type BattleSetup,
   type Cell,
   type BattleState,
@@ -12,7 +11,7 @@ import {
 } from "../../shared";
 import { findAction, summarizeAction } from "./actionSummary";
 import { describeEvent } from "./describeEvent";
-import { resistanceKind } from "./labels";
+import { hitsFrom, type Hit } from "./hits";
 
 /** Game time per real second at 1×. Speed 10 fills a gauge in about 1.7 s. */
 export const TIME_SCALE = 60;
@@ -21,17 +20,6 @@ export const ACTION_MS = 700;
 /** Longest frame step, so a background tab doesn't jump time ahead. */
 const MAX_FRAME_MS = 100;
 const LOG_LINES = 40;
-
-export interface Hit {
-  key: number;
-  unitId: string;
-  amount: number;
-  kind: "damage" | "heal";
-  /** How the target's resistance changed a damage hit, or a shield took it. */
-  tag?: "weak" | "resist" | "immune" | "shield";
-  /** Damage from an effect over time, e.g. poison. */
-  overTime?: boolean;
-}
 
 export interface BattleView {
   state: BattleState;
@@ -142,42 +130,4 @@ export function useBattle(
   );
 
   return { state, log, hits, actorId, lastAction, actionArea, command };
-}
-
-/** Damage and heal numbers to float up for a step's events. */
-export function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
-  return events.flatMap((e): Hit[] => {
-    if (e.type === "heal" || (e.type === "statusTick" && e.effect === "heal")) {
-      if (e.amount <= 0) return [];
-      return [
-        { key: nextKey(), unitId: e.unitId, amount: e.amount, kind: "heal" },
-      ];
-    }
-    if (e.type === "statusTick") {
-      if (e.amount <= 0) return [];
-      return [
-        {
-          key: nextKey(),
-          unitId: e.unitId,
-          amount: e.amount,
-          kind: "damage",
-          overTime: true,
-        },
-      ];
-    }
-    if (e.type !== "damage") return [];
-    return [
-      {
-        key: nextKey(),
-        unitId: e.unitId,
-        amount: e.amount,
-        kind: "damage",
-        // A hit fully soaked by a shield shows as SHIELD.
-        tag:
-          e.amount === 0 && e.absorbed
-            ? "shield"
-            : resistanceKind(e.multiplier),
-      },
-    ];
-  });
 }

@@ -14,7 +14,7 @@ import {
 } from "../../shared";
 import { previewClasses, previewLabel, previewText } from "./labels";
 import { Portrait } from "./Portrait";
-import type { Hit } from "./useBattle";
+import type { Hit } from "./hits";
 import { useLongPress } from "./useLongPress";
 
 function castProgress(casting: Casting, time: number): number {

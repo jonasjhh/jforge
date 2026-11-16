@@ -93,6 +93,27 @@ describe("summarizeAction", () => {
     ).toBe("Wolf attacks Mage — +5 HP");
   });
 
+  it("counts healed units and knockouts in a crowd", () => {
+    const heal = (unitId: string): BattleEvent => ({
+      type: "heal",
+      unitId,
+      amount: 5,
+      hp: 50,
+    });
+    expect(summarizeAction(state, [attack, heal(wolf), heal(slime)])).toBe(
+      "Wolf attacks Mage — 2 healed",
+    );
+    expect(
+      summarizeAction(state, [
+        attack,
+        hit(wolf, 50),
+        hit(slime, 50),
+        ko(wolf),
+        ko(slime),
+      ]),
+    ).toBe("Wolf attacks Mage — 2 hit, 2 KO");
+  });
+
   it("leaves a step with no result as is", () => {
     expect(
       summarizeAction(state, [

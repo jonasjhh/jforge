@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { aegis, cleave, fireball, heal, lastRites, vanish } from "../content";
+import {
+  aegis,
+  cleave,
+  fireball,
+  heal,
+  lastRites,
+  shatter,
+  vanish,
+} from "../content";
 import { previewDamage } from "../preview";
 import { applyStatus } from "../status";
 import type { BattleEvent, BattleState, StatusDef, Unit } from "../types";
@@ -87,6 +95,14 @@ describe("damage preview", () => {
     foe.statuses = [];
     applyStatus(state, hero, foe, statusOf(lastRites), []);
     expect(previewDamage(hero, foe)!.knocksOut).toBe(false);
+  });
+
+  it("ignores stealth for Shatter, which isn't an ambush", () => {
+    const state = duel();
+    const blast = previewDamage(heroOf(state), foeOf(state), shatter)!;
+    applyStatus(state, heroOf(state), heroOf(state), statusOf(vanish), []);
+    expect(previewDamage(heroOf(state), foeOf(state), shatter)).toEqual(blast);
+    expect(blast.amount).toBeGreaterThan(0);
   });
 
   it("doubles out of stealth", () => {
