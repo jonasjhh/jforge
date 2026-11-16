@@ -495,7 +495,9 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **Skills**: melee's own `Skill` type. The designer edits spell damage,
   weapon strikes, heals and buffs/debuffs; other effects pass through.
 - **Gear**: a slot (weapon, armor, accessory) and stat bonuses (`add` or
-  `mul`). A weapon also says how it attacks (melee's `Weapon`).
+  `mul`). A weapon also says how it attacks (melee's `Weapon`). Weapons
+  and armor can have a **category**: blade, polearm, dagger, bow, staff or
+  focus; heavy armor, light armor or robe. Accessories have none.
 - **Types**: a class or an enemy type. Stats at level 1, growth per level,
   an unarmed attack, traits, an icon, and the level each skill is learned
   at. An enemy's threat is not typed in: it is estimated from the
@@ -504,12 +506,38 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **Characters**: a type at a level (1 to 50), wearing gear. Characters of
   a class form the party; characters of an enemy type the monster pool.
 
+**Gear restrictions** (`canUse`, `canWear` in `shared/gear.ts`): a type
+can list the categories it is **proficient** with. Its characters can use
+gear of those categories and gear with no category; a type without a list
+uses anything, as does every type of a library saved before categories.
+Gear a character can't use is worn in name only: `equippedGear` leaves it
+out, so it adds no stats and no weapon, and the character editor marks it
+"(can't use)" and offers only what fits. The class editor sets the list
+("Any gear" or a choice of categories); the gear editor sets a piece's
+category. The starter Knight takes blades, polearms, heavy and light
+armor; the Sage staves, foci and robes.
+
 **Melee's classes** (`shared/melee.ts`): every melee class is also a char
 class (`melee-fighter`, ...), in the starter library and added to saved
 libraries when they load, so each can be levelled, geared, edited and
 used by jrpg. At level 3 it has exactly melee's stats; they grow 8% of the
 level-1 value per level (speed 2%). Skills are learned in melee's order at
 levels 1, 2, 4, 6, 8. An edited copy is kept; a deleted one comes back.
+Their proficiencies (`MELEE_PROFICIENCIES`) include their own weapon's
+category:
+
+| Class              | Weapons        | Armor        |
+| ------------------ | -------------- | ------------ |
+| Fighter, Lancer    | blade, polearm | heavy, light |
+| Paladin            | blade          | heavy, light |
+| Archer, Rogue      | bow, dagger    | light        |
+| Mage, Chronomancer | staff, focus   | robe         |
+| Healer             | staff          | robe, light  |
+| Warlock            | focus, dagger  | robe, light  |
+| Geomancer          | staff, focus   | robe, light  |
+
+A melee class or basic piece saved before categories gets its
+proficiencies or category filled in when the library loads.
 
 **Heroes and basic gear**: with the classes come a named hero of each
 (`melee-hero-fighter`, ...: Brann, Isolde, Vex, Tamsin, Orrin, Hale, Wren,
@@ -518,8 +546,8 @@ Cade, Sable, Lucan) and basic gear: each class's own weapon as a piece
 attack, magic and spirit) and two armors (Traveller's Jerkin, Traveller's
 Robe). Basic gear has no drawbacks. `starterKit` fills a character's
 empty slots with it: their melee class's weapon, and the robe if the
-class's magic beats its attack, the jerkin if not (designed classes get
-armor only). Every hero starts in their kit. Like the classes, an edited
+class's magic beats its attack, the jerkin if not, or the other when the
+class can't wear that one (designed classes get armor only). Every hero starts in their kit. Like the classes, an edited
 hero or piece is kept and a deleted one comes back. Melee's Custom roster
 gets the heroes too and fields five of its party characters per
 encounter.
@@ -571,8 +599,10 @@ party size` experience and sometimes gear (40%; elites and the final
   The party holds five; when it is full the recruit can take a member's
   place, standing where they stood, and the one who leaves puts their gear
   in the bag.
-- **Gear**: three different pieces; take one, for a member (what they wore
-  goes in the bag) or for the bag.
+- **Gear**: three different pieces; take one, for a member whose class
+  can use it (what they wore goes in the bag) or for the bag. The party
+  panel shows what each member uses and offers only bag gear that fits;
+  `changeGear` refuses the rest.
 - **Training**: one member gains a level.
 
 Up to six rows offer **finds** (never two such rows running): a different
@@ -596,7 +626,8 @@ swapped with the bag. A cleared level leads to the next, deeper one.
 starter library if it has no class character) plus jrpg's own content,
 copied when the run starts so later edits don't break it: 9 enemy types
 (Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
-Imp, Raider) and 16 pieces of gear; char provides the heroes and their
+Imp, Raider) and 20 pieces of gear, each weapon and armor with a
+category (two foci, Seer's Orb and Black Tome, so every class has finds); char provides the heroes and their
 basic gear, which finds and drops leave out. All gear exists at four **tiers** (plain,
 Fine, Superior, Masterwork: each adds half again to what the piece adds);
 finds are a tier better per depth, with some luck.

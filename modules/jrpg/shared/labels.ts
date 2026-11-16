@@ -1,4 +1,4 @@
-import type { Gear } from "@jforge/char/shared";
+import { GEAR_CATEGORY_NAMES, type Gear } from "@jforge/char/shared";
 import type { BattleSetup } from "@jforge/melee/shared";
 import type { Encounter } from "./run";
 
@@ -13,6 +13,13 @@ const STAT_WORDS = {
   spirit: "spirit",
   speed: "speed",
 } as const;
+
+/** What sort of gear it is: its category ("Polearm"), else its slot. */
+export function gearKind(gear: Gear): string {
+  return gear.category
+    ? GEAR_CATEGORY_NAMES[gear.category]
+    : gear.slot[0]!.toUpperCase() + gear.slot.slice(1);
+}
 
 /** What a piece of gear does: "+6 attack, x0.9 speed". */
 export function gearSummary(gear: Gear): string {

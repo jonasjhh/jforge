@@ -93,6 +93,10 @@
   margin: 0 0 0.4rem;
 }
 
+.member-uses {
+  margin: -0.2rem 0 0.4rem;
+}
+
 .member-gear {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

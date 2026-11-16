@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { archetypeOf } from "@jforge/char/shared";
+import { archetypeOf, canWear } from "@jforge/char/shared";
 import {
   battleFor,
   canRecruit,
@@ -8,6 +8,7 @@ import {
   encounterLabel,
   enemySummary,
   gearOf,
+  gearKind,
   gearSummary,
   levelCleared,
   nextLevel,
@@ -306,6 +307,11 @@ function GearFind({
 }) {
   const pieces = gearIds.flatMap((id) => gearOf(run, id) ?? []);
   const [chosen, setChosen] = useState(pieces[0]?.id ?? null);
+  const chosenPiece = pieces.find((piece) => piece.id === chosen);
+  // Only those whose class can use it are offered it.
+  const users = chosenPiece
+    ? run.party.filter((member) => canWear(run.library, member, chosenPiece))
+    : [];
   return (
     <section className="panel" aria-label="Encounter">
       <h2>
@@ -326,7 +332,7 @@ function GearFind({
               >
                 <strong>{piece.name}</strong>{" "}
                 <span className="muted small">
-                  {piece.slot} · {gearSummary(piece)}
+                  {gearKind(piece)} · {gearSummary(piece)}
                 </span>
               </button>
             ))}
@@ -335,9 +341,14 @@ function GearFind({
       ) : (
         <p>Nothing of use.</p>
       )}
+      {chosenPiece && users.length === 0 && (
+        <p className="muted small">
+          Nobody in the party can use it; it can go in the bag.
+        </p>
+      )}
       <div className="choices">
-        {chosen !== null &&
-          run.party.map((member) => (
+        {chosenPiece &&
+          users.map((member) => (
             <button
               key={member.id}
               type="button"

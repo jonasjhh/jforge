@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { content, createBattle, isCombatantDef } from "@jforge/melee/shared";
 import { toCombatantDef } from "../compile";
+import { canUse } from "../gear";
 import { blankCharacter, emptyLibrary, parseLibrary } from "../library";
 import {
   BASIC_ARMOR,
   MELEE_CLASS_LEVEL,
   MELEE_HEROES,
+  MELEE_PROFICIENCIES,
   basicGear,
   basicWeapon,
   classFromMelee,
@@ -204,5 +206,49 @@ describe("melee heroes", () => {
       ),
     };
     expect(withMeleeClasses(edited)).toBe(edited);
+  });
+});
+
+describe("melee proficiencies", () => {
+  it("cover every class, its own weapon and an armor its kit can give", () => {
+    const library = withMeleeClasses(emptyLibrary());
+    for (const def of playerTypes) {
+      const type = library.archetypes.find(
+        (a) => a.id === meleeClassId(def.id),
+      )!;
+      expect(type.proficiencies).toEqual(MELEE_PROFICIENCIES[def.id]);
+      expect(canUse(type, basicWeapon(def))).toBe(true);
+      const hero = library.characters.find(
+        (c) => c.id === meleeHeroId(def.id),
+      )!;
+      expect(hero.gear.weapon).toBe(meleeWeaponId(def.id));
+      expect(hero.gear.armor).toBeDefined();
+    }
+  });
+
+  it("gives an archer, who can't wear robes, the jerkin", () => {
+    const library = withMeleeClasses(emptyLibrary());
+    const archer = library.characters.find(
+      (c) => c.id === meleeHeroId("archer"),
+    )!;
+    expect(archer.gear.armor).toBe("melee-gear-jerkin");
+  });
+
+  it("fills in what a library saved before categories lacks", () => {
+    const current = withMeleeClasses(emptyLibrary());
+    const old = {
+      ...current,
+      archetypes: current.archetypes.map((a) => {
+        const was = { ...a };
+        delete was.proficiencies;
+        return was;
+      }),
+      gear: current.gear.map((g) => {
+        const was = { ...g };
+        delete was.category;
+        return was;
+      }),
+    };
+    expect(withMeleeClasses(old)).toEqual(current);
   });
 });

@@ -82,7 +82,10 @@ const ally: Encounter = {
     gear: {},
   },
 };
-const ring: Encounter = { kind: "gear", gearIds: ["gear-ring", "gear-bow"] };
+const ring: Encounter = {
+  kind: "gear",
+  gearIds: ["gear-ring", "world-spear", "gear-bow"],
+};
 const training: Encounter = { kind: "training" };
 /** Every encounter on a map. */
 const everything = (map: Stop[][]): Encounter[] =>
@@ -756,9 +759,16 @@ describe("resolveGear", () => {
   });
 
   it("puts it on a character, whose old gear goes in the bag", () => {
-    const run = resolveGear(at([ring]), "gear-bow", "unit-1");
-    expect(run.party[0]!.gear.weapon).toBe("gear-bow");
+    const run = resolveGear(at([ring]), "world-spear", "unit-1");
+    expect(run.party[0]!.gear.weapon).toBe("world-spear");
     expect(run.bag).toEqual(["gear-sword"]);
+  });
+
+  it("keeps it in the bag when the character's class can't use it", () => {
+    // A knight takes blades and polearms, not bows.
+    const run = resolveGear(at([ring]), "gear-bow", "unit-1");
+    expect(run.party[0]!.gear.weapon).toBe("gear-sword");
+    expect(run.bag).toEqual(["gear-bow"]);
   });
 
   it("moves on with nothing for no piece or one that isn't on offer", () => {
@@ -795,12 +805,29 @@ describe("resolveTraining", () => {
 });
 
 describe("changeGear", () => {
-  const run = at([battle], { bag: ["gear-ring", "gear-bow"] });
+  const run = at([battle], {
+    bag: ["gear-ring", "world-spear", "gear-bow", "world-plate"],
+  });
 
   it("swaps bag gear into a slot", () => {
-    const after = changeGear(run, "unit-1", "weapon", "gear-bow");
-    expect(after.party[0]!.gear.weapon).toBe("gear-bow");
-    expect(after.bag.sort()).toEqual(["gear-ring", "gear-sword"]);
+    const after = changeGear(run, "unit-1", "weapon", "world-spear");
+    expect(after.party[0]!.gear.weapon).toBe("world-spear");
+    expect(after.bag.sort()).toEqual([
+      "gear-bow",
+      "gear-ring",
+      "gear-sword",
+      "world-plate",
+    ]);
+  });
+
+  it("refuses gear the character's class can't use", () => {
+    expect(changeGear(run, "unit-1", "weapon", "gear-bow")).toBe(run);
+    // A sage wears robes, not plate; accessories fit anyone.
+    expect(changeGear(run, "unit-2", "armor", "world-plate")).toBe(run);
+    expect(
+      changeGear(run, "unit-2", "accessory", "gear-ring").party[1]!.gear
+        .accessory,
+    ).toBe("gear-ring");
   });
 
   it("empties a slot into the bag", () => {

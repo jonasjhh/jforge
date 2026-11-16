@@ -6,6 +6,7 @@ import {
   characterStats,
   characterWeapon,
   clampLevel,
+  canWear,
   equip,
   gainXp,
   unequip,
@@ -97,8 +98,21 @@ export function CharacterEditor({
               options={[
                 ["", "None"] as const,
                 ...library.gear
-                  .filter((g) => g.slot === slot)
-                  .map((g) => [g.id, g.name] as const),
+                  .filter(
+                    (g) =>
+                      g.slot === slot &&
+                      (canWear(library, character, g) ||
+                        g.id === character.gear[slot]),
+                  )
+                  .map(
+                    (g) =>
+                      [
+                        g.id,
+                        canWear(library, character, g)
+                          ? g.name
+                          : `${g.name} (can't use)`,
+                      ] as const,
+                  ),
               ]}
               onChange={(id) => {
                 const gear = library.gear.find((g) => g.id === id);

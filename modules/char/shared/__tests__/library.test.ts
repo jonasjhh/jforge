@@ -136,6 +136,20 @@ describe("parseLibrary", () => {
       broken((lib) => ({ ...lib, skills: [{ id: "x", name: "X" }] })),
     ],
     [
+      "gear of another slot's category",
+      broken((lib) => ({
+        ...lib,
+        gear: [{ ...lib.gear[0], slot: "weapon", category: "robe" }],
+      })),
+    ],
+    [
+      "a class using an unknown category",
+      broken((lib) => ({
+        ...lib,
+        archetypes: [{ ...lib.archetypes[0], proficiencies: ["hat"] }],
+      })),
+    ],
+    [
       "gear in an unknown slot",
       broken((lib) => ({ ...lib, gear: [{ ...lib.gear[0], slot: "hat" }] })),
     ],

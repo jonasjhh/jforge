@@ -22,6 +22,7 @@ function starterDesigns(): Library {
         id: "gear-sword",
         name: "Iron Sword",
         slot: "weapon",
+        category: "blade",
         bonuses: [{ stat: "attack", op: "add", value: 6 }],
         weapon: { ...sword, id: "gear-sword", name: "Iron Sword" },
       },
@@ -29,6 +30,7 @@ function starterDesigns(): Library {
         id: "gear-bow",
         name: "Short Bow",
         slot: "weapon",
+        category: "bow",
         bonuses: [{ stat: "attack", op: "add", value: 4 }],
         weapon: { ...bow, id: "gear-bow", name: "Short Bow" },
       },
@@ -36,6 +38,7 @@ function starterDesigns(): Library {
         id: "gear-staff",
         name: "Oak Staff",
         slot: "weapon",
+        category: "staff",
         bonuses: [{ stat: "magic", op: "add", value: 6 }],
         weapon: { ...staff, id: "gear-staff", name: "Oak Staff" },
       },
@@ -43,6 +46,7 @@ function starterDesigns(): Library {
         id: "gear-mail",
         name: "Chain Mail",
         slot: "armor",
+        category: "heavy",
         bonuses: [
           { stat: "defense", op: "add", value: 8 },
           { stat: "speed", op: "mul", value: 0.9 },
@@ -52,6 +56,7 @@ function starterDesigns(): Library {
         id: "gear-robe",
         name: "Silk Robe",
         slot: "armor",
+        category: "robe",
         bonuses: [
           { stat: "spirit", op: "add", value: 6 },
           { stat: "maxMp", op: "add", value: 15 },
@@ -99,6 +104,7 @@ function starterDesigns(): Library {
         skills: [{ skillId: cleave.id, level: 2 }],
         traits: [],
         preferredRow: 0,
+        proficiencies: ["blade", "polearm", "heavy", "light"],
       },
       {
         id: "type-sage",
@@ -138,6 +144,7 @@ function starterDesigns(): Library {
         ],
         traits: [],
         preferredRow: 2,
+        proficiencies: ["staff", "focus", "robe"],
       },
       {
         id: "type-goblin",

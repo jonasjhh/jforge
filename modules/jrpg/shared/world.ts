@@ -3,6 +3,7 @@ import {
   type Archetype,
   type Character,
   type Gear,
+  type GearCategory,
   type Library,
 } from "@jforge/char/shared";
 import { content, type Stats, type Weapon } from "@jforge/melee/shared";
@@ -208,62 +209,89 @@ const mul = (stat: keyof Stats, value: number) => ({
 const held = (
   id: string,
   name: string,
+  category: GearCategory,
   weapon: Weapon,
   bonuses: Gear["bonuses"],
 ): Gear => ({
   id: `world-${id}`,
   name,
   slot: "weapon",
+  category,
   bonuses,
   weapon: { ...weapon, id: `world-${id}`, name },
 });
 const worn = (
-  slot: "armor" | "accessory",
+  category: GearCategory,
   id: string,
   name: string,
   bonuses: Gear["bonuses"],
 ): Gear => ({
   id: `world-${id}`,
   name,
-  slot,
+  slot: "armor",
+  category,
+  bonuses,
+});
+const accessory = (
+  id: string,
+  name: string,
+  bonuses: Gear["bonuses"],
+): Gear => ({
+  id: `world-${id}`,
+  name,
+  slot: "accessory",
   bonuses,
 });
 
 const GEAR: Gear[] = [
-  held("blade", "Steel Blade", c.sword, [add("attack", 7)]),
-  held("axe", "War Axe", c.sword, [add("attack", 11), mul("speed", 0.9)]),
-  held("spear", "Ash Spear", c.spear, [add("attack", 5)]),
-  held("daggers", "Twin Daggers", c.daggers, [
+  held("blade", "Steel Blade", "blade", c.sword, [add("attack", 7)]),
+  held("axe", "War Axe", "blade", c.sword, [
+    add("attack", 11),
+    mul("speed", 0.9),
+  ]),
+  held("spear", "Ash Spear", "polearm", c.spear, [add("attack", 5)]),
+  held("daggers", "Twin Daggers", "dagger", c.daggers, [
     add("attack", 3),
     mul("speed", 1.1),
   ]),
-  held("longbow", "Longbow", c.bow, [add("attack", 6)]),
-  held("rod", "Ember Rod", c.staff, [add("magic", 7)]),
-  held("crook", "Shepherd's Crook", c.staff, [
+  held("longbow", "Longbow", "bow", c.bow, [add("attack", 6)]),
+  held("rod", "Ember Rod", "staff", c.staff, [add("magic", 7)]),
+  held("orb", "Seer's Orb", "focus", c.hourglass, [
+    add("magic", 5),
+    add("maxMp", 10),
+  ]),
+  held("tome", "Black Tome", "focus", c.grimoire, [
+    add("magic", 9),
+    add("spirit", -3),
+  ]),
+  held("crook", "Shepherd's Crook", "staff", c.staff, [
     add("magic", 3),
     add("spirit", 5),
   ]),
-  worn("armor", "plate", "Plate Armor", [
+  worn("heavy", "plate", "Plate Armor", [
     add("defense", 12),
     mul("speed", 0.85),
   ]),
-  worn("armor", "jerkin", "Leather Jerkin", [
+  worn("heavy", "scale", "Scale Mail", [
+    add("defense", 7),
+    add("maxHp", 15),
+    mul("speed", 0.95),
+  ]),
+  worn("light", "coat", "Ranger's Coat", [
+    add("defense", 3),
+    mul("speed", 1.05),
+  ]),
+  worn("light", "jerkin", "Leather Jerkin", [
     add("defense", 4),
     add("maxHp", 10),
   ]),
-  worn("armor", "cloak", "Warded Cloak", [add("spirit", 9)]),
-  worn("armor", "vestments", "Vestments", [add("maxMp", 20), add("spirit", 3)]),
-  worn("accessory", "amulet", "Amulet of Vigor", [add("maxHp", 25)]),
-  worn("accessory", "band", "Power Band", [add("attack", 4)]),
-  worn("accessory", "charm", "Sage's Charm", [
-    add("magic", 4),
-    add("maxMp", 10),
-  ]),
-  worn("accessory", "buckler", "Iron Buckler", [add("defense", 5)]),
-  worn("accessory", "boots", "Fleet Boots", [
-    mul("speed", 1.2),
-    add("defense", -2),
-  ]),
+  worn("robe", "cloak", "Warded Cloak", [add("spirit", 9)]),
+  worn("robe", "vestments", "Vestments", [add("maxMp", 20), add("spirit", 3)]),
+  accessory("amulet", "Amulet of Vigor", [add("maxHp", 25)]),
+  accessory("band", "Power Band", [add("attack", 4)]),
+  accessory("charm", "Sage's Charm", [add("magic", 4), add("maxMp", 10)]),
+  accessory("buckler", "Iron Buckler", [add("defense", 5)]),
+  accessory("boots", "Fleet Boots", [mul("speed", 1.2), add("defense", -2)]),
 ];
 
 const WORLD_SKILLS = [

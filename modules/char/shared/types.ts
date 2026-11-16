@@ -13,6 +13,33 @@ import type {
 export const GEAR_SLOTS = ["weapon", "armor", "accessory"] as const;
 export type GearSlot = (typeof GEAR_SLOTS)[number];
 
+/**
+ * What sort of weapon or armor a piece is. A class names the categories
+ * it can use; accessories have none, so anyone wears them.
+ */
+export const GEAR_CATEGORIES = {
+  weapon: ["blade", "polearm", "dagger", "bow", "staff", "focus"],
+  armor: ["heavy", "light", "robe"],
+  accessory: [],
+} as const satisfies Record<GearSlot, readonly string[]>;
+export type GearCategory = (typeof GEAR_CATEGORIES)[GearSlot][number];
+/** How each category is called. */
+export const GEAR_CATEGORY_NAMES: Record<GearCategory, string> = {
+  blade: "Blade",
+  polearm: "Polearm",
+  dagger: "Dagger",
+  bow: "Bow",
+  staff: "Staff",
+  focus: "Focus",
+  heavy: "Heavy armor",
+  light: "Light armor",
+  robe: "Robe",
+};
+export const ALL_GEAR_CATEGORIES: GearCategory[] = [
+  ...GEAR_CATEGORIES.weapon,
+  ...GEAR_CATEGORIES.armor,
+];
+
 /** One change a piece of gear makes to a stat: +5 attack, or x1.1 speed. */
 export interface StatBonus {
   stat: StatName;
@@ -25,6 +52,8 @@ export interface Gear {
   id: string;
   name: string;
   slot: GearSlot;
+  /** Its category, one of its slot's; without one anyone can wear it. */
+  category?: GearCategory;
   bonuses: StatBonus[];
   /** For the weapon slot: how the wearer attacks while holding it. */
   weapon?: Weapon;
@@ -56,6 +85,11 @@ export interface Archetype {
   traits: Trait[];
   /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
   preferredRow: number;
+  /**
+   * The gear categories its characters can use; without the list they
+   * can use any. Gear with no category fits everyone either way.
+   */
+  proficiencies?: GearCategory[];
 }
 
 /** One character or enemy: an archetype at a level, wearing gear. */

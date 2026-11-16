@@ -1,6 +1,7 @@
 import { STAT_NAMES, type Stats } from "@jforge/melee/shared";
 import {
   GEAR_SLOTS,
+  type Archetype,
   type Character,
   type Gear,
   type GearSlot,
@@ -29,6 +30,27 @@ export function applyBonuses(stats: Stats, bonuses: StatBonus[]): Stats {
   return result;
 }
 
+/** Whether characters of `type` can use `gear`. */
+export function canUse(type: Archetype | undefined, gear: Gear): boolean {
+  return (
+    gear.category === undefined ||
+    type?.proficiencies === undefined ||
+    type.proficiencies.includes(gear.category)
+  );
+}
+
+/** Whether `character` can use `gear`, by their class's proficiencies. */
+export function canWear(
+  library: Library,
+  character: Character,
+  gear: Gear,
+): boolean {
+  return canUse(
+    library.archetypes.find((a) => a.id === character.archetypeId),
+    gear,
+  );
+}
+
 /** Puts `gear` in its slot, replacing what was there. */
 export function equip(character: Character, gear: Gear): Character {
   return { ...character, gear: { ...character.gear, [gear.slot]: gear.id } };
@@ -43,11 +65,14 @@ export function unequip(character: Character, slot: GearSlot): Character {
 
 /**
  * The gear a character wears, in slot order. A slot pointing at gear that
- * no longer exists, or that belongs in another slot, counts as empty.
+ * no longer exists, belongs in another slot or that their class cannot
+ * use counts as empty.
  */
 export function equippedGear(library: Library, character: Character): Gear[] {
   return GEAR_SLOTS.flatMap((slot) => {
     const worn = library.gear.find((g) => g.id === character.gear[slot]);
-    return worn && worn.slot === slot ? [worn] : [];
+    return worn && worn.slot === slot && canWear(library, character, worn)
+      ? [worn]
+      : [];
   });
 }

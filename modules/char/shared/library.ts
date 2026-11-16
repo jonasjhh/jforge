@@ -8,8 +8,11 @@ import {
 import { compileRoster } from "./compile";
 import { clampLevel } from "./progression";
 import {
+  ALL_GEAR_CATEGORIES,
+  GEAR_CATEGORIES,
   GEAR_SLOTS,
   type Archetype,
+  type GearSlot,
   type Character,
   type Gear,
   type Library,
@@ -175,6 +178,10 @@ function isGear(v: unknown): boolean {
   return (
     named(v) &&
     GEAR_SLOTS.includes(v.slot as never) &&
+    (v.category === undefined ||
+      (GEAR_CATEGORIES[v.slot as GearSlot] as readonly unknown[]).includes(
+        v.category,
+      )) &&
     Array.isArray(v.bonuses) &&
     v.bonuses.every(
       (b) =>
@@ -200,7 +207,10 @@ function isArchetype(v: unknown): boolean {
     ) &&
     Array.isArray(v.traits) &&
     v.traits.every((t) => TRAITS.includes(t as never)) &&
-    isNumber(v.preferredRow)
+    isNumber(v.preferredRow) &&
+    (v.proficiencies === undefined ||
+      (Array.isArray(v.proficiencies) &&
+        v.proficiencies.every((c) => ALL_GEAR_CATEGORIES.includes(c as never))))
   );
 }
 

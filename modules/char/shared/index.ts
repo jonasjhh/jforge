@@ -8,7 +8,14 @@ export {
   xpToNext,
   type Progress,
 } from "./progression";
-export { applyBonuses, equip, equippedGear, unequip } from "./gear";
+export {
+  applyBonuses,
+  canUse,
+  canWear,
+  equip,
+  equippedGear,
+  unequip,
+} from "./gear";
 export {
   archetypeOf,
   characterStats,

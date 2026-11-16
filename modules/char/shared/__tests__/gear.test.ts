@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { applyBonuses, equip, equippedGear, unequip } from "../gear";
+import {
+  applyBonuses,
+  canUse,
+  canWear,
+  equip,
+  equippedGear,
+  unequip,
+} from "../gear";
 import { blankCharacter, emptyLibrary, flatStats } from "../library";
 import { starterLibrary } from "../starter";
 import type { Gear } from "../types";
@@ -83,5 +90,37 @@ describe("equipping", () => {
     expect(equippedGear(lib, { ...bare, gear: { accessory: "x" } })).toEqual(
       [],
     );
+  });
+});
+
+describe("gear restrictions", () => {
+  const library = starterLibrary();
+  const [aldric, mira] = library.characters;
+  const gear = (id: string) => library.gear.find((g) => g.id === id)!;
+
+  it("lets a class use only its categories, and anyone uncategorised gear", () => {
+    expect(canWear(library, aldric!, gear("gear-sword"))).toBe(true);
+    expect(canWear(library, aldric!, gear("gear-bow"))).toBe(false);
+    expect(canWear(library, mira!, gear("gear-mail"))).toBe(false);
+    expect(canWear(library, mira!, gear("gear-ring"))).toBe(true);
+    const plain = { ...gear("gear-bow") };
+    delete plain.category;
+    expect(canWear(library, aldric!, plain)).toBe(true);
+  });
+
+  it("lets a class without a list use anything", () => {
+    const knight = library.archetypes.find((a) => a.id === "type-knight")!;
+    const open = { ...knight };
+    delete open.proficiencies;
+    expect(canUse(open, gear("gear-bow"))).toBe(true);
+    expect(canUse(undefined, gear("gear-bow"))).toBe(true);
+  });
+
+  it("leaves gear the class can't use out of what is worn", () => {
+    const archer = equip(aldric!, gear("gear-bow"));
+    expect(archer.gear.weapon).toBe("gear-bow");
+    expect(equippedGear(library, archer).map((g) => g.id)).toEqual([
+      "gear-mail",
+    ]);
   });
 });

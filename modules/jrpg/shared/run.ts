@@ -1,6 +1,7 @@
 import {
   basicGear,
   blankCharacter,
+  canWear,
   clampLevel,
   equip,
   gainXp,
@@ -669,8 +670,9 @@ export function resolveTraining(run: Run, characterId: string | null): Run {
 }
 
 /**
- * Puts gear from the bag in a character's slot (`gearId`), or empties the
- * slot (null). Whatever was worn there goes back in the bag.
+ * Puts gear from the bag in a character's slot (`gearId`) if their class
+ * can use it, or empties the slot (null). Whatever was worn there goes
+ * back in the bag.
  */
 export function changeGear(
   run: Run,
@@ -686,7 +688,14 @@ export function changeGear(
   if (gearId !== null) {
     const at = bag.indexOf(gearId);
     const gear = gearOf(run, gearId);
-    if (at < 0 || !gear || gear.slot !== slot) return run;
+    if (
+      at < 0 ||
+      !gear ||
+      gear.slot !== slot ||
+      !canWear(run.library, character, gear)
+    ) {
+      return run;
+    }
     bag.splice(at, 1);
     changed = equip(character, gear);
   } else {

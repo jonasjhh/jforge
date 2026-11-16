@@ -1,5 +1,11 @@
 import { TRAITS, type Skill } from "@jforge/melee/shared";
-import { MAX_LEVEL, clampLevel, type Archetype } from "../shared";
+import {
+  ALL_GEAR_CATEGORIES,
+  GEAR_CATEGORY_NAMES,
+  MAX_LEVEL,
+  clampLevel,
+  type Archetype,
+} from "../shared";
 import { NumberField, SelectField, TextField } from "./fields";
 import { PORTRAIT_OPTIONS, ROW_OPTIONS } from "./labels";
 import { StatsFields } from "./StatsFields";
@@ -104,6 +110,47 @@ export function ArchetypeEditor({
             </div>
           );
         })}
+      </fieldset>
+      <fieldset className="group">
+        <legend>Gear it can use</legend>
+        <label className="chip">
+          <input
+            type="checkbox"
+            checked={archetype.proficiencies === undefined}
+            onChange={(e) => {
+              const next = { ...archetype };
+              if (e.target.checked) delete next.proficiencies;
+              else next.proficiencies = [...ALL_GEAR_CATEGORIES];
+              onChange(next);
+            }}
+          />
+          Any gear
+        </label>
+        {archetype.proficiencies && (
+          <div className="chips">
+            {ALL_GEAR_CATEGORIES.map((category) => (
+              <label key={category} className="chip">
+                <input
+                  type="checkbox"
+                  checked={archetype.proficiencies!.includes(category)}
+                  onChange={(e) =>
+                    set({
+                      proficiencies: e.target.checked
+                        ? [...archetype.proficiencies!, category]
+                        : archetype.proficiencies!.filter(
+                            (c) => c !== category,
+                          ),
+                    })
+                  }
+                />
+                {GEAR_CATEGORY_NAMES[category]}
+              </label>
+            ))}
+          </div>
+        )}
+        <p className="muted small">
+          Gear without a category, and every accessory, fits anyone.
+        </p>
       </fieldset>
       <fieldset className="group">
         <legend>Traits (default resistances)</legend>

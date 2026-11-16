@@ -1,7 +1,10 @@
 import { content } from "@jforge/melee/shared";
 import {
+  GEAR_CATEGORIES,
+  GEAR_CATEGORY_NAMES,
   GEAR_SLOTS,
   type Gear,
+  type GearCategory,
   type GearSlot,
   type StatBonus,
 } from "../shared";
@@ -35,6 +38,8 @@ export function GearEditor({ gear, onChange }: GearEditorProps) {
     });
   const setSlot = (slot: GearSlot) => {
     const next: Gear = { ...gear, slot };
+    // A category belongs to one slot.
+    delete next.category;
     // A weapon needs to say how it attacks; other gear must not.
     if (slot === "weapon") {
       next.weapon ??= { ...content.sword, id: gear.id, name: gear.name };
@@ -54,6 +59,24 @@ export function GearEditor({ gear, onChange }: GearEditorProps) {
         options={SLOT_OPTIONS}
         onChange={setSlot}
       />
+      {GEAR_CATEGORIES[gear.slot].length > 0 && (
+        <SelectField
+          label="Category"
+          value={gear.category ?? ""}
+          options={[
+            ["", "None: anyone can use it"] as const,
+            ...GEAR_CATEGORIES[gear.slot].map(
+              (c: GearCategory) => [c, GEAR_CATEGORY_NAMES[c]] as const,
+            ),
+          ]}
+          onChange={(category) => {
+            const next: Gear = { ...gear };
+            if (category) next.category = category;
+            else delete next.category;
+            onChange(next);
+          }}
+        />
+      )}
       <fieldset className="group">
         <legend>Stat bonuses</legend>
         {gear.bonuses.map((bonus, i) => (

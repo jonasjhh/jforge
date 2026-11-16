@@ -1,7 +1,10 @@
 import {
+  GEAR_CATEGORY_NAMES,
   GEAR_SLOTS,
   archetypeOf,
+  canWear,
   xpToNext,
+  type Character,
   type GearSlot,
 } from "@jforge/char/shared";
 import { changeGear, gearOf, gearSummary, type Run } from "../shared";
@@ -19,10 +22,13 @@ interface PartyPanelProps {
 
 /** The party between encounters: levels, and gear to swap with the bag. */
 export function PartyPanel({ run, onChange }: PartyPanelProps) {
-  const inBag = (slot: GearSlot) =>
+  // What in the bag fits the slot and the member's class.
+  const inBag = (member: Character, slot: GearSlot) =>
     [...new Set(run.bag)].flatMap((id) => {
       const gear = gearOf(run, id);
-      return gear && gear.slot === slot ? [gear] : [];
+      return gear && gear.slot === slot && canWear(run.library, member, gear)
+        ? [gear]
+        : [];
     });
   return (
     <section className="panel" aria-label="Party">
@@ -39,6 +45,14 @@ export function PartyPanel({ run, onChange }: PartyPanelProps) {
                 {needed > 0 && ` · ${member.xp} / ${needed} XP`}
               </span>
             </p>
+            {type?.proficiencies && (
+              <p className="muted small member-uses">
+                Uses:{" "}
+                {type.proficiencies
+                  .map((c) => GEAR_CATEGORY_NAMES[c])
+                  .join(", ")}
+              </p>
+            )}
             <div className="member-gear">
               {GEAR_SLOTS.map((slot) => {
                 const worn = gearOf(run, member.gear[slot]);
@@ -62,7 +76,7 @@ export function PartyPanel({ run, onChange }: PartyPanelProps) {
                     >
                       <option value="">None</option>
                       {worn && <option value={worn.id}>{worn.name}</option>}
-                      {inBag(slot)
+                      {inBag(member, slot)
                         .filter((g) => g.id !== worn?.id)
                         .map((g) => (
                           <option key={g.id} value={g.id}>
