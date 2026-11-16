@@ -43,7 +43,7 @@ export function App() {
     return (
       <StartScreen
         library={library}
-        onStart={(seed) => update(startRun(library, seed))}
+        onStart={(seed, chosen) => update(startRun(library, seed, chosen))}
       />
     );
   }

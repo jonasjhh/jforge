@@ -281,6 +281,65 @@ const GEAR: Gear[] = [
   ]),
 ];
 
+/** Plain gear: nothing it makes worse. */
+const BASIC = GEAR.filter((g) =>
+  g.bonuses.every((b) => (b.op === "add" ? b.value > 0 : b.value >= 1)),
+);
+
+const sameWeapon = (a: Weapon, b: Weapon) =>
+  a.kind === b.kind &&
+  a.damageType === b.damageType &&
+  a.columns === b.columns &&
+  a.depth === b.depth;
+
+/** How much `gear` adds to what `type` is good at: its best stats count most. */
+const suits = (gear: Gear, type: Archetype) =>
+  gear.bonuses.reduce(
+    (sum, b) =>
+      b.op === "add" &&
+      ["attack", "magic", "spirit", "defense"].includes(b.stat)
+        ? sum + b.value * type.baseStats[b.stat]
+        : sum,
+    0,
+  );
+
+const best = (choices: Gear[], type: Archetype) =>
+  choices.reduce<Gear | undefined>(
+    (top, g) => (!top || suits(g, type) > suits(top, type) ? g : top),
+    undefined,
+  );
+
+/**
+ * What a recruit brings along: plain world gear in their empty slots.
+ * Armor for everyone (vestments for casters, a jerkin otherwise), a
+ * weapon if one handles like their own, else an accessory that suits them.
+ */
+export function withKit(library: Library, character: Character): Character {
+  const type = library.archetypes.find((a) => a.id === character.archetypeId);
+  if (!type) return character;
+  const known = new Set(library.gear.map((g) => g.id));
+  const basic = BASIC.filter((g) => known.has(g.id));
+  const caster = type.baseStats.magic > type.baseStats.attack;
+  const armor = basic.find(
+    (g) => g.id === (caster ? "world-vestments" : "world-jerkin"),
+  );
+  const weapon = best(
+    basic.filter((g) => g.weapon && sameWeapon(g.weapon, type.weapon)),
+    type,
+  );
+  const accessory = weapon
+    ? undefined
+    : best(
+        basic.filter((g) => g.slot === "accessory"),
+        type,
+      );
+  const gear = { ...character.gear };
+  for (const piece of [weapon, armor, accessory]) {
+    if (piece && gear[piece.slot] === undefined) gear[piece.slot] = piece.id;
+  }
+  return { ...character, gear };
+}
+
 const WORLD_SKILLS = [
   c.aimedShot,
   c.firebolt,

@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { archetypeOf, type Library } from "@jforge/char/shared";
-import { MIN_LEVEL_LENGTH, heroes, startRun } from "../shared";
+import {
+  MIN_LEVEL_LENGTH,
+  START_PARTY_SIZE,
+  drawParty,
+  heroes,
+  startRun,
+} from "../shared";
 import { meta } from "../meta";
 
 const newSeed = () => Math.floor(Math.random() * 1_000_000);
@@ -8,16 +14,32 @@ const newSeed = () => Math.floor(Math.random() * 1_000_000);
 interface StartScreenProps {
   /** The library designed in char, if any. */
   library: Library | null;
-  onStart: (seed: number) => void;
+  onStart: (seed: number, chosen: string[]) => void;
 }
 
-/** Before a run: who was drawn to set out, and who else is out there. */
+/** Before a run: choosing who sets out, from a party drawn by lot. */
 export function StartScreen({ library, onStart }: StartScreenProps) {
   const [seed, setSeed] = useState(newSeed);
-  const run = startRun(library, seed);
-  const others = heroes(library).filter(
-    (hero) => !run.party.some((member) => member.id === hero.id),
+  const [chosen, setChosen] = useState(() =>
+    drawParty(library, seed).map((c) => c.id),
   );
+  const all = heroes(library);
+  const run = startRun(library, seed, chosen);
+  const full = chosen.length >= Math.min(START_PARTY_SIZE, all.length);
+
+  // Choosing one more than fits lets go of the first chosen.
+  const toggle = (id: string) =>
+    setChosen((was) =>
+      was.includes(id)
+        ? was.filter((other) => other !== id)
+        : [...was, id].slice(-START_PARTY_SIZE),
+    );
+  const drawAgain = () => {
+    const next = newSeed();
+    setSeed(next);
+    setChosen(drawParty(library, next).map((c) => c.id));
+  };
+
   return (
     <main className="page">
       <a className="back" href="/">
@@ -33,35 +55,38 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
 
       <section className="panel" aria-label="Setting out">
         <h2>Setting out</h2>
-        <ul>
-          {run.party.map((member) => (
-            <li key={member.id}>
-              <strong>{member.name}</strong>{" "}
-              <span className="muted small">
-                {archetypeOf(run.library, member)?.name} · Level {member.level}
-              </span>
-            </li>
-          ))}
-        </ul>
         <p className="muted small">
-          Drawn by lot. Out there to meet:{" "}
-          {others.map((hero) => hero.name).join(", ")}. Class characters you
-          design in <a href="/char/">Char</a> join the draw; your enemies and
-          gear join the world's own.
+          Choose {START_PARTY_SIZE} to set out, at Level {run.baseLevel}. The
+          others may be met on the road. Class characters you design in{" "}
+          <a href="/char/">Char</a> join them; your enemies and gear join the
+          world's own.
         </p>
+        <div className="pieces" role="group" aria-label="Heroes">
+          {all.map((hero) => (
+            <button
+              key={hero.id}
+              type="button"
+              aria-pressed={chosen.includes(hero.id)}
+              className="piece"
+              onClick={() => toggle(hero.id)}
+            >
+              <strong>{hero.name}</strong>{" "}
+              <span className="muted small">
+                {archetypeOf(run.library, hero)?.name}
+              </span>
+            </button>
+          ))}
+        </div>
         <div className="button-row">
           <button
             type="button"
             className="primary"
-            onClick={() => onStart(seed)}
+            disabled={!full}
+            onClick={() => onStart(seed, chosen)}
           >
             Set out
           </button>
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => setSeed(newSeed())}
-          >
+          <button type="button" className="secondary" onClick={drawAgain}>
             Draw again
           </button>
         </div>

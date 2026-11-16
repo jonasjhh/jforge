@@ -11,6 +11,7 @@ import {
   gearSummary,
   levelCleared,
   nextLevel,
+  recruitOf,
   resolveAlly,
   resolveGear,
   resolveTraining,
@@ -189,9 +190,12 @@ function EncounterPanel({
   }
 
   if (encounter.kind === "ally") {
-    const { character } = encounter;
+    const character = recruitOf(run) ?? encounter.character;
     const type = archetypeOf(run.library, character);
     const room = canRecruit(run);
+    const kit = Object.values(character.gear).flatMap(
+      (id) => gearOf(run, id)?.name ?? [],
+    );
     return (
       <section className="panel" aria-label="Encounter">
         <h2>
@@ -203,24 +207,53 @@ function EncounterPanel({
           {type && type.name !== character.name ? `, a ${type.name},` : ""}{" "}
           offers to join you.
         </p>
-        {!room && <p className="muted small">Your party is full.</p>}
-        <div className="button-row">
-          <button
-            type="button"
-            className="primary"
-            disabled={!room}
-            onClick={() => onChange(resolveAlly(run, true))}
-          >
-            Welcome {character.name}
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => onChange(resolveAlly(run, false))}
-          >
-            Move on
-          </button>
-        </div>
+        {kit.length > 0 && (
+          <p className="muted small">Brings along: {kit.join(", ")}.</p>
+        )}
+        {room ? (
+          <div className="button-row">
+            <button
+              type="button"
+              className="primary"
+              onClick={() => onChange(resolveAlly(run, true))}
+            >
+              Welcome {character.name}
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => onChange(resolveAlly(run, false))}
+            >
+              Move on
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="muted small">
+              Your party is full. {character.name} can take someone's place:
+              they leave, and their gear goes in the bag.
+            </p>
+            <div className="choices">
+              {run.party.map((member) => (
+                <button
+                  key={member.id}
+                  type="button"
+                  className="secondary"
+                  onClick={() => onChange(resolveAlly(run, true, member.id))}
+                >
+                  Replace {member.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => onChange(resolveAlly(run, false))}
+              >
+                Move on
+              </button>
+            </div>
+          </>
+        )}
       </section>
     );
   }

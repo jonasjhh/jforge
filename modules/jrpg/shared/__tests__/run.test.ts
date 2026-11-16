@@ -24,6 +24,7 @@ import {
   commitBattle,
   currentEncounter,
   currentStop,
+  drawParty,
   enemyLevelBonus,
   generateLevel,
   heroes,
@@ -34,6 +35,7 @@ import {
   nextLevel,
   packFor,
   parseRun,
+  recruitOf,
   resolveAlly,
   resolveGear,
   resolveTraining,
@@ -48,6 +50,7 @@ import {
   type Run,
   type Stop,
 } from "../run";
+import { formationOf } from "../formation";
 
 const library = starterLibrary();
 const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
@@ -91,6 +94,18 @@ const walk = (run: Run, pick: number): Run => {
 };
 
 describe("startRun", () => {
+  it("sets out with the heroes chosen, or those drawn if none are", () => {
+    const [first, , third] = heroes(library);
+    const chosen = startRun(library, 7, [third!.id, first!.id, first!.id]);
+    expect(chosen.party.map((c) => c.id)).toEqual([third!.id, first!.id]);
+    expect(startRun(library, 7, ["nobody"]).party).toEqual(
+      startRun(library, 7).party,
+    );
+    expect(startRun(library, 7).party.map((c) => c.id)).toEqual(
+      drawParty(library, 7).map((c) => c.id),
+    );
+  });
+
   it("draws a different party for different seeds, the same for one seed", () => {
     expect(startRun(library, 7).party).toEqual(startRun(library, 7).party);
     const parties = new Set(
@@ -682,6 +697,54 @@ describe("resolveAlly", () => {
   it("does nothing off an ally encounter", () => {
     const run = at([battle]);
     expect(resolveAlly(run, true)).toBe(run);
+    expect(recruitOf(run)).toBeNull();
+  });
+
+  it("brings a recruit along in their kit", () => {
+    const kit = recruitOf(at([ally]))!.gear;
+    expect(kit.armor).toBeDefined();
+    expect(resolveAlly(at([ally]), true).party.at(-1)!.gear).toEqual(kit);
+  });
+
+  it("lets a recruit take a member's place when the party is full", () => {
+    const run = at([ally]);
+    const full = {
+      ...run,
+      party: Array.from({ length: MAX_PARTY_SIZE }, (_, i) => ({
+        ...run.party[0]!,
+        id: `m${i}`,
+        level: 4 + i,
+      })),
+    };
+    const leaving = full.party[2]!;
+    const cell = formationOf(full)[leaving.id];
+    const after = resolveAlly(full, true, leaving.id);
+    expect(after.party).toHaveLength(MAX_PARTY_SIZE);
+    expect(after.party.map((c) => c.id)).toEqual([
+      "m0",
+      "m1",
+      "new",
+      "m3",
+      "m4",
+    ]);
+    // At the lowest level of those who stay, where the one who left stood.
+    expect(after.party[2]).toMatchObject({ name: "Nell", level: 4 });
+    expect(formationOf(after)["new"]).toEqual(cell);
+    expect(after.bag).toEqual([
+      ...full.bag,
+      ...Object.values(leaving.gear).filter((id) => id !== undefined),
+    ]);
+    expect(after.position).toBe(1);
+  });
+
+  it("ignores a replacement while there is room or for a stranger", () => {
+    expect(resolveAlly(at([ally]), true, "nobody").party).toHaveLength(3);
+    const run = at([ally]);
+    const kept = resolveAlly(run, true, run.party[0]!.id);
+    expect(kept.party.map((c) => c.id)).toEqual([
+      ...run.party.map((c) => c.id),
+      "new",
+    ]);
   });
 });
 

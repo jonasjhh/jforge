@@ -25,7 +25,13 @@ import {
   type Position,
 } from "@jforge/melee/shared";
 import { formationOf } from "./formation";
-import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
+import {
+  GEAR_TIERS,
+  TRAVELLER_NAMES,
+  tierId,
+  withKit,
+  withWorld,
+} from "./world";
 
 // A run: the party travels through levels, each a map of encounters
 // generated from a seed, row by row along roads that split and merge. Everything here is pure; the screens
@@ -155,17 +161,34 @@ export function heroes(source: Library | null): Character[] {
   return world.characters.filter((c) => isClass(world, c));
 }
 
-/**
- * A new run. The party is drawn from the heroes by the seed, all raised
- * to the level of the highest among them (START_LEVEL at least).
- */
-export function startRun(source: Library | null, seed: number): Run {
+/** START_PARTY_SIZE heroes drawn by the seed: who sets out if nobody chooses. */
+export function drawParty(source: Library | null, seed: number): Character[] {
   const random = createRandom(seed ^ 0x9a27);
   const left = heroes(source);
   const drawn: Character[] = [];
   while (left.length > 0 && drawn.length < START_PARTY_SIZE) {
     drawn.push(left.splice(Math.floor(random() * left.length), 1)[0]!);
   }
+  return drawn;
+}
+
+/**
+ * A new run. The party is the heroes `chosen` by id (unknown ids and
+ * repeats are skipped, at most START_PARTY_SIZE), or drawn by the seed if
+ * none are, all raised to the level of the highest among them
+ * (START_LEVEL at least).
+ */
+export function startRun(
+  source: Library | null,
+  seed: number,
+  chosen: string[] = [],
+): Run {
+  const all = heroes(source);
+  const picked = [...new Set(chosen)]
+    .map((id) => all.find((c) => c.id === id))
+    .filter((c): c is Character => !!c)
+    .slice(0, START_PARTY_SIZE);
+  const drawn = picked.length > 0 ? picked : drawParty(source, seed);
   const baseLevel = Math.max(START_LEVEL, ...drawn.map((c) => c.level));
   const party = drawn.map((c) =>
     c.level >= baseLevel ? c : { ...c, level: baseLevel, xp: 0 },
@@ -559,20 +582,54 @@ export function canRecruit(run: Run): boolean {
   return run.party.length < MAX_PARTY_SIZE;
 }
 
-/**
- * Leaves an ally encounter. A recruit joins at the level of the party's
- * weakest member if that is higher than its own.
- */
-export function resolveAlly(run: Run, recruit: boolean): Run {
+/** The traveller met here as they would join: in their starting kit. */
+export function recruitOf(run: Run): Character | null {
   const encounter = currentEncounter(run);
-  if (run.defeated || encounter?.kind !== "ally") return run;
+  return encounter?.kind === "ally"
+    ? withKit(run.library, encounter.character)
+    : null;
+}
+
+/**
+ * Leaves an ally encounter. A recruit joins in their starting kit, at the
+ * level of the party's weakest member if that is higher than its own. Only
+ * if the party is full, the recruit can take the place of `replaceId`: that
+ * member leaves, their gear goes in the bag and the recruit stands where
+ * they stood.
+ */
+export function resolveAlly(
+  run: Run,
+  recruit: boolean,
+  replaceId?: string,
+): Run {
+  const ally = recruitOf(run);
+  if (run.defeated || !ally) return run;
   const next = moveOn(run);
-  if (!recruit || !canRecruit(run)) return next;
-  const lowest = Math.min(...run.party.map((c) => c.level));
-  const ally = encounter.character;
+  if (!recruit) return next;
+  const room = canRecruit(run);
+  // Someone makes way only when there is no room.
+  const leaving = room ? undefined : run.party.find((c) => c.id === replaceId);
+  if (!room && !leaving) return next;
+  const staying = run.party.filter((c) => c !== leaving);
+  const lowest = Math.min(...staying.map((c) => c.level));
   const joined =
     ally.level >= lowest ? ally : { ...ally, level: lowest, xp: 0 };
-  return { ...next, party: [...run.party, joined] };
+  if (!leaving) return { ...next, party: [...run.party, joined] };
+  const cell = formationOf(run)[leaving.id];
+  const formation = { ...run.formation };
+  delete formation[leaving.id];
+  if (cell) formation[joined.id] = cell;
+  return {
+    ...next,
+    party: run.party.map((c) => (c === leaving ? joined : c)),
+    bag: [
+      ...next.bag,
+      ...Object.values(leaving.gear).filter(
+        (id): id is string => id !== undefined && !!gearOf(run, id),
+      ),
+    ],
+    formation,
+  };
 }
 
 /**

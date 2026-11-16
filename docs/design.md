@@ -553,8 +553,13 @@ party size` experience and sometimes gear (40%; elites and the final
   battle seed, so coming back never rerolls its luck. Starting a battle
   over is allowed (the ↺ button, once the party has acted).
 - **Ally**: a traveller who isn't in the party offers to join, at the
-  level of the party's weakest member if that is higher. The party holds
-  five.
+  level of the party's weakest member if that is higher, in a **starting
+  kit** of plain world gear (nothing with a drawback) in their empty
+  slots: armor (vestments for casters, a jerkin otherwise) and a weapon
+  that handles like their own, or a fitting accessory if there is none.
+  The party holds five; when it is full the recruit can take a member's
+  place, standing where they stood, and the one who leaves puts their gear
+  in the bag.
 - **Gear**: three different pieces; take one, for a member (what they wore
   goes in the bag) or for the bag.
 - **Training**: one member gains a level.
@@ -585,10 +590,11 @@ provides) and 16 pieces of gear. All gear exists at four **tiers** (plain,
 Fine, Superior, Masterwork: each adds half again to what the piece adds);
 finds are a tier better per depth, with some luck.
 
-**The party is drawn by lot**: two of the heroes (the travellers and every
-class character designed in char), by the run's seed, both raised to the
-level of the higher one and at least level 3. The start screen shows the
-draw and can draw again; whoever isn't drawn can be met as an ally.
+**The player chooses the party**: two of the heroes (the travellers and
+every class character designed in char), both raised to the level of the
+higher one and at least level 3. The start screen preselects two drawn by
+the run's seed and can draw again; choosing a third lets go of the first.
+Whoever doesn't set out can be met as an ally.
 
 Enemies gain the party's average levels gained plus one per depth. The
 **threat budget** of a battle is a share of the party's own estimated
@@ -600,7 +606,7 @@ counted, not only those of parties that got that far); a test keeps the
 first level in its bands. The run is saved in the browser after every
 encounter.
 
-Not yet: shops, replacing a member when the party is full.
+Not yet: shops.
 
 Still to come: a live damage preview and power budget in the skill
 designer, the remaining effect types (statuses, summons), resistances per

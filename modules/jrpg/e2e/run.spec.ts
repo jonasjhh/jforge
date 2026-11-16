@@ -8,6 +8,11 @@ test("sets out, meets the first battle and can retreat to the map", async ({
     "Level 3",
   );
   await page.getByRole("button", { name: "Draw again" }).click();
+  // Choosing the party: letting one go leaves a place to fill.
+  const heroes = page.getByRole("group", { name: "Heroes" });
+  await heroes.locator('[aria-pressed="true"]').first().click();
+  await expect(page.getByRole("button", { name: "Set out" })).toBeDisabled();
+  await heroes.locator('[aria-pressed="false"]').first().click();
   await page.getByRole("button", { name: "Set out" }).click();
 
   await expect(page.getByRole("heading", { name: "Level 1" })).toBeVisible();
