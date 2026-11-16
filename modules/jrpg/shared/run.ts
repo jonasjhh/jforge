@@ -21,7 +21,10 @@ import {
   type BattleSetup,
   type CombatantDef,
   type Difficulty,
+  type Placement,
+  type Position,
 } from "@jforge/melee/shared";
+import { formationOf } from "./formation";
 import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
 
 // A run: the party travels through levels, each a fixed sequence of
@@ -70,6 +73,8 @@ export interface Run {
    * no walking away: the fight is won, lost, or given up (which loses).
    */
   committed?: boolean;
+  /** Where the player put party members, by character id (formation.ts). */
+  formation?: Record<string, Position>;
 }
 
 /** What a won battle paid. */
@@ -362,12 +367,19 @@ export function battleFor(run: Run): BattleSetup | null {
   const encounter = currentEncounter(run);
   if (run.defeated || encounter?.kind !== "battle") return null;
   const pool = monsterPool(run, RANK_LEVELS[encounter.rank]);
-  return randomEncounter(
+  const drawn = randomEncounter(
     encounter.seed,
     encounter.difficulty,
-    { party: partyDefs(run), monsters: packFor(pool, encounter.seed) },
+    { party: [], monsters: packFor(pool, encounter.seed) },
     threatBudget(run, encounter.difficulty),
   );
+  // The enemies stand where the seed puts them, the party in formation.
+  const cells = formationOf(run);
+  const party = run.party.flatMap((member): Placement[] => {
+    const def = toCombatantDef(run.library, member);
+    return def ? [{ def, side: "player", position: cells[member.id]! }] : [];
+  });
+  return { placements: [...party, ...drawn.placements] };
 }
 
 /**

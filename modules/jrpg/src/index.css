@@ -123,3 +123,82 @@
 .path {
   gap: 3px;
 }
+
+.field {
+  margin: 0.6rem 0;
+}
+
+.field-grid {
+  display: grid;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.field-enemy {
+  background: var(--enemy-surface-bottom);
+  border: 1px solid var(--enemy-line);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+}
+
+.field-party {
+  background: var(--ally-surface-bottom);
+  border: 1px solid var(--line);
+  border-radius: 0 0 12px 12px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+}
+
+.field-cell {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  min-width: 0;
+  height: 2.6rem;
+  padding: 0 2px;
+  border-radius: 8px;
+  border: 1px dashed var(--line-soft);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.field-cell:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.field-cell.held {
+  border-style: solid;
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.field-enemy .field-cell.held {
+  border-color: var(--enemy-line);
+  background: var(--enemy-surface-top);
+}
+
+.field-enemy .portrait {
+  color: var(--danger-soft);
+}
+
+.field-cell.picked {
+  border-color: var(--turn);
+  box-shadow: 0 0 0 1px var(--turn);
+}
+
+.field-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.62rem;
+  line-height: 1;
+}

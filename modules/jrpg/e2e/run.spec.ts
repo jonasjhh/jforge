@@ -19,6 +19,12 @@ test("sets out, meets the first battle and can retreat to the map", async ({
     "Battle",
   );
 
+  // Rearranging the party: tap a member, then an empty cell.
+  const formation = page.getByRole("grid", { name: "Formation" });
+  await formation.locator(".held").first().click();
+  await formation.getByLabel("middle row, column 5", { exact: true }).click();
+  await expect(formation.getByLabel(/, middle row, column 5$/)).toBeVisible();
+
   await page.getByRole("button", { name: "Fight" }).click();
   await expect(page.getByRole("grid", { name: "Enemies" })).toBeVisible();
   await page.getByRole("button", { name: "← Retreat" }).click();

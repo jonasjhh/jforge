@@ -18,6 +18,7 @@ import {
   type Reward,
   type Run,
 } from "../shared";
+import { Formation } from "./Formation";
 import { PartyPanel } from "./PartyPanel";
 
 const DIFFICULTY_WORDS = { easy: "Easy", normal: "Normal", hard: "Hard" };
@@ -180,6 +181,7 @@ function EncounterPanel({
           </span>
         </h2>
         <p>{setup ? enemySummary(setup) : "Nobody is here."}</p>
+        {setup && <Formation run={run} setup={setup} onChange={onChange} />}
         <p className="muted small">
           You can retreat until you give your first command. After that the
           fight is won or the run is over.

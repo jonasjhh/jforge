@@ -553,6 +553,13 @@ generated from the run's seed (`shared/run.ts`, pure like the engine):
 - **Fork**: two ways, each one of ally, gear, training or an elite battle;
   the party meets the one it picks.
 
+**Formation** (`shared/formation.ts`): before a battle the map shows the
+field: the enemies where they will stand and the party, which the player
+arranges (tap a member, then a cell; an occupied cell swaps). Unplaced
+members stand in their class's preferred row, filling from the middle.
+The formation is kept for the rest of the run and locked once the party
+has acted in a battle.
+
 Every level has an ally, gear and training, plus two more finds drawn at
 random (gear, forks, another ally or training), between the first and
 last battle and never two in a row. Between encounters gear can be
