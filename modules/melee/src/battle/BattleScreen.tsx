@@ -178,6 +178,27 @@ export function BattleScreen({
           </p>
         )}
 
+        {active && (menu.kind === "attack" || menu.kind === "move") && (
+          <div className="command-list">
+            <button
+              type="button"
+              className="command"
+              title="Halve the hits you take until your next turn"
+              onClick={() => command({ type: "defend" })}
+            >
+              Defend
+            </button>
+            <button
+              type="button"
+              className="command"
+              title="Do nothing now and act again sooner"
+              onClick={() => command({ type: "wait" })}
+            >
+              Wait
+            </button>
+          </div>
+        )}
+
         {active && menu.kind === "skills" && (
           <>
             <p>

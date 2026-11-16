@@ -21,6 +21,7 @@ export {
   validateSkill,
 } from "./skills";
 export { MOVE_GAUGE_LEFT, validateMove } from "./move";
+export { DEFEND_FACTOR, WAIT_GAUGE_LEFT } from "./stance";
 export { AMBUSH_POWER, isStealthed } from "./stealth";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";
 export { applyStatus } from "./status";

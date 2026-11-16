@@ -141,8 +141,17 @@ export function UnitDetails({ unit, time, speed, onClose }: UnitDetailsProps) {
         ) : (
           <p className="muted">No weaknesses or resistances.</p>
         )}
-        {(unit.statuses.length > 0 || timed.length > 0 || unit.casting) && (
+        {(unit.statuses.length > 0 ||
+          timed.length > 0 ||
+          unit.casting ||
+          unit.defending) && (
           <ul className="details-list">
+            {unit.defending && (
+              <li>
+                <strong>Defending</strong> — hits are halved{" "}
+                <span className="muted">until its next action.</span>
+              </li>
+            )}
             {unit.casting && (
               <li>
                 <strong>Casting {unit.casting.skillName}</strong> — lands in{" "}

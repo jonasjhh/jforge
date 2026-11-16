@@ -126,4 +126,13 @@ describe("summarizeAction", () => {
       ]),
     ).toBe("Mage steps back");
   });
+
+  it("counts defending and waiting as actions", () => {
+    expect(summarizeAction(state, [{ type: "defended", unitId: mage }])).toBe(
+      "Mage defends",
+    );
+    expect(summarizeAction(state, [{ type: "waited", unitId: mage }])).toBe(
+      "Mage waits",
+    );
+  });
 });

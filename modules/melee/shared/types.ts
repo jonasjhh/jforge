@@ -362,6 +362,8 @@ export interface Unit {
   vanished?: boolean;
   hp: number;
   mp: number;
+  /** Bracing since its last turn: hits are halved until it acts again. */
+  defending?: boolean;
   /** 0..GAUGE_FULL; the unit acts when it is full. */
   gauge: number;
   modifiers: Modifier[];
@@ -389,7 +391,11 @@ export type Command =
   | { type: "attack"; targetId: string }
   | { type: "skill"; skillId: string; cell: Cell }
   /** Step to an adjacent empty cell on the unit's own side. */
-  | { type: "move"; to: Position };
+  | { type: "move"; to: Position }
+  /** Brace: hits are halved until the unit's next action. A full turn. */
+  | { type: "defend" }
+  /** Do nothing and act again soon: the gauge keeps three quarters. */
+  | { type: "wait" };
 
 export type BattleEvent =
   | { type: "timeAdvanced"; time: number }
@@ -481,6 +487,8 @@ export type BattleEvent =
     }
   | { type: "heal"; unitId: string; amount: number; hp: number }
   | { type: "moved"; unitId: string; from: Position; to: Position }
+  | { type: "defended"; unitId: string }
+  | { type: "waited"; unitId: string }
   | { type: "knockedOut"; unitId: string }
   | { type: "modifierExpired"; unitId: string; source: string }
   | { type: "battleOver"; winner: Side | null };

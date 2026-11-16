@@ -4,18 +4,23 @@ import { resistanceNote, unitName } from "./labels";
 
 type ActionEvent = Extract<
   BattleEvent,
-  { type: "attack" | "skill" | "moved" | "castStarted" }
+  {
+    type: "attack" | "skill" | "moved" | "castStarted" | "defended" | "waited";
+  }
 >;
 
-/** The action in a step's events: an attack, skill, step or cast start. */
+const ACTIONS: BattleEvent["type"][] = [
+  "attack",
+  "skill",
+  "moved",
+  "castStarted",
+  "defended",
+  "waited",
+];
+
+/** The action in a step's events: an attack, skill, step, cast start, defend or wait. */
 export function findAction(events: BattleEvent[]): ActionEvent | undefined {
-  return events.find(
-    (e): e is ActionEvent =>
-      e.type === "attack" ||
-      e.type === "skill" ||
-      e.type === "moved" ||
-      e.type === "castStarted",
-  );
+  return events.find((e): e is ActionEvent => ACTIONS.includes(e.type));
 }
 
 /**

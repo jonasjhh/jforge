@@ -213,6 +213,8 @@ describe("describeEvent", () => {
     expect(push(2)).toBe("Wolf is pushed back");
     expect(push(0)).toBe("Wolf is pulled forward");
     expect(say({ type: "unmoved", unitId: WOLF })).toBe("Wolf doesn't budge");
+    expect(say({ type: "defended", unitId: MAGE })).toBe("Mage defends");
+    expect(say({ type: "waited", unitId: MAGE })).toBe("Mage waits");
     expect(say({ type: "collided", unitId: WOLF, blockerId: ROCK })).toBe(
       "Wolf crashes into Boulder!",
     );

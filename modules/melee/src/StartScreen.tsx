@@ -91,8 +91,9 @@ export function StartScreen({
 
       <p className="muted small">
         Gauges fill with speed. When one of your units is ready, time stops
-        until you choose its action. The enemies act on their own. Hold a unit
-        (or right-click it) to see its details.
+        until you choose its action. The enemies act on their own. Defend halves
+        the hits a unit takes until it acts again; Wait skips the turn but lets
+        it act again sooner. Hold a unit (or right-click it) to see its details.
       </p>
       <p className="muted small">
         Unit icons by {PORTRAIT_AUTHORS.join(" and ")} from{" "}

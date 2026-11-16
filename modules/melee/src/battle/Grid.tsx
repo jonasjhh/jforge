@@ -255,6 +255,7 @@ function UnitCell({
     aimed ? "aimed" : "",
     incoming ? "incoming" : "",
     unit.casting ? "casting" : "",
+    unit.defending ? "defending" : "",
     emphasized ? "emphasized" : "",
     unit.obstacle ? "boulder" : "",
     unit.statuses.some((st) => st.effect === "stealth") ? "stealthed" : "",

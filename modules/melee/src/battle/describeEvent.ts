@@ -104,6 +104,10 @@ export function describeEvent(
       const shield = event.absorbed ? `, ${event.absorbed} absorbed` : "";
       return `${name(event.unitId)} takes ${event.amount} ${event.damageType} damage${note}${shield}`;
     }
+    case "defended":
+      return `${name(event.unitId)} defends`;
+    case "waited":
+      return `${name(event.unitId)} waits`;
     case "knockedOut":
       return `${name(event.unitId)} is knocked out`;
     case "modifierExpired":

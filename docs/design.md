@@ -75,6 +75,14 @@ weapon attack (reach, rows, damage type) at a power, with an optional
 (knocked-out units count), the target doesn't move and takes a collision
 instead: x1.5 damage, reported before the blow.
 
+**Defend and Wait** (done): two commands every unit has, always allowed.
+**Defend** spends the whole turn; until the unit acts again, every hit on it
+(weapons, spells, collisions) is halved. Damage over time is not, and the
+damage preview and the AI's expected damage include it. **Wait** does
+nothing and keeps three quarters of the gauge, so the unit acts again soon:
+a way to let an ally go first or to wait for an enemy to come into reach.
+Monsters don't use either yet.
+
 Area effects are **targeting shapes**:
 single, row, column, line, cross, 3x3 blast, whole side, N random.
 

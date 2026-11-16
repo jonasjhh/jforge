@@ -4,6 +4,7 @@ import { applyDamage, physicalHit } from "./damage";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach } from "./reach";
 import { MOVE_GAUGE_LEFT, resolveMove, validateMove } from "./move";
+import { dropGuard, resolveDefend, resolveWait } from "./stance";
 import { breakStealth } from "./stealth";
 import { landCast, castSkill, validateSkill } from "./skills";
 import { applyStatus, runDueTicks } from "./status";
@@ -162,6 +163,7 @@ export function validateCommand(
   unit: Unit,
   command: Command,
 ): string | null {
+  if (command.type === "defend" || command.type === "wait") return null;
   if (command.type === "move") return validateMove(state, unit, command.to);
   if (command.type === "skill") {
     const skill = findSkill(unit, command.skillId);
@@ -202,6 +204,15 @@ function resolve(
   command: Command,
   events: BattleEvent[],
 ): void {
+  dropGuard(unit);
+  if (command.type === "defend") {
+    resolveDefend(state, unit, events);
+    return;
+  }
+  if (command.type === "wait") {
+    resolveWait(state, unit, events);
+    return;
+  }
   if (command.type === "move") {
     resolveMove(state, unit, command.to, events);
     return;

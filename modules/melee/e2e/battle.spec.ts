@@ -66,3 +66,13 @@ test("goes back to the start screen", async ({ page }) => {
     page.getByRole("button", { name: "Start", exact: true }),
   ).toBeVisible();
 });
+
+test("defends, then waits", async ({ page }) => {
+  await startBattle(page);
+  await waitForTurn(page);
+  await page.getByRole("button", { name: "Defend", exact: true }).click();
+  await expect(log(page)).toContainText("defends");
+  await waitForTurn(page);
+  await page.getByRole("button", { name: "Wait", exact: true }).click();
+  await expect(log(page)).toContainText("waits");
+});

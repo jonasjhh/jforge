@@ -1,5 +1,6 @@
 import { nextRandom } from "./rng";
 import { dropReady, vanish } from "./units";
+import { stanceFactor } from "./stance";
 import { effectiveStat } from "./stats";
 import type { BattleEvent, BattleState, DamageType, Unit } from "./types";
 
@@ -25,8 +26,8 @@ export function resistance(target: Unit, type: DamageType): number {
 }
 
 /**
- * raw x K / (K + defense) x resistance x random(0.9..1.1). At least 1,
- * unless the target is immune (multiplier 0).
+ * raw x K / (K + defense) x resistance x stance x random(0.9..1.1). At
+ * least 1, unless the target is immune (multiplier 0).
  */
 function mitigate(
   state: BattleState,
@@ -42,7 +43,13 @@ function mitigate(
       ? 0
       : Math.max(
           1,
-          Math.round(raw * defenseFactor(defense) * multiplier * variance),
+          Math.round(
+            raw *
+              defenseFactor(defense) *
+              multiplier *
+              stanceFactor(target) *
+              variance,
+          ),
         );
   return { amount, damageType, multiplier };
 }
@@ -85,7 +92,10 @@ export function expectedDamage(
         defenseFactor(effectiveStat(target, "defense"))
       : effectiveStat(attacker, "magic") *
         defenseFactor(effectiveStat(target, "spirit"));
-  return Math.max(1, Math.round(raw * power * multiplier));
+  return Math.max(
+    1,
+    Math.round(raw * power * multiplier * stanceFactor(target)),
+  );
 }
 
 /** A weapon attack without the random spread, for the AI to plan with. */
@@ -237,6 +247,7 @@ export function knockOutIfDown(
 ): void {
   if (target.hp > 0) return;
   target.gauge = 0;
+  target.defending = undefined;
   target.statuses = [];
   if (target.casting) {
     events.push({
