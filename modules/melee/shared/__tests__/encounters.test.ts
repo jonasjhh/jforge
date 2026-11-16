@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createBattle } from "../battle";
-import { playerTypes, slime, wolf } from "../content";
+import { monsters, playerTypes, slime, wolf } from "../content";
 import {
   DIFFICULTIES,
   THREAT_BUDGET,
@@ -78,13 +78,19 @@ describe("randomEncounter", () => {
   });
 
   it("keeps each difficulty in its win-rate band (attacks only)", () => {
+    // The party's skills are taken away: the budgets are tuned for a party
+    // that only attacks (and moves), as monsters do.
+    const pools = {
+      party: playerTypes.map((d) => ({ ...d, skills: [] })),
+      monsters,
+    };
     const winRate = (difficulty: Difficulty) => {
       const runs = 300;
       let wins = 0;
       for (let seed = 0; seed < runs; seed++) {
         if (
-          simulate(randomEncounter(seed, difficulty), seed + 1000).winner ===
-          "player"
+          simulate(randomEncounter(seed, difficulty, pools), seed + 1000)
+            .winner === "player"
         )
           wins++;
       }

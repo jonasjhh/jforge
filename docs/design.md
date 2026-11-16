@@ -60,7 +60,7 @@ range attacks the nearest occupied column instead.
 **Moving** (done): a unit may step to an adjacent empty cell on its own
 side (knocked-out units still block their cell). It costs half a turn: the
 gauge drops to half instead of empty. Reach, cover and area spill follow
-the new position at once. Monsters don't move yet.
+the new position at once. AI units move too (see Enemy AI).
 
 **Rows matter for melee** (done). Every weapon is melee or ranged; spells
 count as ranged. Melee damage dealt is x1 / x0.75 / x0.5 from the front /
@@ -355,7 +355,35 @@ char can edit it later):
   battles still replay exactly.
 
 The Wolf is a finisher; the Slime is clumsy; the Viper picks on soft
-targets. Monsters don't cast skills or move yet.
+targets.
+
+**Skills** (done): an AI unit weighs every skill it can afford at every
+cell it may aim it, and uses the best one if it beats its best attack.
+A skill's worth is summed over everyone it would hit, friend or foe, in
+the same units as a target score (a plain attack on a healthy, unarmored
+target is about 1):
+
+- damage (spells, strikes, shatter): the target score scaled by the
+  expected damage compared with a plain attack, plus the finish bonus;
+  against it for allies caught in the area;
+- heal: 4 x share of max HP restored x share missing;
+- buffs on allies and debuffs on foes: 1 each, nothing if already on;
+  damage or healing over time counts at 0.6 of its total;
+- cleanse: 1 per harmful status or modifier removed;
+- gauge: 1.2 x the share of a full gauge an ally gains (or a foe loses);
+- summon: 1.5 (a boulder 0.4) until the limit, on its own side;
+- heave: 0.5 for pushing a melee foe back.
+
+Delayed skills count 0.75; the price costs 0.5 x the share of max MP and
+2 x the share of current HP. Every option gets the same seeded noise.
+
+**Movement** (done): before acting, an AI unit checks each adjacent empty
+cell (and each teleport it can afford). A cell is worth 2 x its best weapon
+hit there (as a share of the target's max HP) minus the hits of every foe
+that could reach it there (as a share of its own). It moves if a cell
+beats its own by 0.2 (0.4 for a teleport that takes a whole turn, plus its
+price); moving costs half a turn, so it acts again soon. So melee units
+step out of the back rows and frail ranged units get out of melee reach.
 
 ### Monsters
 
@@ -441,7 +469,6 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **Sonic** damage type, with a future Bard.
 - **Push on spells**: reuse the strike push on a spell (e.g. a blast that
   knocks enemies back).
-- **Casting monsters**: monsters that use skills, not just weapons.
 
 ## char (phase 4)
 
