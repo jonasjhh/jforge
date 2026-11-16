@@ -25,6 +25,7 @@ modules/<name>/
   index.html, src/    the module's React app (its own PWA, scoped to /<name>/)
   shared/             rules and types used by the app, the API and other modules
   worker/             the module's Hono API, mounted at /api/<name>
+  e2e/                Playwright smoke tests (see Testing)
   public/             icons
 worker/index.ts       the one Worker: mounts every module's API, serves dist/
 tooling/              shared Vite/PWA config, dev ports, icon generator,
@@ -66,6 +67,21 @@ Lorc and Delapouite, under
 in use are bundled: `pnpm portraits` regenerates
 `modules/melee/src/battle/portraitIcons.ts` from the list in
 `modules/melee/scripts/portraits.mjs`.
+
+## Testing
+
+Mostly unit tests, each isolating one rule or helper (Vitest, in
+`__tests__/` folders next to the code), plus a few end-to-end smoke tests
+of the happy paths (Playwright, in `modules/<name>/e2e/`).
+
+```
+pnpm test             # unit tests
+pnpm coverage         # unit tests with a coverage report
+pnpm build && pnpm e2e   # starts the Worker on :8791 and drives Chromium
+```
+
+The end-to-end tests seed `Math.random`, so the app picks the same
+encounter every run. CI runs both, and keeps Playwright traces of failures.
 
 ## Adding a module
 

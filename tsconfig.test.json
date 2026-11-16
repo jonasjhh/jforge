@@ -7,6 +7,6 @@
     "noUnusedParameters": true,
     "types": ["node"]
   },
-  "include": ["**/__tests__"],
+  "include": ["**/__tests__", "modules/*/e2e"],
   "exclude": ["node_modules", "dist"]
 }

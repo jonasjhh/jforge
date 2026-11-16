@@ -8,6 +8,7 @@
   "include": [
     "tooling",
     "vitest.config.ts",
+    "playwright.config.ts",
     "eslint.config.js",
     "landing/vite.config.ts",
     "modules/*/vite.config.ts",
