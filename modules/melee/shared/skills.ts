@@ -22,7 +22,6 @@ import type {
   BattleEvent,
   BattleState,
   Cell,
-  ExtraEffect,
   Skill,
   SkillEffect,
   Unit,
@@ -308,53 +307,8 @@ export function landCast(
   if (skill) applySkill(state, unit, skill, casting.cell, events, true);
 }
 
-/** The skill's effects on everyone in its area, right now. */
+/** The skill's effect on everyone in its area, right now. */
 function applySkill(
-  state: BattleState,
-  unit: Unit,
-  skill: Skill,
-  cell: Cell,
-  events: BattleEvent[],
-  delayed: boolean,
-): void {
-  const also = skill.also;
-  const victims =
-    also?.on === "victims" ? skillVictims(state, unit, skill, cell) : [];
-  applyMain(state, unit, skill, cell, events, delayed);
-  if (!also) return;
-  for (const target of also.on === "caster" ? [unit] : victims) {
-    if (isAlive(target)) applyExtra(state, unit, target, also.effect, events);
-  }
-}
-
-/** A skill's `also` effect on one unit. */
-function applyExtra(
-  state: BattleState,
-  unit: Unit,
-  target: Unit,
-  effect: ExtraEffect,
-  events: BattleEvent[],
-): void {
-  switch (effect.type) {
-    case "heal": {
-      const amount = restoreHp(target, healAmount(unit, target, effect));
-      events.push({ type: "heal", unitId: target.id, amount, hp: target.hp });
-      return;
-    }
-    case "status":
-      applyStatus(state, unit, target, effect.status, events);
-      return;
-    case "cleanse":
-      cleanse(target, events);
-      return;
-    case "modify":
-      applyModifier(state, target, effect.modifier, events);
-      return;
-  }
-}
-
-/** The skill's main effect on everyone in its area, right now. */
-function applyMain(
   state: BattleState,
   unit: Unit,
   skill: Skill,

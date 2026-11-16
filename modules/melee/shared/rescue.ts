@@ -1,11 +1,23 @@
 import { unitAt } from "./grid";
+import { applyModifier } from "./status";
 import { GAUGE_FULL } from "./timeline";
 import type { BattleEvent, BattleState, Position, Unit } from "./types";
 import { dropReady } from "./units";
 
 // A rescue (the Knight's Rescue) pulls an ally back out of the line: in
 // the ally's column, the rescuer takes the middle row and the ally the
-// back row behind it. Being dragged back costs the ally half its gauge.
+// back row behind it. Being dragged back costs the ally half its gauge;
+// the rescuer braces for the blows it now takes in the ally's place.
+
+/** The rescuer's brace: defense x1.3 until about its next turn. */
+export const RESCUE_BRACE = {
+  name: "Braced",
+  stat: "defense",
+  op: "mul",
+  value: 1.3,
+  duration: 125,
+  harmful: false,
+} as const;
 
 /** Where the rescuer and the ally end up. */
 export function rescueCells(ally: Unit): { rescuer: Position; ally: Position } {
@@ -37,7 +49,10 @@ export function rescueBlock(
   return null;
 }
 
-/** Pulls `ally` back behind `rescuer`; the ally's gauge halves. */
+/**
+ * Pulls `ally` back behind `rescuer`; the ally's gauge halves and the
+ * rescuer braces (RESCUE_BRACE).
+ */
 export function rescue(
   state: BattleState,
   rescuer: Unit,
@@ -60,4 +75,5 @@ export function rescue(
   ally.gauge /= 2;
   if (ally.gauge < GAUGE_FULL) dropReady(state, ally.id);
   events.push({ type: "gaugeChanged", unitId: ally.id, gauge: ally.gauge });
+  applyModifier(state, rescuer, RESCUE_BRACE, events);
 }

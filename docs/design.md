@@ -293,12 +293,13 @@ cell) and its `area` which cells it hits around the aimed one.
   else (a knocked-out body blocks too), and it can't be aimed when the
   two already stand there. Being dragged back halves the ally's gauge.
   It also braces the Knight (defense x1.3 for 125 game time, about one
-  Knight turn) through the skill's **extra effect** (`also`, below), which
+  Knight turn; `RESCUE_BRACE`, part of the rescue effect itself), which
   is how it meets "utility pays its way". It pairs with Charge: pull a
   hurt ally back, charge back into the front. The AI values it only for
   an ally at half HP or less, by how much less damage it takes in the
   back row, how hurt and how much frailer than the Knight it is; half as
-  much for a melee ally, and less the gauge it loses.
+  much for a melee ally, and less the gauge it loses; the brace adds to
+  that only when it is already worth it.
 - **Expose** (Sage): an **expose** status on one enemy (150 game time,
   8 MP): it takes x1.3 from every damage type (`EXPOSE_FACTOR`, applied
   in `resistance`, so previews and the AI see it). Resisted types stay
@@ -375,11 +376,6 @@ cell) and its `area` which cells it hits around the aimed one.
   allowed; a delayed revive that finds its ally already up does nothing.
   While choosing, fallen allies are highlighted. The AI values a revive
   above most heals, so enemy healers bring their side back too.
-
-A skill may carry one **extra effect** (`also`): a modify, status, heal
-or cleanse applied after the main effect, to the caster or to the living
-units the main effect hit. The AI adds its worth only when the main
-effect is worth something, so the extra alone never makes it cast.
 
 The full shape below is the goal.
 
@@ -544,7 +540,8 @@ skill may break one for a reason worth stating.
   (the same line threat counts a skill in full at, `FULL_CASTS`).
   Skills that don't follow it yet, to revisit one at a time: Provoke,
   Iron Stance and War Cry (Fighter), Shield Wall and Guard (Knight),
-  Vanish (Rogue), Aegis and Last Rites (Paladin).
+  Vanish (Rogue), Aegis and Last Rites (Paladin). Each is revisited in
+  its own way; there is no general "second effect" to bolt on.
 
 ### Class roster plan (12 archetypes)
 

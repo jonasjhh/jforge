@@ -717,20 +717,6 @@ export const rescue: Skill = {
   notSelf: true,
   adjacent: true,
   effect: { type: "rescue" },
-  also: {
-    on: "caster",
-    effect: {
-      type: "modify",
-      modifier: {
-        name: "Braced",
-        stat: "defense",
-        op: "mul",
-        value: 1.3,
-        duration: 125,
-        harmful: false,
-      },
-    },
-  },
 };
 
 /**

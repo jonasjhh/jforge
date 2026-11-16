@@ -8,6 +8,7 @@ import {
 } from "./damage";
 import { previewDamage } from "./preview";
 import { pushDestination } from "./push";
+import { RESCUE_BRACE } from "./rescue";
 import { healAmount, skillCells, skillVictims } from "./skills";
 import { unitAt } from "./grid";
 import { effectiveStat, isAlive } from "./stats";
@@ -142,7 +143,9 @@ function frailer(ally: Unit, protector: Unit): number {
  * Pulling an ally back to the back row is worth the damage it no longer
  * takes there, the more so the more it is hurt and the frailer it is than
  * the rescuer; nothing while it is above half HP. Half as much for a melee
- * ally, whose blows weaken back there, and less the gauge it loses.
+ * ally, whose blows weaken back there, and less the gauge it loses. The
+ * rescuer's brace counts like any helpful modifier, but only on top: it
+ * alone is no reason to rescue.
  */
 function rescueValue(rescuer: Unit, ally: Unit): number {
   const hurt = 1 - ally.hp / effectiveStat(ally, "maxHp");
@@ -151,7 +154,10 @@ function rescueValue(rescuer: Unit, ally: Unit): number {
   const melee = ally.weapon.kind === "melee" ? 0.5 : 1;
   const gaugeLost = (GAUGE_WEIGHT * ally.gauge) / 2 / GAUGE_FULL;
   const gain = 4 * SUPPORT_VALUE * shelter * frailer(ally, rescuer) * hurt;
-  return gain * melee - gaugeLost;
+  const value = gain * melee - gaugeLost;
+  if (value <= 0) return value;
+  const braced = rescuer.modifiers.some((m) => m.source === RESCUE_BRACE.name);
+  return value + (braced ? 0 : SUPPORT_VALUE);
 }
 
 /** What the skill's effect on one victim is worth to the caster's side. */
@@ -231,29 +237,8 @@ export function skillValue(
       value += victimValue(state, unit, skill, victim);
     }
   }
-  if (skill.also && value > 0) value += alsoValue(state, unit, skill, cell);
   if (skill.castTime) value *= CAST_DISCOUNT;
   return value - skillCost(unit, skill);
-}
-
-/**
- * What a skill's extra effect is worth. Counted only when the main effect
- * is worth something, so the extra alone never makes the AI use the skill.
- */
-function alsoValue(
-  state: BattleState,
-  unit: Unit,
-  skill: Skill,
-  cell: Cell,
-): number {
-  const { also } = skill;
-  if (!also) return 0;
-  const extra: Skill = { ...skill, effect: also.effect };
-  const victims =
-    also.on === "caster"
-      ? [unit]
-      : skillVictims(state, unit, skill, cell).filter(isAlive);
-  return victims.reduce((v, u) => v + victimValue(state, unit, extra, u), 0);
 }
 
 /**

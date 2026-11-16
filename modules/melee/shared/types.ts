@@ -264,15 +264,10 @@ export type SkillEffect =
   | { type: "revive"; power: number }
   /**
    * Pulls the aimed ally back: in its column the caster takes the middle
-   * row and the ally the back row; the ally's gauge halves (see rescue.ts).
+   * row and the ally the back row; the ally's gauge halves and the caster
+   * braces (see rescue.ts).
    */
   | { type: "rescue" };
-
-/** The effects a skill's `also` may add: no damage and no movement. */
-export type ExtraEffect = Extract<
-  SkillEffect,
-  { type: "modify" | "status" | "heal" | "cleanse" }
->;
 
 /**
  * Which cells a skill hits around the aimed cell. The two grids form one
@@ -313,12 +308,6 @@ export interface Skill {
   hpCost?: number;
   /** Costs only half a turn, like Move: the gauge drops to half. */
   halfTurn?: boolean;
-  /**
-   * A second effect that lands after the main one, on the caster or on
-   * the main effect's victims (as they were before it landed). Rescue
-   * also braces the Knight.
-   */
-  also?: { on: "caster" | "victims"; effect: ExtraEffect };
 }
 
 /** A delayed skill on its way: aimed, paid for, landing at `readyAt`. */
