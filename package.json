@@ -19,7 +19,8 @@
     "test": "vitest run",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
     "worker:dev": "wrangler dev",
-    "worker:deploy": "pnpm build && wrangler deploy"
+    "worker:deploy": "pnpm build && wrangler deploy",
+    "portraits": "node modules/melee/scripts/portraits.mjs && prettier --write modules/melee/src/battle/portraitIcons.ts"
   },
   "dependencies": {
     "@jforge/jrpg": "workspace:*",

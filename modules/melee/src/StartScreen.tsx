@@ -6,6 +6,7 @@ import {
   type Difficulty,
 } from "../shared";
 import { meta } from "../meta";
+import { PORTRAIT_AUTHORS } from "./battle/portraitIcons";
 import { useApiHealth } from "./useApiHealth";
 
 interface StartScreenProps {
@@ -110,6 +111,17 @@ export function StartScreen({
         Gauges fill with speed. When one of your units is ready, time stops
         until you choose its action. The enemies act on their own. Hold a unit
         (or right-click it) to see its details.
+      </p>
+      <p className="muted small">
+        Unit icons by {PORTRAIT_AUTHORS.join(" and ")} from{" "}
+        <a className="link" href="https://game-icons.net">
+          game-icons.net
+        </a>
+        ,{" "}
+        <a className="link" href="https://creativecommons.org/licenses/by/3.0/">
+          CC BY 3.0
+        </a>
+        .
       </p>
       <p className="muted small">
         API:{" "}

@@ -12,6 +12,7 @@ import {
   type Side,
   type Unit,
 } from "../../shared";
+import { Portrait } from "./Portrait";
 import type { Hit } from "./useBattle";
 import { useLongPress } from "./useLongPress";
 
@@ -294,31 +295,38 @@ function UnitCell({
           {alive ? unit.hp : "KO"}
         </span>
       </span>
-      {unit.skills.length > 0 && unit.base.maxMp > 0 && (
-        <span
-          className="bar mp"
-          aria-label={`MP ${unit.mp} of ${unit.base.maxMp}`}
-        >
-          <span style={{ width: `${(unit.mp / unit.base.maxMp) * 100}%` }} />
+      <span className="unit-foot">
+        <Portrait defId={unit.defId} />
+        <span className="unit-foot-bars">
+          {unit.skills.length > 0 && unit.base.maxMp > 0 && (
+            <span
+              className="bar mp"
+              aria-label={`MP ${unit.mp} of ${unit.base.maxMp}`}
+            >
+              <span
+                style={{ width: `${(unit.mp / unit.base.maxMp) * 100}%` }}
+              />
+            </span>
+          )}
+          {unit.obstacle ? null : unit.casting ? (
+            <span
+              className="bar cast"
+              aria-label={`Casting ${unit.casting.skillName}`}
+            >
+              <span
+                style={{ width: `${castProgress(unit.casting, time) * 100}%` }}
+              />
+            </span>
+          ) : (
+            <span className="bar gauge" aria-hidden="true">
+              <span
+                style={{ width: `${(unit.gauge / GAUGE_FULL) * 100}%` }}
+                className={unit.gauge >= GAUGE_FULL ? "full" : ""}
+              />
+            </span>
+          )}
         </span>
-      )}
-      {unit.obstacle ? null : unit.casting ? (
-        <span
-          className="bar cast"
-          aria-label={`Casting ${unit.casting.skillName}`}
-        >
-          <span
-            style={{ width: `${castProgress(unit.casting, time) * 100}%` }}
-          />
-        </span>
-      ) : (
-        <span className="bar gauge" aria-hidden="true">
-          <span
-            style={{ width: `${(unit.gauge / GAUGE_FULL) * 100}%` }}
-            className={unit.gauge >= GAUGE_FULL ? "full" : ""}
-          />
-        </span>
-      )}
+      </span>
       {preview && <PreviewBadge preview={preview} />}
       {hits.map((h) => (
         <span

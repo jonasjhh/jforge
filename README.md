@@ -58,6 +58,15 @@ pnpm dev:jrpg         # http://localhost:5182/jrpg/
 pnpm dev:landing      # http://localhost:5180/
 ```
 
+## Credits
+
+melee's unit icons are from [game-icons.net](https://game-icons.net) by
+Lorc and Delapouite, under
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Only the icons
+in use are bundled: `pnpm portraits` regenerates
+`modules/melee/src/battle/portraitIcons.ts` from the list in
+`modules/melee/scripts/portraits.mjs`.
+
 ## Adding a module
 
 1. Copy `modules/melee` to `modules/<name>` and change `package.json`

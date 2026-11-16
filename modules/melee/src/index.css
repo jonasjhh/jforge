@@ -409,6 +409,45 @@ button:not(:disabled):active {
   background: var(--turn);
 }
 
+/* The unit's icon beside its thin bars, so the name keeps the full width. */
+.unit-foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 14px;
+}
+
+.unit-foot-bars {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.portrait {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ally);
+}
+
+.grid-enemy .portrait {
+  color: var(--danger-soft);
+}
+
+.unit.active .portrait {
+  color: var(--turn);
+}
+
+.unit.down .portrait {
+  filter: grayscale(1);
+}
+
+.unit.boulder .portrait {
+  color: #e4e7ec;
+}
+
 .unit.down {
   opacity: 0.35;
 }
@@ -820,6 +859,17 @@ button:not(:disabled):active {
 
 .details-header h2 {
   margin: 0;
+}
+
+.details-header .portrait-large {
+  width: 1.6em;
+  height: 1.6em;
+  margin-right: 0.4rem;
+  vertical-align: -0.45em;
+}
+
+.details-header .portrait-large.foe {
+  color: var(--danger-soft);
 }
 
 .details-stats {

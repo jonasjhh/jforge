@@ -8,6 +8,7 @@ import {
   type Status,
   type Unit,
 } from "../../shared";
+import { Portrait } from "./Portrait";
 import { TIME_SCALE } from "./useBattle";
 
 interface UnitDetailsProps {
@@ -90,6 +91,10 @@ export function UnitDetails({ unit, time, speed, onClose }: UnitDetailsProps) {
       >
         <header className="details-header">
           <h2>
+            <Portrait
+              defId={unit.defId}
+              className={`portrait-large ${unit.side === "enemy" ? "foe" : ""}`}
+            />
             {unit.name}
             {kind && <span className="muted"> · {kind}</span>}
           </h2>
