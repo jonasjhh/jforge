@@ -28,3 +28,19 @@ Object bindings and classes with the module name.
     pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build
 
 (`pnpm check` runs all of them.)
+
+## Workflow
+
+The rules are this file, `docs/design.md` and `docs/progression.md`.
+
+Before changing anything, for each change:
+
+1. Review the existing rules and the code the change touches.
+2. Report how the proposed change affects those rules and the current
+   implementation: which rules it changes, breaks or adds; what behaves
+   differently (balance, saved data, other modules, tests).
+3. Ask whether this is what was intended.
+4. Give alternatives where they help decide, with their trade-offs.
+
+Implement only after the answer. When a change alters a rule, update the
+doc that states it in the same commit.

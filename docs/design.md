@@ -6,6 +6,9 @@ as **jrpg**. The combat is inspired by classic time-based JRPG battles
 (gauges that fill with speed, front and back rows, elements), but all
 content (classes, monsters, skills, names) is original.
 
+How stats, gear, levels and a run's progression add up, and where to tune
+them, is in [progression.md](progression.md).
+
 ## Modules
 
 ```

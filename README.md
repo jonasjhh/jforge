@@ -3,7 +3,9 @@
 A monorepo of small apps ("modules"). Each module lives in its own folder
 under `modules/`, opens on its own at `/<name>/`, installs as its own PWA,
 and can use code from other modules. A landing page at `/` lists them all.
-The game framework design is in [`docs/design.md`](docs/design.md).
+The game framework design is in [`docs/design.md`](docs/design.md), and how
+stats, levels and progression work is in
+[`docs/progression.md`](docs/progression.md).
 
 Every module is served by **one** Cloudflare Worker, so Cloudflare
 credentials, deploys and secrets are set up once, not per module.
