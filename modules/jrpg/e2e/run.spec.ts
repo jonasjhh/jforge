@@ -28,3 +28,26 @@ test("sets out, meets the first battle and can retreat to the map", async ({
   await page.reload();
   await expect(page.getByRole("heading", { name: "Level 1" })).toBeVisible();
 });
+
+test("can't walk away from a battle once the party has acted", async ({
+  page,
+}) => {
+  await page.goto("/jrpg/");
+  await page.getByRole("button", { name: "Set out" }).click();
+  await page.getByRole("button", { name: "Fight" }).click();
+  await expect(page.getByRole("group", { name: "Action" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole("button", { name: "Defend" }).click();
+  await expect(page.getByRole("button", { name: "Give up" })).toBeVisible();
+
+  // Reloading is no way out: the run opens in the same battle.
+  await page.reload();
+  await expect(page.getByRole("grid", { name: "Enemies" })).toBeVisible();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Give up" }).click();
+  await expect(page.getByRole("region", { name: "Encounter" })).toContainText(
+    "The party has fallen",
+  );
+});

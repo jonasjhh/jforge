@@ -10,13 +10,16 @@ import {
   START_LEVEL,
   START_PARTY_SIZE,
   battleFor,
+  battleSeed,
   canRecruit,
   changeGear,
   chooseFork,
+  commitBattle,
   currentEncounter,
   enemyLevelBonus,
   generateLevel,
   heroes,
+  leaveBattle,
   levelCleared,
   loseBattle,
   monsterPool,
@@ -409,6 +412,50 @@ describe("winBattle", () => {
 
   it("is null off a battle", () => {
     expect(winBattle(at([ally]))).toBeNull();
+  });
+});
+
+describe("committing to a battle", () => {
+  it("is free to leave before the party acts, and nothing changes", () => {
+    const run = at([battle]);
+    expect(leaveBattle(run)).toBe(run);
+  });
+
+  it("ends the run when left after the party has acted", () => {
+    const committed = commitBattle(at([battle]));
+    expect(committed.committed).toBe(true);
+    expect(leaveBattle(committed)).toMatchObject({
+      defeated: true,
+      committed: false,
+      position: 0,
+    });
+  });
+
+  it("locks the party's gear while the fight is on", () => {
+    const committed = commitBattle(at([battle], { bag: ["gear-ring"] }));
+    expect(changeGear(committed, "unit-1", "accessory", "gear-ring")).toBe(
+      committed,
+    );
+  });
+
+  it("is over once the battle is won or lost", () => {
+    const committed = commitBattle(at([battle, battle]));
+    expect(winBattle(committed)!.run.committed).toBe(false);
+    expect(loseBattle(committed).committed).toBe(false);
+  });
+
+  it("only happens at a battle, and survives saving", () => {
+    const meeting = at([ally]);
+    expect(commitBattle(meeting)).toBe(meeting);
+    const committed = commitBattle(at([battle]));
+    expect(commitBattle(committed)).toBe(committed);
+    expect(parseRun(JSON.stringify(committed))?.committed).toBe(true);
+  });
+
+  it("fights an encounter with the same seed every time", () => {
+    const run = at([battle, { ...battle, seed: 6 }]);
+    expect(battleSeed(run)).toBe(battleSeed(at([battle])));
+    expect(battleSeed({ ...run, position: 1 })).not.toBe(battleSeed(run));
   });
 });
 

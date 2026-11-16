@@ -180,6 +180,10 @@ function EncounterPanel({
           </span>
         </h2>
         <p>{setup ? enemySummary(setup) : "Nobody is here."}</p>
+        <p className="muted small">
+          You can retreat until you give your first command. After that the
+          fight is won or the run is over.
+        </p>
         <button type="button" className="primary" onClick={onFight}>
           Fight
         </button>

@@ -538,8 +538,11 @@ generated from the run's seed (`shared/run.ts`, pure like the engine):
   kinds of enemy drawn from the pool by its seed. Winning gives every
   member `40 x enemy threat / party size` experience and sometimes gear
   (40%; elites and the final battle always), which goes in the bag. Losing
-  or drawing **ends the run**. Retreating returns to the map with nothing
-  lost.
+  or drawing **ends the run**. The party can **retreat** to the map (to
+  change gear, say) until it gives its first command; from then on the
+  fight is won or the run is over: giving up loses, gear is locked, and a
+  reload opens the same battle from its start. An encounter is always
+  fought with the same battle seed, so coming back never rerolls its luck.
 - **Ally**: a traveller who isn't in the party offers to join, at the
   level of the party's weakest member if that is higher. The party holds
   five.

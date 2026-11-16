@@ -5,6 +5,7 @@ import {
   skillVictims,
   type BattleSetup,
   type Cell,
+  type Command,
   type Side,
   type Skill,
   type Unit,
@@ -47,6 +48,8 @@ interface BattleScreenProps {
   /** After a battle: `won` starts a new encounter, otherwise a retry. */
   onRestart: (won: boolean) => void;
   onExit: () => void;
+  /** Called once, when the player gives the battle's first command. */
+  onCommit?: () => void;
   /** Wording for a host other than melee's own start screen (jrpg). */
   labels?: Partial<BattleLabels>;
 }
@@ -54,6 +57,8 @@ interface BattleScreenProps {
 export interface BattleLabels {
   /** The way out, in the header. */
   exit: string;
+  /** The way out once the player has given a command (default: `exit`). */
+  exitCommitted?: string;
   /** The main button after a victory, and after a defeat or draw. */
   won: string;
   lost: string;
@@ -73,9 +78,12 @@ export function BattleScreen({
   seed,
   onRestart,
   onExit,
+  onCommit,
   labels,
 }: BattleScreenProps) {
   const text = { ...MELEE_LABELS, ...labels };
+  // Whether the player has given a command in this battle yet.
+  const [committed, setCommitted] = useState(false);
   // The unit whose details are open; time stands still meanwhile.
   const [inspected, setInspected] = useState<string | null>(null);
   // Paused by the player, or because they left the app.
@@ -86,8 +94,22 @@ export function BattleScreen({
     setSpeed(next);
     saveBattleSpeed(next);
   };
-  const { state, log, hits, actorId, lastAction, actionArea, command } =
-    useBattle(setup, seed, paused || inspected !== null, speed);
+  const {
+    state,
+    log,
+    hits,
+    actorId,
+    lastAction,
+    actionArea,
+    command: send,
+  } = useBattle(setup, seed, paused || inspected !== null, speed);
+  const command = (given: Command) => {
+    if (!committed) {
+      setCommitted(true);
+      onCommit?.();
+    }
+    send(given);
+  };
   const over = state.phase.kind === "over";
   const showPaused = paused && !over;
   usePauseControls(setPaused, over);
@@ -133,7 +155,7 @@ export function BattleScreen({
     <main className="battle">
       <header className="battle-header">
         <button type="button" className="link" onClick={onExit}>
-          {text.exit}
+          {committed ? (text.exitCommitted ?? text.exit) : text.exit}
         </button>
         <span className="header-end">
           <span className="muted">Seed {seed}</span>

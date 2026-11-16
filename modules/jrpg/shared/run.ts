@@ -65,6 +65,11 @@ export interface Run {
   /** The encounter the party stands at; past the end, the level is cleared. */
   position: number;
   defeated: boolean;
+  /**
+   * The party has acted in the battle it stands at. From then on there is
+   * no walking away: the fight is won, lost, or given up (which loses).
+   */
+  committed?: boolean;
 }
 
 /** What a won battle paid. */
@@ -358,6 +363,28 @@ export function battleFor(run: Run): BattleSetup | null {
   );
 }
 
+/**
+ * The seed the battle at the party's position is fought with. Fixed per
+ * encounter, so coming back to a fight never rerolls its luck.
+ */
+export function battleSeed(run: Run): number {
+  const encounter = currentEncounter(run);
+  return encounter?.kind === "battle" ? encounter.seed ^ 0xba77 : 0;
+}
+
+/** The party gives its first command in the battle it stands at. */
+export function commitBattle(run: Run): Run {
+  return battleFor(run) && !run.committed ? { ...run, committed: true } : run;
+}
+
+/**
+ * Leaving a battle: free before the party has acted, the end of the run
+ * after.
+ */
+export function leaveBattle(run: Run): Run {
+  return run.committed ? loseBattle(run) : run;
+}
+
 /** Experience each member gets for beating the enemies of `setup`. */
 export function xpFor(setup: BattleSetup, partySize: number): number {
   const threat = setup.placements
@@ -387,6 +414,7 @@ export function winBattle(run: Run): { run: Run; reward: Reward } | null {
       party,
       bag: loot ? [...run.bag, loot.id] : run.bag,
       position: run.position + 1,
+      committed: false,
     },
     reward: { xp, levelUps, ...(loot ? { loot } : {}) },
   };
@@ -394,7 +422,7 @@ export function winBattle(run: Run): { run: Run; reward: Reward } | null {
 
 /** The battle is lost (or drawn): the run ends here. */
 export function loseBattle(run: Run): Run {
-  return { ...run, defeated: true };
+  return { ...run, defeated: true, committed: false };
 }
 
 export function canRecruit(run: Run): boolean {
@@ -476,7 +504,8 @@ export function changeGear(
   gearId: string | null,
 ): Run {
   const character = run.party.find((c) => c.id === characterId);
-  if (!character) return run;
+  // No changing gear once the fight is on.
+  if (!character || run.committed) return run;
   const bag = [...run.bag];
   let changed: Character;
   if (gearId !== null) {

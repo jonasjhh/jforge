@@ -2,6 +2,9 @@ import { useState } from "react";
 import { BattleScreen } from "@jforge/melee/battle";
 import {
   battleFor,
+  battleSeed,
+  commitBattle,
+  leaveBattle,
   loseBattle,
   startRun,
   winBattle,
@@ -12,10 +15,9 @@ import { RunScreen } from "./RunScreen";
 import { StartScreen } from "./StartScreen";
 import { loadLibrary, loadRun, saveRun } from "./storage";
 
-const newSeed = () => Math.floor(Math.random() * 1_000_000);
-
 const BATTLE_LABELS = {
   exit: "← Retreat",
+  exitCommitted: "Give up",
   won: "Collect rewards",
   lost: "End of the run",
   back: null,
@@ -23,8 +25,9 @@ const BATTLE_LABELS = {
 
 export function App() {
   const [run, setRun] = useState<Run | null>(loadRun);
-  // The battle being fought, by its battle seed; null on the map.
-  const [fighting, setFighting] = useState<number | null>(null);
+  // On the battle screen. A fight the party has acted in is never left
+  // standing, so a run saved in one opens in it (from its start).
+  const [fighting, setFighting] = useState(() => run?.committed === true);
   // What the last battle paid, shown until the party moves on.
   const [reward, setReward] = useState<Reward | null>(null);
 
@@ -43,21 +46,32 @@ export function App() {
     );
   }
 
-  const setup = fighting === null ? null : battleFor(run);
-  if (fighting !== null && setup) {
+  const setup = fighting ? battleFor(run) : null;
+  if (setup) {
     return (
       <BattleScreen
-        key={fighting}
+        key={`${run.depth}-${run.position}`}
         setup={setup}
-        seed={fighting}
-        labels={BATTLE_LABELS}
+        seed={battleSeed(run)}
+        labels={{
+          ...BATTLE_LABELS,
+          // A battle reopened after a reload is already committed.
+          ...(run.committed ? { exit: BATTLE_LABELS.exitCommitted } : {}),
+        }}
+        onCommit={() => update(commitBattle(run))}
         onRestart={(won) => {
           const result = won ? winBattle(run) : null;
           setReward(result?.reward ?? null);
           update(result ? result.run : loseBattle(run));
-          setFighting(null);
+          setFighting(false);
         }}
-        onExit={() => setFighting(null)}
+        onExit={() => {
+          if (run.committed && !window.confirm("Give up? The run ends here.")) {
+            return;
+          }
+          update(leaveBattle(run));
+          setFighting(false);
+        }}
       />
     );
   }
@@ -72,10 +86,11 @@ export function App() {
       }}
       onFight={() => {
         setReward(null);
-        setFighting(newSeed());
+        setFighting(true);
       }}
       onAbandon={() => {
         setReward(null);
+        setFighting(false);
         update(null);
       }}
     />

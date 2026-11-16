@@ -48,7 +48,7 @@ export function PartyPanel({ run, onChange }: PartyPanelProps) {
                     <select
                       aria-label={`${member.name}: ${SLOT_LABELS[slot]}`}
                       value={worn?.id ?? ""}
-                      disabled={run.defeated}
+                      disabled={run.defeated || run.committed === true}
                       onChange={(e) =>
                         onChange(
                           changeGear(
