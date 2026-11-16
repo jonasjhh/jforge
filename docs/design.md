@@ -287,6 +287,18 @@ cell) and its `area` which cells it hits around the aimed one.
   and damage count from the front row, so a Knight pushed or placed back
   hits at the full front-row factor; the preview and the AI see it that
   way. Moving this way is part of the action: no extra half turn.
+- **Rescue** (Knight): pulls an ally **next to** the Knight out of the
+  line, 7 MP. In the ally's column the Knight takes the middle row and
+  the ally the back row behind it; both cells must be free of anyone
+  else (a knocked-out body blocks too), and it can't be aimed when the
+  two already stand there. Being dragged back halves the ally's gauge.
+  It also braces the Knight (defense x1.3 for 125 game time, about one
+  Knight turn) through the skill's **extra effect** (`also`, below), which
+  is how it meets "utility pays its way". It pairs with Charge: pull a
+  hurt ally back, charge back into the front. The AI values it only for
+  an ally at half HP or less, by how much less damage it takes in the
+  back row, how hurt and how much frailer than the Knight it is; half as
+  much for a melee ally, and less the gauge it loses.
 - **Expose** (Sage): an **expose** status on one enemy (150 game time,
   8 MP): it takes x1.3 from every damage type (`EXPOSE_FACTOR`, applied
   in `resistance`, so previews and the AI see it). Resisted types stay
@@ -363,6 +375,11 @@ cell) and its `area` which cells it hits around the aimed one.
   allowed; a delayed revive that finds its ally already up does nothing.
   While choosing, fallen allies are highlighted. The AI values a revive
   above most heals, so enemy healers bring their side back too.
+
+A skill may carry one **extra effect** (`also`): a modify, status, heal
+or cleanse applied after the main effect, to the caster or to the living
+units the main effect hit. The AI adds its worth only when the main
+effect is worth something, so the extra alone never makes it cast.
 
 The full shape below is the goal.
 
@@ -543,7 +560,8 @@ and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield
 Wall hardens its whole row, Guard takes the hits meant for an ally next
 to it, Shield Bash knocks an enemy a row back, Charge runs it back into the
-front row with a strike), **Sage** (knowledge and counter-magic, with a
+front row with a strike, Rescue pulls a hurt ally back behind it),
+**Sage** (knowledge and counter-magic, with a
 tome of arcane words; Expose makes an enemy take more of everything).
 
 Planned, in rough order (names and kits are proposals):

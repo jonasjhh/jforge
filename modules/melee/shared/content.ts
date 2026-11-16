@@ -701,6 +701,39 @@ export const charge: Skill = {
 };
 
 /**
+ * Knight: pulls an adjacent ally out of the line. In the ally's column the
+ * Knight takes the middle row and the ally the back row behind it; both
+ * cells must be free. Being dragged back halves the ally's gauge; the
+ * Knight braces (defense x1.3) until about its next turn.
+ */
+export const rescue: Skill = {
+  id: "rescue",
+  name: "Rescue",
+  description:
+    "Pull an ally next to you back out of the line: in its column you take the middle row and it the back row behind you. It loses half its turn gauge; you brace (defense x1.3) until about your next turn.",
+  mpCost: 7,
+  target: "ally",
+  area: "single",
+  notSelf: true,
+  adjacent: true,
+  effect: { type: "rescue" },
+  also: {
+    on: "caster",
+    effect: {
+      type: "modify",
+      modifier: {
+        name: "Braced",
+        stat: "defense",
+        op: "mul",
+        value: 1.3,
+        duration: 125,
+        harmful: false,
+      },
+    },
+  },
+};
+
+/**
  * Sage: lays bare one enemy's weak points; for a while it takes x1.3 from
  * every damage type (EXPOSE_FACTOR). Immune stays immune.
  */
@@ -814,6 +847,7 @@ export const skills = [
   guard,
   shieldBash,
   charge,
+  rescue,
   expose,
 ];
 
@@ -1069,7 +1103,7 @@ export const knight: CombatantDef = {
     speed: 8,
   },
   weapon: lance,
-  skills: [shieldWall, guard, shieldBash, charge],
+  skills: [shieldWall, guard, shieldBash, charge, rescue],
   preferredRow: 0,
 };
 

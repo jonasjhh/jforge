@@ -7,6 +7,7 @@ import {
   firebolt,
   guard,
   knight,
+  rescue,
   playerTypes,
   sage,
   shieldBash,
@@ -53,7 +54,13 @@ describe("Knight and Sage", () => {
   it("are melee player types with skills of their own", () => {
     expect(playerTypes).toContain(knight);
     expect(playerTypes).toContain(sage);
-    expect(knight.skills).toEqual([shieldWall, guard, shieldBash, charge]);
+    expect(knight.skills).toEqual([
+      shieldWall,
+      guard,
+      shieldBash,
+      charge,
+      rescue,
+    ]);
     expect(sage.skills).toEqual([expose]);
     const others = playerTypes
       .filter((t) => t !== knight && t !== sage)
@@ -315,5 +322,103 @@ describe("Charge", () => {
     expect(validateCommand(front, knightIn(front), command)).toMatch(
       /front row/,
     );
+  });
+});
+
+describe("Rescue", () => {
+  const KNIGHT = "player-1-0";
+  const ALLY = "player-2-0";
+  /** The Knight (fast) at player 1,0, a hurt ally beside it at 2,0. */
+  const rescueTurn = (...others: [number, number][]) => {
+    const state = advance(
+      createBattle(
+        {
+          placements: [
+            place(fast(knight), "player", 1, 0),
+            place(def("ally", { speed: 1 }), "player", 2, 0),
+            ...others.map(([col, row]) =>
+              place(def("other", { speed: 1 }), "player", col, row),
+            ),
+            place(def("foe", { speed: 1 }), "enemy", 2, 0),
+          ],
+        },
+        1,
+      ),
+    ).state;
+    const ally = unit(state, ALLY);
+    ally.hp = 30;
+    ally.gauge = 600;
+    return state;
+  };
+  const command = {
+    type: "skill",
+    skillId: rescue.id,
+    cell: { side: "player", col: 2, row: 0 },
+  } as const;
+
+  it("puts the Knight in the ally's middle row and the ally behind it", () => {
+    const { state, events } = act(rescueTurn(), command);
+    const self = state.units.find((u) => u.defId === "knight")!;
+    expect(self.position).toEqual({ col: 2, row: 1 });
+    expect(unit(state, ALLY).position).toEqual({ col: 2, row: 2 });
+    expect(events).toContainEqual({
+      type: "rescued",
+      unitId: ALLY,
+      byId: KNIGHT,
+    });
+    expect(self.mp).toBe(knight.stats.maxMp - rescue.mpCost);
+  });
+
+  it("halves the ally's gauge and braces the Knight", () => {
+    const before = rescueTurn();
+    const defense = effectiveStat(unit(before, KNIGHT), "defense");
+    const { state } = act(before, command);
+    expect(unit(state, ALLY).gauge).toBe(300);
+    const self = state.units.find((u) => u.defId === "knight")!;
+    expect(self.modifiers).toContainEqual(
+      expect.objectContaining({ source: "Braced", stat: "defense" }),
+    );
+    expect(effectiveStat(self, "defense")).toBeCloseTo(defense * 1.3, 0);
+  });
+
+  it("needs both cells free; a knocked-out body blocks too", () => {
+    const taken = rescueTurn([2, 1]);
+    expect(validateCommand(taken, unit(taken, KNIGHT), command)).toMatch(
+      /No room/,
+    );
+    const body = rescueTurn([2, 2]);
+    unit(body, "player-2-2").hp = 0;
+    expect(validateCommand(body, unit(body, KNIGHT), command)).toMatch(
+      /No room/,
+    );
+  });
+
+  it("is aimed only at an ally next to the Knight, not one already behind", () => {
+    const far = rescueTurn();
+    unit(far, ALLY).position = { col: 3, row: 0 };
+    expect(
+      validateCommand(far, unit(far, KNIGHT), {
+        ...command,
+        cell: { side: "player", col: 3, row: 0 },
+      }),
+    ).toMatch(/next to you/);
+    const placed = rescueTurn();
+    unit(placed, KNIGHT).position = { col: 2, row: 1 };
+    unit(placed, ALLY).position = { col: 2, row: 2 };
+    expect(
+      validateCommand(placed, unit(placed, KNIGHT), {
+        ...command,
+        cell: { side: "player", col: 2, row: 2 },
+      }),
+    ).toMatch(/already behind/);
+  });
+
+  it("is worth it to the AI for a hurt front-row ally, not a healthy one", () => {
+    const value = (state: BattleState) =>
+      skillValue(state, unit(state, KNIGHT), rescue, command.cell);
+    expect(value(rescueTurn())).toBeGreaterThan(0);
+    const healthy = rescueTurn();
+    unit(healthy, ALLY).hp = 100;
+    expect(value(healthy)).toBeLessThanOrEqual(0);
   });
 });

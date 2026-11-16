@@ -1,5 +1,6 @@
 import {
   DEFENSE_K,
+  ROW_TAKEN,
   defenseFactor,
   expectedPhysicalDamage,
   resistance,
@@ -126,11 +127,31 @@ function tauntValue(state: BattleState, taunter: Unit): number {
  */
 function guardValue(guardian: Unit, ally: Unit): number {
   if (ally.statuses.some((s) => s.effect === "guard")) return 0;
+  const health = guardian.hp / guardian.base.maxHp;
+  return 2 * SUPPORT_VALUE * frailer(ally, guardian) * health;
+}
+
+/** How much frailer `ally` is than `protector`: 0 (as tough) to 1. */
+function frailer(ally: Unit, protector: Unit): number {
   const toughness = (u: Unit) =>
     effectiveStat(u, "maxHp") * (1 + effectiveStat(u, "defense") / DEFENSE_K);
-  const frailer = Math.max(0, 1 - toughness(ally) / toughness(guardian));
-  const health = guardian.hp / guardian.base.maxHp;
-  return 2 * SUPPORT_VALUE * frailer * health;
+  return Math.max(0, 1 - toughness(ally) / toughness(protector));
+}
+
+/**
+ * Pulling an ally back to the back row is worth the damage it no longer
+ * takes there, the more so the more it is hurt and the frailer it is than
+ * the rescuer; nothing while it is above half HP. Half as much for a melee
+ * ally, whose blows weaken back there, and less the gauge it loses.
+ */
+function rescueValue(rescuer: Unit, ally: Unit): number {
+  const hurt = 1 - ally.hp / effectiveStat(ally, "maxHp");
+  if (hurt < 0.5) return 0;
+  const shelter = ROW_TAKEN[ally.position.row] - ROW_TAKEN[2];
+  const melee = ally.weapon.kind === "melee" ? 0.5 : 1;
+  const gaugeLost = (GAUGE_WEIGHT * ally.gauge) / 2 / GAUGE_FULL;
+  const gain = 4 * SUPPORT_VALUE * shelter * frailer(ally, rescuer) * hurt;
+  return gain * melee - gaugeLost;
 }
 
 /** What the skill's effect on one victim is worth to the caster's side. */
@@ -180,6 +201,8 @@ function victimValue(
         ? SUPPORT_VALUE / 2
         : 0;
     }
+    case "rescue":
+      return rescueValue(unit, victim);
     case "summon":
     case "teleport":
     case "revive":
@@ -208,8 +231,29 @@ export function skillValue(
       value += victimValue(state, unit, skill, victim);
     }
   }
+  if (skill.also && value > 0) value += alsoValue(state, unit, skill, cell);
   if (skill.castTime) value *= CAST_DISCOUNT;
   return value - skillCost(unit, skill);
+}
+
+/**
+ * What a skill's extra effect is worth. Counted only when the main effect
+ * is worth something, so the extra alone never makes the AI use the skill.
+ */
+function alsoValue(
+  state: BattleState,
+  unit: Unit,
+  skill: Skill,
+  cell: Cell,
+): number {
+  const { also } = skill;
+  if (!also) return 0;
+  const extra: Skill = { ...skill, effect: also.effect };
+  const victims =
+    also.on === "caster"
+      ? [unit]
+      : skillVictims(state, unit, skill, cell).filter(isAlive);
+  return victims.reduce((v, u) => v + victimValue(state, unit, extra, u), 0);
 }
 
 /**
