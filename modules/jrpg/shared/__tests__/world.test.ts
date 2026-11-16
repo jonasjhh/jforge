@@ -5,7 +5,7 @@ import {
   starterLibrary,
 } from "@jforge/char/shared";
 import { createBattle, isCombatantDef } from "@jforge/melee/shared";
-import { GEAR_TIERS, atTier, withKit, withWorld } from "../world";
+import { GEAR_TIERS, atTier, withWorld } from "../world";
 
 const starter = starterLibrary();
 const world = withWorld(starter, 3);
@@ -45,7 +45,9 @@ describe("withWorld", () => {
   });
 
   it("puts what was designed first", () => {
-    expect(world.characters.slice(0, 3)).toEqual(starter.characters);
+    expect(world.characters.slice(0, starter.characters.length)).toEqual(
+      starter.characters,
+    );
     expect(world.gear.slice(0, starter.gear.length)).toEqual(starter.gear);
   });
 
@@ -95,46 +97,5 @@ describe("atTier", () => {
       bonuses: [{ stat: "speed" as const, op: "add" as const, value: -2 }],
     };
     expect(atTier(heavy, 3).bonuses[0]!.value).toBe(-2);
-  });
-});
-
-describe("withKit", () => {
-  const type = (id: string) => world.archetypes.find((a) => a.id === id)!;
-  const traveller = (meleeClass: string) =>
-    world.characters.find((c) => c.archetypeId === `melee-${meleeClass}`)!;
-
-  it("gives plain world gear that fits: a like weapon, armor by role", () => {
-    const archer = withKit(world, traveller("archer"));
-    expect(archer.gear).toEqual({
-      weapon: "world-longbow",
-      armor: "world-jerkin",
-    });
-    expect(withKit(world, traveller("mage")).gear.armor).toBe(
-      "world-vestments",
-    );
-  });
-
-  it("gives an accessory instead when no weapon handles like their own", () => {
-    const warlock = withKit(world, traveller("warlock"));
-    expect(warlock.gear.weapon).toBeUndefined();
-    expect(warlock.gear.accessory).toBeDefined();
-  });
-
-  it("keeps what is already worn and never gives gear with drawbacks", () => {
-    const worn = { ...traveller("fighter"), gear: { armor: "world-plate" } };
-    const kitted = withKit(world, worn);
-    expect(kitted.gear.armor).toBe("world-plate");
-    for (const c of world.characters.filter(
-      (c) => type(c.archetypeId).kind === "class",
-    )) {
-      for (const id of Object.values(withKit(world, { ...c, gear: {} }).gear)) {
-        const gear = world.gear.find((g) => g.id === id)!;
-        expect(
-          gear.bonuses.every((b) =>
-            b.op === "add" ? b.value > 0 : b.value >= 1,
-          ),
-        ).toBe(true);
-      }
-    }
   });
 });

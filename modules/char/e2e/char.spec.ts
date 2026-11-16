@@ -29,8 +29,14 @@ test("a designed character plays in melee and shows up in jrpg", async ({
 
   await page.getByRole("link", { name: "Test in Melee" }).click();
   await page.getByRole("radio", { name: "Custom" }).click();
-  await expect(page.getByText("Your party:")).toBeVisible();
-  await expect(page.getByRole("main")).toContainText("Sir Aldric");
+  const party = page.locator("p", { has: page.getByText("Your party:") });
+  await expect(party).toBeVisible();
+  // Melee fields five of the roster's heroes, picked by the encounter's seed.
+  for (let i = 0; i < 20; i++) {
+    if ((await party.textContent())?.includes("Sir Aldric")) break;
+    await page.getByRole("button", { name: "Reroll" }).click();
+  }
+  await expect(party).toContainText("Sir Aldric");
   await expect(page.getByRole("main")).toContainText("Goblin");
   await page.getByRole("button", { name: "Start", exact: true }).click();
   await expect(page.getByRole("grid", { name: "Party" })).toContainText(

@@ -3,16 +3,23 @@ import { content, createBattle, isCombatantDef } from "@jforge/melee/shared";
 import { toCombatantDef } from "../compile";
 import { blankCharacter, emptyLibrary, parseLibrary } from "../library";
 import {
+  BASIC_ARMOR,
   MELEE_CLASS_LEVEL,
+  MELEE_HEROES,
+  basicGear,
+  basicWeapon,
   classFromMelee,
   meleeClassId,
   meleeClasses,
+  meleeHeroId,
+  meleeWeaponId,
+  starterKit,
   withMeleeClasses,
 } from "../melee";
 import { statsAtLevel } from "../progression";
 import { starterLibrary } from "../starter";
 
-const { fighter, healer, playerTypes } = content;
+const { fighter, healer, mage, playerTypes } = content;
 
 describe("classFromMelee", () => {
   it("has melee's stats at the reference level, give or take rounding", () => {
@@ -109,5 +116,93 @@ describe("withMeleeClasses", () => {
         ),
       ).not.toThrow();
     }
+  });
+});
+
+describe("basic gear", () => {
+  it("is each class's own weapon, adding a little to its best stat", () => {
+    const sword = basicWeapon(fighter);
+    expect(sword).toMatchObject({
+      id: meleeWeaponId("fighter"),
+      name: `Fighter's ${fighter.weapon.name}`,
+      slot: "weapon",
+      bonuses: [{ stat: "attack", op: "add" }],
+    });
+    expect(sword.weapon).toMatchObject({
+      kind: fighter.weapon.kind,
+      columns: fighter.weapon.columns,
+      depth: fighter.weapon.depth,
+      damageType: fighter.weapon.damageType,
+    });
+    expect(basicWeapon(mage).bonuses[0]!.stat).toBe("magic");
+  });
+
+  it("has nothing that makes a stat worse", () => {
+    for (const gear of basicGear()) {
+      expect(gear.bonuses.every((b) => b.op === "add" && b.value > 0)).toBe(
+        true,
+      );
+    }
+  });
+});
+
+describe("starterKit", () => {
+  const library = withMeleeClasses(emptyLibrary());
+  const type = (id: string) =>
+    library.archetypes.find((a) => a.id === meleeClassId(id))!;
+
+  it("gives a melee class its weapon and armor for its role", () => {
+    const fighterKit = starterKit(
+      library,
+      blankCharacter("a", type("fighter")),
+    );
+    expect(fighterKit.gear).toEqual({
+      weapon: meleeWeaponId("fighter"),
+      armor: "melee-gear-jerkin",
+    });
+    expect(
+      starterKit(library, blankCharacter("b", type("mage"))).gear.armor,
+    ).toBe("melee-gear-robe");
+  });
+
+  it("keeps what is worn and gives only gear the library has", () => {
+    const worn = {
+      ...blankCharacter("a", type("fighter")),
+      gear: { armor: "x" },
+    };
+    expect(starterKit(library, worn).gear.armor).toBe("x");
+    const bare = { ...library, gear: [] };
+    expect(starterKit(bare, blankCharacter("b", type("fighter"))).gear).toEqual(
+      {},
+    );
+  });
+
+  it("gives a designed class armor only", () => {
+    const starter = starterLibrary();
+    const sage = starter.archetypes.find((a) => a.id === "type-sage")!;
+    expect(starterKit(starter, blankCharacter("c", sage)).gear).toEqual({
+      armor: "melee-gear-robe",
+    });
+  });
+});
+
+describe("melee heroes", () => {
+  it("are one per class, in basic gear, and come back if missing", () => {
+    const library = withMeleeClasses(emptyLibrary());
+    expect(library.characters.map((c) => c.name)).toEqual(
+      playerTypes.flatMap((def) => MELEE_HEROES[def.id] ?? []),
+    );
+    for (const hero of library.characters) {
+      expect(hero.gear.weapon).toBeDefined();
+      expect(hero.gear.armor).toBeDefined();
+    }
+    expect(library.gear.slice(-BASIC_ARMOR.length)).toEqual(BASIC_ARMOR);
+    const edited = {
+      ...library,
+      characters: library.characters.map((c) =>
+        c.id === meleeHeroId("fighter") ? { ...c, gear: {} } : c,
+      ),
+    };
+    expect(withMeleeClasses(edited)).toBe(edited);
   });
 });

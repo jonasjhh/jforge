@@ -1,9 +1,11 @@
 import {
+  basicGear,
   blankCharacter,
   clampLevel,
   equip,
   gainXp,
   parseLibrary,
+  starterKit,
   starterLibrary,
   toCombatantDef,
   unequip,
@@ -25,13 +27,7 @@ import {
   type Position,
 } from "@jforge/melee/shared";
 import { formationOf } from "./formation";
-import {
-  GEAR_TIERS,
-  TRAVELLER_NAMES,
-  tierId,
-  withKit,
-  withWorld,
-} from "./world";
+import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
 
 // A run: the party travels through levels, each a map of encounters
 // generated from a seed, row by row along roads that split and merge. Everything here is pure; the screens
@@ -237,8 +233,12 @@ export function generateLevel(
   const take = <T>(items: T[]): T => items.splice(roll(items.length), 1)[0]!;
   const length = MIN_LEVEL_LENGTH + roll(LEVEL_LENGTH_SPREAD + 1);
 
-  // Gear is stored at every tier; the plain pieces are the ones to draw.
-  const plain = library.gear.filter((g) => !/\+\d$/.test(g.id));
+  // Gear is stored at every tier; the plain pieces are the ones to draw,
+  // except the basic gear heroes set out in.
+  const basic = new Set(basicGear().map((g) => g.id));
+  const plain = library.gear.filter(
+    (g) => !/\+\d$/.test(g.id) && !basic.has(g.id),
+  );
   const has = new Set(library.gear.map((g) => g.id));
   const gearId = (): string => {
     const base = pick(plain).id;
@@ -586,7 +586,7 @@ export function canRecruit(run: Run): boolean {
 export function recruitOf(run: Run): Character | null {
   const encounter = currentEncounter(run);
   return encounter?.kind === "ally"
-    ? withKit(run.library, encounter.character)
+    ? starterKit(run.library, encounter.character)
     : null;
 }
 

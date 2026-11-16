@@ -511,6 +511,19 @@ used by jrpg. At level 3 it has exactly melee's stats; they grow 8% of the
 level-1 value per level (speed 2%). Skills are learned in melee's order at
 levels 1, 2, 4, 6, 8. An edited copy is kept; a deleted one comes back.
 
+**Heroes and basic gear**: with the classes come a named hero of each
+(`melee-hero-fighter`, ...: Brann, Isolde, Vex, Tamsin, Orrin, Hale, Wren,
+Cade, Sable, Lucan) and basic gear: each class's own weapon as a piece
+(`melee-gear-fighter`, "Fighter's Sword", +3 to the class's best of
+attack, magic and spirit) and two armors (Traveller's Jerkin, Traveller's
+Robe). Basic gear has no drawbacks. `starterKit` fills a character's
+empty slots with it: their melee class's weapon, and the robe if the
+class's magic beats its attack, the jerkin if not (designed classes get
+armor only). Every hero starts in their kit. Like the classes, an edited
+hero or piece is kept and a deleted one comes back. Melee's Custom roster
+gets the heroes too and fields five of its party characters per
+encounter.
+
 **Stats**: `round(base + growth x (level - 1))`, then gear the way melee
 applies modifiers: `(stat + adds) x muls`, rounded. Experience: a level
 costs `100 x level`; `gainXp` levels up as often as it pays for.
@@ -553,10 +566,8 @@ party size` experience and sometimes gear (40%; elites and the final
   battle seed, so coming back never rerolls its luck. Starting a battle
   over is allowed (the ↺ button, once the party has acted).
 - **Ally**: a traveller who isn't in the party offers to join, at the
-  level of the party's weakest member if that is higher, in a **starting
-  kit** of plain world gear (nothing with a drawback) in their empty
-  slots: armor (vestments for casters, a jerkin otherwise) and a weapon
-  that handles like their own, or a fitting accessory if there is none.
+  level of the party's weakest member if that is higher, with char's
+  `starterKit` in their empty slots (heroes already wear theirs).
   The party holds five; when it is full the recruit can take a member's
   place, standing where they stood, and the one who leaves puts their gear
   in the bag.
@@ -585,13 +596,13 @@ swapped with the bag. A cleared level leads to the next, deeper one.
 starter library if it has no class character) plus jrpg's own content,
 copied when the run starts so later edits don't break it: 9 enemy types
 (Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
-Imp, Raider), 10 named travellers (one of each melee class, which char
-provides) and 16 pieces of gear. All gear exists at four **tiers** (plain,
+Imp, Raider) and 16 pieces of gear; char provides the heroes and their
+basic gear, which finds and drops leave out. All gear exists at four **tiers** (plain,
 Fine, Superior, Masterwork: each adds half again to what the piece adds);
 finds are a tier better per depth, with some luck.
 
-**The player chooses the party**: two of the heroes (the travellers and
-every class character designed in char), both raised to the level of the
+**The player chooses the party**: two of the heroes (every class
+character in char's library: melee's heroes and any designed), both raised to the level of the
 higher one and at least level 3. The start screen preselects two drawn by
 the run's seed and can draw again; choosing a third lets go of the first.
 Whoever doesn't set out can be met as an ally.

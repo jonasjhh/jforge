@@ -43,9 +43,16 @@ export {
 } from "./library";
 export { starterLibrary } from "./starter";
 export {
+  BASIC_ARMOR,
   MELEE_CLASS_LEVEL,
+  MELEE_HEROES,
+  basicGear,
+  basicWeapon,
   classFromMelee,
   meleeClassId,
   meleeClasses,
+  meleeHeroId,
+  meleeWeaponId,
+  starterKit,
   withMeleeClasses,
 } from "./melee";

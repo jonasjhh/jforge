@@ -79,12 +79,14 @@ describe("remove", () => {
 
   it("removes a type together with its characters", () => {
     const after = remove(library, "archetypes", "type-knight");
-    expect(after.characters.map((c) => c.name)).toEqual(["Mira", "Goblin"]);
+    expect(after.characters.map((c) => c.name)).toEqual(
+      library.characters.slice(1).map((c) => c.name),
+    );
   });
 
   it("removes just the character", () => {
     const after = remove(library, "characters", "unit-1");
-    expect(after.characters).toHaveLength(2);
+    expect(after.characters).toHaveLength(library.characters.length - 1);
     expect(after.archetypes).toHaveLength(library.archetypes.length);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  MAX_PARTY_SIZE,
   createBattle,
   estimateThreat,
   isCombatantDef,
@@ -122,7 +123,11 @@ describe("toCombatantDef", () => {
 describe("compileRoster", () => {
   it("sorts characters into the party and the monster pool", () => {
     const roster = compileRoster(library);
-    expect(roster.party.map((d) => d.name)).toEqual(["Aldric", "Mira"]);
+    expect(roster.party.map((d) => d.name)).toEqual([
+      "Aldric",
+      "Mira",
+      ...library.characters.slice(3).map((c) => c.name),
+    ]);
     expect(roster.monsters.map((d) => d.name)).toEqual(["Goblin"]);
   });
 
@@ -137,7 +142,7 @@ describe("compileRoster", () => {
       createBattle(
         {
           placements: [
-            ...party.map((def, col) => ({
+            ...party.slice(0, MAX_PARTY_SIZE).map((def, col) => ({
               def,
               side: "player" as const,
               position: { col, row: 0 },
