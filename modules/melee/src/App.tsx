@@ -58,6 +58,7 @@ export function App() {
           seed: newSeed(),
         });
       }}
+      onRetry={() => setBattle({ ...battle, seed: newSeed() })}
       onExit={() => setBattle(null)}
     />
   );

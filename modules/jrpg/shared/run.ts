@@ -109,8 +109,11 @@ export const ENEMY_LEVELS_PER_DEPTH = 1;
 export const BUDGET_SHARE: Record<Difficulty, number> = {
   easy: 0.6,
   normal: 0.8,
-  hard: 1.0,
+  hard: 0.9,
 };
+
+/** Every level deeper, the enemies' share grows by this much of itself. */
+export const DEPTH_GROWTH = 0.06;
 
 const isClass = (library: Library, character: Character) =>
   library.archetypes.some(
@@ -329,10 +332,14 @@ export function monsterPool(run: Run, tougher = 0): CombatantDef[] {
   return designed.length > 0 ? designed : content.monsters;
 }
 
-/** The enemies' threat budget for a battle of this difficulty. */
+/**
+ * The enemies' threat budget for a battle of this difficulty: a share of
+ * the party's threat that grows with the run's depth.
+ */
 export function threatBudget(run: Run, difficulty: Difficulty): number {
   const party = partyDefs(run).reduce((sum, d) => sum + estimateThreat(d), 0);
-  return party * BUDGET_SHARE[difficulty];
+  const deeper = 1 + DEPTH_GROWTH * (run.depth - 1);
+  return party * BUDGET_SHARE[difficulty] * deeper;
 }
 
 /**

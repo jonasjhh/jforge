@@ -541,7 +541,8 @@ generated from the run's seed (`shared/run.ts`, pure like the engine):
   or drawing **ends the run**. The party can **retreat** to the map (to
   change gear, say) until it gives its first command; from then on the
   fight is won or the run is over: giving up loses, gear is locked, and a
-  reload opens the same battle from its start. An encounter is always
+  reload opens the same battle from its start. Starting a battle over is
+  allowed (the ↺ button, once the party has acted). An encounter is always
   fought with the same battle seed, so coming back never rerolls its luck.
 - **Ally**: a traveller who isn't in the party offers to join, at the
   level of the party's weakest member if that is higher. The party holds
@@ -573,9 +574,12 @@ draw and can draw again; whoever isn't drawn can be met as an ally.
 
 Enemies gain the party's average levels gained plus one per depth. The
 **threat budget** of a battle is a share of the party's own estimated
-threat (Easy 0.6, Normal 0.8, Hard 1), so encounters keep pace with
-levels, gear and party size; auto-played parties win about 97% / 84% /
-70% of them on the first level. The run is saved in the browser after every
+threat (Easy 0.6, Normal 0.8, Hard 0.9), so encounters keep pace with
+levels, gear and party size, and the share grows 6% per depth, so deeper
+levels are harder. Auto-played parties win about 94% / 76% / 56% of the
+first level's battles and 84% / 61% / 36% of the fifth's (every battle
+counted, not only those of parties that got that far); a test keeps the
+first level in its bands. The run is saved in the browser after every
 encounter.
 
 Not yet: HP carrying over between battles, shops, rest stops, replacing a

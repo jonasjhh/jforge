@@ -41,6 +41,13 @@ test("can't walk away from a battle once the party has acted", async ({
   await page.getByRole("button", { name: "Defend" }).click();
   await expect(page.getByRole("button", { name: "Give up" })).toBeVisible();
 
+  // Starting over is allowed: the battle begins again.
+  await page.getByRole("button", { name: "Restart battle" }).click();
+  await expect(
+    page.getByRole("button", { name: "Restart battle" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Give up" })).toBeVisible();
+
   // Reloading is no way out: the run opens in the same battle.
   await page.reload();
   await expect(page.getByRole("grid", { name: "Enemies" })).toBeVisible();

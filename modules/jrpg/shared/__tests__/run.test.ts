@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { starterLibrary } from "@jforge/char/shared";
-import { MAX_PARTY_SIZE, content, createBattle } from "@jforge/melee/shared";
+import {
+  MAX_PARTY_SIZE,
+  content,
+  createBattle,
+  simulate,
+} from "@jforge/melee/shared";
 import {
   BUDGET_SHARE,
+  DEPTH_GROWTH,
   GEAR_CHOICES,
   LEVEL_LENGTH_SPREAD,
   MAX_PACK_KINDS,
@@ -338,6 +344,50 @@ describe("battleFor", () => {
       threatBudget(run, "easy"),
     );
   });
+});
+
+describe("difficulty", () => {
+  it("gives the enemies a bigger share every level deeper", () => {
+    const run = at([battle]);
+    const deeper = (depth: number) =>
+      threatBudget({ ...run, depth }, "normal") / threatBudget(run, "normal");
+    expect(deeper(2)).toBeCloseTo(1 + DEPTH_GROWTH);
+    expect(deeper(5)).toBeCloseTo(1 + 4 * DEPTH_GROWTH);
+  });
+
+  it("keeps the first level's battles in their win-rate bands", () => {
+    // Auto-played runs. Every battle is counted, then taken as won, so
+    // later battles aren't only fought by the parties that got lucky.
+    const tally = { easy: [0, 0], normal: [0, 0], hard: [0, 0] };
+    for (let seed = 0; seed < 60; seed++) {
+      let run = startRun(null, seed);
+      for (let step = 0; !levelCleared(run); step++) {
+        const encounter = currentEncounter(run)!;
+        const who = run.party[step % run.party.length]!.id;
+        if (encounter.kind === "ally") run = resolveAlly(run, true);
+        else if (encounter.kind === "fork") run = chooseFork(run, step % 2);
+        else if (encounter.kind === "training") {
+          run = resolveTraining(run, who);
+        } else if (encounter.kind === "gear") {
+          run = resolveGear(run, encounter.gearIds[0] ?? null, who);
+        } else {
+          const result = simulate(battleFor(run)!, seed * 100 + step);
+          const count = tally[encounter.difficulty];
+          count[1]!++;
+          if (result.winner === "player") count[0]!++;
+          run = winBattle(run)!.run;
+        }
+      }
+    }
+    const rate = (d: keyof typeof tally) => tally[d][0]! / tally[d][1]!;
+    expect(rate("easy")).toBeGreaterThan(0.85);
+    expect(rate("normal")).toBeGreaterThan(0.6);
+    expect(rate("normal")).toBeLessThan(0.9);
+    expect(rate("hard")).toBeGreaterThan(0.35);
+    expect(rate("hard")).toBeLessThan(0.75);
+    expect(rate("easy")).toBeGreaterThan(rate("normal"));
+    expect(rate("normal")).toBeGreaterThan(rate("hard"));
+  }, 60_000);
 });
 
 describe("monsterPool", () => {

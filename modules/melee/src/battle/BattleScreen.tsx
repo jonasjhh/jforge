@@ -50,6 +50,8 @@ interface BattleScreenProps {
   onExit: () => void;
   /** Called once, when the player gives the battle's first command. */
   onCommit?: () => void;
+  /** Starts the battle over; offered once the player has given a command. */
+  onRetry?: () => void;
   /** Wording for a host other than melee's own start screen (jrpg). */
   labels?: Partial<BattleLabels>;
 }
@@ -79,6 +81,7 @@ export function BattleScreen({
   onRestart,
   onExit,
   onCommit,
+  onRetry,
   labels,
 }: BattleScreenProps) {
   const text = { ...MELEE_LABELS, ...labels };
@@ -159,6 +162,17 @@ export function BattleScreen({
         </button>
         <span className="header-end">
           <span className="muted">Seed {seed}</span>
+          {!over && committed && onRetry && (
+            <button
+              type="button"
+              className="speed-button"
+              aria-label="Restart battle"
+              title="Restart battle"
+              onClick={onRetry}
+            >
+              ↺
+            </button>
+          )}
           {!over && (
             <button
               type="button"

@@ -28,6 +28,8 @@ export function App() {
   // On the battle screen. A fight the party has acted in is never left
   // standing, so a run saved in one opens in it (from its start).
   const [fighting, setFighting] = useState(() => run?.committed === true);
+  // Times the battle at hand was started over; a new one remounts it.
+  const [attempt, setAttempt] = useState(0);
   // What the last battle paid, shown until the party moves on.
   const [reward, setReward] = useState<Reward | null>(null);
 
@@ -50,7 +52,7 @@ export function App() {
   if (setup) {
     return (
       <BattleScreen
-        key={`${run.depth}-${run.position}`}
+        key={`${run.depth}-${run.position}-${attempt}`}
         setup={setup}
         seed={battleSeed(run)}
         labels={{
@@ -59,6 +61,7 @@ export function App() {
           ...(run.committed ? { exit: BATTLE_LABELS.exitCommitted } : {}),
         }}
         onCommit={() => update(commitBattle(run))}
+        onRetry={() => setAttempt(attempt + 1)}
         onRestart={(won) => {
           const result = won ? winBattle(run) : null;
           setReward(result?.reward ?? null);
