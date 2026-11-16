@@ -4,7 +4,6 @@ import {
   getUnit,
   previewDamage,
   isAlive,
-  ROW_DEALT,
   sameCell,
   skillArea,
   skillVictims,
@@ -24,6 +23,7 @@ import {
   type BattleSpeed,
 } from "./battleSpeed";
 import { Grid } from "./Grid";
+import { canAfford, rowHint, skillCost, targetHint } from "./labels";
 import { TurnOrder } from "./TurnOrder";
 import { UnitDetails } from "./UnitDetails";
 import { useBattle } from "./useBattle";
@@ -45,33 +45,6 @@ type Menu =
   | { kind: "skill"; skill: Skill; aim: Cell | null };
 
 const ATTACK: Menu = { kind: "attack" };
-
-const ROW_LABELS = ["front", "middle", "back"];
-
-/** "15 HP" for Blood Bolt, "24 MP · delayed" for Meteor. */
-function skillCost(skill: Skill): string {
-  return [
-    skill.hpCost ? `${skill.hpCost} HP` : "",
-    skill.mpCost || !skill.hpCost ? `${skill.mpCost} MP` : "",
-    skill.castTime ? "delayed" : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
-
-/** Enough MP, and more HP than an HP cost (it may never be fatal). */
-function canAfford(unit: Unit, skill: Skill): boolean {
-  return unit.mp >= skill.mpCost && unit.hp > (skill.hpCost ?? 0);
-}
-
-/** ", front row: full damage" for melee; ranged weapons ignore rows. */
-function rowHint(unit: Unit): string {
-  if (unit.weapon.kind !== "melee") return "";
-  const row = unit.position.row;
-  const dealt = ROW_DEALT[row] ?? 1;
-  const effect = dealt === 1 ? "full damage" : `×${dealt} damage`;
-  return `, ${ROW_LABELS[row]} row: ${effect}`;
-}
 
 export function BattleScreen({
   setup,
@@ -408,27 +381,6 @@ function previewVictims(
   if (skill.effect.type !== "shatter") return victims;
   const rock = unitAt(state, aim);
   return victims.filter((u) => u !== rock);
-}
-
-/** What to tap for a single-target skill. */
-function targetHint(skill: Skill): string {
-  if (skill.effect.type === "summon" && skill.effect.anySide) {
-    return "tap a highlighted empty cell on either side";
-  }
-  if (skill.effect.type === "summon" || skill.effect.type === "teleport") {
-    return "tap a highlighted empty cell on your side";
-  }
-  if (skill.effect.type === "heave") return "tap a highlighted unit";
-  switch (skill.target) {
-    case "self":
-      return "tap yourself to use it";
-    case "ally":
-      return "tap a highlighted ally";
-    case "enemy":
-      return "tap a highlighted enemy";
-    case "any":
-      return "tap a highlighted cell";
-  }
 }
 
 function SkillPrompt({ skill, aim, victims, casterSide }: SkillPromptProps) {

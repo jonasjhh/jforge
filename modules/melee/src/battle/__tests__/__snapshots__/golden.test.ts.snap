@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden battle text > damage preview badges stay the same 1`] = `
+[
+  "preview resist | Immune | about 24 damage, immune",
+  "preview resist ko | Immune KO | about 24 damage, immune, knocks out",
+  "preview resist | ~24 | about 24 damage, resists",
+  "preview resist ko | ~24 KO | about 24 damage, resists, knocks out",
+  "preview | ~24 | about 24 damage",
+  "preview ko | ~24 KO | about 24 damage, knocks out",
+  "preview weak | ~24 | about 24 damage, weak",
+  "preview weak ko | ~24 KO | about 24 damage, weak, knocks out",
+  "preview weak | ~24 | about 24 damage, weak",
+  "preview weak ko | ~24 KO | about 24 damage, weak, knocks out",
+]
+`;
+
+exports[`golden battle text > logs, captions and floating numbers stay the same 1`] = `
+{
+  "easy #1000": "1924dbcb",
+  "easy #16838": "1281e114",
+  "easy #24757": "7aab3226",
+  "easy #32676": "5476d7e7",
+  "easy #40595": "e3f33d3b",
+  "easy #48514": "9bdd9f03",
+  "easy #56433": "d3447a89",
+  "easy #64352": "7ce4e69c",
+  "easy #72271": "23afca64",
+  "easy #80190": "ac69d85b",
+  "easy #88109": "523a77d7",
+  "easy #8919": "5a567531",
+  "hard #1000": "2967ff71",
+  "hard #16838": "932ed1f6",
+  "hard #24757": "fb20039d",
+  "hard #32676": "80b25398",
+  "hard #40595": "990626e6",
+  "hard #48514": "004318c1",
+  "hard #56433": "1fadd3ac",
+  "hard #64352": "1d6e1c63",
+  "hard #72271": "471660db",
+  "hard #80190": "9091099e",
+  "hard #88109": "82084d53",
+  "hard #8919": "e9ba066e",
+  "normal #1000": "c9aeb827",
+  "normal #16838": "4364f61f",
+  "normal #24757": "b8173c14",
+  "normal #32676": "d536c5e5",
+  "normal #40595": "ac05a053",
+  "normal #48514": "9b51e9a3",
+  "normal #56433": "922b4f4f",
+  "normal #64352": "5d8ae8e2",
+  "normal #72271": "83d72ab6",
+  "normal #80190": "030c9805",
+  "normal #88109": "fa3dc85d",
+  "normal #8919": "fe757b5d",
+}
+`;
+
+exports[`golden battle text > skill costs, hints and affordability stay the same 1`] = `
+[
+  "Cleave: 5 MP | tap a highlighted enemy",
+  "Skewer: 4 MP | tap a highlighted enemy",
+  "Hook: 4 MP | tap a highlighted enemy",
+  "Aimed Shot: 6 MP | tap a highlighted enemy",
+  "Fireball: 12 MP | tap a highlighted cell",
+  "Meteor: 24 MP · delayed | tap a highlighted cell",
+  "Heal: 8 MP | tap a highlighted ally",
+  "Regen: 10 MP | tap a highlighted ally",
+  "Cure: 5 MP | tap a highlighted ally",
+  "Haste: 8 MP | tap a highlighted ally",
+  "Slow: 8 MP | tap a highlighted enemy",
+  "Quicken: 12 MP | tap a highlighted ally",
+  "Drain: 6 MP | tap a highlighted enemy",
+  "Blood Bolt: 15 HP | tap a highlighted enemy",
+  "Summon Imp: 10 HP · 6 MP | tap a highlighted empty cell on your side",
+  "Vanish: 6 MP | tap yourself to use it",
+  "Shadowstep: 4 MP | tap a highlighted empty cell on your side",
+  "Aegis: 8 MP | tap a highlighted ally",
+  "Last Rites: 12 MP | tap a highlighted ally",
+  "Raise Boulder: 6 MP | tap a highlighted empty cell on either side",
+  "Shatter: 8 MP | tap a highlighted cell",
+  "Upheaval: 6 MP | tap a highlighted unit",
+]
+`;
+
+exports[`golden battle text > skill costs, hints and affordability stay the same 2`] = `
+{
+  "afford": "011110111101111001110011100001001110011101111001110011100111001110001100111001110111100111001110011100111001110111101111011110011100111000010011100111011110011100111001110011100011001110011101111001110011100111001110011101111011110111100111001110000100111001110111100111001110011100111000110011100111011110011100111001110011100111011110111101111001110011100001001110011101111001110011100111001110001100111001110111100111001110011100111001110111101111011110011100111000010011100111011110011100111001110011100011001110011101111001110011100111001110011101111011110111100111001110000100111001110111100111001110011100111000110011100111011110011100111001110011100111",
+  "rows": [
+    "Fighter, front row: full damage",
+    "Lancer, middle row: ×0.75 damage",
+    "Archer",
+    "Mage",
+    "Healer",
+    "Slime, front row: full damage",
+  ],
+}
+`;

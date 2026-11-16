@@ -12,6 +12,7 @@ import {
   type Side,
   type Unit,
 } from "../../shared";
+import { previewClasses, previewLabel, previewText } from "./labels";
 import { Portrait } from "./Portrait";
 import type { Hit } from "./useBattle";
 import { useLongPress } from "./useLongPress";
@@ -361,37 +362,11 @@ function UnitCell({
   );
 }
 
-/** "about 24 damage, weak, knocks out" for screen readers. */
-function previewText(p: DamagePreview): string {
-  return [
-    `about ${p.amount} damage`,
-    p.multiplier === 0
-      ? "immune"
-      : p.multiplier > 1
-        ? "weak"
-        : p.multiplier < 1
-          ? "resists"
-          : "",
-    p.knocksOut ? "knocks out" : "",
-  ]
-    .filter(Boolean)
-    .join(", ");
-}
-
 /** Expected damage on a target: gold if weak, grey if resisted, red if KO. */
 function PreviewBadge({ preview: p }: { preview: DamagePreview }) {
-  const classes = [
-    "preview",
-    p.multiplier > 1 ? "weak" : "",
-    p.multiplier < 1 ? "resist" : "",
-    p.knocksOut ? "ko" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
   return (
-    <span className={classes} aria-hidden="true">
-      {p.multiplier === 0 ? "Immune" : `~${p.amount}`}
-      {p.knocksOut && " KO"}
+    <span className={previewClasses(p)} aria-hidden="true">
+      {previewLabel(p)}
     </span>
   );
 }

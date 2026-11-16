@@ -143,7 +143,8 @@ export function useBattle(
   return { state, log, hits, actorId, lastAction, actionArea, command };
 }
 
-function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
+/** Damage and heal numbers to float up for a step's events. */
+export function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
   return events.flatMap((e): Hit[] => {
     if (e.type === "heal" || (e.type === "statusTick" && e.effect === "heal")) {
       if (e.amount <= 0) return [];
