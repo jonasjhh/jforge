@@ -315,6 +315,11 @@ export interface CombatantDef {
   obstacle?: boolean;
   /** How dangerous a monster is, for building encounters to a budget. */
   threat?: number;
+  /**
+   * Whose icon it wears, as the id of a built-in type ("fighter", "slime").
+   * For combatants designed elsewhere; built-in ones use their own id.
+   */
+  portrait?: string;
 }
 
 /** Puts a combatant on the grid for one battle. */
@@ -341,6 +346,8 @@ export interface Unit {
    */
   id: string;
   defId: string;
+  /** The built-in type whose icon it wears; its own `defId` if absent. */
+  portrait?: string;
   name: string;
   side: Side;
   control: Control;

@@ -54,4 +54,15 @@ export {
   type Difficulty,
   type EncounterPools,
 } from "./encounters";
+export {
+  EMPTY_ROSTER,
+  ROSTER_STORAGE_KEY,
+  encounterPools,
+  isCombatantDef,
+  parseRoster,
+  readRoster,
+  writeRoster,
+  type Roster,
+  type RosterStore,
+} from "./roster";
 export * as content from "./content";

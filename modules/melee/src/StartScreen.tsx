@@ -3,6 +3,7 @@ import {
   randomEncounter,
   type BattleSetup,
   type Difficulty,
+  type EncounterPools,
 } from "../shared";
 import { meta } from "../meta";
 import { PORTRAIT_AUTHORS } from "./battle/portraitIcons";
@@ -11,6 +12,12 @@ import { useApiHealth } from "./useApiHealth";
 interface StartScreenProps {
   difficulty: Difficulty;
   encounterSeed: number;
+  /** Who encounters are drawn from: built-in types or the imported roster. */
+  pools: EncounterPools;
+  /** How many combatants the char module has published on this device. */
+  imported: number;
+  custom: boolean;
+  onCustom: (custom: boolean) => void;
   onDifficulty: (difficulty: Difficulty) => void;
   onReroll: () => void;
   onStart: (setup: BattleSetup) => void;
@@ -37,12 +44,16 @@ function roster(setup: BattleSetup, side: "player" | "enemy"): string {
 export function StartScreen({
   difficulty,
   encounterSeed,
+  pools,
+  imported,
+  custom,
+  onCustom,
   onDifficulty,
   onReroll,
   onStart,
 }: StartScreenProps) {
   const health = useApiHealth<{ status: string }>("/api/melee/health");
-  const encounter = randomEncounter(encounterSeed, difficulty);
+  const encounter = randomEncounter(encounterSeed, difficulty, pools);
 
   return (
     <main className="page">
@@ -68,6 +79,28 @@ export function StartScreen({
             </button>
           ))}
         </div>
+        {imported > 0 && (
+          <div className="segmented" role="radiogroup" aria-label="Roster">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!custom}
+              className={custom ? "" : "selected"}
+              onClick={() => onCustom(false)}
+            >
+              Built-in
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={custom}
+              className={custom ? "selected" : ""}
+              onClick={() => onCustom(true)}
+            >
+              Custom
+            </button>
+          </div>
+        )}
         <p>
           <strong>Your party:</strong> {roster(encounter, "player")}
         </p>
@@ -94,6 +127,13 @@ export function StartScreen({
         until you choose its action. The enemies act on their own. Defend halves
         the hits a unit takes until it acts again; Wait skips the turn but lets
         it act again sooner. Hold a unit (or right-click it) to see its details.
+      </p>
+      <p className="muted small">
+        Design your own classes, enemies, skills and gear in{" "}
+        <a className="link" href="/char/">
+          Char
+        </a>
+        ; they appear here as the Custom roster.
       </p>
       <p className="muted small">
         Unit icons by {PORTRAIT_AUTHORS.join(" and ")} from{" "}

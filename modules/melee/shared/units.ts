@@ -38,6 +38,7 @@ export function makeUnit(
     gauge: 0,
     modifiers: modifiers.map((m) => ({ ...m })),
     ...(def.obstacle ? { obstacle: true } : {}),
+    ...(def.portrait ? { portrait: def.portrait } : {}),
   };
 }
 

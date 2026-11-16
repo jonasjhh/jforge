@@ -11,6 +11,7 @@
     "dev:landing": "pnpm --filter @jforge/landing dev",
     "dev:melee": "pnpm --filter @jforge/melee dev",
     "dev:jrpg": "pnpm --filter @jforge/jrpg dev",
+    "dev:char": "pnpm --filter @jforge/char dev",
     "build": "tsc -b && node tooling/clean-dist.mjs && pnpm -r --workspace-concurrency=1 build",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -25,6 +26,7 @@
     "portraits": "node modules/melee/scripts/portraits.mjs && prettier --write modules/melee/src/battle/portraitIcons.ts"
   },
   "dependencies": {
+    "@jforge/char": "workspace:*",
     "@jforge/jrpg": "workspace:*",
     "@jforge/melee": "workspace:*",
     "hono": "^4.13.17"

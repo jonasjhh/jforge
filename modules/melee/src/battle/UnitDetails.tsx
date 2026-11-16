@@ -92,7 +92,7 @@ export function UnitDetails({ unit, time, speed, onClose }: UnitDetailsProps) {
         <header className="details-header">
           <h2>
             <Portrait
-              defId={unit.defId}
+              defId={unit.portrait ?? unit.defId}
               className={`portrait-large ${unit.side === "enemy" ? "foe" : ""}`}
             />
             {unit.name}

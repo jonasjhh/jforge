@@ -14,6 +14,7 @@ credentials, deploys and secrets are set up once, not per module.
 | ------- | --------- | ---------- | ----------------------------------------- |
 | `melee` | `/melee/` | —          | Battle engine: time-based turns, 5x3 grid |
 | `jrpg`  | `/jrpg/`  | `melee`    | Turn-based adventure (placeholder)        |
+| `char`  | `/char/`  | `melee`    | Designer: classes, enemies, skills, gear  |
 
 ## Layout
 
@@ -35,7 +36,9 @@ wrangler.toml         the one Worker's config
 
 Modules depend on each other through pnpm workspace packages: `jrpg`
 lists `"@jforge/melee": "workspace:*"` and imports
-`@jforge/melee/shared`. A module exposes what others may import through
+`@jforge/melee/shared`. `char` publishes the characters designed in it as a
+roster in melee's format (browser storage, one origin), which `melee` and
+`jrpg` read: so both import from char without depending on it. A module exposes what others may import through
 the `exports` field of its `package.json`.
 
 ## Development
@@ -56,6 +59,7 @@ One module with hot reload (run `pnpm worker:dev` alongside for its API):
 ```
 pnpm dev:melee        # http://localhost:5181/melee/
 pnpm dev:jrpg         # http://localhost:5182/jrpg/
+pnpm dev:char         # http://localhost:5183/char/
 pnpm dev:landing      # http://localhost:5180/
 ```
 

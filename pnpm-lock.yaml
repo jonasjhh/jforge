@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@jforge/char':
+        specifier: workspace:*
+        version: link:modules/char
       '@jforge/jrpg':
         specifier: workspace:*
         version: link:modules/jrpg
@@ -81,6 +84,21 @@ importers:
 
   landing:
     dependencies:
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+
+  modules/char:
+    dependencies:
+      '@jforge/melee':
+        specifier: workspace:*
+        version: link:../melee
+      hono:
+        specifier: ^4.13.17
+        version: 4.13.18
       react:
         specifier: ^18.3.1
         version: 18.3.1

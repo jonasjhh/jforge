@@ -1,6 +1,11 @@
-import type { BattleSummary } from "@jforge/melee/shared";
+import {
+  EMPTY_ROSTER,
+  readRoster,
+  type BattleSummary,
+  type Roster,
+} from "@jforge/melee/shared";
 import { meta } from "../meta";
-import { previewOpeningBattle } from "../shared";
+import { partyFrom, previewOpeningBattle } from "../shared";
 import { useApiHealth } from "./useApiHealth";
 
 interface Health {
@@ -8,6 +13,15 @@ interface Health {
   status: string;
   uses: string[];
   demo: BattleSummary;
+}
+
+/** The party published by the char module on this device, if any. */
+function loadRoster(): Roster {
+  try {
+    return readRoster(localStorage);
+  } catch {
+    return EMPTY_ROSTER;
+  }
 }
 
 function describeBattle(summary: BattleSummary): string {
@@ -22,7 +36,9 @@ function describeBattle(summary: BattleSummary): string {
 
 export function App() {
   const health = useApiHealth<Health>("/api/jrpg/health");
-  const local = previewOpeningBattle();
+  const roster = loadRoster();
+  const party = partyFrom(roster);
+  const local = previewOpeningBattle(1, party);
   return (
     <main className="page">
       <a className="back" href="/">
@@ -37,6 +53,19 @@ export function App() {
           <li>
             Module: <code>modules/{meta.name}</code>, served at{" "}
             <code>/{meta.name}/</code>
+          </li>
+          <li>
+            Party{" "}
+            {roster.party.length > 0 ? (
+              <>
+                (from <a href="/char/">Char</a>)
+              </>
+            ) : (
+              <>
+                (default; design your own in <a href="/char/">Char</a>)
+              </>
+            )}
+            : <strong>{party.map((def) => def.name).join(", ")}</strong>
           </li>
           <li>
             Opening battle with melee in the browser:{" "}

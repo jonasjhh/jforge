@@ -6,6 +6,7 @@
     { "path": "./tsconfig.test.json" },
     { "path": "./landing" },
     { "path": "./modules/melee" },
-    { "path": "./modules/jrpg" }
+    { "path": "./modules/jrpg" },
+    { "path": "./modules/char" }
   ]
 }

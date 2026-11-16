@@ -1,0 +1,99 @@
+import type { Skill, SkillEffect } from "@jforge/melee/shared";
+
+/** The effects the skill designer can edit. Others pass through untouched. */
+export const EDITABLE_EFFECTS = ["damage", "strike", "heal", "modify"] as const;
+export type EditableEffect = (typeof EDITABLE_EFFECTS)[number];
+
+export const EFFECT_LABELS: Record<EditableEffect, string> = {
+  damage: "Spell damage",
+  strike: "Weapon strike",
+  heal: "Heal",
+  modify: "Buff or debuff",
+};
+
+export function isEditable(effect: SkillEffect): boolean {
+  return (EDITABLE_EFFECTS as readonly string[]).includes(effect.type);
+}
+
+/** A sensible starting effect of each kind. */
+export function defaultEffect(type: EditableEffect): SkillEffect {
+  switch (type) {
+    case "damage":
+      return { type: "damage", kind: "magical", element: "fire", power: 1 };
+    case "strike":
+      return { type: "strike", power: 1.5 };
+    case "heal":
+      return { type: "heal", power: 1 };
+    case "modify":
+      return {
+        type: "modify",
+        modifier: {
+          name: "Boost",
+          stat: "attack",
+          op: "mul",
+          value: 1.5,
+          duration: 100,
+          harmful: false,
+        },
+      };
+  }
+}
+
+/**
+ * Where a new effect is usually aimed, so switching the effect of a skill
+ * also gives it a target that makes sense.
+ */
+export function defaultTarget(effect: SkillEffect): Skill["target"] {
+  if (effect.type === "heal") return "ally";
+  if (effect.type === "modify")
+    return effect.modifier.harmful ? "enemy" : "ally";
+  return "enemy";
+}
+
+/** One line on what a skill does, from its data: "Fire damage x1.2, plus". */
+export function effectSummary(skill: Skill): string {
+  const { effect } = skill;
+  const shape = skill.area === "single" ? "" : `, ${skill.area}`;
+  switch (effect.type) {
+    case "damage":
+      return `${effect.element} damage ×${effect.power}${shape}`;
+    case "strike":
+      return `weapon strike ×${effect.power}${shape}`;
+    case "heal":
+      return `heals ×${effect.power} magic${shape}`;
+    case "modify": {
+      const m = effect.modifier;
+      const change = m.op === "mul" ? `×${m.value}` : signed(m.value);
+      return `${m.stat} ${change} for ${m.duration}${shape}`;
+    }
+    default:
+      return `${effect.type}${shape}`;
+  }
+}
+
+function signed(value: number): string {
+  return value >= 0 ? `+${value}` : `${value}`;
+}
+
+/** What stops a skill from being usable, in words; empty when it is fine. */
+export function skillProblems(skill: Skill): string[] {
+  const problems: string[] = [];
+  if (skill.name.trim() === "") problems.push("Give the skill a name.");
+  if (skill.mpCost < 0) problems.push("MP cost can't be negative.");
+  const { effect } = skill;
+  if (
+    (effect.type === "damage" ||
+      effect.type === "strike" ||
+      effect.type === "heal") &&
+    effect.power <= 0
+  ) {
+    problems.push("Power must be above 0.");
+  }
+  if (effect.type === "strike" && skill.target !== "enemy") {
+    problems.push("A weapon strike must target an enemy.");
+  }
+  if (effect.type === "modify" && effect.modifier.duration <= 0) {
+    problems.push("A buff or debuff needs a duration.");
+  }
+  return problems;
+}

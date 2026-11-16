@@ -445,11 +445,37 @@ Ideas to build in small steps, roughly in this order when they fit:
 
 ## char (phase 4)
 
-Character builder (name, type, skills) and skill designer (form over the
-effect blocks, live damage preview, power budget). Stored in the browser
-(IndexedDB) with JSON export and import; cloud sync later. **Test in
-melee**: all modules share one origin, so char writes a fight setup in
-melee's format to a storage key melee defines, then opens `/melee/`.
+**Bootstrapped** (`modules/char`). A library of four lists, all plain data:
+
+- **Skills**: melee's own `Skill` type. The designer edits spell damage,
+  weapon strikes, heals and buffs/debuffs; other effects pass through.
+- **Gear**: a slot (weapon, armor, accessory) and stat bonuses (`add` or
+  `mul`). A weapon also says how it attacks (melee's `Weapon`).
+- **Types**: a class or an enemy type. Stats at level 1, growth per level,
+  an unarmed attack, traits, an icon, and the level each skill is learned
+  at. Enemy types also have a threat.
+- **Characters**: a type at a level (1 to 50), wearing gear. Characters of
+  a class form the party; characters of an enemy type the monster pool.
+
+**Stats**: `round(base + growth x (level - 1))`, then gear the way melee
+applies modifiers: `(stat + adds) x muls`, rounded. Experience: a level
+costs `100 x level`; `gainXp` levels up as often as it pays for.
+
+**Import into melee and jrpg**: melee owns a roster format (`shared/roster.ts`:
+party and monster pool as `CombatantDef`s under one storage key). Char
+compiles every character into a `CombatantDef` (levels and gear worked into
+plain stats) and writes the roster on every change; melee offers it as the
+**Custom** roster on its start screen, and jrpg sets out with the imported
+party. All modules share one origin, so no server is involved. Char depends
+on melee, never the other way round.
+
+The library is saved in the browser (localStorage), with JSON export and
+import.
+
+Still to come: a live damage preview and power budget in the skill
+designer, the remaining effect types (statuses, summons), resistances per
+type, AI targeting profiles, IndexedDB or cloud saves, and jrpg awarding
+experience.
 
 ## Phases
 

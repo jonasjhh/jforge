@@ -298,7 +298,7 @@ function UnitCell({
         </span>
       </span>
       <span className="unit-foot">
-        <Portrait defId={unit.defId} />
+        <Portrait defId={unit.portrait ?? unit.defId} />
         <span className="unit-foot-bars">
           {unit.skills.length > 0 && unit.base.maxMp > 0 && (
             <span
