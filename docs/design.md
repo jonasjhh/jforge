@@ -375,6 +375,10 @@ party wins (real play also uses skills and movement);
 a test keeps each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
+After a victory, **Next battle** draws a new encounter (new encounter seed,
+same difficulty). After a defeat or draw, **Try again** replays the same
+encounter with a new battle seed.
+
 ## Open questions
 
 **Knocked-out units.** Decided: bodies stay. A knocked-out unit keeps its

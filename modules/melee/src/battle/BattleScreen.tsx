@@ -31,7 +31,8 @@ import { useBattle } from "./useBattle";
 interface BattleScreenProps {
   setup: BattleSetup;
   seed: number;
-  onRestart: () => void;
+  /** After a battle: `won` starts a new encounter, otherwise a retry. */
+  onRestart: (won: boolean) => void;
   onExit: () => void;
 }
 
@@ -346,9 +347,9 @@ export function BattleScreen({
               <button
                 type="button"
                 className="command action"
-                onClick={onRestart}
+                onClick={() => onRestart(phase.winner === "player")}
               >
-                Play again
+                {phase.winner === "player" ? "Next battle" : "Try again"}
               </button>
               <button type="button" className="command" onClick={onExit}>
                 Back

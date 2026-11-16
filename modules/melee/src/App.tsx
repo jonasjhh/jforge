@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { BattleSetup, Difficulty } from "../shared";
+import { randomEncounter, type BattleSetup, type Difficulty } from "../shared";
 import { BattleScreen } from "./battle/BattleScreen";
 import { StartScreen } from "./StartScreen";
 
@@ -30,8 +30,20 @@ export function App() {
       key={battle.seed}
       setup={battle.setup}
       seed={battle.seed}
-      // Play again: the same encounter, a fresh battle seed.
-      onRestart={() => setBattle({ ...battle, seed: newSeed() })}
+      onRestart={(won) => {
+        if (!won) {
+          // Retry: the same encounter, a fresh battle seed.
+          setBattle({ ...battle, seed: newSeed() });
+          return;
+        }
+        // Next battle: a new random encounter at the chosen difficulty.
+        const next = newSeed();
+        setEncounterSeed(next);
+        setBattle({
+          setup: randomEncounter(next, difficulty),
+          seed: newSeed(),
+        });
+      }}
       onExit={() => setBattle(null)}
     />
   );
