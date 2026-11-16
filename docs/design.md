@@ -516,6 +516,19 @@ Still open:
   such as a class gaining a skill; saves are never migrated. Exported
   library files of an older version no longer import.
 
+### Skill design guidelines
+
+Guidelines for good design, not hard rules: nothing enforces them, and a
+skill may break one for a reason worth stating.
+
+- **Utility pays its way.** A skill that neither deals damage nor heals
+  should either do something else as well or be cheap: at most a quarter
+  of its class's max MP, so it can be cast at least four times a battle
+  (the same line threat counts a skill in full at, `FULL_CASTS`).
+  Skills that don't follow it yet, to revisit one at a time: Provoke,
+  Iron Stance and War Cry (Fighter), Shield Wall and Guard (Knight),
+  Vanish (Rogue), Aegis and Last Rites (Paladin).
+
 ### Class roster plan (12 archetypes)
 
 Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
