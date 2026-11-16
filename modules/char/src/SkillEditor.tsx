@@ -22,6 +22,7 @@ const AREA_OPTIONS = [
   ["plus", "Plus (5 cells)"],
   ["square", "Square (3×3)"],
   ["line", "Line of two"],
+  ["row", "Whole row"],
   ["reach", "Everyone in weapon reach"],
 ] as const;
 const EFFECT_OPTIONS = EDITABLE_EFFECTS.map(

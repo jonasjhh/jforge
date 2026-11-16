@@ -129,6 +129,26 @@ export const blessedBlade: Weapon = {
   kind: "melee",
 };
 
+/** Knight: a lance; like a sword, but it pierces. */
+export const lance: Weapon = {
+  id: "lance",
+  name: "Lance",
+  columns: 1,
+  depth: 1,
+  damageType: "pierce",
+  kind: "melee",
+};
+
+/** Sage: arcane words read from a tome; any column, front-most unit only. */
+export const tome: Weapon = {
+  id: "tome",
+  name: "Tome",
+  columns: "any",
+  depth: 1,
+  damageType: "arcane",
+  kind: "ranged",
+};
+
 /** Geomancer: hurled stones (crush); any column, front-most unit only. */
 export const rod: Weapon = {
   id: "rod",
@@ -163,6 +183,8 @@ export const weapons = [
   daggers,
   blessedBlade,
   rod,
+  lance,
+  tome,
 ];
 
 export const heal: Skill = {
@@ -594,6 +616,58 @@ export const upheaval: Skill = {
   effect: { type: "heave", rows: 1 },
 };
 
+/**
+ * Knight: for a while, the Knight and every ally in its row take less
+ * physical damage (defense x1.5).
+ */
+export const shieldWall: Skill = {
+  id: "shield-wall",
+  name: "Shield Wall",
+  description:
+    "You and every ally in your row raise your guard: defense x1.5 for a while.",
+  mpCost: 6,
+  target: "self",
+  area: "row",
+  effect: {
+    type: "modify",
+    modifier: {
+      name: "Shield Wall",
+      stat: "defense",
+      op: "mul",
+      value: 1.5,
+      duration: 150,
+      harmful: false,
+    },
+  },
+};
+
+/**
+ * Sage: lays bare one enemy's weak points; for a while it takes x1.3 from
+ * every damage type (EXPOSE_FACTOR). Immune stays immune.
+ */
+export const expose: Skill = {
+  id: "expose",
+  name: "Expose",
+  description:
+    "Lays bare one enemy's weak points: it takes x1.3 damage of every type for a while.",
+  mpCost: 8,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "exposed",
+      name: "Exposed",
+      effect: "expose",
+      harmful: true,
+      stat: "magic",
+      power: 0,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
 export const skills = [
   heal,
   revive,
@@ -620,6 +694,8 @@ export const skills = [
   raiseBoulder,
   shatter,
   upheaval,
+  shieldWall,
+  expose,
 ];
 
 export const fighter: CombatantDef = {
@@ -857,6 +933,48 @@ export const geomancer: CombatantDef = {
   preferredRow: 1,
 };
 
+/**
+ * Protector of the line: heavy and slow, with a lance. Where the Fighter
+ * draws attacks, the Knight makes its row harder to break.
+ */
+export const knight: CombatantDef = {
+  id: "knight",
+  name: "Knight",
+  stats: {
+    maxHp: 125,
+    maxMp: 18,
+    attack: 18,
+    magic: 6,
+    defense: 22,
+    spirit: 12,
+    speed: 8,
+  },
+  weapon: lance,
+  skills: [shieldWall],
+  preferredRow: 0,
+};
+
+/**
+ * Knowledge and counter-magic: where the Mage destroys and the Healer
+ * restores, the Sage weakens enemies and undoes what they do.
+ */
+export const sage: CombatantDef = {
+  id: "sage",
+  name: "Sage",
+  stats: {
+    maxHp: 75,
+    maxMp: 45,
+    attack: 6,
+    magic: 18,
+    defense: 7,
+    spirit: 20,
+    speed: 11,
+  },
+  weapon: tome,
+  skills: [expose],
+  preferredRow: 2,
+};
+
 export const playerTypes = [
   fighter,
   lancer,
@@ -868,6 +986,8 @@ export const playerTypes = [
   rogue,
   paladin,
   geomancer,
+  knight,
+  sage,
 ];
 /** Fast and frail; its bite poisons. Likes soft targets. */
 export const viper: CombatantDef = {

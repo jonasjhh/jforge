@@ -131,9 +131,11 @@ export interface StatusDef {
    * heal / damage: HP per tick. stealth: hidden until it ends. shield:
    * absorbs `power x stat` damage before HP. ward: can't be knocked out
    * (a lethal hit leaves 1 HP). taunt: enemies that single out a target
-   * must pick it while they can. The last four just last until they end.
+   * must pick it while they can. expose: takes more from every damage type
+   * (see EXPOSE_FACTOR). The last five just last until they end.
    */
-  effect: "heal" | "damage" | "stealth" | "shield" | "ward" | "taunt";
+  effect:
+    "heal" | "damage" | "stealth" | "shield" | "ward" | "taunt" | "expose";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */
@@ -242,10 +244,11 @@ export type SkillEffect =
 /**
  * Which cells a skill hits around the aimed cell. The two grids form one
  * battlefield 5 wide and 6 deep, front rows touching, so an area can spill
- * across the front line onto the other side. "reach" ignores the aimed cell's
- * surroundings: it covers every enemy the caster's weapon can reach.
+ * across the front line onto the other side. "row" is the aimed cell's whole
+ * row on its own side. "reach" ignores the aimed cell's surroundings: it
+ * covers every enemy the caster's weapon can reach.
  */
-export type SkillArea = "single" | "plus" | "square" | "line" | "reach";
+export type SkillArea = "single" | "plus" | "square" | "line" | "row" | "reach";
 
 /** A skill is plain data, so char can design new ones later. */
 export interface Skill {

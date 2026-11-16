@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import {
   AMBUSH_POWER,
+  EXPOSE_FACTOR,
   effectiveStat,
   isAlive,
   type Modifier,
@@ -48,6 +49,8 @@ function statusText(status: Status, speed: number): string {
       return "Can't be knocked out: a fatal hit leaves 1 HP.";
     case "taunt":
       return "Provoking: enemies that single out a target must pick it.";
+    case "expose":
+      return `Exposed: takes ×${EXPOSE_FACTOR} damage of every type.`;
   }
 }
 

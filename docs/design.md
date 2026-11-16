@@ -253,6 +253,16 @@ cell) and its `area` which cells it hits around the aimed one.
   can't reach the Fighter is free; area skills are free; stealth wins
   over taunt (a hidden taunter binds no one). The AI casts it only with
   allies to cover, and less the more the Fighter is hurt.
+- **Shield Wall** (Knight): a `self` skill with the **row** area (the
+  aimed cell's whole row, on its own side only): the Knight and every
+  ally in its row get defense x1.5 for 150 game time, 6 MP. It hardens
+  the front line against weapons; spells go through spirit and are not
+  affected.
+- **Expose** (Sage): an **expose** status on one enemy (150 game time,
+  8 MP): it takes x1.3 from every damage type (`EXPOSE_FACTOR`, applied
+  in `resistance`, so previews and the AI see it). Resisted types stay
+  resisted, only less so; immune stays immune. It is harmful, so Cure
+  removes it.
 - **Aimed Shot** (Archer): a bow strike at x1.0 that **ignores cover**
   (`ignoreCover` on a strike), so it reaches any visible enemy, back row
   included, 6 MP. Its job is picking off casters and the wounded behind a
@@ -470,9 +480,9 @@ Still open:
   a time, each reviewed first. A saved melee class in char gets the
   skills melee adds to it; a class designed in char is left alone.
 
-### Class roster plan (10 archetypes)
+### Class roster plan (12 archetypes)
 
-Existing (10): **Fighter** (melee, front; Cleave hits all in reach, Provoke draws single-target attacks), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
+Existing (12): **Fighter** (melee, front; Cleave hits all in reach, Provoke draws single-target attacks), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
@@ -480,7 +490,10 @@ Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields
 an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
-and impact; raises boulders, shatters them on crowds, heaves units back).
+and impact; raises boulders, shatters them on crowds, heaves units back),
+**Knight** (protector of the line: heavy and slow, with a lance; Shield
+Wall hardens its whole row), **Sage** (knowledge and counter-magic, with a
+tome of arcane words; Expose makes an enemy take more of everything).
 
 Planned, in rough order (names and kits are proposals):
 
@@ -530,8 +543,7 @@ Gear a character can't use is worn in name only: `equippedGear` leaves it
 out, so it adds no stats and no weapon, and the character editor marks it
 "(can't use)" and offers only what fits. The class editor sets the list
 ("Any gear" or a choice of categories); the gear editor sets a piece's
-category. The starter Knight takes blades, polearms, heavy and light
-armor; the Sage staves, foci and robes.
+category.
 
 **Melee's classes** (`shared/melee.ts`): every melee class is also a char
 class (`melee-fighter`, ...), in the starter library and added to saved
@@ -551,13 +563,23 @@ category:
 | Healer             | staff          | robe, light  |
 | Warlock            | focus, dagger  | robe, light  |
 | Geomancer          | staff, focus   | robe, light  |
+| Knight             | polearm, blade | heavy, light |
+| Sage               | focus, staff   | robe         |
 
 A melee class or basic piece saved before categories gets its
-proficiencies or category filled in when the library loads.
+proficiencies or category filled in when the library loads. A saved melee
+class gets the skills melee has added to it since.
+
+The Knight and Sage were once designed in the starter library
+(`type-knight`, `type-sage`). A saved library that still has them loses
+them when it loads: their characters move to `melee-knight` and
+`melee-sage`, and the one named after the class's hero (the starter's
+Aldric and Mira) becomes that hero, keeping level, experience and gear.
+A run already under way keeps its own copy of the library.
 
 **Heroes and basic gear**: with the classes come a named hero of each
 (`melee-hero-fighter`, ...: Brann, Isolde, Vex, Tamsin, Orrin, Hale, Wren,
-Cade, Sable, Lucan) and basic gear: each class's own weapon as a piece
+Cade, Sable, Lucan, Aldric, Mira) and basic gear: each class's own weapon as a piece
 (`melee-gear-fighter`, "Fighter's Sword", +3 to the class's best of
 attack, magic and spirit) and two armors (Traveller's Jerkin, Traveller's
 Robe). Basic gear has no drawbacks. `starterKit` fills a character's

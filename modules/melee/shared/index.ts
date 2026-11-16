@@ -29,6 +29,7 @@ export { applyStatus } from "./status";
 export { GAUGE_FULL, fillRate, turnOrder } from "./timeline";
 export {
   DEFENSE_K,
+  EXPOSE_FACTOR,
   magicalHit,
   physicalHit,
   resistance,

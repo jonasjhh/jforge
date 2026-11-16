@@ -14,6 +14,7 @@ import {
 import { compileRoster } from "../compile";
 import { MAX_LEVEL } from "../progression";
 import { starterLibrary } from "../starter";
+import { designedLibrary } from "./designed";
 
 describe("flatStats", () => {
   it("gives every stat the same value", () => {
@@ -33,8 +34,8 @@ describe("nextId", () => {
     library = upsert(library, "gear", blankGear("gear-1"));
     library = upsert(library, "gear", blankGear("gear-3"));
     expect(nextId(library, "gear")).toBe("gear-2");
-    // The starter library already has unit-1 to unit-3.
-    expect(nextId(starterLibrary(), "characters")).toBe("unit-4");
+    // The library already has unit-1 to unit-3.
+    expect(nextId(designedLibrary(), "characters")).toBe("unit-4");
   });
 });
 
@@ -60,7 +61,7 @@ describe("upsert", () => {
 });
 
 describe("remove", () => {
-  const library = starterLibrary();
+  const library = designedLibrary();
 
   it("removes a skill and unlearns it everywhere", () => {
     const after = remove(library, "skills", "heal");
@@ -78,7 +79,7 @@ describe("remove", () => {
   });
 
   it("removes a type together with its characters", () => {
-    const after = remove(library, "archetypes", "type-knight");
+    const after = remove(library, "archetypes", "type-squire");
     expect(after.characters.map((c) => c.name)).toEqual(
       library.characters.slice(1).map((c) => c.name),
     );

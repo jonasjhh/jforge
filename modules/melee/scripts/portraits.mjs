@@ -21,6 +21,8 @@ const PORTRAITS = {
   rogue: ["hood", "Lorc"],
   paladin: ["templar-shield", "Delapouite"],
   geomancer: ["crystal-cluster", "Lorc"],
+  knight: ["visored-helm", "Lorc"],
+  sage: ["open-book", "Lorc"],
   slime: ["slime", "Delapouite"],
   wolf: ["wolf-head", "Lorc"],
   viper: ["snake", "Lorc"],

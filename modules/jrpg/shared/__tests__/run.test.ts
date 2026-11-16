@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ALDRIC, MIRA, pair } from "./pair";
 import { starterLibrary } from "@jforge/char/shared";
 import {
   MAX_PARTY_SIZE,
@@ -58,7 +59,7 @@ const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
 /** A run standing at the given encounters. */
 const at = (encounters: Encounter[], changes: Partial<Run> = {}): Run => ({
   ...startRun(library, 1),
-  party: library.characters.slice(0, 2),
+  party: pair(library),
   baseLevel: 3,
   map: roadOf(encounters),
   position: 0,
@@ -76,7 +77,7 @@ const ally: Encounter = {
   character: {
     id: "new",
     name: "Nell",
-    archetypeId: "type-sage",
+    archetypeId: "melee-sage",
     level: 1,
     xp: 0,
     gear: {},
@@ -632,7 +633,7 @@ describe("committing to a battle", () => {
 
   it("locks the party's gear while the fight is on", () => {
     const committed = commitBattle(at([battle], { bag: ["gear-ring"] }));
-    expect(changeGear(committed, "unit-1", "accessory", "gear-ring")).toBe(
+    expect(changeGear(committed, ALDRIC, "accessory", "gear-ring")).toBe(
       committed,
     );
   });
@@ -759,21 +760,21 @@ describe("resolveGear", () => {
   });
 
   it("puts it on a character, whose old gear goes in the bag", () => {
-    const run = resolveGear(at([ring]), "world-spear", "unit-1");
+    const run = resolveGear(at([ring]), "world-spear", ALDRIC);
     expect(run.party[0]!.gear.weapon).toBe("world-spear");
     expect(run.bag).toEqual(["gear-sword"]);
   });
 
   it("keeps it in the bag when the character's class can't use it", () => {
     // A knight takes blades and polearms, not bows.
-    const run = resolveGear(at([ring]), "gear-bow", "unit-1");
+    const run = resolveGear(at([ring]), "gear-bow", ALDRIC);
     expect(run.party[0]!.gear.weapon).toBe("gear-sword");
     expect(run.bag).toEqual(["gear-bow"]);
   });
 
   it("moves on with nothing for no piece or one that isn't on offer", () => {
     for (const id of [null, "gear-mail"]) {
-      const run = resolveGear(at([ring]), id, "unit-1");
+      const run = resolveGear(at([ring]), id, ALDRIC);
       expect(run.bag).toEqual([]);
       expect(run.position).toBe(1);
     }
@@ -787,7 +788,7 @@ describe("resolveGear", () => {
 
 describe("resolveTraining", () => {
   it("gives the chosen member a level and moves on", () => {
-    const run = resolveTraining(at([training]), "unit-2");
+    const run = resolveTraining(at([training]), MIRA);
     expect(run.party.map((c) => c.level)).toEqual([3, 4]);
     expect(run.position).toBe(1);
   });
@@ -800,7 +801,7 @@ describe("resolveTraining", () => {
 
   it("does nothing off a training encounter", () => {
     const run = at([battle]);
-    expect(resolveTraining(run, "unit-1")).toBe(run);
+    expect(resolveTraining(run, ALDRIC)).toBe(run);
   });
 });
 
@@ -810,7 +811,7 @@ describe("changeGear", () => {
   });
 
   it("swaps bag gear into a slot", () => {
-    const after = changeGear(run, "unit-1", "weapon", "world-spear");
+    const after = changeGear(run, ALDRIC, "weapon", "world-spear");
     expect(after.party[0]!.gear.weapon).toBe("world-spear");
     expect(after.bag.sort()).toEqual([
       "gear-bow",
@@ -821,30 +822,29 @@ describe("changeGear", () => {
   });
 
   it("refuses gear the character's class can't use", () => {
-    expect(changeGear(run, "unit-1", "weapon", "gear-bow")).toBe(run);
+    expect(changeGear(run, ALDRIC, "weapon", "gear-bow")).toBe(run);
     // A sage wears robes, not plate; accessories fit anyone.
-    expect(changeGear(run, "unit-2", "armor", "world-plate")).toBe(run);
+    expect(changeGear(run, MIRA, "armor", "world-plate")).toBe(run);
     expect(
-      changeGear(run, "unit-2", "accessory", "gear-ring").party[1]!.gear
-        .accessory,
+      changeGear(run, MIRA, "accessory", "gear-ring").party[1]!.gear.accessory,
     ).toBe("gear-ring");
   });
 
   it("empties a slot into the bag", () => {
-    const after = changeGear(run, "unit-1", "armor", null);
+    const after = changeGear(run, ALDRIC, "armor", null);
     expect(after.party[0]!.gear.armor).toBeUndefined();
     expect(after.bag).toContain("gear-mail");
   });
 
   it("refuses gear that isn't in the bag or fits another slot", () => {
-    expect(changeGear(run, "unit-1", "weapon", "gear-staff")).toBe(run);
-    expect(changeGear(run, "unit-1", "armor", "gear-ring")).toBe(run);
+    expect(changeGear(run, ALDRIC, "weapon", "gear-staff")).toBe(run);
+    expect(changeGear(run, ALDRIC, "armor", "gear-ring")).toBe(run);
     expect(changeGear(run, "nobody", "accessory", "gear-ring")).toBe(run);
   });
 
   it("uses up one copy when the bag holds two", () => {
     const two = at([battle], { bag: ["gear-ring", "gear-ring"] });
-    expect(changeGear(two, "unit-1", "accessory", "gear-ring").bag).toEqual([
+    expect(changeGear(two, ALDRIC, "accessory", "gear-ring").bag).toEqual([
       "gear-ring",
     ]);
   });

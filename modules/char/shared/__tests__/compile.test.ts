@@ -13,17 +13,17 @@ import {
   toCombatantDef,
   unlockedSkills,
 } from "../compile";
-import { starterLibrary } from "../starter";
+import { designedLibrary } from "./designed";
 import type { Character } from "../types";
 
-const library = starterLibrary();
+const library = designedLibrary();
 const [aldric, mira, goblin] = library.characters as [
   Character,
   Character,
   Character,
 ];
-const knight = library.archetypes.find((a) => a.id === "type-knight")!;
-const sage = library.archetypes.find((a) => a.id === "type-sage")!;
+const knight = library.archetypes.find((a) => a.id === "type-squire")!;
+const sage = library.archetypes.find((a) => a.id === "type-scholar")!;
 const orphan: Character = { ...aldric, id: "lost", archetypeId: "gone" };
 
 describe("archetypeOf", () => {
@@ -36,7 +36,7 @@ describe("archetypeOf", () => {
 describe("characterStats", () => {
   it("levels first, then puts gear on top", () => {
     const stats = characterStats(library, aldric)!;
-    // Knight level 3: 16 + 2 x 2 attack; Iron Sword +6.
+    // Squire level 3: 16 + 2 x 2 attack; Iron Sword +6.
     expect(stats.leveled.attack).toBe(20);
     expect(stats.total.attack).toBe(26);
     // Chain Mail: +8 defense, speed x0.9.
@@ -94,7 +94,7 @@ describe("toCombatantDef", () => {
     expect(isCombatantDef(def)).toBe(true);
     expect(def).toMatchObject({
       id: "char-unit-2",
-      name: "Mira",
+      name: "Ilse",
       portrait: "mage",
       preferredRow: 2,
       stats: characterStats(library, mira)!.total,
@@ -124,8 +124,8 @@ describe("compileRoster", () => {
   it("sorts characters into the party and the monster pool", () => {
     const roster = compileRoster(library);
     expect(roster.party.map((d) => d.name)).toEqual([
-      "Aldric",
-      "Mira",
+      "Bram",
+      "Ilse",
       ...library.characters.slice(3).map((c) => c.name),
     ]);
     expect(roster.monsters.map((d) => d.name)).toEqual(["Goblin"]);

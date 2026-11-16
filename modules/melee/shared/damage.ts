@@ -21,8 +21,17 @@ export interface Hit {
 }
 
 /** The target's multiplier for a damage type (1 if not listed). */
+/** What an exposed unit (Expose) takes from every damage type, times. */
+export const EXPOSE_FACTOR = 1.3;
+
+/**
+ * The target's multiplier for `type`: its resistance, times EXPOSE_FACTOR
+ * while it is exposed. Immune stays immune.
+ */
 export function resistance(target: Unit, type: DamageType): number {
-  return target.resistances[type] ?? 1;
+  const base = target.resistances[type] ?? 1;
+  const exposed = target.statuses.some((s) => s.effect === "expose");
+  return exposed ? base * EXPOSE_FACTOR : base;
 }
 
 /**

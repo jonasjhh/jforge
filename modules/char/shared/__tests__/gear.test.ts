@@ -9,6 +9,7 @@ import {
 } from "../gear";
 import { blankCharacter, emptyLibrary, flatStats } from "../library";
 import { starterLibrary } from "../starter";
+import { designedLibrary } from "./designed";
 import type { Gear } from "../types";
 
 const stats = { ...flatStats(10), maxHp: 100 };
@@ -94,7 +95,7 @@ describe("equipping", () => {
 });
 
 describe("gear restrictions", () => {
-  const library = starterLibrary();
+  const library = designedLibrary();
   const [aldric, mira] = library.characters;
   const gear = (id: string) => library.gear.find((g) => g.id === id)!;
 
@@ -109,7 +110,7 @@ describe("gear restrictions", () => {
   });
 
   it("lets a class without a list use anything", () => {
-    const knight = library.archetypes.find((a) => a.id === "type-knight")!;
+    const knight = library.archetypes.find((a) => a.id === "type-squire")!;
     const open = { ...knight };
     delete open.proficiencies;
     expect(canUse(open, gear("gear-bow"))).toBe(true);

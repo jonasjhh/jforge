@@ -28,6 +28,7 @@ const AREA_REACH: Record<SkillArea, number> = {
   line: 1.5,
   plus: 3,
   square: 4,
+  row: 2.5,
   reach: 2,
 };
 /** A skill it can cast this many times on its MP counts in full. */

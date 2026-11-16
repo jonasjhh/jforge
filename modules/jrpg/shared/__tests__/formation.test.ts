@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ALDRIC, MIRA, pair } from "./pair";
 import { starterLibrary } from "@jforge/char/shared";
 import { createBattle } from "@jforge/melee/shared";
 import { formationOf, moveMember } from "../formation";
@@ -23,12 +24,11 @@ const battle: Encounter = {
 /** Aldric (a Knight, front row) and Mira (a Sage, back row) at a battle. */
 const run: Run = {
   ...startRun(library, 1),
-  party: library.characters.slice(0, 2),
+  party: pair(library),
   map: roadOf([battle]),
   position: 0,
   path: [0],
 };
-const [ALDRIC, MIRA] = ["unit-1", "unit-2"];
 
 describe("formationOf", () => {
   it("stands members in their class's row, from the middle out", () => {

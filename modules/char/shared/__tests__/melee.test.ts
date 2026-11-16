@@ -20,6 +20,7 @@ import {
 } from "../melee";
 import { statsAtLevel } from "../progression";
 import { starterLibrary } from "../starter";
+import { DESIGNED_CLASSES, designedLibrary } from "./designed";
 
 const { fighter, healer, mage, playerTypes } = content;
 
@@ -123,6 +124,52 @@ describe("withMeleeClasses", () => {
     expect(library.archetypes.find((a) => a.id === "sellsword")).toBe(designed);
   });
 
+  it("turns the starter's former Knight and Sage into melee's", () => {
+    const former = (id: string, name: string) => ({
+      ...DESIGNED_CLASSES[0]!,
+      id,
+      name,
+    });
+    const person = (id: string, name: string, archetypeId: string) => ({
+      id,
+      name,
+      archetypeId,
+      level: 4,
+      xp: 20,
+      gear: { weapon: "gear-sword" },
+    });
+    const library = withMeleeClasses({
+      ...emptyLibrary(),
+      archetypes: [
+        former("type-knight", "Knight"),
+        former("type-sage", "Sage"),
+      ],
+      characters: [
+        person("unit-1", "Aldric", "type-knight"),
+        person("unit-2", "Mira", "type-sage"),
+        person("unit-7", "Gareth", "type-knight"),
+      ],
+    });
+    expect(library.archetypes.map((a) => a.id)).not.toContain("type-knight");
+    expect(library.archetypes.map((a) => a.id)).not.toContain("type-sage");
+    const of = (name: string) =>
+      library.characters.filter((c) => c.name === name);
+    expect(of("Aldric")).toEqual([
+      { ...person(meleeHeroId("knight"), "Aldric", meleeClassId("knight")) },
+    ]);
+    expect(of("Mira")).toHaveLength(1);
+    expect(of("Mira")[0]).toMatchObject({
+      id: meleeHeroId("sage"),
+      archetypeId: meleeClassId("sage"),
+      level: 4,
+    });
+    expect(of("Gareth")[0]).toMatchObject({
+      id: "unit-7",
+      archetypeId: meleeClassId("knight"),
+    });
+    expect(withMeleeClasses(library)).toBe(library);
+  });
+
   it("is part of the starter library, which still saves and loads", () => {
     const starter = starterLibrary();
     expect(withMeleeClasses(starter)).toBe(starter);
@@ -212,8 +259,8 @@ describe("starterKit", () => {
   });
 
   it("gives a designed class armor only", () => {
-    const starter = starterLibrary();
-    const sage = starter.archetypes.find((a) => a.id === "type-sage")!;
+    const starter = designedLibrary();
+    const sage = starter.archetypes.find((a) => a.id === "type-scholar")!;
     expect(starterKit(starter, blankCharacter("c", sage)).gear).toEqual({
       armor: "melee-gear-robe",
     });
