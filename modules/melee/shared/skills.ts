@@ -129,6 +129,9 @@ export function validateSkill(
   if (skill.notSelf && target.id === unit.id) {
     return `${skill.name} can't target its caster`;
   }
+  if (skill.notFromFront && unit.position.row === 0) {
+    return `${skill.name} can't be used while locked in hand-to-hand combat in the front row`;
+  }
   if (skill.adjacent) {
     const dc = Math.abs(target.position.col - unit.position.col);
     const dr = Math.abs(target.position.row - unit.position.row);

@@ -152,7 +152,7 @@ function rescueValue(rescuer: Unit, ally: Unit): number {
   if (hurt < 0.5) return 0;
   const shelter = ROW_TAKEN[ally.position.row] - ROW_TAKEN[2];
   const melee = ally.weapon.kind === "melee" ? 0.5 : 1;
-  const gaugeLost = (GAUGE_WEIGHT * ally.gauge) / 2 / GAUGE_FULL;
+  const gaugeLost = (GAUGE_WEIGHT * Math.max(0, ally.gauge)) / 2 / GAUGE_FULL;
   const gain = 4 * SUPPORT_VALUE * shelter * frailer(ally, rescuer) * hurt;
   const value = gain * melee - gaugeLost;
   if (value <= 0) return value;

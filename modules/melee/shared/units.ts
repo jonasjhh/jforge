@@ -11,7 +11,10 @@ import type {
   Unit,
 } from "./types";
 
-/** A fresh battle unit for `def`, at full HP and MP with an empty gauge. */
+/**
+ * A fresh battle unit for `def`, at full HP and MP, its gauge empty or at
+ * its weapon's `startGauge`.
+ */
 export function makeUnit(
   def: CombatantDef,
   side: Side,
@@ -35,7 +38,7 @@ export function makeUnit(
     statuses: [],
     hp: def.stats.maxHp,
     mp: def.stats.maxMp,
-    gauge: 0,
+    gauge: def.weapon.startGauge ?? 0,
     modifiers: modifiers.map((m) => ({ ...m })),
     ...(def.obstacle ? { obstacle: true } : {}),
     ...(def.portrait ? { portrait: def.portrait } : {}),

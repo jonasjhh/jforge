@@ -109,6 +109,11 @@ export interface Weapon {
   kind: "melee" | "ranged";
   /** A status every damaging hit puts on the target, e.g. venom. */
   onHit?: StatusDef;
+  /**
+   * The holder's gauge at the start of a battle; absent means 0. Below 0
+   * it acts later than its speed alone would make it (a bow: -500).
+   */
+  startGauge?: number;
 }
 
 /** One cell of the battlefield, on either side. */
@@ -304,6 +309,11 @@ export interface Skill {
    * across or along, on the same side (e.g. Guard).
    */
   adjacent?: boolean;
+  /**
+   * True if it can't be used from the front row, where the caster is
+   * locked in hand-to-hand combat (e.g. Aimed Shot).
+   */
+  notFromFront?: boolean;
   /** HP paid to use it. Refused unless the caster has more HP than this. */
   hpCost?: number;
   /** Costs only half a turn, like Move: the gauge drops to half. */

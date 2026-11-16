@@ -102,7 +102,7 @@ const ENEMY_TYPES: Archetype[] = [
     "bandit",
     "Bandit Archer",
     "archer",
-    [48, 12, 13, 0, 5, 5, 13],
+    [48, 12, 13, 0, 5, 5, 12],
     [5, 1, 1.5, 0, 0.5, 0.5, 0.3],
     c.bow,
     2,

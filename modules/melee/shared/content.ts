@@ -30,6 +30,9 @@ export const bow: Weapon = {
   depth: 1,
   damageType: "pierce",
   kind: "ranged",
+  // Drawing and nocking takes time: a bow's holder acts after most units
+  // at first, however fast it is.
+  startGauge: -500,
 };
 /** Magic ignores cover: any enemy. */
 export const staff: Weapon = {
@@ -322,15 +325,22 @@ export const provoke: Skill = {
   },
 };
 
-/** Archer: a careful shot over the front line at a covered enemy. */
+/**
+ * Archer: a careful shot over the front line at a covered enemy. It takes
+ * aim first (castTime) and lands on the aimed cell, so the target can step
+ * out of it; x1.5 makes up for the wait. Not from the front row.
+ */
 export const aimedShot: Skill = {
   id: "aimed-shot",
   name: "Aimed Shot",
-  description: "A careful shot that finds any visible enemy, even in cover.",
+  description:
+    "Take aim, then a careful shot (x1.5) that finds any visible enemy, even in cover. It lands where the target stood. Not while locked in melee in the front row.",
   mpCost: 6,
   target: "enemy",
   area: "single",
-  effect: { type: "strike", power: 1, ignoreCover: true },
+  castTime: 40,
+  notFromFront: true,
+  effect: { type: "strike", power: 1.5, ignoreCover: true },
 };
 
 /** Lancer: drags an enemy one row forward, out of cover. */
@@ -864,7 +874,7 @@ export const archer: CombatantDef = {
     magic: 6,
     defense: 10,
     spirit: 10,
-    speed: 13,
+    speed: 12,
   },
   weapon: bow,
   skills: [aimedShot],

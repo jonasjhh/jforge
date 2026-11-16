@@ -72,7 +72,8 @@ export function rescue(
     }
   }
   events.push({ type: "rescued", unitId: ally.id, byId: rescuer.id });
-  ally.gauge /= 2;
+  // Half of a gauge still below 0 (a bow's late start) would be a gain.
+  ally.gauge = Math.min(ally.gauge, ally.gauge / 2);
   if (ally.gauge < GAUGE_FULL) dropReady(state, ally.id);
   events.push({ type: "gaugeChanged", unitId: ally.id, gauge: ally.gauge });
   applyModifier(state, rescuer, RESCUE_BRACE, events);

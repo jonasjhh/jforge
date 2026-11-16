@@ -323,7 +323,9 @@ function UnitCell({
           ) : (
             <span className="bar gauge" aria-hidden="true">
               <span
-                style={{ width: `${(unit.gauge / GAUGE_FULL) * 100}%` }}
+                style={{
+                  width: `${(Math.max(0, unit.gauge) / GAUGE_FULL) * 100}%`,
+                }}
                 className={unit.gauge >= GAUGE_FULL ? "full" : ""}
               />
             </span>

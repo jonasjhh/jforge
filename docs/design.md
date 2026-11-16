@@ -92,7 +92,10 @@ single, row, column, line, cross, 3x3 blast, whole side, N random.
 ### Time
 
 Each unit has a gauge from 0 to 1000 that fills at `speed` per unit of game
-time. The engine jumps straight to the next moment something happens (a
+time. It starts a battle at 0, or at the weapon's `startGauge`: a bow's is
+-500 (drawing and nocking takes time), so an archer acts after most units
+at first however fast it is, then at its full rate. Effects that halve a
+gauge never raise one still below 0. The engine jumps straight to the next moment something happens (a
 unit is ready, a modifier expires) instead of ticking frame by frame.
 
 - **Time freezes** while a player unit waits for a command, and during
@@ -305,10 +308,15 @@ cell) and its `area` which cells it hits around the aimed one.
   in `resistance`, so previews and the AI see it). Resisted types stay
   resisted, only less so; immune stays immune. It is harmful, so Cure
   removes it.
-- **Aimed Shot** (Archer): a bow strike at x1.0 that **ignores cover**
+- **Aimed Shot** (Archer): a bow strike at x1.5 that **ignores cover**
   (`ignoreCover` on a strike), so it reaches any visible enemy, back row
   included, 6 MP. Its job is picking off casters and the wounded behind a
-  front line; stealth still hides a unit from it.
+  front line; stealth still hides a unit from it. It **takes aim first**
+  (cast time 40, which x1.5 makes up for) and lands on the aimed cell:
+  the target can step out of it, be guarded or rescued, or the archer
+  knocked out first. It can't be used from the **front row**, where the
+  archer is locked in hand-to-hand combat (`notFromFront`), so pulling an
+  archer forward (Hook) takes it away.
 - **Heal** (Healer): one living ally, restores power x magic HP, never
   above max.
 - **Fireball** (Mage): any cell, hits a **plus** (the cell and its four
@@ -545,7 +553,7 @@ skill may break one for a reason worth stating.
 
 ### Class roster plan (12 archetypes)
 
-Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged; Aimed Shot ignores cover), **Mage**
+Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:

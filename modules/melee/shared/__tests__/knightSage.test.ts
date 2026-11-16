@@ -381,6 +381,12 @@ describe("Rescue", () => {
     expect(effectiveStat(self, "defense")).toBeCloseTo(defense * 1.3, 0);
   });
 
+  it("never raises a gauge still below 0 (a bow's late start)", () => {
+    const before = rescueTurn();
+    unit(before, ALLY).gauge = -400;
+    expect(unit(act(before, command).state, ALLY).gauge).toBe(-400);
+  });
+
   it("needs both cells free; a knocked-out body blocks too", () => {
     const taken = rescueTurn([2, 1]);
     expect(validateCommand(taken, unit(taken, KNIGHT), command)).toMatch(
