@@ -4,6 +4,6 @@ export const meta: ModuleMeta = {
   name: "melee",
   title: "Melee",
   description: "Battle engine: time-based turns on a 5x3 grid.",
-  themeColor: "#1c0f0f",
+  themeColor: "#111118",
   devPort: 5181,
 };
