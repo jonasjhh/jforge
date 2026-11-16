@@ -1,4 +1,5 @@
 import {
+  DEFENSE_K,
   defenseFactor,
   expectedPhysicalDamage,
   resistance,
@@ -118,6 +119,20 @@ function tauntValue(state: BattleState, taunter: Unit): number {
   return SUPPORT_VALUE * health;
 }
 
+/**
+ * Standing guard over an ally is worth as much as the ally is frailer than
+ * the guardian, and less the more the guardian is hurt. Nothing for an
+ * ally already guarded.
+ */
+function guardValue(guardian: Unit, ally: Unit): number {
+  if (ally.statuses.some((s) => s.effect === "guard")) return 0;
+  const toughness = (u: Unit) =>
+    effectiveStat(u, "maxHp") * (1 + effectiveStat(u, "defense") / DEFENSE_K);
+  const frailer = Math.max(0, 1 - toughness(ally) / toughness(guardian));
+  const health = guardian.hp / guardian.base.maxHp;
+  return 2 * SUPPORT_VALUE * frailer * health;
+}
+
 /** What the skill's effect on one victim is worth to the caster's side. */
 function victimValue(
   state: BattleState,
@@ -142,6 +157,7 @@ function victimValue(
       return sign * healValue(victim, healAmount(unit, victim, effect));
     case "status":
       if (effect.status.effect === "taunt") return tauntValue(state, victim);
+      if (effect.status.effect === "guard") return guardValue(unit, victim);
       return statusValue(p, unit, victim, effect.status, friend);
     case "modify": {
       const { modifier } = effect;

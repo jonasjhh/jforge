@@ -132,10 +132,19 @@ export interface StatusDef {
    * absorbs `power x stat` damage before HP. ward: can't be knocked out
    * (a lethal hit leaves 1 HP). taunt: enemies that single out a target
    * must pick it while they can. expose: takes more from every damage type
-   * (see EXPOSE_FACTOR). The last five just last until they end.
+   * (see EXPOSE_FACTOR). guard: single-target hits from enemies land on
+   * the unit that applied it instead, while it stands (see guard.ts). The
+   * last six just last until they end.
    */
   effect:
-    "heal" | "damage" | "stealth" | "shield" | "ward" | "taunt" | "expose";
+    | "heal"
+    | "damage"
+    | "stealth"
+    | "shield"
+    | "ward"
+    | "taunt"
+    | "expose"
+    | "guard";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */
@@ -275,6 +284,11 @@ export interface Skill {
   castTime?: number;
   /** True if the caster may not target itself (e.g. Quicken). */
   notSelf?: boolean;
+  /**
+   * True if it may only be aimed at a unit next to the caster: one cell
+   * across or along, on the same side (e.g. Guard).
+   */
+  adjacent?: boolean;
   /** HP paid to use it. Refused unless the caster has more HP than this. */
   hpCost?: number;
   /** Costs only half a turn, like Move: the gauge drops to half. */
@@ -498,6 +512,8 @@ export type BattleEvent =
   | { type: "unmoved"; unitId: string }
   | { type: "shieldBroken"; unitId: string; name: string }
   | { type: "warded"; unitId: string; name: string }
+  /** A hit aimed at `unitId` lands on its guardian `byId` instead. */
+  | { type: "guarded"; unitId: string; byId: string }
   | { type: "teleported"; unitId: string; from: Position; to: Position }
   | {
       type: "collided";

@@ -2,6 +2,7 @@ import { applyDamage, magicalHit, physicalHit } from "./damage";
 import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
 import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isStealthed } from "./stealth";
+import { guardianOf } from "./guard";
 import { tauntBlock } from "./taunt";
 import {
   GRID_COLUMNS,
@@ -126,6 +127,13 @@ export function validateSkill(
   if (skill.notSelf && target.id === unit.id) {
     return `${skill.name} can't target its caster`;
   }
+  if (skill.adjacent) {
+    const dc = Math.abs(target.position.col - unit.position.col);
+    const dr = Math.abs(target.position.row - unit.position.row);
+    if (!sameSide || dc + dr !== 1) {
+      return `${skill.name} needs a unit next to you`;
+    }
+  }
   if (skill.effect.type === "gauge") {
     if (target.casting) return `${target.name} is busy casting`;
     if (state.ready.includes(target.id))
@@ -199,10 +207,30 @@ export function skillVictims(
   cell: Cell,
 ): Unit[] {
   const spared = skill.effect.type === "shatter" ? unitAt(state, cell) : null;
-  return skillArea(state, unit, skill, cell).flatMap((c) => {
+  const victims = skillArea(state, unit, skill, cell).flatMap((c) => {
     const victim = unitAt(state, c);
     return victim && victim !== spared && isAlive(victim) ? [victim] : [];
   });
+  const guardian = guardedHit(state, unit, skill, victims);
+  return guardian ? [guardian] : victims;
+}
+
+/**
+ * The guardian a single-target strike or damage spell lands on instead of
+ * the one victim it was aimed at, or null if it lands as aimed.
+ */
+function guardedHit(
+  state: BattleState,
+  unit: Unit,
+  skill: Skill,
+  victims: Unit[],
+): Unit | null {
+  const { type } = skill.effect;
+  if (skill.area !== "single" || (type !== "strike" && type !== "damage")) {
+    return null;
+  }
+  const [aimed] = victims;
+  return aimed && victims.length === 1 ? guardianOf(state, unit, aimed) : null;
 }
 
 /**
@@ -344,7 +372,12 @@ function applySkill(
       : 1;
 
   // Victims are fixed before any effect lands, so order doesn't matter.
-  for (const target of skillVictims(state, unit, skill, cell)) {
+  const victims = skillVictims(state, unit, skill, cell);
+  const guardian = victims[0];
+  if (aimedAt && skill.area === "single" && guardian && guardian !== aimedAt) {
+    events.push({ type: "guarded", unitId: aimedAt.id, byId: guardian.id });
+  }
+  for (const target of victims) {
     const effect = skill.effect;
     switch (effect.type) {
       case "heal": {

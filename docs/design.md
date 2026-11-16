@@ -267,6 +267,19 @@ cell) and its `area` which cells it hits around the aimed one.
   ally in its row get defense x1.5 for 150 game time, 6 MP. It hardens
   the front line against weapons; spells go through spirit and are not
   affected.
+- **Guard** (Knight): a **guard** status on an ally **next to** the
+  Knight (one cell across or along; `adjacent` on the skill), 150 game
+  time, 5 MP. While it lasts and the Knight stands, an enemy's
+  single-target hit on that ally (a weapon attack, or a strike or damage
+  spell with the `single` area) lands on the Knight instead, against the
+  Knight's own defense, row and resistances, and the log says so. Area
+  skills, statuses and debuffs still reach the ally. The guard holds for
+  its time even if the two move apart. The AI casts it the more the ally
+  is frailer than the Knight (HP and defense), and less the more the
+  Knight is hurt; an AI attacker scores a guarded target as the Knight.
+- **Shield Bash** (Knight): a lance strike at x0.8 that pushes the enemy
+  one row back (5 MP); blocked, it crashes for x1.5 impact instead (the
+  same rule as other pushes).
 - **Expose** (Sage): an **expose** status on one enemy (150 game time,
   8 MP): it takes x1.3 from every damage type (`EXPOSE_FACTOR`, applied
   in `resistance`, so previews and the AI see it). Resisted types stay
@@ -508,7 +521,8 @@ side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields
 an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield
-Wall hardens its whole row), **Sage** (knowledge and counter-magic, with a
+Wall hardens its whole row, Guard takes the hits meant for an ally next
+to it, Shield Bash knocks an enemy a row back), **Sage** (knowledge and counter-magic, with a
 tome of arcane words; Expose makes an enemy take more of everything).
 
 Planned, in rough order (names and kits are proposals):

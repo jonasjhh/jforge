@@ -642,6 +642,50 @@ export const shieldWall: Skill = {
 };
 
 /**
+ * Knight: stands guard over an ally next to it; for a while, enemies'
+ * single-target hits on that ally land on the Knight instead.
+ */
+export const guard: Skill = {
+  id: "guard",
+  name: "Guard",
+  description:
+    "Stand guard over an ally next to you: for a while, single-target hits on it land on you instead.",
+  mpCost: 5,
+  target: "ally",
+  area: "single",
+  notSelf: true,
+  adjacent: true,
+  effect: {
+    type: "status",
+    status: {
+      id: "guarded",
+      name: "Guarded",
+      effect: "guard",
+      harmful: false,
+      stat: "attack",
+      power: 0,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
+/**
+ * Knight: rams an enemy with its shield, knocking it a row back; if
+ * something is in the way, it crashes into it for x1.5 impact.
+ */
+export const shieldBash: Skill = {
+  id: "shield-bash",
+  name: "Shield Bash",
+  description:
+    "Ram an enemy within reach: x0.8 damage and it is knocked a row back. Blocked, it crashes for x1.5 impact instead.",
+  mpCost: 5,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 0.8, push: 1 },
+};
+
+/**
  * Sage: lays bare one enemy's weak points; for a while it takes x1.3 from
  * every damage type (EXPOSE_FACTOR). Immune stays immune.
  */
@@ -752,6 +796,8 @@ export const skills = [
   shatter,
   upheaval,
   shieldWall,
+  guard,
+  shieldBash,
   expose,
 ];
 
@@ -1007,7 +1053,7 @@ export const knight: CombatantDef = {
     speed: 8,
   },
   weapon: lance,
-  skills: [shieldWall],
+  skills: [shieldWall, guard, shieldBash],
   preferredRow: 0,
 };
 

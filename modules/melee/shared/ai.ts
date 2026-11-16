@@ -1,5 +1,6 @@
 import { defenseFactor, expectedPhysicalDamage, wouldKnockOut } from "./damage";
 import { bestMove } from "./aiMove";
+import { hitVictim } from "./guard";
 import { bestSkill } from "./aiSkills";
 import { attackTargets } from "./reach";
 import { nextRandom } from "./rng";
@@ -50,7 +51,8 @@ export function chooseCommand(state: BattleState, unit: Unit): Command | null {
 
   let best: { command: Command; score: number } | null = null;
   for (const target of attackTargets(state, unit)) {
-    const score = targetScore(state, unit, target);
+    // A guarded target's blow lands on its guardian: score that one.
+    const score = targetScore(state, unit, hitVictim(state, unit, target));
     if (!best || score > best.score) {
       best = { command: { type: "attack", targetId: target.id }, score };
     }

@@ -23,6 +23,8 @@ export function describeEvent(
         : `${name(event.unitId)} takes ${event.amount} ${event.damageType ?? ""} damage (${event.name})`;
     case "shieldBroken":
       return `${name(event.unitId)}'s ${event.name} breaks`;
+    case "guarded":
+      return `${name(event.byId)} takes the blow for ${name(event.unitId)}`;
     case "warded":
       return `${name(event.unitId)} is held by ${event.name}!`;
     case "ambush":

@@ -1,6 +1,7 @@
 import { chooseCommand } from "./ai";
 import { dropReady, findSkill, makeUnit } from "./units";
 import { applyDamage, physicalHit } from "./damage";
+import { hitVictim } from "./guard";
 import { MAX_PARTY_SIZE, isOnGrid, unitId } from "./grid";
 import { canReach, reachableTargets } from "./reach";
 import { tauntBlock } from "./taunt";
@@ -226,8 +227,12 @@ function resolve(
     if (skill.halfTurn) unit.gauge = MOVE_GAUGE_LEFT;
     return;
   }
-  const target = getUnit(state, command.targetId);
-  events.push({ type: "attack", unitId: unit.id, targetId: target.id });
+  const aimed = getUnit(state, command.targetId);
+  events.push({ type: "attack", unitId: unit.id, targetId: aimed.id });
+  const target = hitVictim(state, unit, aimed);
+  if (target !== aimed) {
+    events.push({ type: "guarded", unitId: aimed.id, byId: target.id });
+  }
   const ambush = breakStealth(unit, events);
   const hit = physicalHit(state, unit, target, ambush);
   applyDamage(state, target, hit, events);
