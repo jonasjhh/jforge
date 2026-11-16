@@ -25,7 +25,7 @@ import {
   type Menu,
 } from "../turnMenu";
 
-const { cure, fireball, firebolt, heal, venomFangs } = content;
+const { cure, fireball, firebolt, heal, revive, venomFangs } = content;
 
 // A fast caster waits for a command; one ally and two enemies stand by.
 const caster = {
@@ -272,6 +272,24 @@ describe("emphasized", () => {
       emphasized(active, skillMenu(cure), { ...poisoned(ally), hp: 0 }),
     ).toBe(false);
     expect(emphasized(active, skillMenu(heal), poisoned(ally))).toBe(false);
+  });
+});
+
+describe("emphasized while reviving", () => {
+  const { state, active } = waiting();
+  const ally = unit(state, "ally");
+
+  it("marks fallen allies only", () => {
+    expect(emphasized(active, skillMenu(revive), { ...ally, hp: 0 })).toBe(
+      true,
+    );
+    expect(emphasized(active, skillMenu(revive), ally)).toBe(false);
+    expect(
+      emphasized(active, skillMenu(revive), { ...unit(state, "foe"), hp: 0 }),
+    ).toBe(false);
+    expect(
+      emphasized(active, skillMenu(revive), { ...ally, hp: 0, vanished: true }),
+    ).toBe(false);
   });
 });
 

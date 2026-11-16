@@ -46,11 +46,13 @@ function outcome(state: BattleState, events: BattleEvent[]): string | null {
   const damaged = new Map<string, Extract<BattleEvent, { type: "damage" }>>();
   const healed = new Map<string, number>();
   const knockedOut: string[] = [];
+  const revived: string[] = [];
   for (const e of events) {
     if (e.type === "damage") damaged.set(e.unitId, e);
     else if (e.type === "heal" && e.amount > 0)
       healed.set(e.unitId, (healed.get(e.unitId) ?? 0) + e.amount);
     else if (e.type === "knockedOut") knockedOut.push(e.unitId);
+    else if (e.type === "revived") revived.push(e.unitId);
   }
 
   const parts: string[] = [];
@@ -66,6 +68,7 @@ function outcome(state: BattleState, events: BattleEvent[]): string | null {
   } else if (healed.size > 1) {
     parts.push(`${healed.size} healed`);
   }
+  for (const id of revived) parts.push(`${name(id)} revived`);
   if (knockedOut.length === 1) {
     // A lone target's KO needs no name; in a crowd, say who fell.
     parts.push(damaged.size === 1 ? "KO" : `${name(knockedOut[0])} KO`);

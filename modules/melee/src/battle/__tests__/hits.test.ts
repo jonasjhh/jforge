@@ -28,6 +28,12 @@ const counter = () => {
 };
 
 describe("hitsFrom", () => {
+  it("floats a revived unit's new HP as a heal", () => {
+    expect(
+      hitsFrom([{ type: "revived", unitId: "v", hp: 30 }], counter()),
+    ).toEqual([{ key: 1, unitId: "v", amount: 30, kind: "heal" }]);
+  });
+
   it("floats a number for each hit and heal, with fresh keys", () => {
     expect(
       hitsFrom(

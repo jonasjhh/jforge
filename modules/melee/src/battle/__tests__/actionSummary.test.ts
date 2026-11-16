@@ -93,6 +93,24 @@ describe("summarizeAction", () => {
     ).toBe("Wolf attacks Mage — +5 HP");
   });
 
+  it("names who was revived", () => {
+    expect(
+      summarizeAction(state, [
+        {
+          type: "skill",
+          unitId: slime,
+          cell: { side: "enemy", col: 0, row: 0 },
+          targetId: wolf,
+          area: [{ side: "enemy", col: 0, row: 0 }],
+          skillId: "revive",
+          skillName: "Revive",
+          mp: 0,
+        },
+        { type: "revived", unitId: wolf, hp: 30 },
+      ]),
+    ).toMatch(/Wolf revived$/);
+  });
+
   it("counts healed units and knockouts in a crowd", () => {
     const heal = (unitId: string): BattleEvent => ({
       type: "heal",

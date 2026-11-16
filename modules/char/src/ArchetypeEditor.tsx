@@ -42,14 +42,6 @@ export function ArchetypeEditor({
           options={ROW_OPTIONS}
           onChange={(row) => set({ preferredRow: Number(row) })}
         />
-        {archetype.kind === "enemy" && (
-          <NumberField
-            label="Threat"
-            value={archetype.threat}
-            min={1}
-            onChange={(threat) => set({ threat: Math.max(1, threat) })}
-          />
-        )}
       </div>
       <StatsFields
         legend="Stats at level 1"

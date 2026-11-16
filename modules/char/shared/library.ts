@@ -148,7 +148,6 @@ export function blankArchetype(id: string, kind: Archetype["kind"]): Archetype {
     skills: [],
     traits: [],
     preferredRow: 0,
-    threat: 2,
   };
 }
 
@@ -201,8 +200,7 @@ function isArchetype(v: unknown): boolean {
     ) &&
     Array.isArray(v.traits) &&
     v.traits.every((t) => TRAITS.includes(t as never)) &&
-    isNumber(v.preferredRow) &&
-    isNumber(v.threat)
+    isNumber(v.preferredRow)
   );
 }
 

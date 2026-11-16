@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createBattle, isCombatantDef } from "@jforge/melee/shared";
+import {
+  createBattle,
+  estimateThreat,
+  isCombatantDef,
+} from "@jforge/melee/shared";
 import {
   archetypeOf,
   characterStats,
@@ -98,8 +102,16 @@ describe("toCombatantDef", () => {
     expect(def.threat).toBeUndefined();
   });
 
-  it("gives enemies their threat", () => {
-    expect(toCombatantDef(library, goblin)?.threat).toBe(2);
+  it("gives enemies a threat estimated from what they fight with", () => {
+    const def = toCombatantDef(library, goblin)!;
+    const { threat, ...rest } = def;
+    expect(threat).toBe(estimateThreat(rest));
+  });
+
+  it("makes a higher-level enemy a bigger threat", () => {
+    const low = toCombatantDef(library, { ...goblin, level: 1 })!;
+    const high = toCombatantDef(library, { ...goblin, level: 20 })!;
+    expect(high.threat!).toBeGreaterThan(low.threat!);
   });
 
   it("is null when the type is gone", () => {

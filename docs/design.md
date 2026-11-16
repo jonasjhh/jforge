@@ -307,6 +307,12 @@ cell) and its `area` which cells it hits around the aimed one.
   status (Poison) and keeps helpful ones (Regen). Statuses carry a
   harmful flag, so a cleanse needs no list of what to remove. While
   choosing, allies with a harmful status are highlighted.
+- **Revive** (Healer): 20 MP, one knocked-out ally (not a boulder or a
+  summon, which vanish), brings it back with 1.5 x magic HP (at least 1)
+  and an empty gauge. Aimed at a living ally or an empty cell it is not
+  allowed; a delayed revive that finds its ally already up does nothing.
+  While choosing, fallen allies are highlighted. The AI values a revive
+  above most heals, so enemy healers bring their side back too.
 
 The full shape below is the goal.
 
@@ -411,6 +417,19 @@ their skills and move, to about 99% / 89% / 56% party wins; a test keeps
 each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
+Designed enemies (from char) get an **estimated threat**
+(`estimateThreat`): `0.023 x sqrt(offense x durability)`, so twice the
+stats all round is twice the threat. Offense is the best of its weapon
+(plus a share of on-hit poison) and its affordable damaging skills (times
+the foes an area usually catches, less for delayed or expensive ones),
+raised by 40% per support skill (up to +160%), times speed. Durability is
+max HP raised by defense and spirit and by its resistances, x1.4 if it can
+revive. It was fitted to how many copies of a range of monsters the party
+beats about half the time on Hard; mixed pools of designed monsters land
+in Hard's band, a pool of one big monster less exactly (a copy more or
+less is a big step). If every monster costs more than the budget, one of
+the cheapest is placed anyway.
+
 After a victory, **Next battle** draws a new encounter (new encounter seed,
 same difficulty). After a defeat or draw, **Try again** replays the same
 encounter with a new battle seed.
@@ -425,9 +444,8 @@ exposed at once, and areas pass over it. Its turn, statuses and any cast
 are cleared. Summons and boulders are the exception: they vanish and free
 their cell.
 
-Still open, one at a time:
+Still open:
 
-- Revive itself: who gets it, and at what HP.
 - Whether a row emptied by knockouts changes anything beyond cover.
 
 ## Roadmap rules
@@ -480,7 +498,9 @@ Ideas to build in small steps, roughly in this order when they fit:
   `mul`). A weapon also says how it attacks (melee's `Weapon`).
 - **Types**: a class or an enemy type. Stats at level 1, growth per level,
   an unarmed attack, traits, an icon, and the level each skill is learned
-  at. Enemy types also have a threat.
+  at. An enemy's threat is not typed in: it is estimated from the
+  compiled character (stats, weapon, skills), so a higher level or better
+  gear means fewer of it per encounter. The character editor shows it.
 - **Characters**: a type at a level (1 to 50), wearing gear. Characters of
   a class form the party; characters of an enemy type the monster pool.
 

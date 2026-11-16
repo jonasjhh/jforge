@@ -1,4 +1,4 @@
-import { STAT_NAMES } from "@jforge/melee/shared";
+import { STAT_NAMES, THREAT_BUDGET } from "@jforge/melee/shared";
 import {
   GEAR_SLOTS,
   MAX_LEVEL,
@@ -9,6 +9,7 @@ import {
   equip,
   gainXp,
   unequip,
+  toCombatantDef,
   unlockedSkills,
   xpToNext,
   type Character,
@@ -40,6 +41,7 @@ export function CharacterEditor({
   const archetype = archetypeOf(library, character);
   const stats = characterStats(library, character);
   const needed = xpToNext(character.level);
+  const threat = toCombatantDef(library, character)?.threat ?? 0;
   return (
     <>
       <TextField
@@ -145,6 +147,13 @@ export function CharacterEditor({
               .join(", ") || "none yet"}
             .
           </p>
+          {archetype.kind === "enemy" && (
+            <p className="muted">
+              Threat <strong>{threat}</strong>: an encounter spends{" "}
+              {THREAT_BUDGET.normal} on Normal, so about{" "}
+              {Math.max(1, Math.floor(THREAT_BUDGET.normal / threat))} of these.
+            </p>
+          )}
         </>
       )}
     </>

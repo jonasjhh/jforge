@@ -125,17 +125,23 @@ export function incomingCells(state: BattleState): Cell[] {
   );
 }
 
-/** While choosing a cleanse target, the allies who need it stand out. */
+/**
+ * The allies who need the skill being aimed stand out: those carrying
+ * something harmful for a cleanse, the fallen for a revive.
+ */
 export function emphasized(
   active: Unit | null,
   menu: Menu,
   unit: Unit,
 ): boolean {
+  if (menu.kind !== "skill" || unit.side !== active?.side) return false;
+  const { effect } = menu.skill;
+  if (effect.type === "revive") {
+    return !isAlive(unit) && !unit.obstacle && !unit.vanished;
+  }
   return (
-    menu.kind === "skill" &&
-    menu.skill.effect.type === "cleanse" &&
+    effect.type === "cleanse" &&
     isAlive(unit) &&
-    unit.side === active?.side &&
     unit.statuses.some((s) => s.harmful)
   );
 }

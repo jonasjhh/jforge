@@ -231,7 +231,12 @@ export type SkillEffect =
    */
   | { type: "shatter"; power: number; element: DamageType }
   /** Moves the target `rows` back on its own side; blocked means no move. */
-  | { type: "heave"; rows: number };
+  | { type: "heave"; rows: number }
+  /**
+   * Brings a knocked-out ally back with power x the caster's magic in HP.
+   * Its gauge starts empty. Not for summons (they vanish) or obstacles.
+   */
+  | { type: "revive"; power: number };
 
 /**
  * Which cells a skill hits around the aimed cell. The two grids form one
@@ -493,6 +498,7 @@ export type BattleEvent =
       blockerId?: string;
     }
   | { type: "heal"; unitId: string; amount: number; hp: number }
+  | { type: "revived"; unitId: string; hp: number }
   | { type: "moved"; unitId: string; from: Position; to: Position }
   | { type: "defended"; unitId: string }
   | { type: "waited"; unitId: string }

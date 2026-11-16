@@ -47,6 +47,7 @@ export {
 export { previewDamage, type DamagePreview } from "./preview";
 export { simulate, type BattleSummary } from "./simulate";
 export { DEFAULT_TARGETING, targetScore } from "./ai";
+export { estimateThreat } from "./threat";
 export {
   DIFFICULTIES,
   THREAT_BUDGET,

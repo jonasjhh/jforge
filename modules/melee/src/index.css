@@ -472,6 +472,11 @@ button:not(:disabled):active {
   opacity: 0.35;
 }
 
+/* A fallen ally a revive can reach. */
+.unit.down.targetable {
+  opacity: 0.8;
+}
+
 .unit.active {
   border-color: var(--turn);
   --ring: 0 0 0 2px var(--turn);

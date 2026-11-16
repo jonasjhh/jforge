@@ -76,7 +76,12 @@ export function randomEncounter(
   let budget = THREAT_BUDGET[difficulty];
   const cost = (def: CombatantDef) => def.threat ?? 1;
   for (;;) {
-    const affordable = pools.monsters.filter((m) => cost(m) <= budget);
+    let affordable = pools.monsters.filter((m) => cost(m) <= budget);
+    // A pool of only big monsters still gets one: the cheapest.
+    if (affordable.length === 0 && budget === THREAT_BUDGET[difficulty]) {
+      const cheapest = Math.min(...pools.monsters.map(cost));
+      affordable = pools.monsters.filter((m) => cost(m) === cheapest);
+    }
     const rows = allRows().filter((r) => freeCells("enemy", r).length > 0);
     if (affordable.length === 0 || rows.length === 0) break;
     const monster = pick(affordable);

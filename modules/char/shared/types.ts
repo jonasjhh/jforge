@@ -56,8 +56,6 @@ export interface Archetype {
   traits: Trait[];
   /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
   preferredRow: number;
-  /** For enemies: how much of an encounter's budget one of them takes. */
-  threat: number;
 }
 
 /** One character or enemy: an archetype at a level, wearing gear. */

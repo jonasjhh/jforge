@@ -77,6 +77,16 @@ describe("randomEncounter", () => {
     expect(enemies).toHaveLength(Math.floor(THREAT_BUDGET.easy / wolf.threat!));
   });
 
+  it("still places one monster when every one costs more than the budget", () => {
+    const giant = { ...wolf, id: "giant", threat: THREAT_BUDGET.hard + 1 };
+    const setup = randomEncounter(1, "easy", {
+      party: playerTypes,
+      monsters: [giant, { ...giant, id: "titan", threat: 40 }],
+    });
+    const enemies = setup.placements.filter((p) => p.side === "enemy");
+    expect(enemies.map((p) => p.def.id)).toEqual(["giant"]);
+  });
+
   it("keeps each difficulty in its win-rate band", () => {
     const winRate = (difficulty: Difficulty) => {
       const runs = 300;

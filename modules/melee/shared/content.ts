@@ -175,6 +175,16 @@ export const heal: Skill = {
   effect: { type: "heal", power: 1.6 },
 };
 
+export const revive: Skill = {
+  id: "revive",
+  name: "Revive",
+  description: "Brings a knocked-out ally back with some HP.",
+  mpCost: 20,
+  target: "ally",
+  area: "single",
+  effect: { type: "revive", power: 1.5 },
+};
+
 /**
  * Hits the aimed cell and the four next to it, on either side. Aimed at the
  * enemy front row, the blast crosses the line onto your own front row.
@@ -559,6 +569,7 @@ export const upheaval: Skill = {
 
 export const skills = [
   heal,
+  revive,
   fireball,
   meteor,
   regen,
@@ -647,7 +658,7 @@ export const healer: CombatantDef = {
     speed: 11,
   },
   weapon: staff,
-  skills: [heal, regen, cure],
+  skills: [heal, regen, cure, revive],
   preferredRow: 2,
 };
 

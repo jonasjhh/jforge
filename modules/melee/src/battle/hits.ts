@@ -22,6 +22,9 @@ export function hitsFrom(events: BattleEvent[], nextKey: () => number): Hit[] {
         { key: nextKey(), unitId: e.unitId, amount: e.amount, kind: "heal" },
       ];
     }
+    if (e.type === "revived") {
+      return [{ key: nextKey(), unitId: e.unitId, amount: e.hp, kind: "heal" }];
+    }
     if (e.type === "statusTick") {
       if (e.amount <= 0) return [];
       return [

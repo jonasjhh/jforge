@@ -96,6 +96,8 @@ export function describeEvent(
     }
     case "heal":
       return `${name(event.unitId)} recovers ${event.amount} HP`;
+    case "revived":
+      return `${name(event.unitId)} is back on their feet with ${event.hp} HP`;
     case "damage": {
       const note = resistanceNote(event.multiplier);
       if (event.amount === 0 && event.absorbed) {

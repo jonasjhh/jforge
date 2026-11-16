@@ -77,6 +77,14 @@ export function validateSkill(
     }
     return null;
   }
+  if (skill.effect.type === "revive") {
+    const fallen = unitAt(state, cell);
+    if (!fallen || fallen.side !== unit.side || fallen.obstacle) {
+      return `${skill.name} needs a fallen ally`;
+    }
+    if (isAlive(fallen)) return `${fallen.name} is still standing`;
+    return null;
+  }
   if (skill.target === "any") return null;
 
   const target = unitAt(state, cell);
@@ -281,6 +289,14 @@ function applySkill(
     }
     return;
   }
+  if (skill.effect.type === "revive") {
+    // A delayed revive finds its ally already up (or gone): nothing happens.
+    const fallen = unitAt(state, cell);
+    if (fallen && !isAlive(fallen) && !fallen.vanished) {
+      revive(fallen, skill.effect.power * effectiveStat(unit, "magic"), events);
+    }
+    return;
+  }
   if (skill.effect.type === "teleport") {
     const from = { ...unit.position };
     unit.position = { col: cell.col, row: cell.row };
@@ -384,6 +400,13 @@ function applySkill(
       }
     }
   }
+}
+
+/** Back on its feet with `amount` HP (at least 1), its turn starting over. */
+function revive(unit: Unit, amount: number, events: BattleEvent[]): void {
+  unit.hp = Math.min(unit.base.maxHp, Math.max(1, Math.round(amount)));
+  unit.gauge = 0;
+  events.push({ type: "revived", unitId: unit.id, hp: unit.hp });
 }
 
 /**

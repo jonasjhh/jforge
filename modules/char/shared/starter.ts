@@ -94,7 +94,6 @@ export function starterLibrary(): Library {
         skills: [{ skillId: cleave.id, level: 2 }],
         traits: [],
         preferredRow: 0,
-        threat: 2,
       },
       {
         id: "type-sage",
@@ -134,7 +133,6 @@ export function starterLibrary(): Library {
         ],
         traits: [],
         preferredRow: 2,
-        threat: 2,
       },
       {
         id: "type-goblin",
@@ -170,7 +168,6 @@ export function starterLibrary(): Library {
         skills: [],
         traits: [],
         preferredRow: 0,
-        threat: 2,
       },
     ],
     characters: [

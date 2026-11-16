@@ -7,7 +7,8 @@ import {
 import { previewDamage } from "./preview";
 import { pushDestination } from "./push";
 import { skillCells, skillVictims } from "./skills";
-import { effectiveStat } from "./stats";
+import { unitAt } from "./grid";
+import { effectiveStat, isAlive } from "./stats";
 import { GAUGE_FULL } from "./timeline";
 import type {
   BattleState,
@@ -41,6 +42,8 @@ export const GAUGE_WEIGHT = 1.2;
 /** A summoned creature; an obstacle (a boulder) is worth less. */
 export const SUMMON_VALUE = 1.5;
 export const OBSTACLE_VALUE = 0.4;
+/** An ally back in the fight, on top of the HP it comes back with. */
+export const REVIVE_VALUE = 2;
 
 /**
  * What hitting `target` for `amount` is worth to `unit`: the finish bonus
@@ -146,6 +149,7 @@ function victimValue(
     }
     case "summon":
     case "teleport":
+    case "revive":
       return 0;
   }
 }
@@ -164,13 +168,30 @@ export function skillValue(
   const effect = skill.effect;
   let value = 0;
   if (effect.type === "summon") value = summonValue(state, unit, effect, cell);
-  else if (effect.type !== "teleport") {
+  else if (effect.type === "revive") {
+    value = reviveValue(state, unit, effect.power, cell);
+  } else if (effect.type !== "teleport") {
     for (const victim of skillVictims(state, unit, skill, cell)) {
       value += victimValue(state, unit, skill, victim);
     }
   }
   if (skill.castTime) value *= CAST_DISCOUNT;
   return value - skillCost(unit, skill);
+}
+
+/**
+ * A fallen ally back: REVIVE_VALUE plus its HP the way healing it from 0
+ * would count. Validation already ruled out foes and obstacles.
+ */
+function reviveValue(
+  state: BattleState,
+  unit: Unit,
+  power: number,
+  cell: Cell,
+): number {
+  const fallen = unitAt(state, cell);
+  if (!fallen || isAlive(fallen)) return 0;
+  return REVIVE_VALUE + healValue(fallen, power * effectiveStat(unit, "magic"));
 }
 
 /** A fresh summon on its own side; replacing one gains nothing. */

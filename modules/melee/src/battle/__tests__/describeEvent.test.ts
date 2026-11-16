@@ -132,6 +132,9 @@ describe("describeEvent", () => {
       expect(say({ type: "heal", unitId: MAGE, amount: 9, hp: 50 })).toBe(
         "Mage recovers 9 HP",
       );
+      expect(say({ type: "revived", unitId: MAGE, hp: 24 })).toBe(
+        "Mage is back on their feet with 24 HP",
+      );
       const tick = (effect: "heal" | "damage", amount: number) =>
         say({
           type: "statusTick",

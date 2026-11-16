@@ -1,9 +1,10 @@
-import type {
-  CombatantDef,
-  Roster,
-  Skill,
-  Stats,
-  Weapon,
+import {
+  estimateThreat,
+  type CombatantDef,
+  type Roster,
+  type Skill,
+  type Stats,
+  type Weapon,
 } from "@jforge/melee/shared";
 import { applyBonuses, equippedGear } from "./gear";
 import { clampLevel, statsAtLevel } from "./progression";
@@ -71,7 +72,7 @@ export function toCombatantDef(
   const archetype = archetypeOf(library, character);
   const stats = characterStats(library, character);
   if (!archetype || !stats) return null;
-  return {
+  const def: CombatantDef = {
     id: `char-${character.id}`,
     name: character.name,
     stats: stats.total,
@@ -80,8 +81,12 @@ export function toCombatantDef(
     traits: [...archetype.traits],
     preferredRow: archetype.preferredRow,
     portrait: archetype.portrait,
-    ...(archetype.kind === "enemy" ? { threat: archetype.threat } : {}),
   };
+  // Enemies take a share of the encounter budget that grows with their
+  // stats, so a higher level or better gear means fewer of them.
+  return archetype.kind === "enemy"
+    ? { ...def, threat: estimateThreat(def) }
+    : def;
 }
 
 /**
