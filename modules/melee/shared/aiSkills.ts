@@ -13,6 +13,7 @@ import { healAmount, skillCells, skillVictims } from "./skills";
 import { unitAt } from "./grid";
 import { effectiveStat, isAlive } from "./stats";
 import { GAUGE_FULL } from "./timeline";
+import { findSkill } from "./units";
 import type {
   BattleState,
   Cell,
@@ -132,6 +133,24 @@ function guardValue(guardian: Unit, ally: Unit): number {
   return 2 * SUPPORT_VALUE * frailer(ally, guardian) * health;
 }
 
+/**
+ * Silencing a foe is worth SUPPORT_VALUE if it has a skill it could use,
+ * and a cast it is in the middle of as much as that cast is worth to its
+ * side (its price is already paid). Nothing on a foe already silenced.
+ */
+function silenceValue(state: BattleState, foe: Unit): number {
+  if (foe.statuses.some((s) => s.effect === "silence")) return 0;
+  const usable = foe.skills.some((s) => s.mpCost <= foe.mp);
+  let value = usable ? SUPPORT_VALUE : 0;
+  const cast = foe.casting && findSkill(foe, foe.casting.skillId);
+  if (foe.casting && cast) {
+    const worth =
+      skillValue(state, foe, cast, foe.casting.cell) + skillCost(foe, cast);
+    value += Math.max(SUPPORT_VALUE, worth);
+  }
+  return value;
+}
+
 /** How much frailer `ally` is than `protector`: 0 (as tough) to 1. */
 function frailer(ally: Unit, protector: Unit): number {
   const toughness = (u: Unit) =>
@@ -185,6 +204,9 @@ function victimValue(
     case "status":
       if (effect.status.effect === "taunt") return tauntValue(state, victim);
       if (effect.status.effect === "guard") return guardValue(unit, victim);
+      if (effect.status.effect === "silence") {
+        return silenceValue(state, victim);
+      }
       return statusValue(p, unit, victim, effect.status, friend);
     case "modify": {
       const { modifier } = effect;

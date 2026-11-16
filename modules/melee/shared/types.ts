@@ -149,6 +149,7 @@ export interface StatusDef {
     | "ward"
     | "taunt"
     | "expose"
+    | "silence"
     | "guard";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;

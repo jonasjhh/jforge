@@ -308,6 +308,13 @@ cell) and its `area` which cells it hits around the aimed one.
   in `resistance`, so previews and the AI see it). Resisted types stay
   resisted, only less so; immune stays immune. It is harmful, so Cure
   removes it.
+- **Silence** (Sage): a **silence** status on one enemy (150 game time,
+  9 MP): it can't use skills, only attack, move, defend or wait, and a
+  skill it is in the middle of casting fizzles, so it answers Aimed Shot
+  and Meteor. Harmful, so Cure removes it. Cheap, under a quarter of the
+  Sage's MP, as utility should be. The AI values it for a foe with a
+  skill it could use, and a cast in progress as much as that cast is
+  worth to its side.
 - **Aimed Shot** (Archer): a bow strike at x1.5 that **ignores cover**
   (`ignoreCover` on a strike), so it reaches any visible enemy, back row
   included, 6 MP. Its job is picking off casters and the wounded behind a
@@ -567,7 +574,7 @@ Wall hardens its whole row, Guard takes the hits meant for an ally next
 to it, Shield Bash knocks an enemy a row back, Charge runs it back into the
 front row with a strike, Rescue pulls a hurt ally back behind it),
 **Sage** (knowledge and counter-magic, with a
-tome of arcane words; Expose makes an enemy take more of everything).
+tome of arcane words; Expose makes an enemy take more of everything, Silence stops its skills and breaks its casts).
 
 Planned, in rough order (names and kits are proposals):
 

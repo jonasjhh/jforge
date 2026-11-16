@@ -756,6 +756,34 @@ export const expose: Skill = {
   },
 };
 
+/**
+ * Sage: words that bind an enemy's tongue. For a while (150 game time) it
+ * can't use skills, only attack, move, defend or wait; a cast it is in the
+ * middle of fizzles. Harmful, so Cure removes it.
+ */
+export const silence: Skill = {
+  id: "silence",
+  name: "Silence",
+  description:
+    "Binds one enemy's tongue: for a while it can't use skills, and a skill it is casting fizzles.",
+  mpCost: 9,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "silenced",
+      name: "Silenced",
+      effect: "silence",
+      harmful: true,
+      stat: "magic",
+      power: 0,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
 /** Fighter: braces for a while; its own defense doubles. */
 export const ironStance: Skill = {
   id: "iron-stance",
@@ -845,6 +873,7 @@ export const skills = [
   charge,
   rescue,
   expose,
+  silence,
 ];
 
 export const fighter: CombatantDef = {
@@ -1120,7 +1149,7 @@ export const sage: CombatantDef = {
     speed: 11,
   },
   weapon: tome,
-  skills: [expose],
+  skills: [expose, silence],
   preferredRow: 2,
 };
 

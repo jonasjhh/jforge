@@ -598,6 +598,11 @@ button:not(:disabled):active {
   color: #f3e6ff;
 }
 
+.status-silence {
+  background: #3d4a5c;
+  color: #e6edf5;
+}
+
 .status-guard {
   background: #2f5f8c;
   color: #e3f0ff;

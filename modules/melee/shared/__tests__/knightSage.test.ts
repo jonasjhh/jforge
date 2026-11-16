@@ -4,12 +4,14 @@ import {
   charge,
   expose,
   fireball,
+  meteor,
   firebolt,
   guard,
   knight,
   rescue,
   playerTypes,
   sage,
+  silence,
   shieldBash,
   shieldWall,
 } from "../content";
@@ -18,6 +20,7 @@ import { skillValue } from "../aiSkills";
 import { previewDamage } from "../preview";
 import { skillArea } from "../skills";
 import { effectiveStat } from "../stats";
+import { cleanse } from "../status";
 import type { BattleState, CombatantDef, Unit } from "../types";
 import { def, place } from "./helpers";
 
@@ -61,7 +64,7 @@ describe("Knight and Sage", () => {
       charge,
       rescue,
     ]);
-    expect(sage.skills).toEqual([expose]);
+    expect(sage.skills).toEqual([expose, silence]);
     const others = playerTypes
       .filter((t) => t !== knight && t !== sage)
       .flatMap((t) => t.skills ?? []);
@@ -426,5 +429,99 @@ describe("Rescue", () => {
     const healthy = rescueTurn();
     unit(healthy, ALLY).hp = 100;
     expect(value(healthy)).toBeLessThanOrEqual(0);
+  });
+});
+
+describe("Silence", () => {
+  const SAGE = "player-2-0";
+  const FOE = "enemy-2-0";
+  /** The Sage's turn, its foe a caster with MP to spare. */
+  const sageTurn = () => {
+    const state = turnOf(sage);
+    const foe = unit(state, FOE);
+    foe.skills = [firebolt, meteor];
+    foe.mp = 99;
+    return state;
+  };
+  const command = {
+    type: "skill",
+    skillId: silence.id,
+    cell: { side: "enemy", col: 2, row: 0 },
+  } as const;
+  /** The foe silenced; then it is the foe's turn. */
+  const foeTurn = () => {
+    const after = act(sageTurn(), command).state;
+    after.phase = { kind: "awaitingCommand", unitId: FOE };
+    return after;
+  };
+
+  it("stops the enemy using skills but not attacking, for 9 MP", () => {
+    const state = foeTurn();
+    const foe = unit(state, FOE);
+    expect(foe.statuses[0]).toMatchObject({ id: "silenced", harmful: true });
+    expect(unit(state, SAGE).mp).toBe(sage.stats.maxMp - silence.mpCost);
+    const bolt = {
+      type: "skill",
+      skillId: firebolt.id,
+      cell: { side: "player", col: 2, row: 0 },
+    } as const;
+    expect(validateCommand(state, foe, bolt)).toMatch(/silenced/);
+    expect(
+      validateCommand(state, foe, { type: "attack", targetId: SAGE }),
+    ).toBeNull();
+  });
+
+  it("wears off after a while, and Cure removes it", () => {
+    let state = act(sageTurn(), command).state;
+    const until = state.time + 150;
+    while (state.time <= until && state.phase.kind !== "over") {
+      state = advance(state).state;
+      if (state.phase.kind === "awaitingCommand") {
+        state = act(state, { type: "defend" }).state;
+      }
+    }
+    expect(unit(state, FOE).statuses).toEqual([]);
+    const cured = foeTurn();
+    cleanse(unit(cured, FOE), []);
+    expect(unit(cured, FOE).statuses).toEqual([]);
+  });
+
+  it("makes a cast in progress fizzle", () => {
+    const state = sageTurn();
+    const cell = { side: "player", col: 2, row: 0 } as const;
+    unit(state, FOE).casting = {
+      skillId: meteor.id,
+      skillName: meteor.name,
+      cell,
+      area: [cell],
+      startedAt: state.time,
+      readyAt: state.time + 60,
+    };
+    const { state: after, events } = act(state, command);
+    expect(unit(after, FOE).casting).toBeUndefined();
+    expect(events).toContainEqual({
+      type: "castFizzled",
+      unitId: FOE,
+      skillName: meteor.name,
+    });
+  });
+
+  it("is worth it to the AI on a foe with skills, more on one casting", () => {
+    const value = (state: BattleState) =>
+      skillValue(state, unit(state, SAGE), silence, command.cell);
+    const idle = sageTurn();
+    expect(value(idle)).toBeGreaterThan(0);
+    const casting = sageTurn();
+    const cell = { side: "player", col: 2, row: 0 } as const;
+    unit(casting, FOE).casting = {
+      skillId: meteor.id,
+      skillName: meteor.name,
+      cell,
+      area: [cell],
+      startedAt: casting.time,
+      readyAt: casting.time + 60,
+    };
+    expect(value(casting)).toBeGreaterThan(value(idle));
+    expect(value(turnOf(sage))).toBeLessThanOrEqual(0);
   });
 });

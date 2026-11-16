@@ -54,6 +54,15 @@ export function applyStatus(
     name: def.name,
     ticks: def.ticks,
   });
+  // Silence breaks a cast in progress.
+  if (def.effect === "silence" && target.casting) {
+    events.push({
+      type: "castFizzled",
+      unitId: target.id,
+      skillName: target.casting.skillName,
+    });
+    target.casting = undefined;
+  }
 }
 
 /** Game time until the next status tick on any living unit. */
@@ -111,6 +120,7 @@ function tick(
     case "ward":
     case "taunt":
     case "expose":
+    case "silence":
     case "guard":
       // Nothing happens on their single tick: they just end.
       break;

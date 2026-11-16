@@ -56,6 +56,9 @@ export function validateSkill(
   cell: Cell,
 ): string | null {
   if (!skill) return "Unknown skill";
+  if (unit.statuses.some((s) => s.effect === "silence")) {
+    return `${unit.name} is silenced`;
+  }
   if (unit.mp < skill.mpCost) return `Not enough MP for ${skill.name}`;
   if (!canAfford(unit, skill)) return `Not enough HP for ${skill.name}`;
   if (!isCellOnGrid(cell)) return "That cell is off the battlefield";

@@ -51,6 +51,8 @@ function statusText(status: Status, speed: number): string {
       return "Provoking: enemies that single out a target must pick it.";
     case "expose":
       return `Exposed: takes ×${EXPOSE_FACTOR} damage of every type.`;
+    case "silence":
+      return "Silenced: can't use skills.";
     case "guard":
       return "Guarded: enemies' single-target hits on it land on its guardian.";
   }
