@@ -243,55 +243,26 @@ export function BattleScreen({
           {lastAction ?? "Time is moving…"}
         </p>
 
+        {active && (
+          <ModeTabs
+            mode={menu.kind === "skill" ? "skills" : menu.kind}
+            hasSkills={active.skills.length > 0}
+            onChoose={(kind) => choose({ kind })}
+          />
+        )}
+
         {active && menu.kind === "attack" && (
-          <>
-            <p>
-              <strong>{active.name}</strong>'s turn ({active.weapon.name}
-              {rowHint(active)}) — tap a highlighted enemy.
-            </p>
-            <div className="command-list">
-              <button
-                type="button"
-                className="command selected"
-                aria-pressed="true"
-              >
-                Attack
-              </button>
-              <button
-                type="button"
-                className="command"
-                disabled={active.skills.length === 0}
-                onClick={() => choose({ kind: "skills" })}
-              >
-                Skill
-              </button>
-              <button
-                type="button"
-                className="command"
-                onClick={() => choose({ kind: "move" })}
-              >
-                Move
-              </button>
-            </div>
-          </>
+          <p>
+            <strong>{active.name}</strong>'s turn ({active.weapon.name}
+            {rowHint(active)}) — tap a highlighted enemy.
+          </p>
         )}
 
         {active && menu.kind === "move" && (
-          <>
-            <p>
-              <strong>{active.name}</strong> — tap a highlighted cell to step
-              there. <span className="muted">Moving costs half a turn.</span>
-            </p>
-            <div className="command-list">
-              <button
-                type="button"
-                className="command"
-                onClick={() => choose(ATTACK)}
-              >
-                Back
-              </button>
-            </div>
-          </>
+          <p>
+            <strong>{active.name}</strong> — tap a highlighted cell to step
+            there. <span className="muted">Moving costs half a turn.</span>
+          </p>
         )}
 
         {active && menu.kind === "skills" && (
@@ -318,13 +289,6 @@ export function BattleScreen({
                   <span className="skill-description">{skill.description}</span>
                 </button>
               ))}
-              <button
-                type="button"
-                className="command"
-                onClick={() => choose(ATTACK)}
-              >
-                Back
-              </button>
             </div>
           </>
         )}
@@ -342,10 +306,17 @@ export function BattleScreen({
               casterSide={active.side}
             />
             <div className="command-list">
+              <button
+                type="button"
+                className="command"
+                onClick={() => choose({ kind: "skills" })}
+              >
+                ← Skills
+              </button>
               {menu.aim && (
                 <button
                   type="button"
-                  className="command selected"
+                  className="command action"
                   onClick={() =>
                     menu.aim &&
                     command({
@@ -358,13 +329,6 @@ export function BattleScreen({
                   Cast
                 </button>
               )}
-              <button
-                type="button"
-                className="command"
-                onClick={() => choose({ kind: "skills" })}
-              >
-                Back
-              </button>
             </div>
           </>
         )}
@@ -381,7 +345,7 @@ export function BattleScreen({
             <div className="command-list">
               <button
                 type="button"
-                className="command selected"
+                className="command action"
                 onClick={onRestart}
               >
                 Play again
@@ -546,4 +510,41 @@ function usePauseControls(
       window.removeEventListener("keydown", onKey);
     };
   }, [setPaused, over]);
+}
+
+type Mode = "attack" | "skills" | "move";
+
+const MODES: [Mode, string][] = [
+  ["attack", "Attack"],
+  ["skills", "Skill"],
+  ["move", "Move"],
+];
+
+interface ModeTabsProps {
+  mode: Mode;
+  hasSkills: boolean;
+  onChoose: (mode: Mode) => void;
+}
+
+/**
+ * What a tap on the board will do: attack, pick a skill or move. A mode,
+ * not an action, so it is a segmented control rather than buttons.
+ */
+function ModeTabs({ mode, hasSkills, onChoose }: ModeTabsProps) {
+  return (
+    <div className="segmented mode-tabs" role="group" aria-label="Action">
+      {MODES.map(([kind, label]) => (
+        <button
+          key={kind}
+          type="button"
+          className={kind === mode ? "selected" : ""}
+          aria-pressed={kind === mode}
+          disabled={kind === "skills" && !hasSkills}
+          onClick={() => onChoose(kind)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 }

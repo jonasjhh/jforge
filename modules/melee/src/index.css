@@ -5,6 +5,7 @@
   --surface: #1b1b25;
   --line: #313145;
   --line-soft: #23232f;
+  --raised: #2c2c3c;
   --text: #f1eff6;
   --text-muted: #a8a6b9;
   --text-faint: #8a8899;
@@ -99,6 +100,9 @@ button {
   font-family: inherit;
   cursor: pointer;
   touch-action: manipulation;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
 }
 
 button:disabled {
@@ -116,6 +120,13 @@ button:disabled {
   border-radius: 999px;
   background: var(--action);
   color: var(--on-action);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 3px 0 #b8492f;
+}
+
+.primary:active {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .secondary {
@@ -163,10 +174,24 @@ button:disabled {
   font-size: 0.95rem;
 }
 
+/* The chosen option is raised, not filled with the action colour: it is
+   a setting, not something to do. */
 .segmented button.selected {
-  background: var(--action);
-  color: var(--on-action);
+  background: var(--raised);
+  color: var(--text);
   font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.mode-tabs {
+  margin-bottom: 0.6rem;
+}
+
+/* Every button gives way a little when pressed. */
+button:not(:disabled):active {
+  transform: translateY(1px) scale(0.98);
 }
 
 .link {
@@ -704,11 +729,20 @@ button:disabled {
   font-size: 0.85rem;
 }
 
-.command.selected {
+/* A button that does something now (Cast, Play again): filled, with a
+   lip that flattens when pressed. */
+.command.action {
   background: var(--action);
   border-color: var(--action);
   color: var(--on-action);
   font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 2px 0 #b8492f;
+}
+
+.command.action:active {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .result {
