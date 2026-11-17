@@ -117,6 +117,7 @@ export function advance(
       const command = chooseCommand(next, unit);
       if (command) resolve(next, unit, command, events);
       else finishTurn(next, unit);
+      unit.rewindHp = unit.hp;
       if (options.stopAfterAction) {
         endIfDecided(next, events);
         break;
@@ -155,6 +156,7 @@ export function act(state: BattleState, command: Command): StepResult {
   const events: BattleEvent[] = [];
   next.phase = { kind: "running" };
   resolve(next, unit, command, events);
+  unit.rewindHp = unit.hp;
   endIfDecided(next, events);
   return { state: next, events };
 }

@@ -355,6 +355,8 @@ function victimValue(
       return rescueValue(unit, victim);
     case "restoreMp":
       return restoreMpValue(victim);
+    case "rewind":
+      return sign * healValue(victim, victim.rewindHp - victim.hp);
     case "summon":
     case "teleport":
     case "revive":

@@ -37,6 +37,7 @@ export function makeUnit(
     resistances: resistancesFor(def),
     statuses: [],
     hp: def.stats.maxHp,
+    rewindHp: def.stats.maxHp,
     mp: def.stats.maxMp,
     gauge: def.weapon.startGauge ?? 0,
     modifiers: modifiers.map((m) => ({ ...m })),

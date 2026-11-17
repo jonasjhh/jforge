@@ -72,6 +72,8 @@ export function effectSummary(skill: Skill): string {
         return `bomb: ${st.damageType} damage ×${st.power} ${st.stat} after ${st.interval}, plus`;
       }
       return `status${shape}`;
+    case "rewind":
+      return `gives back the HP lost since its last turn${shape}`;
     case "restoreMp":
       return `restores ${effect.amount} MP${shape}`;
     default:

@@ -461,6 +461,13 @@ cell) and its `area` which cells it hits around the aimed one.
   off once; a victim the blast knocks out sets off its own bomb in turn.
   Planting again refreshes the timer; Cure removes it unexploded. The AI
   values it as the blast's damage on everyone now around the target.
+- **Rewind** (Chronomancer): 10 MP, one living ally (the caster too),
+  gives back all the HP it lost since its last turn ended. Every unit
+  keeps `rewindHp`, its HP when its last action ended (or the battle
+  began, or it was revived); Rewind heals it up to that, never above.
+  Refused when the ally has lost no HP since then. HP the ally spent on
+  its own turn (Blood Bolt, Mana Tap) is not given back, as the mark is
+  taken after the action. The AI values it as a heal of the difference.
 - **Cure** (Healer): 5 MP, one living ally, removes every **harmful**
   status (Poison) and keeps helpful ones (Regen). Statuses carry a
   harmful flag, so a cleanse needs no list of what to remove. While
@@ -645,7 +652,7 @@ skill may break one for a reason worth stating.
 Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP, Frost Lance chills), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
-Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an enemy and its neighbours), **Warlock** (spends its own HP:
+Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an enemy and its neighbours, Rewind gives an ally back the HP it lost since its last turn), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields

@@ -583,6 +583,20 @@ export const timeBomb: Skill = {
   },
 };
 
+/**
+ * Chronomancer: one ally gets back the HP it lost since its last turn
+ * ended, however much that was.
+ */
+export const rewind: Skill = {
+  id: "rewind",
+  name: "Rewind",
+  description: "One ally gets back all the HP it lost since its last turn.",
+  mpCost: 10,
+  target: "ally",
+  area: "single",
+  effect: { type: "rewind" },
+};
+
 /** Warlock: shadow damage that heals the Warlock by half of it. */
 export const drain: Skill = {
   id: "drain",
@@ -1103,6 +1117,7 @@ export const skills = [
   slow,
   quicken,
   timeBomb,
+  rewind,
   drain,
   bloodBolt,
   firebolt,
@@ -1273,7 +1288,7 @@ export const chronomancer: CombatantDef = {
     speed: 12,
   },
   weapon: hourglass,
-  skills: [haste, slow, quicken, timeBomb],
+  skills: [haste, slow, quicken, timeBomb, rewind],
   preferredRow: 2,
 };
 

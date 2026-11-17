@@ -154,6 +154,9 @@ export function validateSkill(
   ) {
     return `${target.name}'s MP is already full`;
   }
+  if (skill.effect.type === "rewind" && target.hp >= target.rewindHp) {
+    return `${target.name} has lost no HP since its last turn`;
+  }
   if (skill.effect.type === "gauge") {
     if (target.casting) return `${target.name} is busy casting`;
     if (state.ready.includes(target.id))
@@ -430,6 +433,11 @@ function applySkill(
         events.push({ type: "heal", unitId: target.id, amount, hp: target.hp });
         break;
       }
+      case "rewind": {
+        const amount = restoreHp(target, target.rewindHp - target.hp);
+        events.push({ type: "heal", unitId: target.id, amount, hp: target.hp });
+        break;
+      }
       case "status":
         applyStatus(state, unit, target, effect.status, events);
         break;
@@ -537,6 +545,7 @@ function applySkill(
 /** Back on its feet with `amount` HP (at least 1), its turn starting over. */
 function revive(unit: Unit, amount: number, events: BattleEvent[]): void {
   unit.hp = Math.min(unit.base.maxHp, Math.max(1, Math.round(amount)));
+  unit.rewindHp = unit.hp;
   unit.gauge = 0;
   events.push({ type: "revived", unitId: unit.id, hp: unit.hp });
 }

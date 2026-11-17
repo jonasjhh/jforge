@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { chronomancer, haste, quicken, slow, timeBomb } from "../content";
+import {
+  chronomancer,
+  haste,
+  quicken,
+  rewind,
+  slow,
+  timeBomb,
+} from "../content";
 import { knockOutIfDown } from "../damage";
 import { skillValue } from "../aiSkills";
 import { offenseOf } from "../threat";
@@ -47,8 +54,14 @@ function waitForBlast(state: BattleState) {
 }
 
 describe("Chronomancer skills", () => {
-  it("are Haste, Slow, Quicken and Time Bomb", () => {
-    expect(chronomancer.skills).toEqual([haste, slow, quicken, timeBomb]);
+  it("are Haste, Slow, Quicken, Time Bomb and Rewind", () => {
+    expect(chronomancer.skills).toEqual([
+      haste,
+      slow,
+      quicken,
+      timeBomb,
+      rewind,
+    ]);
   });
 });
 
@@ -138,7 +151,7 @@ describe("Time Bomb", () => {
   });
 
   it("counts toward the Chronomancer's threat as damage", () => {
-    const without = { ...chronomancer, skills: [haste, slow, quicken] };
+    const without = { ...chronomancer, skills: [haste, slow, quicken, rewind] };
     expect(offenseOf(chronomancer)).toBeGreaterThan(offenseOf(without));
   });
 });

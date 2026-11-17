@@ -307,6 +307,11 @@ export type SkillEffect =
    */
   | { type: "rescue" }
   /**
+   * Gives the target back the HP it lost since its last turn ended (its
+   * `rewindHp`). Not on a unit that has lost none since then.
+   */
+  | { type: "rewind" }
+  /**
    * The caster regains `amount` MP, never above its max (Mana Tap, paid
    * for with HP). Not while its MP is full.
    */
@@ -458,6 +463,11 @@ export interface Unit {
   /** A summon that is gone: off the grid, no body. */
   vanished?: boolean;
   hp: number;
+  /**
+   * Its HP when its last turn ended (or the battle began, or it was
+   * revived): what Rewind brings it back up to.
+   */
+  rewindHp: number;
   mp: number;
   /** Bracing since its last turn: hits are halved until it acts again. */
   defending?: boolean;
