@@ -1,3 +1,4 @@
+import { STONE_SKIN_DEFENSE } from "./stoneSkin";
 import type { StatName, Unit } from "./types";
 
 /** (base + sum of adds) x product of muls, never below 0. */
@@ -8,6 +9,12 @@ export function effectiveStat(unit: Unit, stat: StatName): number {
     if (m.stat !== stat) continue;
     if (m.op === "add") add += m.value;
     else mul *= m.value;
+  }
+  if (
+    stat === "defense" &&
+    unit.statuses.some((s) => s.effect === "stoneSkin")
+  ) {
+    mul *= STONE_SKIN_DEFENSE;
   }
   return Math.max(0, (unit.base[stat] + add) * mul);
 }

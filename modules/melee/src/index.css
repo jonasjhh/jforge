@@ -603,6 +603,20 @@ button:not(:disabled):active {
   color: #f5ebd9;
 }
 
+.status-stoneSkin {
+  background: #6e6a5e;
+  color: #f2efe6;
+}
+
+.unit.petrified {
+  filter: grayscale(1);
+}
+
+.status-petrify {
+  background: #4a4a4a;
+  color: #e6e6e6;
+}
+
 .status-bless {
   background: #8c7a2e;
   color: #fff8dc;

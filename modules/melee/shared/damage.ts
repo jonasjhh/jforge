@@ -1,4 +1,5 @@
 import { blessDealt, blessTaken } from "./bless";
+import { PETRIFY_TAKEN, isPetrified } from "./petrify";
 import { bombOn, explode } from "./bomb";
 import { cellOf } from "./grid";
 import { nextRandom } from "./rng";
@@ -44,12 +45,14 @@ export function dealtFactor(attacker: Unit): number {
 
 /**
  * The target's multiplier for `type`: its resistance, times EXPOSE_FACTOR
- * while it is exposed and BLESS_TAKEN while blessed. Immune stays immune.
+ * while it is exposed, BLESS_TAKEN while blessed and PETRIFY_TAKEN while
+ * stone. Immune stays immune.
  */
 export function resistance(target: Unit, type: DamageType): number {
   const base = target.resistances[type] ?? 1;
   const exposed = target.statuses.some((s) => s.effect === "expose");
-  return (exposed ? base * EXPOSE_FACTOR : base) * blessTaken(target);
+  const stone = isPetrified(target) ? PETRIFY_TAKEN : 1;
+  return (exposed ? base * EXPOSE_FACTOR : base) * blessTaken(target) * stone;
 }
 
 /**

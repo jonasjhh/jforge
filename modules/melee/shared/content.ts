@@ -969,6 +969,54 @@ export const shatter: Skill = {
   effect: { type: "shatter", power: 1.2, element: "impact" },
 };
 
+/** Geomancer: an ally's defense x1.5, and nothing can push it, for a while. */
+export const stoneSkin: Skill = {
+  id: "stoneSkin",
+  name: "Stone Skin",
+  description:
+    "An ally's skin turns to stone: defense x1.5 and it can't be pushed or pulled, for a while.",
+  mpCost: 6,
+  target: "ally",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "stoneSkin",
+      name: "Stone Skin",
+      effect: "stoneSkin",
+      harmful: false,
+      stat: "magic",
+      power: 0,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
+/** Geomancer: turns an enemy to stone, frozen but hard to hurt. */
+export const petrifySkill: Skill = {
+  id: "petrify",
+  name: "Petrify",
+  description:
+    "Turn an enemy to stone for a while: it can't act and breaks off any spell, but takes x0.5 damage.",
+  mpCost: 8,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "petrified",
+      name: "Petrified",
+      effect: "petrify",
+      harmful: true,
+      stat: "magic",
+      power: 0,
+      interval: 60,
+      ticks: 1,
+    },
+  },
+};
+
 /** Geomancer: heaves any unit (or boulder) one row back. */
 export const upheaval: Skill = {
   id: "upheaval",
@@ -1304,6 +1352,8 @@ export const skills = [
   raiseBoulder,
   shatter,
   upheaval,
+  stoneSkin,
+  petrifySkill,
   shieldWall,
   guard,
   shieldBash,
@@ -1548,7 +1598,7 @@ export const geomancer: CombatantDef = {
     speed: 10,
   },
   weapon: rod,
-  skills: [raiseBoulder, shatter, upheaval],
+  skills: [raiseBoulder, shatter, upheaval, stoneSkin, petrifySkill],
   preferredRow: 1,
 };
 

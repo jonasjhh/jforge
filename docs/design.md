@@ -421,6 +421,18 @@ cell) and its `area` which cells it hits around the aimed one.
   boulder one row back (no damage; nothing happens if blocked). The Rod
   deals crush damage and Shatter impact (boulders are stone: weak to
   impact).
+- **Stone Skin** (Geomancer): 6 MP, one ally, a helpful `stoneSkin`
+  status for 150 game time: defense x1.5, and pushes and pulls don't move
+  it (Upheaval, pushing and pulling strikes). A pushing strike then lands
+  as a normal hit, not a crash (`stoneSkin.ts`).
+- **Petrify** (Geomancer): 8 MP, one enemy, a harmful `petrify` status
+  for 60 game time. Its gauge doesn't fill and it takes no turn; it takes
+  x0.5 damage (folded into `resistance`). Petrifying breaks a cast in
+  progress (the MP stays spent) and takes a unit waiting to act out of
+  line; its full gauge brings it back as soon as the stone wears off. It
+  can't be quickened. The AI values it by the share of an ally's HP the
+  foe's weapon would take in the turns it loses, minus what the caster's
+  next blow loses on stone, plus a broken cast (`petrify.ts`).
 - **Aegis / Last Rites** (Paladin): all damage (weapons, spells,
   collisions, poison) goes through one function. A **shield** status
   absorbs first (Aegis: 2 x magic, 150 game time, refreshes on recast); a
@@ -703,7 +715,8 @@ Bomb hides an ally, Coup de Grâce finishes the badly hurt), **Paladin** (holy b
 an ally, Last Rites keeps an ally from being knocked out, Consecrate
 burns a crowd with holy damage over time, Judgment heals the most-hurt
 ally with its strikes, Blessing makes an ally hit harder and take less), **Geomancer** (crush
-and impact; raises boulders, shatters them on crowds, heaves units back),
+and impact; raises boulders, shatters them on crowds, heaves units back, Stone Skin roots an ally, Petrify
+freezes a foe),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield
 Wall hardens its whole row, Guard takes the hits meant for an ally next
 to it, Shield Bash knocks an enemy a row back, Charge runs it back into the

@@ -1,3 +1,4 @@
+import { isPetrified, petrifiedUntil } from "./petrify";
 import { timeToNextTick } from "./status";
 import { effectiveStat, isAlive } from "./stats";
 import type { BattleEvent, BattleState, Unit } from "./types";
@@ -6,9 +7,12 @@ export const GAUGE_FULL = 1000;
 // Float tolerance for "the gauge is full".
 const EPSILON = 1e-9;
 
-/** Gauge filled per unit of game time. A casting unit's gauge waits. */
+/**
+ * Gauge filled per unit of game time. A casting or petrified unit's gauge
+ * waits.
+ */
 export function fillRate(unit: Unit): number {
-  if (unit.casting) return 0;
+  if (unit.casting || isPetrified(unit)) return 0;
   return effectiveStat(unit, "speed");
 }
 
@@ -52,6 +56,8 @@ export function advanceTime(
   const newlyReady: Unit[] = [];
   for (const unit of state.units) {
     if (!isAlive(unit) || state.ready.includes(unit.id)) continue;
+    // Stone takes no turn: a full gauge waits for it to wear off.
+    if (isPetrified(unit)) continue;
     // Gauges fill at the rate from before any modifier expires this step:
     // timeToNextEvent never steps past an expiry.
     unit.gauge = Math.min(GAUGE_FULL, unit.gauge + fillRate(unit) * dt);
@@ -101,10 +107,11 @@ export function turnOrder(state: BattleState, count: number): string[] {
     const rate = effectiveStat(unit, "speed");
     if (rate <= 0) continue;
     const full = GAUGE_FULL / rate;
+    // A petrified unit's gauge starts again once the stone wears off.
+    const from = petrifiedUntil(unit) ?? state.time;
     const at = state.ready.includes(unit.id)
       ? state.time + full
-      : (unit.casting?.readyAt ?? state.time) +
-        (GAUGE_FULL - unit.gauge) / rate;
+      : (unit.casting?.readyAt ?? from) + (GAUGE_FULL - unit.gauge) / rate;
     queue.push({ id: unit.id, at, rate });
   }
   while (order.length < count && queue.length > 0) {

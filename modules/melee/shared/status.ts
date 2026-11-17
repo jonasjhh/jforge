@@ -1,3 +1,4 @@
+import { petrify } from "./petrify";
 import { blessDealt } from "./bless";
 import {
   knockOutIfDown,
@@ -60,6 +61,7 @@ export function applyStatus(
     name: def.name,
     ticks: def.ticks,
   });
+  if (def.effect === "petrify") petrify(state, target, events);
   // Silence breaks a cast in progress.
   if (def.effect === "silence" && target.casting) {
     events.push({
@@ -134,6 +136,8 @@ function tick(
     case "coat":
     case "smoke":
     case "bless":
+    case "stoneSkin":
+    case "petrify":
       // Nothing happens on their single tick: they just end.
       break;
     case "bomb":

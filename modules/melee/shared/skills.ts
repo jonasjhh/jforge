@@ -5,6 +5,8 @@ import { breakStealth, isHidden } from "./stealth";
 import { poisonOnHit } from "./coat";
 import { finisherFactor } from "./finisher";
 import { mendMostHurt } from "./judgment";
+import { isPetrified } from "./petrify";
+import { isRooted } from "./stoneSkin";
 import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
 import { CHILL_SLOW } from "./chill";
@@ -174,6 +176,7 @@ export function validateSkill(
   }
   if (skill.effect.type === "gauge") {
     if (target.casting) return `${target.name} is busy casting`;
+    if (isPetrified(target)) return `${target.name} is turned to stone`;
     if (state.ready.includes(target.id))
       return `${target.name} is already ready`;
   }
@@ -389,7 +392,9 @@ function applySkill(
   if (skill.effect.type === "heave") {
     const target = unitAt(state, cell);
     if (target) {
-      const to = pushDestination(state, target, skill.effect.rows);
+      const to = isRooted(target)
+        ? null
+        : pushDestination(state, target, skill.effect.rows);
       if (to) moveBy(target, to, events);
       else events.push({ type: "unmoved", unitId: target.id });
     }
@@ -491,9 +496,13 @@ function applySkill(
       case "strike": {
         // Decide the move first: a blocked push hits harder instead, and
         // the crash is reported before the blow it causes.
-        const to = effect.push
-          ? pushDestination(state, target, effect.push)
-          : undefined;
+        // Stone Skin holds its ground: no move, and no crash either.
+        const rooted = effect.push !== undefined && isRooted(target);
+        if (rooted) events.push({ type: "unmoved", unitId: target.id });
+        const to =
+          effect.push && !rooted
+            ? pushDestination(state, target, effect.push)
+            : undefined;
         const blocked = to === null;
         if (blocked && effect.push) {
           const blocker = pushBlocker(state, target, effect.push);

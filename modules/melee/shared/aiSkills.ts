@@ -11,6 +11,8 @@ import { blastCells } from "./bomb";
 import { CHILL_SLOW } from "./chill";
 import { isCoated } from "./coat";
 import { mostHurtAlly } from "./judgment";
+import { isRooted } from "./stoneSkin";
+import { PETRIFY_TAKEN, isPetrified } from "./petrify";
 import { POISON } from "./poison";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
@@ -188,6 +190,45 @@ function guardValue(guardian: Unit, ally: Unit): number {
  * and a cast it is in the middle of as much as that cast is worth to its
  * side (its price is already paid). Nothing on a foe already silenced.
  */
+/**
+ * Petrify on `foe`: the share of an ally's HP its weapon would take in the
+ * turns it loses (valued like that much healing), minus what the caster's
+ * next blow loses on stone at half (a knockout put off counts), plus a
+ * broken cast. Low or negative for a foe about to fall, so the AI
+ * finishes it instead.
+ */
+function petrifyValue(
+  state: BattleState,
+  p: TargetingProfile,
+  unit: Unit,
+  foe: Unit,
+  status: StatusDef,
+): number {
+  if (isPetrified(foe)) return 0;
+  const duration = status.interval * status.ticks;
+  const turns = (duration * effectiveStat(foe, "speed")) / GAUGE_FULL;
+  let worst = 0;
+  for (const ally of state.units) {
+    if (ally.side !== unit.side || ally.obstacle || !isAlive(ally)) continue;
+    const share = expectedPhysicalDamage(foe, ally) / ally.base.maxHp;
+    worst = Math.max(worst, Math.min(1, share));
+  }
+  const plain = expectedPhysicalDamage(unit, foe);
+  const softened =
+    hitValue(p, unit, foe, plain) -
+    hitValue(p, unit, foe, Math.round(plain * PETRIFY_TAKEN));
+  // Others can strike elsewhere meanwhile: only the caster's own next
+  // blow on the stone counts against it.
+  let value = HEAL_WEIGHT * worst * turns - softened;
+  const cast = foe.casting && findSkill(foe, foe.casting.skillId);
+  if (foe.casting && cast) {
+    const worth =
+      skillValue(state, foe, cast, foe.casting.cell) + skillCost(foe, cast);
+    value += Math.max(SUPPORT_VALUE, worth);
+  }
+  return value;
+}
+
 function silenceValue(state: BattleState, foe: Unit): number {
   if (foe.statuses.some((s) => s.effect === "silence")) return 0;
   const usable = foe.skills.some((s) => s.mpCost <= foe.mp);
@@ -355,6 +396,9 @@ function victimValue(
       if (effect.status.effect === "silence") {
         return silenceValue(state, victim);
       }
+      if (effect.status.effect === "petrify") {
+        return friend ? 0 : petrifyValue(state, p, unit, victim, effect.status);
+      }
       if (effect.status.effect === "bomb") {
         return -sign * bombValue(state, p, unit, victim, effect.status);
       }
@@ -375,7 +419,9 @@ function victimValue(
       return sign * GAUGE_WEIGHT * (effect.to - victim.gauge / GAUGE_FULL);
     case "heave": {
       // Pushing a melee foe back weakens its blows; nothing else is worth it.
-      if (friend || victim.weapon.kind !== "melee") return 0;
+      if (friend || victim.weapon.kind !== "melee" || isRooted(victim)) {
+        return 0;
+      }
       return pushDestination(state, victim, effect.rows)
         ? SUPPORT_VALUE / 2
         : 0;

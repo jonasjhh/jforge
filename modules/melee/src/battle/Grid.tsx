@@ -262,6 +262,7 @@ function UnitCell({
       ? "stealthed"
       : "",
     unit.statuses.some((st) => st.effect === "taunt") ? "taunting" : "",
+    unit.statuses.some((st) => st.effect === "petrify") ? "petrified" : "",
     hits.some((h) => h.kind === "damage") ? "hit" : "",
   ]
     .filter(Boolean)

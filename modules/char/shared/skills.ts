@@ -78,6 +78,12 @@ export function effectSummary(skill: Skill): string {
       if (effect.status.effect === "coat") {
         return `coats the blade: weapon hits poison for ${effect.status.interval}`;
       }
+      if (effect.status.effect === "stoneSkin") {
+        return `stone skin on an ally: defense ×1.5, unpushable for ${effect.status.interval}`;
+      }
+      if (effect.status.effect === "petrify") {
+        return `petrifies an enemy for ${effect.status.interval}: can't act, takes ×0.5`;
+      }
       if (effect.status.effect === "bless") {
         return `blesses an ally: deals ×1.2, takes ×0.8 for ${effect.status.interval}`;
       }
