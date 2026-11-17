@@ -5,4 +5,4 @@
  * it whenever a change makes old saves stale (a class gains a skill, a
  * format changes): saves are dropped, never migrated.
  */
-export const SAVE_VERSION = 28;
+export const SAVE_VERSION = 29;

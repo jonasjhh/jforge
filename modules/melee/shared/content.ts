@@ -607,6 +607,18 @@ export const drain: Skill = {
 };
 
 /** Warlock: shadow damage over time on one enemy. */
+/** Paladin: a strike that heals its most-hurt ally by half the damage. */
+export const judgment: Skill = {
+  id: "judgment",
+  name: "Judgment",
+  description:
+    "A weapon strike; the most-hurt ally heals half the damage dealt.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 1, mend: 0.5 },
+};
+
 /** Paladin: holy damage over time on a plus of enemies. */
 export const consecrate: Skill = {
   id: "consecrate",
@@ -1255,6 +1267,7 @@ export const skills = [
   summonImp,
   curse,
   consecrate,
+  judgment,
   sacrifice,
   vanish,
   shadowstep,
@@ -1489,7 +1502,7 @@ export const paladin: CombatantDef = {
     speed: 9,
   },
   weapon: blessedBlade,
-  skills: [aegis, lastRites, consecrate],
+  skills: [aegis, lastRites, consecrate, judgment],
   preferredRow: 0,
 };
 

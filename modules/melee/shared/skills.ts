@@ -4,6 +4,7 @@ import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isHidden } from "./stealth";
 import { poisonOnHit } from "./coat";
 import { finisherFactor } from "./finisher";
+import { mendMostHurt } from "./judgment";
 import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
 import { CHILL_SLOW } from "./chill";
@@ -516,7 +517,10 @@ function applySkill(
           blocked ? "impact" : unit.weapon.damageType,
           1 - (effect.armorPierce ?? 0),
         );
-        applyDamage(state, target, hit, events);
+        const suffered = applyDamage(state, target, hit, events);
+        if (effect.mend && isAlive(unit)) {
+          mendMostHurt(state, unit, suffered.lost, effect.mend, events);
+        }
         poisonOnHit(state, unit, target, hit.amount, events);
         if (to && isAlive(target)) moveBy(target, to, events);
         if (effect.pin && isAlive(target) && !target.obstacle) {

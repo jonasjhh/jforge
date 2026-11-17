@@ -4,10 +4,12 @@ import {
   aegis,
   consecrate,
   fireball,
+  judgment,
   lastRites,
   paladin,
   venomFangs,
 } from "../content";
+import { skillValue } from "../aiSkills";
 import { applyStatus } from "../status";
 import type { BattleEvent, BattleState, Cell, StatusDef } from "../types";
 import { def, place } from "./helpers";
@@ -275,7 +277,77 @@ describe("Consecrate", () => {
     );
   });
 
-  it("is the Paladin's third skill", () => {
-    expect(paladin.skills).toEqual([aegis, lastRites, consecrate]);
+  it("is the Paladin's third skill, before Judgment", () => {
+    expect(paladin.skills).toEqual([aegis, lastRites, consecrate, judgment]);
+  });
+});
+
+describe("Judgment", () => {
+  /** The Paladin (front, 0,0) is waiting, a 100 HP ally at 1,0 and a foe. */
+  function judgmentTurn(): BattleState {
+    const fast = {
+      ...paladin,
+      stats: { ...paladin.stats, speed: 50, attack: 50 },
+    };
+    return advance(
+      createBattle(
+        {
+          placements: [
+            place(fast, "player", 0),
+            place(def("ally", { maxHp: 100, speed: 1 }), "player", 1),
+            place(def("foe", { maxHp: 1000, speed: 1 }), "enemy", 0),
+          ],
+        },
+        2,
+      ),
+    ).state;
+  }
+  const PALADIN = "player-0-0";
+  const ALLY = "player-1-0";
+  const foeCell: Cell = { side: "enemy", col: 0, row: 0 };
+  const hp = (s: BattleState, id: string) =>
+    s.units.find((u) => u.id === id)!.hp;
+  const setHp = (s: BattleState, id: string, value: number) => {
+    s.units.find((u) => u.id === id)!.hp = value;
+  };
+
+  it("heals the most-hurt ally (by HP share) half the damage dealt", () => {
+    const s = judgmentTurn();
+    setHp(s, ALLY, 40); // 40% of 100
+    setHp(s, PALADIN, 60); // ~52% of 115
+    const { state, events } = cast(s, judgment.id, foeCell);
+    const dealt = events.find((e): e is Damage => e.type === "damage")!;
+    expect(dealt.amount).toBeGreaterThan(0);
+    expect(hp(state, ALLY)).toBe(40 + Math.floor(dealt.amount / 2));
+    expect(hp(state, PALADIN)).toBe(60);
+  });
+
+  it("heals the Paladin when it is the most hurt", () => {
+    const s = judgmentTurn();
+    setHp(s, ALLY, 90);
+    setHp(s, PALADIN, 20);
+    const { state } = cast(s, judgment.id, foeCell);
+    expect(hp(state, PALADIN)).toBeGreaterThan(20);
+    expect(hp(state, ALLY)).toBe(90);
+  });
+
+  it("still strikes, healing no one, when nobody is hurt", () => {
+    const { events } = cast(judgmentTurn(), judgment.id, foeCell);
+    expect(events.some((e) => e.type === "damage")).toBe(true);
+    expect(events.some((e) => e.type === "heal")).toBe(false);
+  });
+
+  it("is worth more to the AI when an ally is hurt", () => {
+    const healthy = judgmentTurn();
+    const hurt = judgmentTurn();
+    setHp(hurt, ALLY, 20);
+    const value = (s: BattleState) =>
+      skillValue(
+        s,
+        s.units.find((u) => u.id === PALADIN)!,
+        judgment,
+        foeCell,
+      );
+    expect(value(hurt)).toBeGreaterThan(value(healthy));
   });
 });

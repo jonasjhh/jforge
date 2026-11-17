@@ -432,6 +432,11 @@ cell) and its `area` which cells it hits around the aimed one.
   `damage` status (0.25 x magic every 30 game time, 4 ticks): an area
   Curse, counted by the threat estimate as damage over time times the
   plus's reach.
+- **Judgment** (Paladin): 6 MP, a single-enemy strike x1.0 (`mend` on
+  the strike, see `judgment.ts`). The living ally missing the largest
+  share of its max HP (the Paladin included, obstacles not) heals half
+  the damage that got through; no one hurt, no heal. The AI values the
+  heal on that ally; the threat estimate counts only the strike.
 - **Vanish / Shadowstep** (Rogue): **Stealth** is a timed status (one
   silent tick that just ends it). A stealthed unit can't be picked by
   enemies for weapon attacks or single-target skills (areas and poison
@@ -689,7 +694,8 @@ for HP and a magic boost), **Rogue** (Vanish into stealth, Shadowstep anywhere o
 side, ambush from stealth for x2, Poison Blade poisons its hits, Smoke
 Bomb hides an ally, Coup de Grâce finishes the badly hurt), **Paladin** (holy blade; Aegis shields
 an ally, Last Rites keeps an ally from being knocked out, Consecrate
-burns a crowd with holy damage over time), **Geomancer** (crush
+burns a crowd with holy damage over time, Judgment heals the most-hurt
+ally with its strikes), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield
 Wall hardens its whole row, Guard takes the hits meant for an ally next

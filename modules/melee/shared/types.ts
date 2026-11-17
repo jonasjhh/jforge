@@ -251,6 +251,11 @@ export type SkillEffect =
       stagger?: number;
       /** Weakens a target that survives the hit (see weaken.ts). */
       weaken?: boolean;
+      /**
+       * Share of the damage dealt that heals the caster's most-hurt ally
+       * (Judgment: 0.5, see judgment.ts).
+       */
+      mend?: number;
     }
   | {
       type: "heal";

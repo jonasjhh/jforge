@@ -58,7 +58,7 @@ export function effectSummary(skill: Skill): string {
     case "damage":
       return `${effect.element} damage ×${effect.power}${effect.split ? ` each, ×${effect.split} shared` : ""}${effect.vsEmpowered ? ` (×${effect.vsEmpowered} if empowered)` : ""}${effect.burnMp ? `, burns ${effect.burnMp} MP` : ""}${effect.chill ? ", chills" : ""}${shape}`;
     case "strike":
-      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.weaken ? ", weakens" : ""}${effect.stagger ? `, staggers ${effect.stagger * 100}%` : ""}${effect.armorPierce ? `, ignores ${effect.armorPierce * 100}% defense` : ""}${effect.finisher ? `, ×${effect.finisher} below 30% HP` : ""}${shape}`;
+      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.weaken ? ", weakens" : ""}${effect.stagger ? `, staggers ${effect.stagger * 100}%` : ""}${effect.armorPierce ? `, ignores ${effect.armorPierce * 100}% defense` : ""}${effect.finisher ? `, ×${effect.finisher} below 30% HP` : ""}${effect.mend ? `, heals the most-hurt ally ${effect.mend * 100}% of the damage` : ""}${shape}`;
     case "heal":
       return `heals ×${effect.power} ${effect.of === "maxHp" ? "max HP" : "magic"}${shape}`;
     case "modify": {

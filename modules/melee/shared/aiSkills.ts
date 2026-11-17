@@ -10,6 +10,7 @@ import { previewDamage } from "./preview";
 import { blastCells } from "./bomb";
 import { CHILL_SLOW } from "./chill";
 import { isCoated } from "./coat";
+import { mostHurtAlly } from "./judgment";
 import { POISON } from "./poison";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
@@ -309,6 +310,12 @@ function rescueValue(rescuer: Unit, ally: Unit): number {
   return value + (braced ? 0 : SUPPORT_VALUE);
 }
 
+/** Judgment's heal of `amount` on the caster's most-hurt ally. */
+function mendValue(state: BattleState, unit: Unit, amount: number): number {
+  const ally = mostHurtAlly(state, unit);
+  return ally ? healValue(ally, Math.floor(amount)) : 0;
+}
+
 /** What the skill's effect on one victim is worth to the caster's side. */
 function victimValue(
   state: BattleState,
@@ -334,7 +341,11 @@ function victimValue(
           : effect.type === "strike"
             ? strikeExtra(p, unit, victim, effect, amount)
             : 0;
-      return -sign * (hitValue(p, unit, victim, amount) + extra);
+      const mend =
+        effect.type === "strike" && effect.mend && !friend
+          ? mendValue(state, unit, Math.min(amount, victim.hp) * effect.mend)
+          : 0;
+      return -sign * (hitValue(p, unit, victim, amount) + extra) + mend;
     }
     case "heal":
       return sign * healValue(victim, healAmount(unit, victim, effect));
