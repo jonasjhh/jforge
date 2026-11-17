@@ -8,6 +8,16 @@ export function isStealthed(unit: Unit): boolean {
 }
 
 /**
+ * Enemies can't single it out (weapon attacks, single-target skills):
+ * stealthed, or hidden in smoke (Smoke Bomb).
+ */
+export function isHidden(unit: Unit): boolean {
+  return unit.statuses.some(
+    (s) => s.effect === "stealth" || s.effect === "smoke",
+  );
+}
+
+/**
  * Called when `unit` starts a damaging action: if it was stealthed, stealth
  * ends and the action is an ambush. Returns the damage multiplier.
  */

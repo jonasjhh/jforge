@@ -1,4 +1,4 @@
-import { isStealthed } from "./stealth";
+import { isHidden } from "./stealth";
 import { forcedTargets } from "./taunt";
 import { isAlive } from "./stats";
 import type { BattleState, Unit } from "./types";
@@ -39,12 +39,12 @@ export function reachableTargets(
     ).length;
     return inFront < depth;
   });
-  if (columns === "any") return exposed.filter((u) => !isStealthed(u));
+  if (columns === "any") return exposed.filter((u) => !isHidden(u));
 
   const distance = (u: Unit) =>
     Math.abs(u.position.col - attacker.position.col);
-  // Stealthed units still cover what's behind them, but can't be picked.
-  const visible = exposed.filter((u) => !isStealthed(u));
+  // Hidden units still cover what's behind them, but can't be picked.
+  const visible = exposed.filter((u) => !isHidden(u));
   const inRange = visible.filter((u) => distance(u) <= columns);
   if (inRange.length > 0 || visible.length === 0) return inRange;
 

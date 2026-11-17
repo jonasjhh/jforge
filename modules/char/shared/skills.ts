@@ -75,6 +75,12 @@ export function effectSummary(skill: Skill): string {
         const st = effect.status;
         return `${st.damageType ?? ""} damage ×${st.power} ${st.stat} over ${st.ticks} ticks${shape}`;
       }
+      if (effect.status.effect === "coat") {
+        return `coats the blade: weapon hits poison for ${effect.status.interval}`;
+      }
+      if (effect.status.effect === "smoke") {
+        return `hides an ally: can't be singled out for ${effect.status.interval}`;
+      }
       return `status${shape}`;
     case "sacrifice": {
       const m = effect.modifier;

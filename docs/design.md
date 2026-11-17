@@ -436,6 +436,18 @@ cell) and its `area` which cells it hits around the aimed one.
   `teleport` effect to any empty cell on its side and a **half-turn**
   skill (gauge drops to half, like Move); it keeps stealth. Skills can
   target `self` only.
+- **Poison Blade** (Rogue): 5 MP, self, a helpful `coat` status for 450
+  game time. While it lasts, every weapon hit that gets through (plain
+  attacks and strike skills) poisons a living, non-boulder target with
+  the Viper's venom (0.4 x the Rogue's attack per tick, 5 ticks);
+  poisoning again restarts it, never stacks. The AI adds the poison's
+  value to the Rogue's strikes while coated; the threat estimate counts
+  the coating like a venomous weapon.
+- **Smoke Bomb** (Rogue): 5 MP, another ally (not the Rogue), a helpful
+  `smoke` status for 100 game time. Enemies can't single it out with
+  weapon attacks or single-target skills, as with stealth; area skills
+  and damage over time still hit it, and it still covers units behind
+  it. Unlike stealth, acting doesn't end it and it gives no ambush.
 - **Drain / Blood Bolt / Summon Imp** (Warlock): damage effects can
   **drain** (heal the caster by a share of the damage dealt; nothing from
   an immune target). Skills can cost **HP**, refused unless the caster has
@@ -666,7 +678,8 @@ Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an 
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field, Curse wears an enemy down, Sacrifice gives up the Imp
 for HP and a magic boost), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
-side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields
+side, ambush from stealth for x2, Poison Blade poisons its hits, Smoke
+Bomb hides an ally), **Paladin** (holy blade; Aegis shields
 an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield

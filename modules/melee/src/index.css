@@ -603,6 +603,16 @@ button:not(:disabled):active {
   color: #f5ebd9;
 }
 
+.status-coat {
+  background: #3f6b2e;
+  color: #eaf7e0;
+}
+
+.status-smoke {
+  background: #5a5f66;
+  color: #f0f2f5;
+}
+
 .status-bomb {
   background: #b34700;
   color: #fff1e0;

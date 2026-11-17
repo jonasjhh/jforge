@@ -1,3 +1,4 @@
+import { POISON } from "./poison";
 import { DEFENSE_K } from "./damage";
 import { IGNITE_BURN } from "./ignite";
 import { resistancesFor } from "./traits";
@@ -93,6 +94,13 @@ export function offenseOf(def: CombatantDef): number {
   }
   const skills = def.skills ?? [];
   const affordable = skills.filter((s) => s.mpCost <= stats.maxMp);
+  // A blade it can coat (Poison Blade) poisons like a venomous bite.
+  const coats = affordable.some(
+    (s) => s.effect.type === "status" && s.effect.status.effect === "coat",
+  );
+  if (coats && onHit?.effect !== "damage") {
+    weaponDamage += ON_HIT_SHARE * POISON.power * POISON.ticks * stats.attack;
+  }
   const best = Math.max(
     weaponDamage,
     ...affordable.map((s) => skillDamage(def, s)),

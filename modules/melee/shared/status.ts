@@ -127,6 +127,8 @@ function tick(
     case "silence":
     case "guard":
     case "weaken":
+    case "coat":
+    case "smoke":
       // Nothing happens on their single tick: they just end.
       break;
     case "bomb":

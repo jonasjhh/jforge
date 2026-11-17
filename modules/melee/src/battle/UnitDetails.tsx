@@ -58,6 +58,10 @@ function statusText(status: Status, speed: number): string {
       return "Guarded: enemies' single-target hits on it land on its guardian.";
     case "weaken":
       return `Weakened: deals ×${WEAKEN_FACTOR} damage.`;
+    case "coat":
+      return "Coated blade: every weapon hit poisons its target.";
+    case "smoke":
+      return "In smoke: enemies can't single it out (areas still hit it).";
     case "bomb":
       return `Explodes when time runs out or it falls: ${status.amount} ${status.damageType ?? ""} damage to it and its neighbours.`;
   }

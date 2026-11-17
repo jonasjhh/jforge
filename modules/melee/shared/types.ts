@@ -142,7 +142,9 @@ export interface StatusDef {
    * weaken: every hit it deals is weaker (see WEAKEN_FACTOR). The last
    * eight just last until they end. bomb: when it ends, or the unit falls
    * first, it explodes for its amount on the unit and its neighbours on
-   * its side (see bomb.ts).
+   * its side (see bomb.ts). coat: its weapon hits poison (see coat.ts).
+   * smoke: enemies can't single it out, as with stealth, but it gives no
+   * ambush and acting doesn't end it.
    */
   effect:
     | "heal"
@@ -155,7 +157,9 @@ export interface StatusDef {
     | "silence"
     | "guard"
     | "weaken"
-    | "bomb";
+    | "bomb"
+    | "coat"
+    | "smoke";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */

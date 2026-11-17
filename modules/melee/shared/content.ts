@@ -1,3 +1,4 @@
+import { POISON } from "./poison";
 import type { CombatantDef, Skill, Weapon } from "./types";
 
 // Starter content so melee can set up a fight on its own. The four player
@@ -69,17 +70,7 @@ export const venomFangs: Weapon = {
   depth: 1,
   damageType: "pierce",
   kind: "melee",
-  onHit: {
-    id: "poison",
-    name: "Poison",
-    effect: "damage",
-    harmful: true,
-    damageType: "poison",
-    stat: "attack",
-    power: 0.4,
-    interval: 30,
-    ticks: 5,
-  },
+  onHit: POISON,
 };
 
 /** A weak ranged poke: any column, front-most unit only. */
@@ -746,6 +737,61 @@ export const vanish: Skill = {
   },
 };
 
+/**
+ * Rogue: coats its blade for a long while; every weapon hit (attacks and
+ * strike skills) poisons, as the Viper's bite does.
+ */
+export const poisonBlade: Skill = {
+  id: "poisonBlade",
+  name: "Poison Blade",
+  description:
+    "Coat your blade for a long while: every weapon hit poisons its target.",
+  mpCost: 5,
+  target: "self",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "poisonBlade",
+      name: "Poison Blade",
+      effect: "coat",
+      harmful: false,
+      stat: "attack",
+      power: 0,
+      interval: 450,
+      ticks: 1,
+    },
+  },
+};
+
+/**
+ * Rogue: hides another ally in smoke. Enemies can't single it out for a
+ * while; unlike Stealth, acting doesn't end it and there's no ambush.
+ */
+export const smokeBomb: Skill = {
+  id: "smokeBomb",
+  name: "Smoke Bomb",
+  description:
+    "Hide another ally in smoke: enemies can't single it out for a while. Area attacks still hit it.",
+  mpCost: 5,
+  target: "ally",
+  area: "single",
+  notSelf: true,
+  effect: {
+    type: "status",
+    status: {
+      id: "smoke",
+      name: "Smoke",
+      effect: "smoke",
+      harmful: false,
+      stat: "magic",
+      power: 0,
+      interval: 100,
+      ticks: 1,
+    },
+  },
+};
+
 /** Rogue: steps to any empty cell on its side, for half a turn. */
 export const shadowstep: Skill = {
   id: "shadowstep",
@@ -1176,6 +1222,8 @@ export const skills = [
   sacrifice,
   vanish,
   shadowstep,
+  poisonBlade,
+  smokeBomb,
   aegis,
   lastRites,
   raiseBoulder,
@@ -1382,7 +1430,7 @@ export const rogue: CombatantDef = {
     speed: 15,
   },
   weapon: daggers,
-  skills: [vanish, shadowstep],
+  skills: [vanish, shadowstep, poisonBlade, smokeBomb],
   preferredRow: 1,
 };
 

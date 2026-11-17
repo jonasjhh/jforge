@@ -9,6 +9,8 @@ import {
 import { previewDamage } from "./preview";
 import { blastCells } from "./bomb";
 import { CHILL_SLOW } from "./chill";
+import { isCoated } from "./coat";
+import { POISON } from "./poison";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
 import { staggeredGauge } from "./stagger";
@@ -235,7 +237,8 @@ function strikeExtra(
     staggered +
     (effect.pin ? pinValue(victim, amount) : 0) +
     (effect.ignite ? statusValue(p, unit, victim, IGNITE_BURN, false) : 0) +
-    (effect.weaken ? statusValue(p, unit, victim, WEAKEN_STATUS, false) : 0)
+    (effect.weaken ? statusValue(p, unit, victim, WEAKEN_STATUS, false) : 0) +
+    (isCoated(unit) ? statusValue(p, unit, victim, POISON, false) : 0)
   );
 }
 

@@ -1,3 +1,4 @@
+import { poisonOnHit } from "./coat";
 import { chooseCommand } from "./ai";
 import { dropReady, findSkill, makeUnit } from "./units";
 import { applyDamage, physicalHit } from "./damage";
@@ -242,6 +243,7 @@ function resolve(
   if (unit.weapon.onHit && hit.amount > 0 && isAlive(target)) {
     applyStatus(state, unit, target, unit.weapon.onHit, events);
   }
+  poisonOnHit(state, unit, target, hit.amount, events);
   finishTurn(state, unit);
 }
 

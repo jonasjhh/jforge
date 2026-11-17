@@ -1,7 +1,8 @@
 import { applyDamage, magicalHit, physicalHit } from "./damage";
 import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
 import { canReach, reachableTargets } from "./reach";
-import { breakStealth, isStealthed } from "./stealth";
+import { breakStealth, isHidden } from "./stealth";
+import { poisonOnHit } from "./coat";
 import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
 import { CHILL_SLOW } from "./chill";
@@ -88,7 +89,7 @@ export function validateSkill(
   if (skill.effect.type === "heave") {
     const target = unitAt(state, cell);
     if (!target || !isAlive(target)) return `${skill.name} needs a unit there`;
-    if (target.side !== unit.side && isStealthed(target)) {
+    if (target.side !== unit.side && isHidden(target)) {
       return `${target.name} can't be seen`;
     }
     return null;
@@ -143,7 +144,7 @@ export function validateSkill(
   if (skill.target === "self" && target.id !== unit.id) {
     return `${skill.name} can only target its caster`;
   }
-  if (!sameSide && skill.area === "single" && isStealthed(target)) {
+  if (!sameSide && skill.area === "single" && isHidden(target)) {
     return `${target.name} can't be seen`;
   }
   if (skill.notSelf && target.id === unit.id) {
@@ -199,7 +200,7 @@ export function validateSkill(
             ignoreCover: skill.effect.ignoreCover,
           })
         : state.units.filter(
-            (u) => u.side !== unit.side && isAlive(u) && !isStealthed(u),
+            (u) => u.side !== unit.side && isAlive(u) && !isHidden(u),
           );
     return tauntBlock(candidates, target);
   }
@@ -501,20 +502,17 @@ function applySkill(
           });
         }
         const power = effect.power * (blocked ? COLLISION_POWER : 1) * ambush;
-        applyDamage(
+        const hit = physicalHit(
           state,
+          unit,
           target,
-          physicalHit(
-            state,
-            unit,
-            target,
-            power,
-            // A crash into something is impact damage.
-            blocked ? "impact" : unit.weapon.damageType,
-            1 - (effect.armorPierce ?? 0),
-          ),
-          events,
+          power,
+          // A crash into something is impact damage.
+          blocked ? "impact" : unit.weapon.damageType,
+          1 - (effect.armorPierce ?? 0),
         );
+        applyDamage(state, target, hit, events);
+        poisonOnHit(state, unit, target, hit.amount, events);
         if (to && isAlive(target)) moveBy(target, to, events);
         if (effect.pin && isAlive(target) && !target.obstacle) {
           applyModifier(state, target, PIN_SLOW, events);
