@@ -151,6 +151,20 @@ function silenceValue(state: BattleState, foe: Unit): number {
   return value;
 }
 
+/**
+ * MP burned off a unit is worth SUPPORT_VALUE per its whole MP bar, and
+ * only if it has skills to spend MP on.
+ */
+function burnValue(
+  victim: Unit,
+  effect: Extract<SkillEffect, { type: "damage" }>,
+): number {
+  if (!effect.burnMp || victim.skills.length === 0) return 0;
+  const maxMp = effectiveStat(victim, "maxMp");
+  if (maxMp <= 0) return 0;
+  return (SUPPORT_VALUE * Math.min(victim.mp, effect.burnMp)) / maxMp;
+}
+
 /** How much frailer `ally` is than `protector`: 0 (as tough) to 1. */
 function frailer(ally: Unit, protector: Unit): number {
   const toughness = (u: Unit) =>
@@ -197,7 +211,8 @@ function victimValue(
     case "damage":
     case "shatter": {
       const amount = previewDamage(unit, victim, skill)?.amount ?? 0;
-      return -sign * hitValue(p, unit, victim, amount);
+      const burn = effect.type === "damage" ? burnValue(victim, effect) : 0;
+      return -sign * (hitValue(p, unit, victim, amount) + burn);
     }
     case "heal":
       return sign * healValue(victim, healAmount(unit, victim, effect));

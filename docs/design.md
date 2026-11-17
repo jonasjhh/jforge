@@ -315,6 +315,16 @@ cell) and its `area` which cells it hits around the aimed one.
   Sage's MP, as utility should be. The AI values it for a foe with a
   skill it could use, and a cast in progress as much as that cast is
   worth to its side.
+- **Mana Burn** (Sage): an arcane spell at x0.8 on one enemy that also
+  burns 10 of its MP (as much as it has; `burnMp` on a damage effect),
+  7 MP. A caster hit by it has fewer skills left; a foe with no MP only
+  takes the hit. The AI adds the MP burned, as a share of the foe's MP
+  bar, when the foe has skills to spend it on.
+- **Rebuke** (Sage): an arcane spell at x1.0 on one enemy, x1.6 if it is
+  **empowered**: casting, or with any helpful status (Regen, a shield,
+  Provoke's taunt) or helpful modifier (Haste, Iron Stance)
+  (`vsEmpowered` on a damage effect, `isEmpowered`), 6 MP. Previews and
+  the AI see the bonus. It punishes buffs and casts, as Silence does.
 - **Aimed Shot** (Archer): a bow strike at x1.5 that **ignores cover**
   (`ignoreCover` on a strike), so it reaches any visible enemy, back row
   included, 6 MP. Its job is picking off casters and the wounded behind a
@@ -574,7 +584,7 @@ Wall hardens its whole row, Guard takes the hits meant for an ally next
 to it, Shield Bash knocks an enemy a row back, Charge runs it back into the
 front row with a strike, Rescue pulls a hurt ally back behind it),
 **Sage** (knowledge and counter-magic, with a
-tome of arcane words; Expose makes an enemy take more of everything, Silence stops its skills and breaks its casts).
+tome of arcane words; Expose makes an enemy take more of everything, Silence stops its skills and breaks its casts, Mana Burn burns its MP, Rebuke hits harder the empowered).
 
 Planned, in rough order (names and kits are proposals):
 

@@ -784,6 +784,47 @@ export const silence: Skill = {
   },
 };
 
+/**
+ * Sage: an arcane bolt (x0.8) that also burns 10 MP off its target, so a
+ * caster has fewer skills left. Little use on foes without MP.
+ */
+export const manaBurn: Skill = {
+  id: "mana-burn",
+  name: "Mana Burn",
+  description: "An arcane bolt (x0.8) that burns away 10 of the target's MP.",
+  mpCost: 7,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "damage",
+    kind: "magical",
+    element: "arcane",
+    power: 0.8,
+    burnMp: 10,
+  },
+};
+
+/**
+ * Sage: an arcane bolt (x1.0) that hits x1.6 an empowered target: one
+ * casting, or with a helpful status or modifier (isEmpowered).
+ */
+export const rebuke: Skill = {
+  id: "rebuke",
+  name: "Rebuke",
+  description:
+    "An arcane bolt (x1.0) that strikes x1.6 at an enemy casting a spell or strengthened by a helpful effect.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "damage",
+    kind: "magical",
+    element: "arcane",
+    power: 1,
+    vsEmpowered: 1.6,
+  },
+};
+
 /** Fighter: braces for a while; its own defense doubles. */
 export const ironStance: Skill = {
   id: "iron-stance",
@@ -874,6 +915,8 @@ export const skills = [
   rescue,
   expose,
   silence,
+  manaBurn,
+  rebuke,
 ];
 
 export const fighter: CombatantDef = {
@@ -1149,7 +1192,7 @@ export const sage: CombatantDef = {
     speed: 11,
   },
   weapon: tome,
-  skills: [expose, silence],
+  skills: [expose, silence, manaBurn, rebuke],
   preferredRow: 2,
 };
 

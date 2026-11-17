@@ -56,7 +56,7 @@ export function effectSummary(skill: Skill): string {
   const shape = skill.area === "single" ? "" : `, ${skill.area}`;
   switch (effect.type) {
     case "damage":
-      return `${effect.element} damage ×${effect.power}${shape}`;
+      return `${effect.element} damage ×${effect.power}${effect.vsEmpowered ? ` (×${effect.vsEmpowered} if empowered)` : ""}${effect.burnMp ? `, burns ${effect.burnMp} MP` : ""}${shape}`;
     case "strike":
       return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${shape}`;
     case "heal":

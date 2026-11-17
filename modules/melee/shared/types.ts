@@ -242,6 +242,13 @@ export type SkillEffect =
       power: number;
       /** Share of the damage dealt that heals the caster, e.g. 0.5. */
       drain?: number;
+      /** MP the target loses on a hit, as much as it has (Mana Burn). */
+      burnMp?: number;
+      /**
+       * Power multiplier against a target that is empowered: casting, or
+       * with a helpful status or modifier (Rebuke: 1.6).
+       */
+      vsEmpowered?: number;
     }
   /**
    * Puts `creature` in the aimed cell on the caster's own side, controlled
@@ -531,6 +538,7 @@ export type BattleEvent =
     }
   | { type: "gaugeChanged"; unitId: string; gauge: number }
   | { type: "hpPaid"; unitId: string; amount: number; hp: number }
+  | { type: "mpBurned"; unitId: string; amount: number; mp: number }
   | { type: "summoned"; unitId: string; byId: string; cell: Cell }
   | { type: "vanished"; unitId: string }
   | { type: "ambush"; unitId: string }

@@ -165,6 +165,27 @@ function tick(
 }
 
 /**
+ * Empowered: casting, or with a helpful status (Regen, a shield) or a
+ * helpful modifier (Haste, Iron Stance). Rebuke hits such a unit harder.
+ */
+export function isEmpowered(unit: Unit): boolean {
+  return (
+    !!unit.casting ||
+    unit.statuses.some((s) => !s.harmful) ||
+    unit.modifiers.some((m) => !m.harmful)
+  );
+}
+
+/** A damage spell's power on `target`, with its bonus if it applies. */
+export function spellPower(
+  effect: Extract<SkillEffect, { type: "damage" }>,
+  target: Unit,
+): number {
+  const bonus = effect.vsEmpowered && isEmpowered(target);
+  return effect.power * (bonus ? effect.vsEmpowered! : 1);
+}
+
+/**
  * Removes every harmful status (Poison) and harmful timed modifier (Slow)
  * from `target`, reporting each one.
  */

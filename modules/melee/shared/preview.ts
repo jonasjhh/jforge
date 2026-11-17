@@ -1,6 +1,7 @@
 import { charged } from "./charge";
 import { expectedDamage, resistance, wouldKnockOut } from "./damage";
 import { AMBUSH_POWER, isStealthed } from "./stealth";
+import { spellPower } from "./status";
 import type { DamageType, Skill, Unit } from "./types";
 
 /** What a hit on one target would likely do, for the targeting UI. */
@@ -32,7 +33,7 @@ export function previewDamage(
   else if (effect.type === "strike") {
     hit = ["physical", effect.power * ambush, attacker.weapon.damageType];
   } else if (effect.type === "damage") {
-    hit = ["magical", effect.power * ambush, effect.element];
+    hit = ["magical", spellPower(effect, target) * ambush, effect.element];
   } else if (effect.type === "shatter") {
     hit = ["magical", effect.power, effect.element];
   } else return null;

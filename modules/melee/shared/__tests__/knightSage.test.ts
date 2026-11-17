@@ -10,6 +10,8 @@ import {
   knight,
   rescue,
   playerTypes,
+  manaBurn,
+  rebuke,
   sage,
   silence,
   shieldBash,
@@ -64,7 +66,7 @@ describe("Knight and Sage", () => {
       charge,
       rescue,
     ]);
-    expect(sage.skills).toEqual([expose, silence]);
+    expect(sage.skills).toEqual([expose, silence, manaBurn, rebuke]);
     const others = playerTypes
       .filter((t) => t !== knight && t !== sage)
       .flatMap((t) => t.skills ?? []);
@@ -523,5 +525,110 @@ describe("Silence", () => {
     };
     expect(value(casting)).toBeGreaterThan(value(idle));
     expect(value(turnOf(sage))).toBeLessThanOrEqual(0);
+  });
+});
+
+describe("Mana Burn", () => {
+  const FOE = "enemy-2-0";
+  const cell = { side: "enemy", col: 2, row: 0 } as const;
+  const burnWith = (mp: number) => {
+    const state = turnOf(sage);
+    const foe = unit(state, FOE);
+    foe.skills = [firebolt];
+    foe.base.maxMp = 30;
+    foe.mp = mp;
+    return state;
+  };
+
+  it("hits with arcane and burns 10 MP, or what is left", () => {
+    const { state, events } = act(burnWith(25), {
+      type: "skill",
+      skillId: manaBurn.id,
+      cell,
+    });
+    expect(unit(state, FOE).hp).toBeLessThan(100);
+    expect(unit(state, FOE).mp).toBe(15);
+    expect(events).toContainEqual({
+      type: "mpBurned",
+      unitId: FOE,
+      amount: 10,
+      mp: 15,
+    });
+    expect(unit(state, "player-2-0").mp).toBe(
+      sage.stats.maxMp - manaBurn.mpCost,
+    );
+    const low = act(burnWith(4), { type: "skill", skillId: manaBurn.id, cell });
+    expect(unit(low.state, FOE).mp).toBe(0);
+    const none = act(burnWith(0), {
+      type: "skill",
+      skillId: manaBurn.id,
+      cell,
+    });
+    expect(none.events.some((e) => e.type === "mpBurned")).toBe(false);
+  });
+
+  it("is worth more to the AI on a foe with MP to lose", () => {
+    const value = (state: BattleState) =>
+      skillValue(state, unit(state, "player-2-0"), manaBurn, cell);
+    expect(value(burnWith(25))).toBeGreaterThan(value(burnWith(0)));
+  });
+});
+
+describe("Rebuke", () => {
+  const FOE = "enemy-2-0";
+  const cell = { side: "enemy", col: 2, row: 0 } as const;
+  const preview = (state: BattleState) =>
+    previewDamage(unit(state, "player-2-0"), unit(state, FOE), rebuke)!.amount;
+
+  it("hits x1.6 a foe with a helpful effect or casting, not a harmful one", () => {
+    const plain = turnOf(sage);
+    const hasted = turnOf(sage);
+    unit(hasted, FOE).modifiers.push({
+      stat: "speed",
+      op: "mul",
+      value: 1.5,
+      source: "Haste",
+    });
+    const casting = turnOf(sage);
+    unit(casting, FOE).casting = {
+      skillId: "x",
+      skillName: "X",
+      cell,
+      area: [cell],
+      startedAt: 0,
+      readyAt: 60,
+    };
+    const slowed = turnOf(sage);
+    unit(slowed, FOE).modifiers.push({
+      stat: "speed",
+      op: "mul",
+      value: 0.5,
+      source: "Slow",
+      harmful: true,
+    });
+    // Both are rounded, so allow one point either way.
+    expect(Math.abs(preview(hasted) - 1.6 * preview(plain))).toBeLessThan(1.5);
+    expect(preview(casting)).toBe(preview(hasted));
+    expect(preview(slowed)).toBe(preview(plain));
+  });
+
+  it("deals the bonus when it lands", () => {
+    const hasted = turnOf(sage);
+    unit(hasted, FOE).modifiers.push({
+      stat: "speed",
+      op: "mul",
+      value: 1.5,
+      source: "Haste",
+    });
+    const expected = preview(hasted);
+    const { events } = act(hasted, {
+      type: "skill",
+      skillId: rebuke.id,
+      cell,
+    });
+    const hit = events.find((e) => e.type === "damage");
+    expect(hit && hit.type === "damage" && hit.amount).toBeGreaterThanOrEqual(
+      Math.floor(expected * 0.85),
+    );
   });
 });

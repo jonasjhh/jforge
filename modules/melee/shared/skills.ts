@@ -14,7 +14,7 @@ import {
   isCellOnGrid,
   unitAt,
 } from "./grid";
-import { applyModifier, applyStatus, cleanse } from "./status";
+import { applyModifier, applyStatus, cleanse, spellPower } from "./status";
 import { GAUGE_FULL } from "./timeline";
 import { effectiveStat, isAlive } from "./stats";
 import { dropReady, findSkill, makeUnit, restoreHp, vanish } from "./units";
@@ -470,10 +470,20 @@ function applySkill(
           state,
           unit,
           target,
-          effect.power * ambush,
+          spellPower(effect, target) * ambush,
           effect.element,
         );
         const suffered = applyDamage(state, target, hit, events);
+        if (effect.burnMp && isAlive(target) && target.mp > 0) {
+          const amount = Math.min(target.mp, effect.burnMp);
+          target.mp -= amount;
+          events.push({
+            type: "mpBurned",
+            unitId: target.id,
+            amount,
+            mp: target.mp,
+          });
+        }
         if (effect.drain && isAlive(unit)) {
           // Only damage that got through (not into a shield) is drained.
           const amount = restoreHp(
