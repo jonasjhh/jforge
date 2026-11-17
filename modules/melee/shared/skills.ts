@@ -4,6 +4,7 @@ import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isStealthed } from "./stealth";
 import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
+import { PIN_SLOW } from "./pin";
 import { rescue, rescueBlock } from "./rescue";
 import { tauntBlock } from "./taunt";
 import {
@@ -463,6 +464,9 @@ function applySkill(
           events,
         );
         if (to && isAlive(target)) moveBy(target, to, events);
+        if (effect.pin && isAlive(target) && !target.obstacle) {
+          applyModifier(state, target, PIN_SLOW, events);
+        }
         break;
       }
       case "damage": {

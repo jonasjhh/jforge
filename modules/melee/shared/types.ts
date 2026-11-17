@@ -216,7 +216,8 @@ export type SkillEffect =
    * behind others in their column (the weapon's column limit still holds).
    * `advance` first runs the attacker to the front row of its column (the
    * way there must be clear, and it must not be there already), and it
-   * strikes from there (see charge.ts).
+   * strikes from there (see charge.ts). `pin` slows a target that
+   * survives the hit (see pin.ts).
    */
   | {
       type: "strike";
@@ -224,6 +225,7 @@ export type SkillEffect =
       push?: number;
       ignoreCover?: boolean;
       advance?: boolean;
+      pin?: boolean;
     }
   | {
       type: "heal";

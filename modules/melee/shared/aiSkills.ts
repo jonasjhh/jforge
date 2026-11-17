@@ -7,6 +7,7 @@ import {
   wouldKnockOut,
 } from "./damage";
 import { previewDamage } from "./preview";
+import { PIN_SLOW } from "./pin";
 import { pushDestination } from "./push";
 import { RESCUE_BRACE } from "./rescue";
 import { healAmount, skillCells, skillVictims } from "./skills";
@@ -165,6 +166,17 @@ function burnValue(
   return (SUPPORT_VALUE * Math.min(victim.mp, effect.burnMp)) / maxMp;
 }
 
+/**
+ * Pinning a unit is worth SUPPORT_VALUE, as a slowing modifier is, unless
+ * the hit knocks it out or it is already pinned.
+ */
+function pinValue(victim: Unit, amount: number): number {
+  if (amount >= victim.hp) return 0;
+  return victim.modifiers.some((m) => m.source === PIN_SLOW.name)
+    ? 0
+    : SUPPORT_VALUE;
+}
+
 /** How much frailer `ally` is than `protector`: 0 (as tough) to 1. */
 function frailer(ally: Unit, protector: Unit): number {
   const toughness = (u: Unit) =>
@@ -212,8 +224,13 @@ function victimValue(
     case "damage":
     case "shatter": {
       const amount = previewDamage(unit, victim, skill, shared)?.amount ?? 0;
-      const burn = effect.type === "damage" ? burnValue(victim, effect) : 0;
-      return -sign * (hitValue(p, unit, victim, amount) + burn);
+      const extra =
+        effect.type === "damage"
+          ? burnValue(victim, effect)
+          : effect.type === "strike" && effect.pin
+            ? pinValue(victim, amount)
+            : 0;
+      return -sign * (hitValue(p, unit, victim, amount) + extra);
     }
     case "heal":
       return sign * healValue(victim, healAmount(unit, victim, effect));

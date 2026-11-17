@@ -341,6 +341,15 @@ cell) and its `area` which cells it hits around the aimed one.
   knocked out first. It can't be used from the **front row**, where the
   archer is locked in hand-to-hand combat (`notFromFront`), so pulling an
   archer forward (Hook) takes it away.
+- **Volley** (Archer): a bow strike at x0.5 on a **3x3** square that
+  ignores cover, 8 MP. Aimed past the enemy front row it hits only
+  enemies; aimed at the front row it spills onto your own front row, as
+  Fireball does. Like Aimed Shot it can't be used from the front row.
+- **Pinning Shot** (Archer): a bow strike at x0.7 that **pins** a target
+  it doesn't knock out: speed x0.7 for 120 game time (the "Pinned"
+  modifier, `pin` on a strike, see pin.ts), 5 MP. It is built into the
+  strike, not a general second effect. Pinned stacks with Slow. The AI
+  values the pin like a slow, and nothing on a target already pinned.
 - **Heal** (Healer): one living ally, restores power x magic HP, never
   above max.
 - **Fireball** (Mage): any cell, hits a **plus** (the cell and its four
@@ -579,7 +588,7 @@ skill may break one for a reason worth stating.
 
 ### Class roster plan (12 archetypes)
 
-Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row), **Mage**
+Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:

@@ -287,6 +287,34 @@ export const cure: Skill = {
   effect: { type: "cleanse" },
 };
 
+/**
+ * Archer: arrows rain down on a 3x3 area. Aimed past the enemy front row
+ * it spares your own; aimed at it, it spills onto your front line.
+ */
+export const volley: Skill = {
+  id: "volley",
+  name: "Volley",
+  description:
+    "Arrows rain on a 3x3 area (x0.5 each), over cover. Aimed at the enemy front row, it hits your own front row too.",
+  mpCost: 8,
+  target: "enemy",
+  area: "square",
+  notFromFront: true,
+  effect: { type: "strike", power: 0.5, ignoreCover: true },
+};
+
+/** Archer: a shot that pins its target, which acts less often for a while. */
+export const pinningShot: Skill = {
+  id: "pinning-shot",
+  name: "Pinning Shot",
+  description:
+    "A shot (x0.7) that pins its target: speed x0.7 for a while if it survives.",
+  mpCost: 5,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 0.7, pin: true },
+};
+
 /** Lancer: thrusts through the target into the unit right behind it. */
 export const skewer: Skill = {
   id: "skewer",
@@ -924,6 +952,8 @@ export const skills = [
   secondWind,
   warCry,
   aimedShot,
+  volley,
+  pinningShot,
   skewer,
   hook,
   haste,
@@ -983,7 +1013,7 @@ export const archer: CombatantDef = {
     speed: 12,
   },
   weapon: bow,
-  skills: [aimedShot],
+  skills: [aimedShot, volley, pinningShot],
   preferredRow: 1,
 };
 
