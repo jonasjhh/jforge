@@ -31,6 +31,7 @@ export { GAUGE_FULL, fillRate, turnOrder } from "./timeline";
 export {
   DEFENSE_K,
   EXPOSE_FACTOR,
+  WEAKEN_FACTOR,
   magicalHit,
   physicalHit,
   resistance,

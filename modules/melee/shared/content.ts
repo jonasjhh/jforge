@@ -410,6 +410,18 @@ export const staggeringThrust: Skill = {
   effect: { type: "strike", power: 0.8, stagger: 0.25 },
 };
 
+/** Lancer: a strike that leaves its target weakened: it deals less. */
+export const weakeningStrike: Skill = {
+  id: "weakening-strike",
+  name: "Weakening Strike",
+  description:
+    "A strike (x0.8) that weakens its target: it deals x0.75 damage for a while.",
+  mpCost: 5,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 0.8, weaken: true },
+};
+
 /** Lancer: thrusts through the target into the unit right behind it. */
 export const skewer: Skill = {
   id: "skewer",
@@ -1056,6 +1068,7 @@ export const skills = [
   frostLance,
   armorPierce,
   staggeringThrust,
+  weakeningStrike,
   skewer,
   hook,
   haste,
@@ -1210,7 +1223,7 @@ export const lancer: CombatantDef = {
     speed: 11,
   },
   weapon: spear,
-  skills: [skewer, hook, armorPierce, staggeringThrust],
+  skills: [skewer, hook, armorPierce, staggeringThrust, weakeningStrike],
   preferredRow: 0,
 };
 

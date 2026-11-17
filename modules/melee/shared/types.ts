@@ -138,8 +138,9 @@ export interface StatusDef {
    * (a lethal hit leaves 1 HP). taunt: enemies that single out a target
    * must pick it while they can. expose: takes more from every damage type
    * (see EXPOSE_FACTOR). guard: single-target hits from enemies land on
-   * the unit that applied it instead, while it stands (see guard.ts). The
-   * last six just last until they end.
+   * the unit that applied it instead, while it stands (see guard.ts).
+   * weaken: every hit it deals is weaker (see WEAKEN_FACTOR). The last
+   * eight just last until they end.
    */
   effect:
     | "heal"
@@ -150,7 +151,8 @@ export interface StatusDef {
     | "taunt"
     | "expose"
     | "silence"
-    | "guard";
+    | "guard"
+    | "weaken";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */
@@ -235,6 +237,8 @@ export type SkillEffect =
        * (Staggering Thrust: 0.25, see stagger.ts).
        */
       stagger?: number;
+      /** Weakens a target that survives the hit (see weaken.ts). */
+      weaken?: boolean;
     }
   | {
       type: "heal";

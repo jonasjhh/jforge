@@ -6,7 +6,10 @@ import {
   lancer,
   skewer,
   staggeringThrust,
+  weakeningStrike,
 } from "../content";
+import { WEAKEN_FACTOR } from "../damage";
+import { WEAKEN_STATUS } from "../weaken";
 import { skillValue } from "../aiSkills";
 import { GAUGE_FULL } from "../timeline";
 import { previewDamage } from "../preview";
@@ -218,5 +221,83 @@ describe("Staggering Thrust", () => {
       );
     };
     expect(value(600)).toBeGreaterThan(value(0));
+  });
+});
+
+describe("Weakening Strike", () => {
+  const strike = (state: BattleState) =>
+    perform(state, weakeningStrike.id, at(2, 0));
+
+  it("is the Lancer's fifth skill", () => {
+    expect(lancer.skills).toEqual([
+      skewer,
+      hook,
+      armorPierce,
+      staggeringThrust,
+      weakeningStrike,
+    ]);
+  });
+
+  it("hits x0.8 and weakens a surviving target", () => {
+    const state = lancerTurn([foe(2, 0)]);
+    const [self, target] = state.units;
+    const shot = previewDamage(self!, target!, weakeningStrike)!.amount;
+    const plain = previewDamage(self!, target!)!.amount;
+    expect(Math.abs(shot - plain * 0.8)).toBeLessThan(1);
+    const { events, state: after } = strike(state);
+    expect(damaged(events)).toEqual(["enemy-2-0"]);
+    expect(unitAtId(after, "enemy-2-0").statuses.map((st) => st.id)).toContain(
+      WEAKEN_STATUS.id,
+    );
+  });
+
+  it("leaves no weakness on a target it knocks out", () => {
+    const { state } = strike(lancerTurn([foe(2, 0, 1)]));
+    expect(unitAtId(state, "enemy-2-0").statuses).toEqual([]);
+  });
+
+  it("makes the weakened deal x0.75 with weapons and spells", () => {
+    const { state } = strike(lancerTurn([foe(2, 0)]));
+    const weakened = unitAtId(state, "enemy-2-0");
+    const lancerUnit = unitAtId(state, "player-2-0");
+    const fresh = { ...weakened, statuses: [] };
+    const bolt = {
+      ...weakeningStrike,
+      effect: {
+        type: "damage" as const,
+        kind: "magical" as const,
+        element: "fire" as const,
+        power: 1,
+      },
+    };
+    for (const skill of [undefined, bolt]) {
+      const weak = previewDamage(weakened, lancerUnit, skill)!.amount;
+      const full = previewDamage(fresh, lancerUnit, skill)!.amount;
+      expect(Math.abs(weak - full * WEAKEN_FACTOR)).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("is worth more to the AI on a foe not yet weakened", () => {
+    const value = (state: BattleState) =>
+      skillValue(
+        state,
+        unitAtId(state, "player-2-0"),
+        weakeningStrike,
+        at(2, 0),
+      );
+    const fresh = lancerTurn([foe(2, 0)]);
+    const weakened = lancerTurn([foe(2, 0)]);
+    weakened.units[1]!.statuses.push({
+      id: WEAKEN_STATUS.id,
+      name: WEAKEN_STATUS.name,
+      effect: "weaken",
+      harmful: true,
+      amount: 0,
+      interval: 150,
+      ticksLeft: 1,
+      nextTickAt: 150,
+      sourceId: "player-2-0",
+    });
+    expect(value(fresh)).toBeGreaterThan(value(weakened));
   });
 });

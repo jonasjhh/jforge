@@ -11,6 +11,7 @@ import { CHILL_SLOW } from "./chill";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
 import { staggeredGauge } from "./stagger";
+import { WEAKEN_STATUS } from "./weaken";
 import { pushDestination } from "./push";
 import { RESCUE_BRACE } from "./rescue";
 import { healAmount, skillCells, skillVictims } from "./skills";
@@ -191,7 +192,8 @@ function strikeExtra(
   return (
     staggered +
     (effect.pin ? pinValue(victim, amount) : 0) +
-    (effect.ignite ? statusValue(p, unit, victim, IGNITE_BURN, false) : 0)
+    (effect.ignite ? statusValue(p, unit, victim, IGNITE_BURN, false) : 0) +
+    (effect.weaken ? statusValue(p, unit, victim, WEAKEN_STATUS, false) : 0)
   );
 }
 

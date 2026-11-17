@@ -24,6 +24,16 @@ export interface Hit {
 /** What an exposed unit (Expose) takes from every damage type, times. */
 export const EXPOSE_FACTOR = 1.3;
 
+/** What a weakened unit (Weakening Strike) deals with every hit, times. */
+export const WEAKEN_FACTOR = 0.75;
+
+/** The attacker's own damage factor: WEAKEN_FACTOR while weakened. */
+export function weakenFactor(attacker: Unit): number {
+  return attacker.statuses.some((s) => s.effect === "weaken")
+    ? WEAKEN_FACTOR
+    : 1;
+}
+
 /**
  * The target's multiplier for `type`: its resistance, times EXPOSE_FACTOR
  * while it is exposed. Immune stays immune.
@@ -105,7 +115,9 @@ export function expectedDamage(
         defenseFactor(effectiveStat(target, "spirit"));
   return Math.max(
     1,
-    Math.round(raw * power * multiplier * stanceFactor(target)),
+    Math.round(
+      raw * power * multiplier * stanceFactor(target) * weakenFactor(attacker),
+    ),
   );
 }
 
@@ -136,7 +148,10 @@ export function physicalHit(
 ): Hit {
   return mitigate(
     state,
-    effectiveStat(attacker, "attack") * rowFactor(attacker, target) * power,
+    effectiveStat(attacker, "attack") *
+      rowFactor(attacker, target) *
+      power *
+      weakenFactor(attacker),
     effectiveStat(target, "defense") * defenseShare,
     target,
     damageType,
@@ -153,7 +168,7 @@ export function magicalHit(
 ): Hit {
   return mitigate(
     state,
-    power * effectiveStat(caster, "magic"),
+    power * effectiveStat(caster, "magic") * weakenFactor(caster),
     effectiveStat(target, "spirit"),
     target,
     element,

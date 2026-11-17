@@ -8,6 +8,7 @@ import { CHILL_SLOW } from "./chill";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
 import { stagger } from "./stagger";
+import { WEAKEN_STATUS } from "./weaken";
 import { rescue, rescueBlock } from "./rescue";
 import { tauntBlock } from "./taunt";
 import {
@@ -483,6 +484,9 @@ function applySkill(
         if (to && isAlive(target)) moveBy(target, to, events);
         if (effect.pin && isAlive(target) && !target.obstacle) {
           applyModifier(state, target, PIN_SLOW, events);
+        }
+        if (effect.weaken && isAlive(target) && !target.obstacle) {
+          applyStatus(state, unit, target, WEAKEN_STATUS, events);
         }
         if (effect.stagger && isAlive(target) && !target.obstacle) {
           stagger(state, target, effect.stagger, events);

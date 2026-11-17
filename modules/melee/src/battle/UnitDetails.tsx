@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import {
   AMBUSH_POWER,
   EXPOSE_FACTOR,
+  WEAKEN_FACTOR,
   effectiveStat,
   isAlive,
   type Modifier,
@@ -55,6 +56,8 @@ function statusText(status: Status, speed: number): string {
       return "Silenced: can't use skills.";
     case "guard":
       return "Guarded: enemies' single-target hits on it land on its guardian.";
+    case "weaken":
+      return `Weakened: deals ×${WEAKEN_FACTOR} damage.`;
   }
 }
 
