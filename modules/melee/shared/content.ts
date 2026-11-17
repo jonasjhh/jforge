@@ -825,6 +825,27 @@ export const rebuke: Skill = {
   },
 };
 
+/**
+ * Sage: an arcane wave down one enemy row. Its power is shared by everyone
+ * it hits: a lone enemy takes the most, a crowded row a little each.
+ */
+export const arcaneWave: Skill = {
+  id: "arcane-wave",
+  name: "Arcane Wave",
+  description:
+    "An arcane wave through one enemy row: x2 power shared by everyone hit, at most x1.5 each.",
+  mpCost: 10,
+  target: "enemy",
+  area: "row",
+  effect: {
+    type: "damage",
+    kind: "magical",
+    element: "arcane",
+    power: 1.5,
+    split: 2,
+  },
+};
+
 /** Fighter: braces for a while; its own defense doubles. */
 export const ironStance: Skill = {
   id: "iron-stance",
@@ -917,6 +938,7 @@ export const skills = [
   silence,
   manaBurn,
   rebuke,
+  arcaneWave,
 ];
 
 export const fighter: CombatantDef = {
@@ -1192,7 +1214,7 @@ export const sage: CombatantDef = {
     speed: 11,
   },
   weapon: tome,
-  skills: [expose, silence, manaBurn, rebuke],
+  skills: [expose, silence, manaBurn, rebuke, arcaneWave],
   preferredRow: 2,
 };
 

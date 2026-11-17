@@ -199,6 +199,7 @@ function victimValue(
   unit: Unit,
   skill: Skill,
   victim: Unit,
+  shared: number,
 ): number {
   // Obstacles don't fight: hurting or helping them changes nothing.
   if (victim.obstacle) return 0;
@@ -210,7 +211,7 @@ function victimValue(
     case "strike":
     case "damage":
     case "shatter": {
-      const amount = previewDamage(unit, victim, skill)?.amount ?? 0;
+      const amount = previewDamage(unit, victim, skill, shared)?.amount ?? 0;
       const burn = effect.type === "damage" ? burnValue(victim, effect) : 0;
       return -sign * (hitValue(p, unit, victim, amount) + burn);
     }
@@ -270,8 +271,9 @@ export function skillValue(
   else if (effect.type === "revive") {
     value = reviveValue(state, unit, effect.power, cell);
   } else if (effect.type !== "teleport") {
-    for (const victim of skillVictims(state, unit, skill, cell)) {
-      value += victimValue(state, unit, skill, victim);
+    const victims = skillVictims(state, unit, skill, cell);
+    for (const victim of victims) {
+      value += victimValue(state, unit, skill, victim, victims.length);
     }
   }
   if (skill.castTime) value *= CAST_DISCOUNT;

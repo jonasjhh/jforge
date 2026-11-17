@@ -249,6 +249,11 @@ export type SkillEffect =
        * with a helpful status or modifier (Rebuke: 1.6).
        */
       vsEmpowered?: number;
+      /**
+       * Total power shared evenly by everyone hit; each gets that share,
+       * at most `power` (Arcane Wave: 2 shared, at most 1.5 each).
+       */
+      split?: number;
     }
   /**
    * Puts `creature` in the aimed cell on the caster's own side, controlled

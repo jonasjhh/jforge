@@ -470,7 +470,7 @@ function applySkill(
           state,
           unit,
           target,
-          spellPower(effect, target) * ambush,
+          spellPower(effect, target, victims.length) * ambush,
           effect.element,
         );
         const suffered = applyDamage(state, target, hit, events);

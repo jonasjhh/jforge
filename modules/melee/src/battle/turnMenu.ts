@@ -167,7 +167,7 @@ export function previewFor(
   if (menu.aim) {
     const victims = skillVictims(state, active, menu.skill, menu.aim);
     return victims.includes(unit)
-      ? previewDamage(active, unit, menu.skill)
+      ? previewDamage(active, unit, menu.skill, victims.length)
       : null;
   }
   return menu.skill.area === "single" &&

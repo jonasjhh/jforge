@@ -325,6 +325,13 @@ cell) and its `area` which cells it hits around the aimed one.
   Provoke's taunt) or helpful modifier (Haste, Iron Stance)
   (`vsEmpowered` on a damage effect, `isEmpowered`), 6 MP. Previews and
   the AI see the bonus. It punishes buffs and casts, as Silence does.
+- **Arcane Wave** (Sage): an arcane spell on a whole enemy row (the
+  **row** area, enemy side only, so it never hits your own units) whose
+  power is **split**: x2 in total, shared evenly by everyone hit, at most
+  x1.5 each (`split` on a damage effect). A lone foe takes x1.5, two take
+  x1 each, five x0.4 each; boulders in the row count as hit. 10 MP.
+  Previews and the AI use the share for the units actually hit; threat
+  counts its x2 total.
 - **Aimed Shot** (Archer): a bow strike at x1.5 that **ignores cover**
   (`ignoreCover` on a strike), so it reaches any visible enemy, back row
   included, 6 MP. Its job is picking off casters and the wounded behind a
@@ -584,7 +591,7 @@ Wall hardens its whole row, Guard takes the hits meant for an ally next
 to it, Shield Bash knocks an enemy a row back, Charge runs it back into the
 front row with a strike, Rescue pulls a hurt ally back behind it),
 **Sage** (knowledge and counter-magic, with a
-tome of arcane words; Expose makes an enemy take more of everything, Silence stops its skills and breaks its casts, Mana Burn burns its MP, Rebuke hits harder the empowered).
+tome of arcane words; Expose makes an enemy take more of everything, Silence stops its skills and breaks its casts, Mana Burn burns its MP, Rebuke hits harder the empowered, Arcane Wave splits x2 across a row).
 
 Planned, in rough order (names and kits are proposals):
 

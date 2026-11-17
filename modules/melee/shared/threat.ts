@@ -51,6 +51,10 @@ function skillDamage(def: CombatantDef, skill: Skill): number {
     damage = def.stats.magic * effect.power;
   } else return 0;
   damage *= AREA_REACH[skill.area];
+  // A split spell deals its total however many it catches.
+  if (effect.type === "damage" && effect.split) {
+    damage = Math.min(damage, def.stats.magic * effect.split);
+  }
   if (skill.castTime) damage *= 0.75;
   if (skill.mpCost > 0) {
     const casts = def.stats.maxMp / skill.mpCost;

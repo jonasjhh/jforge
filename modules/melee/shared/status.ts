@@ -176,13 +176,20 @@ export function isEmpowered(unit: Unit): boolean {
   );
 }
 
-/** A damage spell's power on `target`, with its bonus if it applies. */
+/**
+ * A damage spell's power on `target`, one of `shared` units it hits, with
+ * its split and bonus if they apply.
+ */
 export function spellPower(
   effect: Extract<SkillEffect, { type: "damage" }>,
   target: Unit,
+  shared = 1,
 ): number {
+  const base = effect.split
+    ? Math.min(effect.power, effect.split / Math.max(1, shared))
+    : effect.power;
   const bonus = effect.vsEmpowered && isEmpowered(target);
-  return effect.power * (bonus ? effect.vsEmpowered! : 1);
+  return base * (bonus ? effect.vsEmpowered! : 1);
 }
 
 /**

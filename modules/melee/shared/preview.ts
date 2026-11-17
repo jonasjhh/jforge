@@ -18,12 +18,14 @@ export interface DamagePreview {
  * The expected damage of `attacker`'s weapon attack (no skill) or damaging
  * skill on `target`, or null for skills that deal no damage. Leaves out
  * the random spread and collisions from pushes. A charge is previewed from
- * the front row.
+ * the front row. `shared` is how many units the skill hits, for a split
+ * spell.
  */
 export function previewDamage(
   attacker: Unit,
   target: Unit,
   skill?: Skill,
+  shared = 1,
 ): DamagePreview | null {
   // The first damaging action out of stealth is an ambush.
   const ambush = isStealthed(attacker) ? AMBUSH_POWER : 1;
@@ -33,7 +35,11 @@ export function previewDamage(
   else if (effect.type === "strike") {
     hit = ["physical", effect.power * ambush, attacker.weapon.damageType];
   } else if (effect.type === "damage") {
-    hit = ["magical", spellPower(effect, target) * ambush, effect.element];
+    hit = [
+      "magical",
+      spellPower(effect, target, shared) * ambush,
+      effect.element,
+    ];
   } else if (effect.type === "shatter") {
     hit = ["magical", effect.power, effect.element];
   } else return null;

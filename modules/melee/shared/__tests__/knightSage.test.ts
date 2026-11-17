@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle, validateCommand } from "../battle";
 import {
+  arcaneWave,
   charge,
   expose,
   fireball,
@@ -22,7 +23,8 @@ import { skillValue } from "../aiSkills";
 import { previewDamage } from "../preview";
 import { skillArea } from "../skills";
 import { effectiveStat } from "../stats";
-import { cleanse } from "../status";
+import { cleanse, spellPower } from "../status";
+import { offenseOf } from "../threat";
 import type { BattleState, CombatantDef, Unit } from "../types";
 import { def, place } from "./helpers";
 
@@ -66,7 +68,13 @@ describe("Knight and Sage", () => {
       charge,
       rescue,
     ]);
-    expect(sage.skills).toEqual([expose, silence, manaBurn, rebuke]);
+    expect(sage.skills).toEqual([
+      expose,
+      silence,
+      manaBurn,
+      rebuke,
+      arcaneWave,
+    ]);
     const others = playerTypes
       .filter((t) => t !== knight && t !== sage)
       .flatMap((t) => t.skills ?? []);
@@ -629,6 +637,88 @@ describe("Rebuke", () => {
     const hit = events.find((e) => e.type === "damage");
     expect(hit && hit.type === "damage" && hit.amount).toBeGreaterThanOrEqual(
       Math.floor(expected * 0.85),
+    );
+  });
+});
+
+describe("Arcane Wave", () => {
+  const cell = { side: "enemy", col: 2, row: 0 } as const;
+  const effect = arcaneWave.effect as Extract<
+    typeof arcaneWave.effect,
+    { type: "damage" }
+  >;
+  /** The Sage's turn with foes in the enemy front row at `cols`. */
+  const waveAt = (cols: number[]) => {
+    const state = turnOf(sage);
+    const foe = unit(state, "enemy-2-0");
+    for (const col of cols.filter((c) => c !== 2)) {
+      state.units.push({
+        ...structuredClone(foe),
+        id: `enemy-${col}-0`,
+        position: { col, row: 0 },
+      });
+    }
+    return state;
+  };
+
+  it("shares x2 among everyone hit, at most x1.5 each", () => {
+    const foe = unit(turnOf(sage), "enemy-2-0");
+    expect(spellPower(effect, foe, 1)).toBe(1.5);
+    expect(spellPower(effect, foe, 2)).toBe(1);
+    expect(spellPower(effect, foe, 4)).toBe(0.5);
+    expect(spellPower(effect, foe, 5)).toBe(0.4);
+  });
+
+  it("hits the whole enemy row, each foe for its share", () => {
+    const state = waveAt([0, 1, 2, 4]);
+    const sageUnit = unit(state, "player-2-0");
+    const expected = previewDamage(
+      sageUnit,
+      unit(state, "enemy-2-0"),
+      arcaneWave,
+      4,
+    )!.amount;
+    const { events } = act(state, {
+      type: "skill",
+      skillId: arcaneWave.id,
+      cell,
+    });
+    const hits = events.filter((e) => e.type === "damage");
+    expect(hits.map((e) => e.type === "damage" && e.unitId).sort()).toEqual([
+      "enemy-0-0",
+      "enemy-1-0",
+      "enemy-2-0",
+      "enemy-4-0",
+    ]);
+    for (const hit of hits) {
+      if (hit.type !== "damage") continue;
+      expect(hit.amount).toBeGreaterThanOrEqual(Math.floor(expected * 0.85));
+      expect(hit.amount).toBeLessThanOrEqual(Math.ceil(expected * 1.15));
+    }
+  });
+
+  it("previews a lone foe at x1.5 and a crowded row at less each", () => {
+    const state = waveAt([2]);
+    const sageUnit = unit(state, "player-2-0");
+    const foe = unit(state, "enemy-2-0");
+    const one = previewDamage(sageUnit, foe, arcaneWave, 1)!.amount;
+    const four = previewDamage(sageUnit, foe, arcaneWave, 4)!.amount;
+    expect(Math.abs(four - one / 3)).toBeLessThan(1.5);
+  });
+
+  it("counts for threat as its x2 total, not x1.5 on every foe", () => {
+    const single = {
+      ...sage,
+      skills: [
+        {
+          ...arcaneWave,
+          area: "single" as const,
+          effect: { ...effect, power: 2, split: undefined },
+        },
+      ],
+    };
+    expect(offenseOf({ ...sage, skills: [arcaneWave] })).toBeCloseTo(
+      offenseOf(single),
     );
   });
 });
