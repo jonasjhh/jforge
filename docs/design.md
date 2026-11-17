@@ -451,7 +451,7 @@ cell) and its `area` which cells it hits around the aimed one.
   effect) fills another ally's gauge so it acts right after this turn;
   not on the caster, a unit already ready, or one that is casting.
 - **Time Bomb** (Chronomancer): 10 MP, one enemy, plants a harmful
-  `bomb` status worth 1.0 x the caster's magic (fixed when planted). It
+  `bomb` status worth 0.7 x the caster's magic (fixed when planted). It
   **explodes** when its time runs out (90 game time) or at once when the
   carrier is knocked out, whichever comes first. The blast covers a plus
   around the carrier on the carrier's own side only, the carrier
@@ -572,9 +572,9 @@ Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 15,
-Normal 21, Hard 27, about 30% more than Normal) and lean toward the
+Normal 20, Hard 26, about 30% more than Normal) and lean toward the
 front. Budgets are tuned with auto-played battles where both sides use
-their skills and move, to about 100% / 90% / 55% party wins; a test keeps
+their skills and move, to about 100% / 93% / 53% party wins; a test keeps
 each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
