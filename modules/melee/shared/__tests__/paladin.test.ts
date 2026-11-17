@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { aegis, fireball, lastRites, paladin, venomFangs } from "../content";
+import {
+  aegis,
+  consecrate,
+  fireball,
+  lastRites,
+  paladin,
+  venomFangs,
+} from "../content";
 import { applyStatus } from "../status";
 import type { BattleEvent, BattleState, Cell, StatusDef } from "../types";
 import { def, place } from "./helpers";
@@ -237,5 +244,38 @@ describe("Blessed Blade", () => {
     expect(Math.abs(hitOn(2).amount - hitOn().amount * 2)).toBeLessThanOrEqual(
       1,
     );
+  });
+});
+
+describe("Consecrate", () => {
+  /** The Paladin's turn with foes at enemy 1,1 (centre), 1,0 and 1,2. */
+  function crowd(): BattleState {
+    const fast = { ...paladin, stats: { ...paladin.stats, speed: 50 } };
+    const foe = (row: number) =>
+      place(def(`foe${row}`, { maxHp: 1000, speed: 1 }), "enemy", 1, row);
+    return advance(
+      createBattle(
+        { placements: [place(fast, "player", 4, 2), foe(0), foe(1), foe(2)] },
+        1,
+      ),
+    ).state;
+  }
+  const centre: Cell = { side: "enemy", col: 1, row: 1 };
+
+  it("puts holy damage over time on the target and those beside it", () => {
+    const { state } = cast(crowd(), consecrate.id, centre);
+    for (const row of [0, 1, 2]) {
+      const foe = state.units.find((u) => u.id === `enemy-1-${row}`)!;
+      expect(foe.statuses).toContainEqual(
+        expect.objectContaining({ id: "consecrated", damageType: "holy" }),
+      );
+    }
+    expect(state.units.find((u) => u.id === "player-4-2")!.mp).toBe(
+      paladin.stats.maxMp - 10,
+    );
+  });
+
+  it("is the Paladin's third skill", () => {
+    expect(paladin.skills).toEqual([aegis, lastRites, consecrate]);
   });
 });

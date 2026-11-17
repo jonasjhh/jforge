@@ -607,6 +607,30 @@ export const drain: Skill = {
 };
 
 /** Warlock: shadow damage over time on one enemy. */
+/** Paladin: holy damage over time on a plus of enemies. */
+export const consecrate: Skill = {
+  id: "consecrate",
+  name: "Consecrate",
+  description: "Holy damage over time on an enemy and those beside it.",
+  mpCost: 10,
+  target: "enemy",
+  area: "plus",
+  effect: {
+    type: "status",
+    status: {
+      id: "consecrated",
+      name: "Consecrated",
+      effect: "damage",
+      harmful: true,
+      damageType: "holy",
+      stat: "magic",
+      power: 0.25,
+      interval: 30,
+      ticks: 4,
+    },
+  },
+};
+
 export const curse: Skill = {
   id: "curse",
   name: "Curse",
@@ -1230,6 +1254,7 @@ export const skills = [
   firebolt,
   summonImp,
   curse,
+  consecrate,
   sacrifice,
   vanish,
   shadowstep,
@@ -1464,7 +1489,7 @@ export const paladin: CombatantDef = {
     speed: 9,
   },
   weapon: blessedBlade,
-  skills: [aegis, lastRites],
+  skills: [aegis, lastRites, consecrate],
   preferredRow: 0,
 };
 

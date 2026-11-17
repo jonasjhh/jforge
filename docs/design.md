@@ -428,6 +428,10 @@ cell) and its `area` which cells it hits around the aimed one.
   any number of hits). Drain only counts damage that got through. The AI
   knows a shield soaks part of a hit and a warded unit can't be finished.
   The Blessed Blade deals **holy** damage.
+- **Consecrate** (Paladin): 10 MP, a plus of enemies, a harmful holy
+  `damage` status (0.25 x magic every 30 game time, 4 ticks): an area
+  Curse, counted by the threat estimate as damage over time times the
+  plus's reach.
 - **Vanish / Shadowstep** (Rogue): **Stealth** is a timed status (one
   silent tick that just ends it). A stealthed unit can't be picked by
   enemies for weapon attacks or single-target skills (areas and poison
@@ -684,7 +688,8 @@ Imp on the field, Curse wears an enemy down, Sacrifice gives up the Imp
 for HP and a magic boost), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2, Poison Blade poisons its hits, Smoke
 Bomb hides an ally, Coup de Grâce finishes the badly hurt), **Paladin** (holy blade; Aegis shields
-an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
+an ally, Last Rites keeps an ally from being knocked out, Consecrate
+burns a crowd with holy damage over time), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield
 Wall hardens its whole row, Guard takes the hits meant for an ally next
