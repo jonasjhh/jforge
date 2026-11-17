@@ -84,6 +84,14 @@ to defense (Shield Wall, Braced) are halved with it; spirit is untouched.
 With DEFENSE_K 50 it adds about a sixth against defense 20 and a quarter
 against 40, so it pays against armored foes and the Knight.
 
+**Staggering Thrust** (Lancer): a spear strike at x0.8 that knocks a
+quarter of a full gauge off a target it doesn't knock out (`stagger: 0.25`
+on a strike, see stagger.ts), 5 MP: its next turn comes later, at once,
+where Slow works over time. Never below 0, a gauge already below 0 (a
+bow's late start) is left as it is, and a unit busy casting is not
+affected. A ready unit knocked below full leaves the ready queue. The AI
+values the gauge lost the way a gauge effect is valued.
+
 **Defend and Wait** (done): two commands every unit has, always allowed.
 **Defend** spends the whole turn; until the unit acts again, every hit on it
 (weapons, spells, collisions) is halved. Damage over time is not, and the
@@ -618,7 +626,7 @@ skill may break one for a reason worth stating.
 
 Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP, Frost Lance chills), **Healer** (support), **Lancer** (spear: reaches behind the
-front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense), **Chronomancer** (time control:
+front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense, Staggering Thrust delays a turn), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its

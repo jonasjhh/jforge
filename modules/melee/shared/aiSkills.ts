@@ -10,6 +10,7 @@ import { previewDamage } from "./preview";
 import { CHILL_SLOW } from "./chill";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
+import { staggeredGauge } from "./stagger";
 import { pushDestination } from "./push";
 import { RESCUE_BRACE } from "./rescue";
 import { healAmount, skillCells, skillVictims } from "./skills";
@@ -169,8 +170,9 @@ function burnValue(
 }
 
 /**
- * What a strike leaves behind on a foe it doesn't knock out: a pin, a burn
- * (worth its damage over time, as a status is).
+ * What a strike leaves behind on a foe it doesn't knock out: a stagger
+ * (worth the gauge lost, as a gauge effect is), a pin, a burn (worth its
+ * damage over time, as a status is).
  */
 function strikeExtra(
   p: TargetingProfile,
@@ -180,7 +182,14 @@ function strikeExtra(
   amount: number,
 ): number {
   if (amount >= victim.hp) return 0;
+  const staggered =
+    effect.stagger && !victim.casting
+      ? (GAUGE_WEIGHT *
+          (victim.gauge - staggeredGauge(victim, effect.stagger))) /
+        GAUGE_FULL
+      : 0;
   return (
+    staggered +
     (effect.pin ? pinValue(victim, amount) : 0) +
     (effect.ignite ? statusValue(p, unit, victim, IGNITE_BURN, false) : 0)
   );

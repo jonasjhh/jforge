@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { armorPierce, hook, lancer, skewer } from "../content";
+import {
+  armorPierce,
+  hook,
+  lancer,
+  skewer,
+  staggeringThrust,
+} from "../content";
+import { skillValue } from "../aiSkills";
+import { GAUGE_FULL } from "../timeline";
 import { previewDamage } from "../preview";
 import type { BattleEvent, BattleState, Cell, Placement } from "../types";
 import { def, place } from "./helpers";
@@ -130,7 +138,7 @@ describe("Armor Pierce", () => {
     place(def("armored", { maxHp: 10_000, speed: 1, defense }), "enemy", 2, 0);
 
   it("is the Lancer's third skill", () => {
-    expect(lancer.skills).toEqual([skewer, hook, armorPierce]);
+    expect(lancer.skills!.slice(0, 3)).toEqual([skewer, hook, armorPierce]);
   });
 
   it("hits as if the target had half its defense", () => {
@@ -150,5 +158,65 @@ describe("Armor Pierce", () => {
     const hit = events.find((e): e is Damage => e.type === "damage")!;
     expect(hit.amount).toBeGreaterThanOrEqual(Math.floor(expected * 0.88));
     expect(hit.amount).toBeLessThanOrEqual(Math.ceil(expected * 1.12));
+  });
+});
+
+describe("Staggering Thrust", () => {
+  const withGauge = (gauge: number) => {
+    const state = lancerTurn([foe(2, 0)]);
+    unitAtId(state, "enemy-2-0").gauge = gauge;
+    return state;
+  };
+  const thrust = (state: BattleState) =>
+    perform(state, staggeringThrust.id, at(2, 0));
+
+  it("is the Lancer's fourth skill", () => {
+    expect(lancer.skills![3]).toBe(staggeringThrust);
+  });
+
+  it("knocks a quarter of a full gauge off a surviving target", () => {
+    const { events, state } = thrust(withGauge(600));
+    expect(damaged(events)).toEqual(["enemy-2-0"]);
+    const gauge = 600 - 0.25 * GAUGE_FULL;
+    expect(unitAtId(state, "enemy-2-0").gauge).toBe(gauge);
+    expect(events).toContainEqual({
+      type: "gaugeChanged",
+      unitId: "enemy-2-0",
+      gauge,
+    });
+  });
+
+  it("stops at 0, and never lowers a gauge below 0", () => {
+    expect(unitAtId(thrust(withGauge(100)).state, "enemy-2-0").gauge).toBe(0);
+    expect(unitAtId(thrust(withGauge(-300)).state, "enemy-2-0").gauge).toBe(
+      -300,
+    );
+  });
+
+  it("leaves a casting target's gauge alone", () => {
+    const state = withGauge(600);
+    const cell = { side: "player", col: 2, row: 0 } as const;
+    unitAtId(state, "enemy-2-0").casting = {
+      skillId: "x",
+      skillName: "X",
+      cell,
+      area: [cell],
+      startedAt: 0,
+      readyAt: 60,
+    };
+    expect(unitAtId(thrust(state).state, "enemy-2-0").gauge).toBe(600);
+  });
+
+  it("is worth more to the AI on a target with more gauge to lose", () => {
+    const value = (gauge: number) => {
+      const state = withGauge(gauge);
+      return skillValue(
+        state,
+        unitAtId(state, "player-2-0"),
+        staggeringThrust,
+        at(2, 0),
+      );
+    };
+    expect(value(600)).toBeGreaterThan(value(0));
   });
 });

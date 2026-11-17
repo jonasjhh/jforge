@@ -230,6 +230,11 @@ export type SkillEffect =
       ignite?: boolean;
       /** Share of the target's defense ignored (Armor Pierce: 0.5). */
       armorPierce?: number;
+      /**
+       * Share of a full gauge a surviving target loses, unless casting
+       * (Staggering Thrust: 0.25, see stagger.ts).
+       */
+      stagger?: number;
     }
   | {
       type: "heal";

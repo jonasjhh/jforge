@@ -398,6 +398,18 @@ export const armorPierce: Skill = {
   effect: { type: "strike", power: 1, armorPierce: 0.5 },
 };
 
+/** Lancer: a jarring thrust that knocks the target's next turn back. */
+export const staggeringThrust: Skill = {
+  id: "staggering-thrust",
+  name: "Staggering Thrust",
+  description:
+    "A jarring thrust (x0.8) that knocks a quarter off the target's turn gauge, unless it is casting.",
+  mpCost: 5,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 0.8, stagger: 0.25 },
+};
+
 /** Lancer: thrusts through the target into the unit right behind it. */
 export const skewer: Skill = {
   id: "skewer",
@@ -1043,6 +1055,7 @@ export const skills = [
   manaTap,
   frostLance,
   armorPierce,
+  staggeringThrust,
   skewer,
   hook,
   haste,
@@ -1197,7 +1210,7 @@ export const lancer: CombatantDef = {
     speed: 11,
   },
   weapon: spear,
-  skills: [skewer, hook, armorPierce],
+  skills: [skewer, hook, armorPierce, staggeringThrust],
   preferredRow: 0,
 };
 
