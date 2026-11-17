@@ -12,7 +12,8 @@ import { CHILL_SLOW } from "./chill";
 import { isCoated } from "./coat";
 import { mostHurtAlly } from "./judgment";
 import { isRooted } from "./stoneSkin";
-import { PETRIFY_TAKEN, isPetrified } from "./petrify";
+import { isPetrified } from "./petrify";
+import { strengthsOf } from "./strengths";
 import { POISON } from "./poison";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
@@ -216,7 +217,12 @@ function petrifyValue(
   const plain = expectedPhysicalDamage(unit, foe);
   const softened =
     hitValue(p, unit, foe, plain) -
-    hitValue(p, unit, foe, Math.round(plain * PETRIFY_TAKEN));
+    hitValue(
+      p,
+      unit,
+      foe,
+      Math.round(plain * (strengthsOf(status).taken ?? 1)),
+    );
   // Others can strike elsewhere meanwhile: only the caster's own next
   // blow on the stone counts against it.
   let value = HEAL_WEIGHT * worst * turns - softened;

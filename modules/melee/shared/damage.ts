@@ -1,5 +1,4 @@
-import { blessDealt, blessTaken } from "./bless";
-import { PETRIFY_TAKEN, isPetrified } from "./petrify";
+import { strengthOn } from "./strengths";
 import { bombOn, explode } from "./bomb";
 import { cellOf } from "./grid";
 import { nextRandom } from "./rng";
@@ -25,34 +24,22 @@ export interface Hit {
 }
 
 /** The target's multiplier for a damage type (1 if not listed). */
-/** What an exposed unit (Expose) takes from every damage type, times. */
-export const EXPOSE_FACTOR = 1.3;
-
-/** What a weakened unit (Weakening Strike) deals with every hit, times. */
-export const WEAKEN_FACTOR = 0.75;
-
-/** The attacker's own damage factor: WEAKEN_FACTOR while weakened. */
-export function weakenFactor(attacker: Unit): number {
-  return attacker.statuses.some((s) => s.effect === "weaken")
-    ? WEAKEN_FACTOR
-    : 1;
-}
-
-/** Everything the attacker's own statuses do to its hits (Weaken, Blessing). */
+/**
+ * Everything the attacker's own statuses do to its hits: their `dealt`
+ * strengths (Weaken, Blessing) multiplied.
+ */
 export function dealtFactor(attacker: Unit): number {
-  return weakenFactor(attacker) * blessDealt(attacker);
+  return strengthOn(attacker, "dealt");
 }
 
 /**
- * The target's multiplier for `type`: its resistance, times EXPOSE_FACTOR
- * while it is exposed, BLESS_TAKEN while blessed and PETRIFY_TAKEN while
- * stone. Immune stays immune.
+ * The target's multiplier for `type`: its resistance, times the `taken`
+ * strengths of its statuses (Expose, Blessing, Petrify). Immune stays
+ * immune.
  */
 export function resistance(target: Unit, type: DamageType): number {
   const base = target.resistances[type] ?? 1;
-  const exposed = target.statuses.some((s) => s.effect === "expose");
-  const stone = isPetrified(target) ? PETRIFY_TAKEN : 1;
-  return (exposed ? base * EXPOSE_FACTOR : base) * blessTaken(target) * stone;
+  return base * strengthOn(target, "taken");
 }
 
 /**

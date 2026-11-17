@@ -410,7 +410,7 @@ export const weakeningStrike: Skill = {
   mpCost: 5,
   target: "enemy",
   area: "single",
-  effect: { type: "strike", power: 0.8, weaken: true },
+  effect: { type: "strike", power: 0.8, weaken: 0.75 },
 };
 
 /** Lancer: thrusts through the target into the unit right behind it. */
@@ -1134,7 +1134,7 @@ export const rescue: Skill = {
 
 /**
  * Sage: lays bare one enemy's weak points; for a while it takes x1.3 from
- * every damage type (EXPOSE_FACTOR). Immune stays immune.
+ * every damage type (its `taken` strength). Immune stays immune.
  */
 export const expose: Skill = {
   id: "expose",

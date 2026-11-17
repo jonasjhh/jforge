@@ -94,10 +94,11 @@ values the gauge lost the way a gauge effect is valued.
 
 **Weakening Strike** (Lancer): a spear strike at x0.8 that **weakens** a
 target it doesn't knock out: for 150 game time every hit it deals, weapon,
-skill or spell, is x0.75 (`weaken` on a strike, the "Weakened" status in
-weaken.ts, `WEAKEN_FACTOR` in damage.ts), 5 MP. It is the mirror of
-Expose. Damage over time it applies (poison, burns) is not reduced. Previews and
-the AI see it; the AI values it as any status.
+skill or spell, is x0.75 (`weaken: 0.75` on the strike, the "Weakened" status in
+weaken.ts, its `dealt` strength), 5 MP. It is the mirror of
+Expose. Damage over time and bombs it applies while weakened are set
+x0.75 too, as with Blessing. Previews and the AI see it; the AI values it
+as any status.
 
 **Defend and Wait** (done): two commands every unit has, always allowed.
 **Defend** spends the whole turn; until the unit acts again, every hit on it
@@ -264,6 +265,18 @@ Started: units have MP; a skill costs MP and is aimed at a **cell**. Its
 `target` says where it may be aimed (a living ally, a living enemy, or any
 cell) and its `area` which cells it hits around the aimed one.
 
+**Strengths are data.** A status's factors live on the status in the
+skill, not in the engine: `dealt` (damage the unit deals, weapons, skills
+and the damage over time and bombs it applies), `taken` (damage it takes,
+folded into `resistance`), `defense` (multiplies the defense stat) and
+`ambush` (a stealth status's first hit). A status that leaves one out
+gets its kind's default (`STRENGTH_DEFAULTS` in strengths.ts: Expose taken
+1.3, Weaken dealt 0.75, Blessing dealt 1.2 and taken 0.8, Petrify taken
+0.5, Stone Skin defense 1.5, stealth ambush 2). Statuses multiply. A
+strike's `weaken` is the dealt factor it applies, and its `finishBelow`
+the finisher threshold. So char can make a lesser Blessing or a deeper
+Expose without new code.
+
 - **Cleave** (Fighter): a slash strike at x0.7 on **every enemy the
   sword can reach** (the `reach` area: whatever the weapon could attack
   right now, so covered units are safe and the aimed cell only picks the
@@ -325,8 +338,8 @@ cell) and its `area` which cells it hits around the aimed one.
   much for a melee ally, and less the gauge it loses; the brace adds to
   that only when it is already worth it.
 - **Expose** (Sage): an **expose** status on one enemy (150 game time,
-  8 MP): it takes x1.3 from every damage type (`EXPOSE_FACTOR`, applied
-  in `resistance`, so previews and the AI see it). Resisted types stay
+  8 MP): it takes x1.3 from every damage type (its `taken` strength,
+  applied in `resistance`, so previews and the AI see it). Resisted types stay
   resisted, only less so; immune stays immune. It is harmful, so Cure
   removes it.
 - **Silence** (Sage): a **silence** status on one enemy (150 game time,
@@ -422,12 +435,12 @@ cell) and its `area` which cells it hits around the aimed one.
   deals crush damage and Shatter impact (boulders are stone: weak to
   impact).
 - **Stone Skin** (Geomancer): 6 MP, one ally, a helpful `stoneSkin`
-  status for 150 game time: defense x1.5, and pushes and pulls don't move
+  status for 150 game time: defense x1.5 (its `defense` strength), and pushes and pulls don't move
   it (Upheaval, pushing and pulling strikes). A pushing strike then lands
   as a normal hit, not a crash (`stoneSkin.ts`).
 - **Petrify** (Geomancer): 8 MP, one enemy, a harmful `petrify` status
   for 60 game time. Its gauge doesn't fill and it takes no turn; it takes
-  x0.5 damage (folded into `resistance`). Petrifying breaks a cast in
+  x0.5 damage (its `taken` strength, folded into `resistance`). Petrifying breaks a cast in
   progress (the MP stays spent) and takes a unit waiting to act out of
   line; its full gauge brings it back as soon as the stone wears off. It
   can't be quickened. The AI values it by the share of an ally's HP the
@@ -452,15 +465,16 @@ cell) and its `area` which cells it hits around the aimed one.
 - **Blessing** (Paladin): 6 MP, one ally (the Paladin included), a
   helpful `bless` status for 150 game time; recasting refreshes it. The
   blessed unit deals x1.2 damage and takes x0.8 of every kind (weapons,
-  spells, damage over time, bombs). Taken is folded into `resistance`, as
-  Expose is; dealt sits beside Weaken in the hit functions, and a blessed
-  caster's damage-over-time statuses and bombs are set x1.2 when applied
-  (`bless.ts`).
+  spells, damage over time, bombs): its `dealt` 1.2 and `taken` 0.8
+  strengths. Taken is folded into `resistance`, as Expose is; dealt
+  multiplies with Weaken's in `dealtFactor`, and a blessed caster's
+  damage-over-time statuses and bombs are set x1.2 when applied.
 - **Vanish / Shadowstep** (Rogue): **Stealth** is a timed status (one
   silent tick that just ends it). A stealthed unit can't be picked by
   enemies for weapon attacks or single-target skills (areas and poison
   still hit it; it still covers units behind it). Its first damaging
-  action is an **ambush** for x2, which ends stealth. Shadowstep is a
+  action is an **ambush** for x2 (the stealth status's `ambush`
+  strength), which ends stealth. Shadowstep is a
   `teleport` effect to any empty cell on its side and a **half-turn**
   skill (gauge drops to half, like Move); it keeps stealth. Skills can
   target `self` only.
@@ -477,8 +491,9 @@ cell) and its `area` which cells it hits around the aimed one.
   and damage over time still hit it, and it still covers units behind
   it. Unlike stealth, acting doesn't end it and it gives no ambush.
 - **Coup de Grâce** (Rogue): 8 MP, a single-enemy strike x1.0 that hits
-  x2.5 against a target below 30% of its max HP (`finisher` on the
-  strike; the threshold lives in `finisher.ts`). The preview and the AI
+  x2.5 against a target below 30% of its max HP (`finisher: 2.5` on the
+  strike; `finishBelow` sets the threshold per skill, 30% by default in
+  `finisher.ts`). The preview and the AI
   see the finishing hit; the threat estimate counts the base x1.0.
 - **Drain / Blood Bolt / Summon Imp** (Warlock): damage effects can
   **drain** (heal the caster by a share of the damage dealt; nothing from

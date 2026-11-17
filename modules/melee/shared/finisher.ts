@@ -12,5 +12,6 @@ export function finisherFactor(
   target: Unit,
 ): number {
   if (!effect.finisher) return 1;
-  return target.hp < FINISH_BELOW * target.base.maxHp ? effect.finisher : 1;
+  const below = effect.finishBelow ?? FINISH_BELOW;
+  return target.hp < below * target.base.maxHp ? effect.finisher : 1;
 }

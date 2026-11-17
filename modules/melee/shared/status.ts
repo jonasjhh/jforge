@@ -1,5 +1,5 @@
 import { petrify } from "./petrify";
-import { blessDealt } from "./bless";
+import { strengthOn, strengthsOf } from "./strengths";
 import {
   knockOutIfDown,
   reportDefenses,
@@ -34,9 +34,12 @@ export function applyStatus(
   events: BattleEvent[],
 ): void {
   if (def.damageType && resistance(target, def.damageType) === 0) return;
-  // A blessed caster's damage over time and bombs hit harder too.
+  // The caster's own dealt strengths (Blessing, Weaken) carry into its
+  // damage over time and bombs.
   const dealt =
-    def.effect === "damage" || def.effect === "bomb" ? blessDealt(caster) : 1;
+    def.effect === "damage" || def.effect === "bomb"
+      ? strengthOn(caster, "dealt")
+      : 1;
   const amount = Math.max(
     1,
     Math.round(def.power * effectiveStat(caster, def.stat) * dealt),
@@ -53,6 +56,7 @@ export function applyStatus(
     nextTickAt: state.time + def.interval,
     ticksLeft: def.ticks,
     sourceId: caster.id,
+    ...strengthsOf(def),
   });
   events.push({
     type: "statusApplied",

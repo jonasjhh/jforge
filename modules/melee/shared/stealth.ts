@@ -1,7 +1,10 @@
 import type { BattleEvent, Unit } from "./types";
 
-/** Damage multiplier for the first damaging action out of stealth. */
-export const AMBUSH_POWER = 2;
+/** The ambush of a stealthed unit's first damaging action, times (1 if none). */
+export function ambushPower(unit: Unit): number {
+  const stealth = unit.statuses.find((s) => s.effect === "stealth");
+  return stealth ? (stealth.ambush ?? 1) : 1;
+}
 
 export function isStealthed(unit: Unit): boolean {
   return unit.statuses.some((s) => s.effect === "stealth");
@@ -23,7 +26,8 @@ export function isHidden(unit: Unit): boolean {
  */
 export function breakStealth(unit: Unit, events: BattleEvent[]): number {
   if (!isStealthed(unit)) return 1;
+  const power = ambushPower(unit);
   unit.statuses = unit.statuses.filter((s) => s.effect !== "stealth");
   events.push({ type: "ambush", unitId: unit.id });
-  return AMBUSH_POWER;
+  return power;
 }

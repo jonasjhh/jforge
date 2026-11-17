@@ -1,7 +1,7 @@
 import { charged } from "./charge";
 import { finisherFactor } from "./finisher";
 import { expectedDamage, resistance, wouldKnockOut } from "./damage";
-import { AMBUSH_POWER, isStealthed } from "./stealth";
+import { ambushPower } from "./stealth";
 import { spellPower } from "./status";
 import type { DamageType, Skill, Unit } from "./types";
 
@@ -29,7 +29,7 @@ export function previewDamage(
   shared = 1,
 ): DamagePreview | null {
   // The first damaging action out of stealth is an ambush.
-  const ambush = isStealthed(attacker) ? AMBUSH_POWER : 1;
+  const ambush = ambushPower(attacker);
   const effect = skill?.effect;
   let hit: ["physical" | "magical", number, DamageType];
   if (!effect) hit = ["physical", ambush, attacker.weapon.damageType];

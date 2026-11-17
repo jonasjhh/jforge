@@ -137,9 +137,9 @@ export interface StatusDef {
    * absorbs `power x stat` damage before HP. ward: can't be knocked out
    * (a lethal hit leaves 1 HP). taunt: enemies that single out a target
    * must pick it while they can. expose: takes more from every damage type
-   * (see EXPOSE_FACTOR). guard: single-target hits from enemies land on
+   * (its `taken` strength, see strengths.ts). guard: single-target hits from enemies land on
    * the unit that applied it instead, while it stands (see guard.ts).
-   * weaken: every hit it deals is weaker (see WEAKEN_FACTOR). The last
+   * weaken: every hit it deals is weaker (its `dealt` strength). The last
    * eight just last until they end. bomb: when it ends, or the unit falls
    * first, it explodes for its amount on the unit and its neighbours on
    * its side (see bomb.ts). coat: its weapon hits poison (see coat.ts).
@@ -173,6 +173,15 @@ export interface StatusDef {
   power: number;
   interval: number;
   ticks: number;
+  /**
+   * Strengths (see strengths.ts): damage dealt, damage taken, defense or
+   * ambush, times. Read only for the kinds STRENGTH_DEFAULTS lists, and
+   * its default when left out.
+   */
+  dealt?: number;
+  taken?: number;
+  defense?: number;
+  ambush?: number;
 }
 
 /** A status effect running on a unit. */
@@ -189,6 +198,11 @@ export interface Status {
   ticksLeft: number;
   /** The unit that applied it. */
   sourceId: string;
+  /** Its strengths, fixed when it was applied (see strengths.ts). */
+  dealt?: number;
+  taken?: number;
+  defense?: number;
+  ambush?: number;
 }
 
 /** What a skill does to each unit it hits. More effect types arrive later. */
@@ -243,17 +257,22 @@ export type SkillEffect =
       /** Share of the target's defense ignored (Armor Pierce: 0.5). */
       armorPierce?: number;
       /**
-       * Power multiplier on a target below FINISH_BELOW of its max HP
+       * Power multiplier on a target below `finishBelow` of its max HP
        * (Coup de Grâce: 2.5, see finisher.ts).
        */
       finisher?: number;
+      /** The finisher's HP share threshold (default FINISH_BELOW, 0.3). */
+      finishBelow?: number;
       /**
        * Share of a full gauge a surviving target loses, unless casting
        * (Staggering Thrust: 0.25, see stagger.ts).
        */
       stagger?: number;
-      /** Weakens a target that survives the hit (see weaken.ts). */
-      weaken?: boolean;
+      /**
+       * Weakens a target that survives the hit: it deals this much, times,
+       * for a while (Weakening Strike: 0.75, see weaken.ts).
+       */
+      weaken?: number;
       /**
        * Share of the damage dealt that heals the caster's most-hurt ally
        * (Judgment: 0.5, see judgment.ts).

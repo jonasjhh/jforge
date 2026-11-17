@@ -2,7 +2,7 @@ import type { StatusDef } from "./types";
 
 // A weakening hit (the Lancer's Weakening Strike) leaves its target
 // weakened: every hit it deals for a while, weapon or spell, is weaker
-// (WEAKEN_FACTOR in damage.ts). Built into the strike, not a general
+// (the strike's `weaken` as the status's `dealt` strength). Built into the strike, not a general
 // second effect, as with Pinning Shot's pin.
 
 /** What a weakening hit leaves on a target that survives it. */

@@ -18,7 +18,9 @@ import {
   shieldBash,
   shieldWall,
 } from "../content";
-import { EXPOSE_FACTOR, resistance } from "../damage";
+import { resistance } from "../damage";
+
+const EXPOSE_FACTOR = 1.3;
 import { skillValue } from "../aiSkills";
 import { previewDamage } from "../preview";
 import { skillArea } from "../skills";

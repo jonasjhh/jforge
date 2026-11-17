@@ -1,12 +1,5 @@
 import { useEffect } from "react";
 import {
-  AMBUSH_POWER,
-  BLESS_DEALT,
-  BLESS_TAKEN,
-  PETRIFY_TAKEN,
-  STONE_SKIN_DEFENSE,
-  EXPOSE_FACTOR,
-  WEAKEN_FACTOR,
   effectiveStat,
   isAlive,
   type Modifier,
@@ -47,7 +40,7 @@ function statusText(status: Status, speed: number): string {
     case "damage":
       return `Takes ${status.amount} ${status.damageType ?? ""} damage every ${every}.`;
     case "stealth":
-      return `Hidden: single-target attacks and skills can't pick it. Its next attack deals ×${AMBUSH_POWER}.`;
+      return `Hidden: single-target attacks and skills can't pick it. Its next attack deals ×${status.ambush ?? 1}.`;
     case "shield":
       return `Absorbs the next ${status.amount} damage.`;
     case "ward":
@@ -55,23 +48,23 @@ function statusText(status: Status, speed: number): string {
     case "taunt":
       return "Provoking: enemies that single out a target must pick it.";
     case "expose":
-      return `Exposed: takes ×${EXPOSE_FACTOR} damage of every type.`;
+      return `Exposed: takes ×${status.taken ?? 1} damage of every type.`;
     case "silence":
       return "Silenced: can't use skills.";
     case "guard":
       return "Guarded: enemies' single-target hits on it land on its guardian.";
     case "weaken":
-      return `Weakened: deals ×${WEAKEN_FACTOR} damage.`;
+      return `Weakened: deals ×${status.dealt ?? 1} damage.`;
     case "coat":
       return "Coated blade: every weapon hit poisons its target.";
     case "smoke":
       return "In smoke: enemies can't single it out (areas still hit it).";
     case "stoneSkin":
-      return `Stone Skin: defense ×${STONE_SKIN_DEFENSE}, can't be pushed or pulled.`;
+      return `Stone Skin: defense ×${status.defense ?? 1}, can't be pushed or pulled.`;
     case "petrify":
-      return `Petrified: can't act, takes ×${PETRIFY_TAKEN} damage.`;
+      return `Petrified: can't act, takes ×${status.taken ?? 1} damage.`;
     case "bless":
-      return `Blessed: deals ×${BLESS_DEALT} damage and takes ×${BLESS_TAKEN}.`;
+      return `Blessed: deals ×${status.dealt ?? 1} damage and takes ×${status.taken ?? 1}.`;
     case "bomb":
       return `Explodes when time runs out or it falls: ${status.amount} ${status.damageType ?? ""} damage to it and its neighbours.`;
   }

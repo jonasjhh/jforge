@@ -8,7 +8,7 @@ import {
   staggeringThrust,
   weakeningStrike,
 } from "../content";
-import { WEAKEN_FACTOR } from "../damage";
+const WEAKEN_FACTOR = 0.75;
 import { WEAKEN_STATUS } from "../weaken";
 import { skillValue } from "../aiSkills";
 import { GAUGE_FULL } from "../timeline";

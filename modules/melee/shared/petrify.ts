@@ -3,12 +3,9 @@ import { dropReady } from "./units";
 
 // Petrify (Geomancer): a harmful `petrify` status. While it lasts the unit
 // is stone: its gauge doesn't fill and it can't take a turn, but it takes
-// x0.5 damage. Petrifying breaks a cast in progress (the MP stays spent)
+// x0.5 damage (its `taken` strength). Petrifying breaks a cast in progress (the MP stays spent)
 // and takes a unit waiting to act out of the line; its full gauge brings
 // it straight back once the stone wears off.
-
-/** What a petrified unit takes from every hit, times. */
-export const PETRIFY_TAKEN = 0.5;
 
 export function isPetrified(unit: Unit): boolean {
   return unit.statuses.some((s) => s.effect === "petrify");

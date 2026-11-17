@@ -536,7 +536,13 @@ function applySkill(
           applyModifier(state, target, PIN_SLOW, events);
         }
         if (effect.weaken && isAlive(target) && !target.obstacle) {
-          applyStatus(state, unit, target, WEAKEN_STATUS, events);
+          applyStatus(
+            state,
+            unit,
+            target,
+            { ...WEAKEN_STATUS, dealt: effect.weaken },
+            events,
+          );
         }
         if (effect.stagger && isAlive(target) && !target.obstacle) {
           stagger(state, target, effect.stagger, events);

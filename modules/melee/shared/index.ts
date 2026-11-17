@@ -22,10 +22,8 @@ export {
 } from "./skills";
 export { MOVE_GAUGE_LEFT, validateMove } from "./move";
 export { DEFEND_FACTOR, WAIT_GAUGE_LEFT } from "./stance";
-export { AMBUSH_POWER, isHidden, isStealthed } from "./stealth";
-export { BLESS_DEALT, BLESS_TAKEN } from "./bless";
-export { PETRIFY_TAKEN } from "./petrify";
-export { STONE_SKIN_DEFENSE } from "./stoneSkin";
+export { ambushPower, isHidden, isStealthed } from "./stealth";
+export { STRENGTH_DEFAULTS, strengthsOf, type Strengths } from "./strengths";
 export { isTaunting } from "./taunt";
 export { guardianOf, hitVictim } from "./guard";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";
@@ -33,8 +31,6 @@ export { applyStatus } from "./status";
 export { GAUGE_FULL, fillRate, turnOrder } from "./timeline";
 export {
   DEFENSE_K,
-  EXPOSE_FACTOR,
-  WEAKEN_FACTOR,
   magicalHit,
   physicalHit,
   resistance,
