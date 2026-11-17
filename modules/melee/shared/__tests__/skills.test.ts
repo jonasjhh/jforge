@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { heal } from "../content";
+import { heal, healer, smite } from "../content";
 import { skillCells } from "../skills";
 import type { BattleState, Cell, Skill } from "../types";
 import { def, place } from "./helpers";
@@ -112,5 +112,42 @@ describe("Heal", () => {
     const copy: Skill = structuredClone(heal);
     healAlly(battle());
     expect(heal).toEqual(copy);
+  });
+});
+
+describe("Smite", () => {
+  it("is the Healer's fifth skill: a holy bolt at x1.2 for 6 MP", () => {
+    expect(healer.skills!.at(-1)).toBe(smite);
+    const caster = {
+      ...def("healer", { magic: 10, maxMp: 20, speed: 20 }),
+      skills: [smite],
+    };
+    const start = createBattle(
+      {
+        placements: [
+          place(caster, "player", 0),
+          place(def("foe", { speed: 1 }), "enemy", 0),
+          place(
+            { ...def("ghost", { speed: 1 }), resistances: { holy: 2 } },
+            "enemy",
+            1,
+          ),
+        ],
+      },
+      1,
+    );
+    const smiteAt = (col: number) =>
+      act(advance(start).state, {
+        type: "skill",
+        skillId: smite.id,
+        cell: at("enemy", col),
+      });
+    const hit = smiteAt(0);
+    expect(hit.state.units[0]!.mp).toBe(20 - smite.mpCost);
+    const amount = (events: typeof hit.events) =>
+      events.flatMap((e) => (e.type === "damage" ? [e.amount] : []))[0]!;
+    expect(amount(hit.events)).toBeGreaterThan(0);
+    // Weak to holy: about twice the damage.
+    expect(amount(smiteAt(1).events)).toBeGreaterThan(1.5 * amount(hit.events));
   });
 });

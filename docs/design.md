@@ -408,6 +408,8 @@ cell) and its `area` which cells it hits around the aimed one.
   allowed; a delayed revive that finds its ally already up does nothing.
   While choosing, fallen allies are highlighted. The AI values a revive
   above most heals, so enemy healers bring their side back too.
+- **Smite** (Healer): a holy spell at x1.2 on one enemy, 6 MP, so the
+  Healer has something to do when no one is hurt. No extra rules.
 
 The full shape below is the goal.
 

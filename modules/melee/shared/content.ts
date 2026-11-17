@@ -265,6 +265,17 @@ export const regen: Skill = {
   },
 };
 
+/** Healer: a holy bolt, so it has something to do when no one is hurt. */
+export const smite: Skill = {
+  id: "smite",
+  name: "Smite",
+  description: "A holy bolt (x1.2) at one enemy.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: { type: "damage", kind: "magical", element: "holy", power: 1.2 },
+};
+
 /** Removes poison and other harmful effects; leaves Regen alone. */
 export const cure: Skill = {
   id: "cure",
@@ -939,6 +950,7 @@ export const skills = [
   manaBurn,
   rebuke,
   arcaneWave,
+  smite,
 ];
 
 export const fighter: CombatantDef = {
@@ -1005,7 +1017,7 @@ export const healer: CombatantDef = {
     speed: 11,
   },
   weapon: staff,
-  skills: [heal, regen, cure, revive],
+  skills: [heal, regen, cure, revive, smite],
   preferredRow: 2,
 };
 
