@@ -576,7 +576,7 @@ export const timeBomb: Skill = {
       harmful: true,
       damageType: "arcane",
       stat: "magic",
-      power: 0.7,
+      power: 1,
       interval: 90,
       ticks: 1,
     },

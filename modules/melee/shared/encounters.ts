@@ -9,13 +9,13 @@ export const DIFFICULTIES: Difficulty[] = ["easy", "normal", "hard"];
 /**
  * Total monster threat per difficulty (Slime 2, Wolf 3, Viper 2). Hard is
  * about 30% more than Normal. Tuned with auto-played battles where both sides use
- * their skills and move: about 100% / 93% / 53% party wins. The encounter
+ * their skills and move: about 100% / 90% / 55% party wins. The encounter
  * tests check each difficulty stays in its band.
  */
 export const THREAT_BUDGET: Record<Difficulty, number> = {
   easy: 15,
-  normal: 20,
-  hard: 26,
+  normal: 21,
+  hard: 27,
 };
 
 /** Monsters lean toward the front: weights for rows 0, 1, 2. */

@@ -22,10 +22,7 @@ const foe = (col: number, row: number, maxHp = 10_000) =>
   place(def(`foe${col}${row}`, { maxHp, speed: 1 }), "enemy", col, row);
 const at = (col: number, row: number): Cell => ({ side: "enemy", col, row });
 const unit = (s: BattleState, id: string) => s.units.find((u) => u.id === id)!;
-const bombDef =
-  timeBomb.effect.type === "status" ? timeBomb.effect.status : null;
-/** What one bomb deals: its power x the caster's magic. */
-const BLAST = Math.round(bombDef!.power * chronomancer.stats.magic);
+const MAGIC = chronomancer.stats.magic;
 
 function plant(state: BattleState, cell: Cell) {
   return act(state, { type: "skill", skillId: timeBomb.id, cell });
@@ -56,11 +53,11 @@ describe("Chronomancer skills", () => {
 });
 
 describe("Time Bomb", () => {
-  it("plants a bomb worth its power x the caster's magic and deals nothing yet", () => {
+  it("plants a bomb worth the caster's magic and deals nothing yet", () => {
     const { events, state } = plant(chronoTurn([foe(2, 0)]), at(2, 0));
     expect(events.some((e) => e.type === "damage")).toBe(false);
     const bomb = unit(state, "enemy-2-0").statuses[0]!;
-    expect(bomb).toMatchObject({ effect: "bomb", amount: BLAST });
+    expect(bomb).toMatchObject({ effect: "bomb", amount: MAGIC });
     expect(unit(state, "player-2-2").mp).toBe(
       chronomancer.stats.maxMp - timeBomb.mpCost,
     );
@@ -82,7 +79,7 @@ describe("Time Bomb", () => {
       "enemy-2-1",
       "enemy-3-0",
     ]);
-    expect(hits.every((e) => e.amount === BLAST)).toBe(true);
+    expect(hits.every((e) => e.amount === MAGIC)).toBe(true);
     expect(hits.every((e) => e.damageType === "arcane")).toBe(true);
     expect(unit(after, "enemy-2-0").statuses).toEqual([]);
     expect(events.some((e) => e.type === "statusExpired")).toBe(false);
@@ -109,7 +106,7 @@ describe("Time Bomb", () => {
       "exploded",
       "damage",
     ]);
-    expect(events[2]).toMatchObject({ unitId: "enemy-1-0", amount: BLAST });
+    expect(events[2]).toMatchObject({ unitId: "enemy-1-0", amount: MAGIC });
   });
 
   it("sets off a bomb on a neighbour it knocks out", () => {
