@@ -1,4 +1,5 @@
 import { DEFENSE_K } from "./damage";
+import { IGNITE_BURN } from "./ignite";
 import { resistancesFor } from "./traits";
 import type { CombatantDef, Skill, SkillArea } from "./types";
 import { DAMAGE_TYPES } from "./types";
@@ -46,8 +47,13 @@ const REVIVE_DURABILITY = 1.4;
 function skillDamage(def: CombatantDef, skill: Skill): number {
   const { effect } = skill;
   let damage: number;
-  if (effect.type === "strike") damage = def.stats.attack * effect.power;
-  else if (effect.type === "damage" || effect.type === "shatter") {
+  if (effect.type === "strike") {
+    damage = def.stats.attack * effect.power;
+    if (effect.ignite) {
+      damage +=
+        ON_HIT_SHARE * IGNITE_BURN.power * IGNITE_BURN.ticks * def.stats.attack;
+    }
+  } else if (effect.type === "damage" || effect.type === "shatter") {
     damage = def.stats.magic * effect.power;
   } else return 0;
   damage *= AREA_REACH[skill.area];

@@ -217,7 +217,8 @@ export type SkillEffect =
    * `advance` first runs the attacker to the front row of its column (the
    * way there must be clear, and it must not be there already), and it
    * strikes from there (see charge.ts). `pin` slows a target that
-   * survives the hit (see pin.ts).
+   * survives the hit (see pin.ts);
+   * `ignite` sets it burning (see ignite.ts).
    */
   | {
       type: "strike";
@@ -226,6 +227,7 @@ export type SkillEffect =
       ignoreCover?: boolean;
       advance?: boolean;
       pin?: boolean;
+      ignite?: boolean;
     }
   | {
       type: "heal";

@@ -350,6 +350,16 @@ cell) and its `area` which cells it hits around the aimed one.
   modifier, `pin` on a strike, see pin.ts), 5 MP. It is built into the
   strike, not a general second effect. Pinned stacks with Slow. The AI
   values the pin like a slow, and nothing on a target already pinned.
+- **Quick Shot** (Archer): a bow strike at x0.6 that costs only **half a
+  turn** (`halfTurn`, as Shadowstep), 3 MP. The AI counts a half-turn
+  skill's value double, for the gauge it saves.
+- **Fire Arrow** (Archer): a bow strike at x0.8 with the bow's **pierce**
+  that sets a target it doesn't knock out **burning**: fire damage over
+  time, 0.15 x attack every 30 game time, 5 ticks (`ignite` on a strike,
+  the "Burning" status in ignite.ts), 6 MP. Fire resistance applies to
+  the burn only. Built into the strike, as the pin is; a second Fire
+  Arrow restarts the burn. The AI values the burn as a damage status;
+  threat counts it the way a weapon's poison is counted.
 - **Heal** (Healer): one living ally, restores power x magic HP, never
   above max.
 - **Fireball** (Mage): any cell, hits a **plus** (the cell and its four
@@ -588,7 +598,7 @@ skill may break one for a reason worth stating.
 
 ### Class roster plan (12 archetypes)
 
-Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target), **Mage**
+Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:

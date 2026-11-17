@@ -7,6 +7,7 @@ import {
   wouldKnockOut,
 } from "./damage";
 import { previewDamage } from "./preview";
+import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
 import { pushDestination } from "./push";
 import { RESCUE_BRACE } from "./rescue";
@@ -167,6 +168,24 @@ function burnValue(
 }
 
 /**
+ * What a strike leaves behind on a foe it doesn't knock out: a pin, a burn
+ * (worth its damage over time, as a status is).
+ */
+function strikeExtra(
+  p: TargetingProfile,
+  unit: Unit,
+  victim: Unit,
+  effect: Extract<SkillEffect, { type: "strike" }>,
+  amount: number,
+): number {
+  if (amount >= victim.hp) return 0;
+  return (
+    (effect.pin ? pinValue(victim, amount) : 0) +
+    (effect.ignite ? statusValue(p, unit, victim, IGNITE_BURN, false) : 0)
+  );
+}
+
+/**
  * Pinning a unit is worth SUPPORT_VALUE, as a slowing modifier is, unless
  * the hit knocks it out or it is already pinned.
  */
@@ -227,8 +246,8 @@ function victimValue(
       const extra =
         effect.type === "damage"
           ? burnValue(victim, effect)
-          : effect.type === "strike" && effect.pin
-            ? pinValue(victim, amount)
+          : effect.type === "strike"
+            ? strikeExtra(p, unit, victim, effect, amount)
             : 0;
       return -sign * (hitValue(p, unit, victim, amount) + extra);
     }
@@ -294,6 +313,8 @@ export function skillValue(
     }
   }
   if (skill.castTime) value *= CAST_DISCOUNT;
+  // Half a turn: twice the effect for the gauge it spends.
+  if (skill.halfTurn) value *= 2;
   return value - skillCost(unit, skill);
 }
 

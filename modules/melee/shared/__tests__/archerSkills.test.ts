@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { aimedShot, archer, pinningShot, volley } from "../content";
+import {
+  aimedShot,
+  archer,
+  fireArrow,
+  pinningShot,
+  quickShot,
+  volley,
+} from "../content";
+import { IGNITE_BURN } from "../ignite";
+import { MOVE_GAUGE_LEFT } from "../move";
 import { skillValue } from "../aiSkills";
 import { PIN_SLOW } from "../pin";
 import { previewDamage } from "../preview";
@@ -28,8 +37,14 @@ const hitIds = (events: BattleEvent[]) =>
 const unit = (s: BattleState, id: string) => s.units.find((u) => u.id === id)!;
 
 describe("Archer skills", () => {
-  it("are Aimed Shot, Volley and Pinning Shot, in that order", () => {
-    expect(archer.skills).toEqual([aimedShot, volley, pinningShot]);
+  it("are Aimed Shot, Volley, Pinning Shot, Quick Shot and Fire Arrow", () => {
+    expect(archer.skills).toEqual([
+      aimedShot,
+      volley,
+      pinningShot,
+      quickShot,
+      fireArrow,
+    ]);
   });
 });
 
@@ -117,5 +132,75 @@ describe("Pinning Shot", () => {
     const value = (s: BattleState) =>
       skillValue(s, unit(s, "player-2-1"), pinningShot, at(2, 0));
     expect(value(fresh)).toBeGreaterThan(value(pinned));
+  });
+});
+
+describe("Quick Shot", () => {
+  it("hits x0.6 and leaves half the gauge", () => {
+    const state = archerTurn([foe(2, 0)]);
+    const [self, target] = state.units;
+    const shot = previewDamage(self!, target!, quickShot)!.amount;
+    const plain = previewDamage(self!, target!)!.amount;
+    expect(Math.abs(shot - plain * 0.6)).toBeLessThan(1);
+    const { events, state: after } = act(state, {
+      type: "skill",
+      skillId: quickShot.id,
+      cell: at(2, 0),
+    });
+    expect(hitIds(events)).toEqual(["enemy-2-0"]);
+    expect(unit(after, "player-2-1").gauge).toBe(MOVE_GAUGE_LEFT);
+  });
+
+  it("counts double to the AI for costing half a turn", () => {
+    const state = archerTurn([foe(2, 0)]);
+    const self = unit(state, "player-2-1");
+    const full = { ...quickShot, id: "full", halfTurn: undefined };
+    const half = skillValue(state, self, quickShot, at(2, 0));
+    const whole = skillValue(state, self, full, at(2, 0));
+    expect(half).toBeGreaterThan(whole);
+  });
+});
+
+describe("Fire Arrow", () => {
+  it("hits with pierce and sets a surviving target burning with fire", () => {
+    const state = archerTurn([foe(2, 0)]);
+    const [self, target] = state.units;
+    const shot = previewDamage(self!, target!, fireArrow)!.amount;
+    const plain = previewDamage(self!, target!)!.amount;
+    expect(Math.abs(shot - plain * 0.8)).toBeLessThan(1);
+    const { events, state: after } = act(state, {
+      type: "skill",
+      skillId: fireArrow.id,
+      cell: at(2, 0),
+    });
+    const hit = events.find((e): e is Damage => e.type === "damage")!;
+    expect(hit.damageType).toBe("pierce");
+    const burning = unit(after, "enemy-2-0").statuses.find(
+      (st) => st.id === IGNITE_BURN.id,
+    );
+    expect(burning?.damageType).toBe("fire");
+  });
+
+  it("leaves no burn on a target it knocks out", () => {
+    const state = archerTurn([foe(2, 0, 1)]);
+    const { state: after } = act(state, {
+      type: "skill",
+      skillId: fireArrow.id,
+      cell: at(2, 0),
+    });
+    expect(unit(after, "enemy-2-0").statuses).toEqual([]);
+  });
+
+  it("is worth more to the AI than the same shot without the burn", () => {
+    const state = archerTurn([foe(2, 0)]);
+    const self = unit(state, "player-2-1");
+    const plain = {
+      ...fireArrow,
+      id: "plain",
+      effect: { type: "strike" as const, power: 0.8 },
+    };
+    expect(skillValue(state, self, fireArrow, at(2, 0))).toBeGreaterThan(
+      skillValue(state, self, plain, at(2, 0)),
+    );
   });
 });

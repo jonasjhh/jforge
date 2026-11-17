@@ -315,6 +315,30 @@ export const pinningShot: Skill = {
   effect: { type: "strike", power: 0.7, pin: true },
 };
 
+/** Archer: a light shot for half a turn, so the Archer acts again soon. */
+export const quickShot: Skill = {
+  id: "quick-shot",
+  name: "Quick Shot",
+  description: "A quick shot (x0.6) that costs only half a turn.",
+  mpCost: 3,
+  target: "enemy",
+  area: "single",
+  halfTurn: true,
+  effect: { type: "strike", power: 0.6 },
+};
+
+/** Archer: a burning arrow: pierce on the hit, then fire over time. */
+export const fireArrow: Skill = {
+  id: "fire-arrow",
+  name: "Fire Arrow",
+  description:
+    "A burning arrow (x0.8) that sets its target alight: fire damage over time if it survives.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 0.8, ignite: true },
+};
+
 /** Lancer: thrusts through the target into the unit right behind it. */
 export const skewer: Skill = {
   id: "skewer",
@@ -954,6 +978,8 @@ export const skills = [
   aimedShot,
   volley,
   pinningShot,
+  quickShot,
+  fireArrow,
   skewer,
   hook,
   haste,
@@ -1013,7 +1039,7 @@ export const archer: CombatantDef = {
     speed: 12,
   },
   weapon: bow,
-  skills: [aimedShot, volley, pinningShot],
+  skills: [aimedShot, volley, pinningShot, quickShot, fireArrow],
   preferredRow: 1,
 };
 
