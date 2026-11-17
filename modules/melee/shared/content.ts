@@ -615,6 +615,56 @@ export const drain: Skill = {
   },
 };
 
+/** Warlock: shadow damage over time on one enemy. */
+export const curse: Skill = {
+  id: "curse",
+  name: "Curse",
+  description: "Shadow damage over time on one enemy.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "cursed",
+      name: "Cursed",
+      effect: "damage",
+      harmful: true,
+      damageType: "shadow",
+      stat: "magic",
+      power: 0.3,
+      interval: 30,
+      ticks: 5,
+    },
+  },
+};
+
+/**
+ * Warlock: gives up its Imp, healing by the HP the Imp had left and
+ * gaining a strong magic boost for a while.
+ */
+export const sacrifice: Skill = {
+  id: "sacrifice",
+  name: "Sacrifice",
+  description:
+    "Gives up your Imp: you heal by the HP it had left and your magic rises (x1.5) for a while.",
+  mpCost: 0,
+  target: "ally",
+  area: "single",
+  notSelf: true,
+  effect: {
+    type: "sacrifice",
+    modifier: {
+      name: "Dark Pact",
+      stat: "magic",
+      op: "mul",
+      value: 1.5,
+      duration: 150,
+      harmful: false,
+    },
+  },
+};
+
 /** Warlock: a heavy shadow bolt paid for with the Warlock's own HP. */
 export const bloodBolt: Skill = {
   id: "blood-bolt",
@@ -1122,6 +1172,8 @@ export const skills = [
   bloodBolt,
   firebolt,
   summonImp,
+  curse,
+  sacrifice,
   vanish,
   shadowstep,
   aegis,
@@ -1309,7 +1361,7 @@ export const warlock: CombatantDef = {
     speed: 10,
   },
   weapon: grimoire,
-  skills: [drain, bloodBolt, summonImp],
+  skills: [drain, bloodBolt, summonImp, curse, sacrifice],
   preferredRow: 2,
 };
 

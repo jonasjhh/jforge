@@ -55,6 +55,11 @@ function skillDamage(def: CombatantDef, skill: Skill): number {
     }
   } else if (effect.type === "damage" || effect.type === "shatter") {
     damage = def.stats.magic * effect.power;
+  } else if (effect.type === "status" && effect.status.effect === "damage") {
+    // Damage over time (Curse), counted like a weapon's on-hit poison.
+    const { status } = effect;
+    damage =
+      ON_HIT_SHARE * def.stats[status.stat] * status.power * status.ticks;
   } else if (effect.type === "status" && effect.status.effect === "bomb") {
     // A delayed blast around its carrier: counted as a plus, cast slowly.
     const { status } = effect;

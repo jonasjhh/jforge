@@ -445,6 +445,16 @@ cell) and its `area` which cells it hits around the aimed one.
   **Imp** (30 HP, fast, melee claws, Firebolt 4 MP) lasts until knocked out
   or replaced. Summons **vanish** when knocked out (no body), don't count
   toward the 5-unit party limit, and don't keep a lost battle going.
+- **Curse** (Warlock): 6 MP, one enemy, a harmful shadow `damage` status
+  (0.3 x magic per tick, 5 ticks every 30 game time), like poison. The
+  threat estimate counts a damage-over-time skill as damage (a quarter of
+  its total, as for a poisoning bite), not as a support skill.
+- **Sacrifice** (Warlock): 0 MP, aimed at one of the caster's own living
+  summons (the Imp). The summon vanishes, the Warlock heals by the HP it
+  had left, and gains **Dark Pact** (magic x1.5 for 150 game time, a
+  helpful modifier; recasting refreshes it). The AI weighs the healing
+  and the boost against the Imp, counted for as much of a summon's worth
+  as it has HP left, so it gives up a hurt Imp sooner.
 - **Haste / Slow / Quicken** (Chronomancer): Haste and Slow are timed
   speed modifiers (x1.5 / x0.5 for 150 game time) applied by a `modify`
   skill effect; Slow is harmful, so Cure removes it. Quicken (a `gauge`
@@ -654,7 +664,8 @@ Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all 
 front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an enemy and its neighbours, Rewind gives an ally back the HP it lost since its last turn), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
-Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
+Imp on the field, Curse wears an enemy down, Sacrifice gives up the Imp
+for HP and a magic boost), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields
 an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),

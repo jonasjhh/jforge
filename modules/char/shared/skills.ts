@@ -71,7 +71,15 @@ export function effectSummary(skill: Skill): string {
         const st = effect.status;
         return `bomb: ${st.damageType} damage ×${st.power} ${st.stat} after ${st.interval}, plus`;
       }
+      if (effect.status.effect === "damage") {
+        const st = effect.status;
+        return `${st.damageType ?? ""} damage ×${st.power} ${st.stat} over ${st.ticks} ticks${shape}`;
+      }
       return `status${shape}`;
+    case "sacrifice": {
+      const m = effect.modifier;
+      return `gives up a summon: heals by its HP, ${m.stat} ×${m.value} for ${m.duration}`;
+    }
     case "rewind":
       return `gives back the HP lost since its last turn${shape}`;
     case "restoreMp":

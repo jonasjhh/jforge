@@ -105,6 +105,18 @@ export function validateSkill(
     }
     return null;
   }
+  if (skill.effect.type === "sacrifice") {
+    const summoned = unitAt(state, cell);
+    if (
+      !summoned ||
+      summoned.obstacle ||
+      !isAlive(summoned) ||
+      summoned.summonedBy !== unit.id
+    ) {
+      return `${skill.name} needs one of your summons`;
+    }
+    return null;
+  }
   if (skill.effect.type === "revive") {
     const fallen = unitAt(state, cell);
     if (!fallen || fallen.side !== unit.side || fallen.obstacle) {
@@ -390,6 +402,20 @@ function applySkill(
   }
   if (skill.effect.type === "rescue") {
     if (aimedAt && isAlive(aimedAt)) rescue(state, unit, aimedAt, events);
+    return;
+  }
+  if (skill.effect.type === "sacrifice") {
+    const summoned = unitAt(state, cell);
+    if (!summoned || !isAlive(summoned) || summoned.summonedBy !== unit.id) {
+      return;
+    }
+    const left = summoned.hp;
+    vanish(summoned);
+    dropReady(state, summoned.id);
+    events.push({ type: "vanished", unitId: summoned.id });
+    const amount = restoreHp(unit, left);
+    events.push({ type: "heal", unitId: unit.id, amount, hp: unit.hp });
+    applyModifier(state, unit, skill.effect.modifier, events);
     return;
   }
   if (skill.effect.type === "restoreMp") {

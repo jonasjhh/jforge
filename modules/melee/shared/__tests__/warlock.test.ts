@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
-import { bloodBolt, drain, firebolt, summonImp, warlock } from "../content";
+import { act, advance, createBattle, validateCommand } from "../battle";
+import { skillValue } from "../aiSkills";
+import { offenseOf } from "../threat";
+import {
+  bloodBolt,
+  curse,
+  drain,
+  firebolt,
+  sacrifice,
+  summonImp,
+  warlock,
+} from "../content";
 import { unitAt } from "../grid";
 import type { BattleEvent, BattleState, Cell, CombatantDef } from "../types";
 import { def, place } from "./helpers";
@@ -215,5 +225,94 @@ describe("Summon Imp", () => {
       kind: "over",
       winner: "enemy",
     });
+  });
+});
+
+describe("Warlock skills", () => {
+  it("are Drain, Blood Bolt, Summon Imp, Curse and Sacrifice", () => {
+    expect(warlock.skills).toEqual([
+      drain,
+      bloodBolt,
+      summonImp,
+      curse,
+      sacrifice,
+    ]);
+  });
+});
+
+describe("Curse", () => {
+  it("puts shadow damage over time on one enemy, 0.3 x magic per tick", () => {
+    const { events, state } = cast(warlockTurn(), curse.id, foeCell);
+    expect(events.some((e) => e.type === "damage")).toBe(false);
+    const foe = unitAt(state, foeCell)!;
+    expect(foe.statuses[0]).toMatchObject({
+      name: "Cursed",
+      damageType: "shadow",
+      amount: Math.round(0.3 * warlock.stats.magic),
+      ticksLeft: 5,
+    });
+    expect(warlockOf(state).mp).toBe(warlock.stats.maxMp - curse.mpCost);
+  });
+
+  it("counts toward threat as damage, not as a support skill", () => {
+    // Weaker than Blood Bolt, so it adds nothing; as support it would.
+    const without = { ...warlock, skills: [drain, bloodBolt, summonImp] };
+    const withCurse = { ...without, skills: [...without.skills, curse] };
+    expect(offenseOf(withCurse)).toBe(offenseOf(without));
+  });
+});
+
+describe("Sacrifice", () => {
+  const impCell = mine(2, 2);
+  /** The Warlock's next turn, with its Imp at player 2,2. */
+  function withImp(): BattleState {
+    const summoned = cast(warlockTurn(), summonImp.id, impCell).state;
+    const next = advance(summoned).state;
+    expect(next.phase).toEqual({
+      kind: "awaitingCommand",
+      unitId: "player-4-2",
+    });
+    return next;
+  }
+
+  it("gives up the Imp: the Warlock heals by its HP and gains Dark Pact", () => {
+    const start = withImp();
+    warlockOf(start).hp = 30;
+    unitAt(start, impCell)!.hp = 20;
+    const { events, state } = cast(start, sacrifice.id, impCell);
+    expect(imps(state)).toEqual([]);
+    expect(events).toContainEqual({
+      type: "heal",
+      unitId: "player-4-2",
+      amount: 20,
+      hp: 50,
+    });
+    const pact = warlockOf(state).modifiers.find(
+      (m) => m.source === "Dark Pact",
+    );
+    expect(pact).toMatchObject({ stat: "magic", op: "mul", value: 1.5 });
+    expect(warlockOf(state).mp).toBe(warlock.stats.maxMp - summonImp.mpCost);
+  });
+
+  it("needs one of the Warlock's own summons", () => {
+    const start = warlockTurn();
+    const refuse = (cell: Cell) =>
+      validateCommand(start, warlockOf(start), {
+        type: "skill",
+        skillId: sacrifice.id,
+        cell,
+      });
+    expect(refuse(mine(0, 0))).toBe("Sacrifice needs one of your summons");
+    expect(refuse(mine(2, 2))).toBe("Sacrifice needs one of your summons");
+  });
+
+  it("is worth less to the AI the healthier the Imp it gives up", () => {
+    const value = (impHp: number) => {
+      const state = withImp();
+      warlockOf(state).hp = 30;
+      unitAt(state, impCell)!.hp = impHp;
+      return skillValue(state, warlockOf(state), sacrifice, impCell);
+    };
+    expect(value(5)).toBeGreaterThan(value(30));
   });
 });

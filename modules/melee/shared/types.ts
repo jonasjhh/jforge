@@ -312,6 +312,15 @@ export type SkillEffect =
    */
   | { type: "rewind" }
   /**
+   * The caster gives up one of its own summons (the Imp), on the aimed
+   * cell: the summon vanishes, the caster heals by the HP it had left and
+   * gains `modifier` (Sacrifice's magic boost).
+   */
+  | {
+      type: "sacrifice";
+      modifier: Extract<SkillEffect, { type: "modify" }>["modifier"];
+    }
+  /**
    * The caster regains `amount` MP, never above its max (Mana Tap, paid
    * for with HP). Not while its MP is full.
    */

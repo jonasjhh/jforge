@@ -137,6 +137,21 @@ function bombValue(
 }
 
 /**
+ * Giving up a summon is worth the healing its HP gives the caster and the
+ * boost (unless it is already on), less the summon, which counts for as
+ * much of SUMMON_VALUE as it has HP left.
+ */
+function sacrificeValue(caster: Unit, summoned: Unit, boost: string): number {
+  const share = summoned.hp / summoned.base.maxHp;
+  const boosted = caster.modifiers.some((m) => m.source === boost);
+  return (
+    healValue(caster, summoned.hp) +
+    (boosted ? 0 : SUPPORT_VALUE) -
+    SUMMON_VALUE * share
+  );
+}
+
+/**
  * Drawing the enemies' attacks is worth as much as the allies it shields
  * are frail next to the taunter: nothing alone, little for a hurt taunter.
  */
@@ -357,6 +372,8 @@ function victimValue(
       return restoreMpValue(victim);
     case "rewind":
       return sign * healValue(victim, victim.rewindHp - victim.hp);
+    case "sacrifice":
+      return sacrificeValue(unit, victim, effect.modifier.name);
     case "summon":
     case "teleport":
     case "revive":
