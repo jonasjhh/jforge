@@ -228,6 +228,8 @@ export type SkillEffect =
       advance?: boolean;
       pin?: boolean;
       ignite?: boolean;
+      /** Share of the target's defense ignored (Armor Pierce: 0.5). */
+      armorPierce?: number;
     }
   | {
       type: "heal";

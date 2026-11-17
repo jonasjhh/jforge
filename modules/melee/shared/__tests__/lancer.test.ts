@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
-import { hook, lancer, skewer } from "../content";
+import { armorPierce, hook, lancer, skewer } from "../content";
+import { previewDamage } from "../preview";
 import type { BattleEvent, BattleState, Cell, Placement } from "../types";
 import { def, place } from "./helpers";
 
@@ -121,5 +122,33 @@ describe("Hook", () => {
     expect(events.some((e) => e.type === "knockedOut")).toBe(true);
     expect(events.some((e) => e.type === "pushed")).toBe(false);
     expect(unitAtId(after, "enemy-2-1").position).toEqual({ col: 2, row: 1 });
+  });
+});
+
+describe("Armor Pierce", () => {
+  const armored = (defense: number) =>
+    place(def("armored", { maxHp: 10_000, speed: 1, defense }), "enemy", 2, 0);
+
+  it("is the Lancer's third skill", () => {
+    expect(lancer.skills).toEqual([skewer, hook, armorPierce]);
+  });
+
+  it("hits as if the target had half its defense", () => {
+    const state = lancerTurn([armored(40)]);
+    const [self, target] = state.units;
+    const pierced = previewDamage(self!, target!, armorPierce)!.amount;
+    const halved = lancerTurn([armored(20)]);
+    const plain = previewDamage(halved.units[0]!, halved.units[1]!)!.amount;
+    expect(pierced).toBe(plain);
+  });
+
+  it("deals what the preview shows when it lands", () => {
+    const state = lancerTurn([armored(40)]);
+    const [self, target] = state.units;
+    const expected = previewDamage(self!, target!, armorPierce)!.amount;
+    const { events } = perform(state, armorPierce.id, at(2, 0));
+    const hit = events.find((e): e is Damage => e.type === "damage")!;
+    expect(hit.amount).toBeGreaterThanOrEqual(Math.floor(expected * 0.88));
+    expect(hit.amount).toBeLessThanOrEqual(Math.ceil(expected * 1.12));
   });
 });

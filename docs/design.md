@@ -78,6 +78,12 @@ weapon attack (reach, rows, damage type) at a power, with an optional
 (knocked-out units count), the target doesn't move and takes a collision
 instead: x1.5 damage, reported before the blow.
 
+**Armor Pierce** (Lancer): a spear strike at x1.0 where only half the
+target's defense counts (`armorPierce: 0.5` on a strike), 5 MP. Modifiers
+to defense (Shield Wall, Braced) are halved with it; spirit is untouched.
+With DEFENSE_K 50 it adds about a sixth against defense 20 and a quarter
+against 40, so it pays against armored foes and the Knight.
+
 **Defend and Wait** (done): two commands every unit has, always allowed.
 **Defend** spends the whole turn; until the unit acts again, every hit on it
 (weapons, spells, collisions) is halved. Damage over time is not, and the
@@ -612,7 +618,7 @@ skill may break one for a reason worth stating.
 
 Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP, Frost Lance chills), **Healer** (support), **Lancer** (spear: reaches behind the
-front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
+front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its

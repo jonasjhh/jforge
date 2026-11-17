@@ -475,6 +475,7 @@ function applySkill(
             power,
             // A crash into something is impact damage.
             blocked ? "impact" : unit.weapon.damageType,
+            1 - (effect.armorPierce ?? 0),
           ),
           events,
         );

@@ -386,6 +386,18 @@ export const manaTap: Skill = {
   effect: { type: "restoreMp", amount: 15 },
 };
 
+/** Lancer: a thrust between the plates: half the target's defense counts. */
+export const armorPierce: Skill = {
+  id: "armor-pierce",
+  name: "Armor Pierce",
+  description:
+    "A thrust (x1.0) between the plates: only half the target's defense counts.",
+  mpCost: 5,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 1, armorPierce: 0.5 },
+};
+
 /** Lancer: thrusts through the target into the unit right behind it. */
 export const skewer: Skill = {
   id: "skewer",
@@ -1030,6 +1042,7 @@ export const skills = [
   lightningBolt,
   manaTap,
   frostLance,
+  armorPierce,
   skewer,
   hook,
   haste,
@@ -1184,7 +1197,7 @@ export const lancer: CombatantDef = {
     speed: 11,
   },
   weapon: spear,
-  skills: [skewer, hook],
+  skills: [skewer, hook, armorPierce],
   preferredRow: 0,
 };
 
