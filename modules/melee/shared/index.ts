@@ -23,6 +23,7 @@ export {
 export { MOVE_GAUGE_LEFT, validateMove } from "./move";
 export { DEFEND_FACTOR, WAIT_GAUGE_LEFT } from "./stance";
 export { AMBUSH_POWER, isHidden, isStealthed } from "./stealth";
+export { BLESS_DEALT, BLESS_TAKEN } from "./bless";
 export { isTaunting } from "./taunt";
 export { guardianOf, hitVictim } from "./guard";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";

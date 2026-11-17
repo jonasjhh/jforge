@@ -1,3 +1,4 @@
+import { blessDealt, blessTaken } from "./bless";
 import { bombOn, explode } from "./bomb";
 import { cellOf } from "./grid";
 import { nextRandom } from "./rng";
@@ -36,14 +37,19 @@ export function weakenFactor(attacker: Unit): number {
     : 1;
 }
 
+/** Everything the attacker's own statuses do to its hits (Weaken, Blessing). */
+export function dealtFactor(attacker: Unit): number {
+  return weakenFactor(attacker) * blessDealt(attacker);
+}
+
 /**
  * The target's multiplier for `type`: its resistance, times EXPOSE_FACTOR
- * while it is exposed. Immune stays immune.
+ * while it is exposed and BLESS_TAKEN while blessed. Immune stays immune.
  */
 export function resistance(target: Unit, type: DamageType): number {
   const base = target.resistances[type] ?? 1;
   const exposed = target.statuses.some((s) => s.effect === "expose");
-  return exposed ? base * EXPOSE_FACTOR : base;
+  return (exposed ? base * EXPOSE_FACTOR : base) * blessTaken(target);
 }
 
 /**
@@ -118,7 +124,7 @@ export function expectedDamage(
   return Math.max(
     1,
     Math.round(
-      raw * power * multiplier * stanceFactor(target) * weakenFactor(attacker),
+      raw * power * multiplier * stanceFactor(target) * dealtFactor(attacker),
     ),
   );
 }
@@ -153,7 +159,7 @@ export function physicalHit(
     effectiveStat(attacker, "attack") *
       rowFactor(attacker, target) *
       power *
-      weakenFactor(attacker),
+      dealtFactor(attacker),
     effectiveStat(target, "defense") * defenseShare,
     target,
     damageType,
@@ -170,7 +176,7 @@ export function magicalHit(
 ): Hit {
   return mitigate(
     state,
-    power * effectiveStat(caster, "magic") * weakenFactor(caster),
+    power * effectiveStat(caster, "magic") * dealtFactor(caster),
     effectiveStat(target, "spirit"),
     target,
     element,

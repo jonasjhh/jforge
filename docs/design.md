@@ -437,6 +437,13 @@ cell) and its `area` which cells it hits around the aimed one.
   share of its max HP (the Paladin included, obstacles not) heals half
   the damage that got through; no one hurt, no heal. The AI values the
   heal on that ally; the threat estimate counts only the strike.
+- **Blessing** (Paladin): 6 MP, one ally (the Paladin included), a
+  helpful `bless` status for 150 game time; recasting refreshes it. The
+  blessed unit deals x1.2 damage and takes x0.8 of every kind (weapons,
+  spells, damage over time, bombs). Taken is folded into `resistance`, as
+  Expose is; dealt sits beside Weaken in the hit functions, and a blessed
+  caster's damage-over-time statuses and bombs are set x1.2 when applied
+  (`bless.ts`).
 - **Vanish / Shadowstep** (Rogue): **Stealth** is a timed status (one
   silent tick that just ends it). A stealthed unit can't be picked by
   enemies for weapon attacks or single-target skills (areas and poison
@@ -695,7 +702,7 @@ side, ambush from stealth for x2, Poison Blade poisons its hits, Smoke
 Bomb hides an ally, Coup de Grâce finishes the badly hurt), **Paladin** (holy blade; Aegis shields
 an ally, Last Rites keeps an ally from being knocked out, Consecrate
 burns a crowd with holy damage over time, Judgment heals the most-hurt
-ally with its strikes), **Geomancer** (crush
+ally with its strikes, Blessing makes an ally hit harder and take less), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield
 Wall hardens its whole row, Guard takes the hits meant for an ally next

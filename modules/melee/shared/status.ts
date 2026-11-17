@@ -1,3 +1,4 @@
+import { blessDealt } from "./bless";
 import {
   knockOutIfDown,
   reportDefenses,
@@ -32,9 +33,12 @@ export function applyStatus(
   events: BattleEvent[],
 ): void {
   if (def.damageType && resistance(target, def.damageType) === 0) return;
+  // A blessed caster's damage over time and bombs hit harder too.
+  const dealt =
+    def.effect === "damage" || def.effect === "bomb" ? blessDealt(caster) : 1;
   const amount = Math.max(
     1,
-    Math.round(def.power * effectiveStat(caster, def.stat)),
+    Math.round(def.power * effectiveStat(caster, def.stat) * dealt),
   );
   target.statuses = target.statuses.filter((s) => s.id !== def.id);
   target.statuses.push({
@@ -129,6 +133,7 @@ function tick(
     case "weaken":
     case "coat":
     case "smoke":
+    case "bless":
       // Nothing happens on their single tick: they just end.
       break;
     case "bomb":

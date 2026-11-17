@@ -603,6 +603,11 @@ button:not(:disabled):active {
   color: #f5ebd9;
 }
 
+.status-bless {
+  background: #8c7a2e;
+  color: #fff8dc;
+}
+
 .status-coat {
   background: #3f6b2e;
   color: #eaf7e0;

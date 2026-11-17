@@ -78,6 +78,9 @@ export function effectSummary(skill: Skill): string {
       if (effect.status.effect === "coat") {
         return `coats the blade: weapon hits poison for ${effect.status.interval}`;
       }
+      if (effect.status.effect === "bless") {
+        return `blesses an ally: deals ×1.2, takes ×0.8 for ${effect.status.interval}`;
+      }
       if (effect.status.effect === "smoke") {
         return `hides an ally: can't be singled out for ${effect.status.interval}`;
       }

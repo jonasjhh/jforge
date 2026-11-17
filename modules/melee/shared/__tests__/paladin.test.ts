@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
 import {
   aegis,
+  blessing,
   consecrate,
   fireball,
   judgment,
@@ -10,6 +11,7 @@ import {
   venomFangs,
 } from "../content";
 import { skillValue } from "../aiSkills";
+import { previewDamage } from "../preview";
 import { applyStatus } from "../status";
 import type { BattleEvent, BattleState, Cell, StatusDef } from "../types";
 import { def, place } from "./helpers";
@@ -276,10 +278,6 @@ describe("Consecrate", () => {
       paladin.stats.maxMp - 10,
     );
   });
-
-  it("is the Paladin's third skill, before Judgment", () => {
-    expect(paladin.skills).toEqual([aegis, lastRites, consecrate, judgment]);
-  });
 });
 
 describe("Judgment", () => {
@@ -349,5 +347,89 @@ describe("Judgment", () => {
         foeCell,
       );
     expect(value(hurt)).toBeGreaterThan(value(healthy));
+  });
+});
+
+describe("Blessing", () => {
+  /** The Paladin (0,0) is waiting, an ally at 1,0 and a foe at enemy 0,0. */
+  function blessingTurn(): BattleState {
+    const fast = {
+      ...paladin,
+      stats: { ...paladin.stats, speed: 50, attack: 50 },
+    };
+    return advance(
+      createBattle(
+        {
+          placements: [
+            place(fast, "player", 0),
+            place(def("ally", { maxHp: 100, speed: 1 }), "player", 1),
+            place(
+              def("foe", { maxHp: 1000, speed: 1, attack: 40 }),
+              "enemy",
+              0,
+            ),
+          ],
+        },
+        2,
+      ),
+    ).state;
+  }
+  const self: Cell = { side: "player", col: 0, row: 0 };
+  const paladinOf = (s: BattleState) =>
+    s.units.find((u) => u.id === "player-0-0")!;
+  const foeOf = (s: BattleState) => s.units.find((u) => u.id === "enemy-0-0")!;
+
+  it("blesses an ally for 150 game time, for 6 MP", () => {
+    const { state } = cast(blessingTurn(), blessing.id, self);
+    expect(paladinOf(state).statuses).toContainEqual(
+      expect.objectContaining({ id: "blessing", effect: "bless" }),
+    );
+    expect(paladinOf(state).mp).toBe(paladin.stats.maxMp - 6);
+  });
+
+  it("deals x1.2 and takes x0.8 damage", () => {
+    const plain = blessingTurn();
+    const blessed = blessingTurn();
+    applyStatus(
+      blessed,
+      paladinOf(blessed),
+      paladinOf(blessed),
+      statusOf(blessing),
+      [],
+    );
+    const dealt = (s: BattleState) =>
+      previewDamage(paladinOf(s), foeOf(s))!.amount;
+    const taken = (s: BattleState) =>
+      previewDamage(foeOf(s), paladinOf(s))!.amount;
+    expect(Math.abs(dealt(blessed) - dealt(plain) * 1.2)).toBeLessThanOrEqual(
+      1,
+    );
+    expect(Math.abs(taken(blessed) - taken(plain) * 0.8)).toBeLessThanOrEqual(
+      1,
+    );
+  });
+
+  it("makes a blessed caster's damage over time hit harder", () => {
+    const s = blessingTurn();
+    const me = paladinOf(s);
+    me.base.magic = 50; // big enough that x1.2 survives rounding
+    const foe = foeOf(s);
+    const burn = statusOf(consecrate);
+    applyStatus(s, me, foe, burn, []);
+    const plain = foe.statuses.find((st) => st.id === burn.id)!.amount;
+    applyStatus(s, me, me, statusOf(blessing), []);
+    applyStatus(s, me, foe, burn, []);
+    const blessed = foe.statuses.find((st) => st.id === burn.id)!.amount;
+    expect(blessed).toBeGreaterThan(plain);
+  });
+
+  it("is the Paladin's fifth skill", () => {
+    expect(paladin.skills).toEqual([
+      aegis,
+      lastRites,
+      consecrate,
+      judgment,
+      blessing,
+    ]);
   });
 });

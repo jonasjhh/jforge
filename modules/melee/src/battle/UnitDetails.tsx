@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import {
   AMBUSH_POWER,
+  BLESS_DEALT,
+  BLESS_TAKEN,
   EXPOSE_FACTOR,
   WEAKEN_FACTOR,
   effectiveStat,
@@ -62,6 +64,8 @@ function statusText(status: Status, speed: number): string {
       return "Coated blade: every weapon hit poisons its target.";
     case "smoke":
       return "In smoke: enemies can't single it out (areas still hit it).";
+    case "bless":
+      return `Blessed: deals ×${BLESS_DEALT} damage and takes ×${BLESS_TAKEN}.`;
     case "bomb":
       return `Explodes when time runs out or it falls: ${status.amount} ${status.damageType ?? ""} damage to it and its neighbours.`;
   }

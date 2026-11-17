@@ -159,7 +159,8 @@ export interface StatusDef {
     | "weaken"
     | "bomb"
     | "coat"
-    | "smoke";
+    | "smoke"
+    | "bless";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */

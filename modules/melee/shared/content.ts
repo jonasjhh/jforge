@@ -607,6 +607,30 @@ export const drain: Skill = {
 };
 
 /** Warlock: shadow damage over time on one enemy. */
+/** Paladin: one ally deals more damage and takes less for a while. */
+export const blessing: Skill = {
+  id: "blessing",
+  name: "Blessing",
+  description:
+    "Bless an ally: it deals x1.2 damage and takes x0.8 for a while.",
+  mpCost: 6,
+  target: "ally",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "blessing",
+      name: "Blessing",
+      effect: "bless",
+      harmful: false,
+      stat: "magic",
+      power: 0,
+      interval: 150,
+      ticks: 1,
+    },
+  },
+};
+
 /** Paladin: a strike that heals its most-hurt ally by half the damage. */
 export const judgment: Skill = {
   id: "judgment",
@@ -1268,6 +1292,7 @@ export const skills = [
   curse,
   consecrate,
   judgment,
+  blessing,
   sacrifice,
   vanish,
   shadowstep,
@@ -1502,7 +1527,7 @@ export const paladin: CombatantDef = {
     speed: 9,
   },
   weapon: blessedBlade,
-  skills: [aegis, lastRites, consecrate, judgment],
+  skills: [aegis, lastRites, consecrate, judgment, blessing],
   preferredRow: 0,
 };
 
