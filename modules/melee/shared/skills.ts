@@ -4,6 +4,7 @@ import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isStealthed } from "./stealth";
 import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
+import { CHILL_SLOW } from "./chill";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
 import { rescue, rescueBlock } from "./rescue";
@@ -495,6 +496,9 @@ function applySkill(
           effect.element,
         );
         const suffered = applyDamage(state, target, hit, events);
+        if (effect.chill && isAlive(target) && !target.obstacle) {
+          applyModifier(state, target, CHILL_SLOW, events);
+        }
         if (effect.burnMp && isAlive(target) && target.mp > 0) {
           const amount = Math.min(target.mp, effect.burnMp);
           target.mp -= amount;

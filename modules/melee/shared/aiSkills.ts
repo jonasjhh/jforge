@@ -7,6 +7,7 @@ import {
   wouldKnockOut,
 } from "./damage";
 import { previewDamage } from "./preview";
+import { CHILL_SLOW } from "./chill";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
 import { pushDestination } from "./push";
@@ -209,6 +210,21 @@ function pinValue(victim: Unit, amount: number): number {
     : SUPPORT_VALUE;
 }
 
+/**
+ * A chill is a small slow: worth half SUPPORT_VALUE, unless the hit knocks
+ * the foe out or it is already chilled.
+ */
+function chillValue(
+  victim: Unit,
+  effect: Extract<SkillEffect, { type: "damage" }>,
+  amount: number,
+): number {
+  if (!effect.chill || amount >= victim.hp) return 0;
+  return victim.modifiers.some((m) => m.source === CHILL_SLOW.name)
+    ? 0
+    : SUPPORT_VALUE / 2;
+}
+
 /** How much frailer `ally` is than `protector`: 0 (as tough) to 1. */
 function frailer(ally: Unit, protector: Unit): number {
   const toughness = (u: Unit) =>
@@ -258,7 +274,7 @@ function victimValue(
       const amount = previewDamage(unit, victim, skill, shared)?.amount ?? 0;
       const extra =
         effect.type === "damage"
-          ? burnValue(victim, effect)
+          ? burnValue(victim, effect) + chillValue(victim, effect, amount)
           : effect.type === "strike"
             ? strikeExtra(p, unit, victim, effect, amount)
             : 0;

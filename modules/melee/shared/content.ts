@@ -356,6 +356,24 @@ export const lightningBolt: Skill = {
   },
 };
 
+/** Mage: a shard of ice at one enemy, which slows it a little. */
+export const frostLance: Skill = {
+  id: "frost-lance",
+  name: "Frost Lance",
+  description:
+    "Cold damage (x1.1) to one enemy, which is chilled: speed x0.85 for a short while.",
+  mpCost: 6,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "damage",
+    kind: "magical",
+    element: "cold",
+    power: 1.1,
+    chill: true,
+  },
+};
+
 /** Mage: turns its own life into MP, to keep the big spells coming. */
 export const manaTap: Skill = {
   id: "mana-tap",
@@ -1011,6 +1029,7 @@ export const skills = [
   fireArrow,
   lightningBolt,
   manaTap,
+  frostLance,
   skewer,
   hook,
   haste,
@@ -1087,7 +1106,7 @@ export const mage: CombatantDef = {
     speed: 9,
   },
   weapon: staff,
-  skills: [fireball, meteor, lightningBolt, manaTap],
+  skills: [fireball, meteor, lightningBolt, manaTap, frostLance],
   preferredRow: 2,
 };
 

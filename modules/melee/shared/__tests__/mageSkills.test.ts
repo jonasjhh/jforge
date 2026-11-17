@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle, validateCommand } from "../battle";
-import { fireball, lightningBolt, mage, manaTap, meteor } from "../content";
+import { CHILL_SLOW } from "../chill";
+import {
+  fireball,
+  frostLance,
+  lightningBolt,
+  mage,
+  manaTap,
+  meteor,
+} from "../content";
+import { effectiveStat } from "../stats";
 import { skillValue } from "../aiSkills";
 import { offenseOf } from "../threat";
 import type { BattleEvent, BattleState, Cell, Placement } from "../types";
@@ -18,16 +27,22 @@ function mageTurn(others: Placement[], mp?: number): BattleState {
   if (mp !== undefined) start.units[0]!.mp = mp;
   return advance(start).state;
 }
-const foe = (col: number, row: number) =>
-  place(def(`foe${col}${row}`, { maxHp: 10_000, speed: 1 }), "enemy", col, row);
+const foe = (col: number, row: number, maxHp = 10_000) =>
+  place(def(`foe${col}${row}`, { maxHp, speed: 1 }), "enemy", col, row);
 const at = (col: number, row: number): Cell => ({ side: "enemy", col, row });
 const self: Cell = { side: "player", col: 2, row: 2 };
 const MAGE = "player-2-2";
 const unit = (s: BattleState, id: string) => s.units.find((u) => u.id === id)!;
 
 describe("Mage skills", () => {
-  it("are Fireball, Meteor, Lightning Bolt and Mana Tap", () => {
-    expect(mage.skills).toEqual([fireball, meteor, lightningBolt, manaTap]);
+  it("are Fireball, Meteor, Lightning Bolt, Mana Tap and Frost Lance", () => {
+    expect(mage.skills).toEqual([
+      fireball,
+      meteor,
+      lightningBolt,
+      manaTap,
+      frostLance,
+    ]);
   });
 });
 
@@ -93,8 +108,45 @@ describe("Mana Tap", () => {
   });
 
   it("adds nothing to threat", () => {
-    expect(offenseOf(mage)).toBeCloseTo(
-      offenseOf({ ...mage, skills: mage.skills!.slice(0, 3) }),
-    );
+    expect(
+      offenseOf({ ...mage, skills: mage.skills!.slice(0, 4) }),
+    ).toBeCloseTo(offenseOf({ ...mage, skills: mage.skills!.slice(0, 3) }));
+  });
+});
+
+describe("Frost Lance", () => {
+  const cast = (state: BattleState) =>
+    act(state, { type: "skill", skillId: frostLance.id, cell: at(2, 0) });
+
+  it("hits with cold and chills a surviving target: speed x0.85", () => {
+    const state = mageTurn([foe(2, 0)]);
+    const before = effectiveStat(unit(state, "enemy-2-0"), "speed");
+    const { events, state: after } = cast(state);
+    const hit = events.find((e): e is Damage => e.type === "damage")!;
+    expect(hit.damageType).toBe("cold");
+    const chilled = unit(after, "enemy-2-0");
+    expect(chilled.modifiers.map((m) => m.source)).toContain(CHILL_SLOW.name);
+    expect(effectiveStat(chilled, "speed")).toBeCloseTo(before * 0.85);
+    expect(unit(after, MAGE).mp).toBe(mage.stats.maxMp - frostLance.mpCost);
+  });
+
+  it("leaves no chill on a target it knocks out", () => {
+    const { state } = cast(mageTurn([foe(2, 0, 1)]));
+    expect(unit(state, "enemy-2-0").modifiers).toEqual([]);
+  });
+
+  it("is worth more to the AI on a foe not yet chilled", () => {
+    const fresh = mageTurn([foe(2, 0)]);
+    const chilled = mageTurn([foe(2, 0)]);
+    unit(chilled, "enemy-2-0").modifiers.push({
+      stat: "speed",
+      op: "mul",
+      value: CHILL_SLOW.value,
+      source: CHILL_SLOW.name,
+      harmful: true,
+    });
+    const value = (s: BattleState) =>
+      skillValue(s, unit(s, MAGE), frostLance, at(2, 0));
+    expect(value(fresh)).toBeGreaterThan(value(chilled));
   });
 });

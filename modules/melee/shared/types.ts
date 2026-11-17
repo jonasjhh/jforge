@@ -258,6 +258,8 @@ export type SkillEffect =
        * at most `power` (Arcane Wave: 2 shared, at most 1.5 each).
        */
       split?: number;
+      /** Slows a target that survives the hit a little (see chill.ts). */
+      chill?: boolean;
     }
   /**
    * Puts `creature` in the aimed cell on the caster's own side, controlled
