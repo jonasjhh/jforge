@@ -120,6 +120,8 @@ export function describeEvent(
       return `${name(event.unitId)} waits`;
     case "knockedOut":
       return `${name(event.unitId)} is knocked out`;
+    case "exploded":
+      return `${name(event.unitId)}'s ${event.name} explodes!`;
     case "modifierExpired":
       return `${name(event.unitId)}'s ${event.source} wears off`;
     case "battleOver":

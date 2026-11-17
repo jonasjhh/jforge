@@ -555,6 +555,34 @@ export const quicken: Skill = {
   effect: { type: "gauge", to: 1 },
 };
 
+/**
+ * Chronomancer: a bomb on one enemy that goes off when its time runs out,
+ * or as soon as the enemy falls, hitting it and its neighbours.
+ */
+export const timeBomb: Skill = {
+  id: "timeBomb",
+  name: "Time Bomb",
+  description:
+    "Plants a bomb on one enemy. It explodes when time runs out or the enemy falls, hitting it and its neighbours.",
+  mpCost: 10,
+  target: "enemy",
+  area: "single",
+  effect: {
+    type: "status",
+    status: {
+      id: "timeBomb",
+      name: "Time Bomb",
+      effect: "bomb",
+      harmful: true,
+      damageType: "arcane",
+      stat: "magic",
+      power: 1,
+      interval: 90,
+      ticks: 1,
+    },
+  },
+};
+
 /** Warlock: shadow damage that heals the Warlock by half of it. */
 export const drain: Skill = {
   id: "drain",
@@ -1074,6 +1102,7 @@ export const skills = [
   haste,
   slow,
   quicken,
+  timeBomb,
   drain,
   bloodBolt,
   firebolt,
@@ -1244,7 +1273,7 @@ export const chronomancer: CombatantDef = {
     speed: 12,
   },
   weapon: hourglass,
-  skills: [haste, slow, quicken],
+  skills: [haste, slow, quicken, timeBomb],
   preferredRow: 2,
 };
 

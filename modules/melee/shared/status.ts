@@ -4,6 +4,8 @@ import {
   resistance,
   sufferDamage,
 } from "./damage";
+import { explode } from "./bomb";
+import { cellOf } from "./grid";
 import { effectiveStat, isAlive } from "./stats";
 import { restoreHp } from "./units";
 import type {
@@ -91,6 +93,8 @@ export function runDueTicks(
       tick(state, unit, status, events);
       // A damage tick can knock the unit out, which clears its statuses.
       if (!isAlive(unit)) break;
+      // A bomb takes itself off when it goes off.
+      if (!unit.statuses.includes(status)) continue;
       status.ticksLeft -= 1;
       if (status.ticksLeft <= 0) {
         unit.statuses = unit.statuses.filter((s) => s !== status);
@@ -124,6 +128,9 @@ function tick(
     case "guard":
     case "weaken":
       // Nothing happens on their single tick: they just end.
+      break;
+    case "bomb":
+      explode(state, unit, status, cellOf(unit), events);
       break;
     case "damage": {
       const multiplier = status.damageType

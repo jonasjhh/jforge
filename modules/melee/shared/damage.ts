@@ -1,3 +1,5 @@
+import { bombOn, explode } from "./bomb";
+import { cellOf } from "./grid";
 import { nextRandom } from "./rng";
 import { dropReady, vanish } from "./units";
 import { stanceFactor } from "./stance";
@@ -274,6 +276,9 @@ export function knockOutIfDown(
   events: BattleEvent[],
 ): void {
   if (target.hp > 0) return;
+  // A bomb it carries goes off where it fell, after it is reported down.
+  const bomb = bombOn(target);
+  const cell = cellOf(target);
   target.gauge = 0;
   target.defending = undefined;
   target.statuses = [];
@@ -291,4 +296,5 @@ export function knockOutIfDown(
     vanish(target);
     events.push({ type: "vanished", unitId: target.id });
   }
+  if (bomb) explode(state, target, bomb, cell, events);
 }

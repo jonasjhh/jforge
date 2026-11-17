@@ -140,7 +140,9 @@ export interface StatusDef {
    * (see EXPOSE_FACTOR). guard: single-target hits from enemies land on
    * the unit that applied it instead, while it stands (see guard.ts).
    * weaken: every hit it deals is weaker (see WEAKEN_FACTOR). The last
-   * eight just last until they end.
+   * eight just last until they end. bomb: when it ends, or the unit falls
+   * first, it explodes for its amount on the unit and its neighbours on
+   * its side (see bomb.ts).
    */
   effect:
     | "heal"
@@ -152,7 +154,8 @@ export interface StatusDef {
     | "expose"
     | "silence"
     | "guard"
-    | "weaken";
+    | "weaken"
+    | "bomb";
   /** Harmful statuses (poison) are removed by Cure; helpful ones (Regen) are not. */
   harmful: boolean;
   /** For damage ticks: the type resistances apply to. */
@@ -591,6 +594,8 @@ export type BattleEvent =
   | { type: "defended"; unitId: string }
   | { type: "waited"; unitId: string }
   | { type: "knockedOut"; unitId: string }
+  /** A bomb the unit carried went off; its damage events follow. */
+  | { type: "exploded"; unitId: string; name: string }
   | { type: "modifierExpired"; unitId: string; source: string }
   | { type: "battleOver"; winner: Side | null };
 

@@ -450,6 +450,17 @@ cell) and its `area` which cells it hits around the aimed one.
   skill effect; Slow is harmful, so Cure removes it. Quicken (a `gauge`
   effect) fills another ally's gauge so it acts right after this turn;
   not on the caster, a unit already ready, or one that is casting.
+- **Time Bomb** (Chronomancer): 10 MP, one enemy, plants a harmful
+  `bomb` status worth 1.0 x the caster's magic (fixed when planted). It
+  **explodes** when its time runs out (90 game time) or at once when the
+  carrier is knocked out, whichever comes first. The blast covers a plus
+  around the carrier on the carrier's own side only, the carrier
+  included, and hits everyone standing there (boulders too) for its
+  amount as arcane damage: resistances apply, spirit doesn't, as with
+  other damage over time. The bomb comes off before the blast, so it goes
+  off once; a victim the blast knocks out sets off its own bomb in turn.
+  Planting again refreshes the timer; Cure removes it unexploded. The AI
+  values it as the blast's damage on everyone now around the target.
 - **Cure** (Healer): 5 MP, one living ally, removes every **harmful**
   status (Poison) and keeps helpful ones (Regen). Statuses carry a
   harmful flag, so a cleanse needs no list of what to remove. While
@@ -561,9 +572,9 @@ Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 15,
-Normal 19, Hard 25, which is 30% more than Normal) and lean toward the
+Normal 21, Hard 27, about 30% more than Normal) and lean toward the
 front. Budgets are tuned with auto-played battles where both sides use
-their skills and move, to about 99% / 89% / 56% party wins; a test keeps
+their skills and move, to about 100% / 90% / 55% party wins; a test keeps
 each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
@@ -634,7 +645,7 @@ skill may break one for a reason worth stating.
 Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP, Frost Lance chills), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
-Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
+Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an enemy and its neighbours), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2), **Paladin** (holy blade; Aegis shields

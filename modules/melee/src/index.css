@@ -603,6 +603,11 @@ button:not(:disabled):active {
   color: #f5ebd9;
 }
 
+.status-bomb {
+  background: #b34700;
+  color: #fff1e0;
+}
+
 .status-silence {
   background: #3d4a5c;
   color: #e6edf5;

@@ -7,6 +7,7 @@ import {
   wouldKnockOut,
 } from "./damage";
 import { previewDamage } from "./preview";
+import { blastCells } from "./bomb";
 import { CHILL_SLOW } from "./chill";
 import { IGNITE_BURN } from "./ignite";
 import { PIN_SLOW } from "./pin";
@@ -15,7 +16,7 @@ import { WEAKEN_STATUS } from "./weaken";
 import { pushDestination } from "./push";
 import { RESCUE_BRACE } from "./rescue";
 import { healAmount, skillCells, skillVictims } from "./skills";
-import { unitAt } from "./grid";
+import { cellOf, unitAt } from "./grid";
 import { effectiveStat, isAlive } from "./stats";
 import { GAUGE_FULL } from "./timeline";
 import { findSkill } from "./units";
@@ -107,6 +108,32 @@ function statusValue(
   }
   // Shield, ward, stealth: helpful on the side it's meant for.
   return (status.harmful ? -sign : sign) * SUPPORT_VALUE;
+}
+
+/**
+ * A bomb is worth the damage its blast would do to everyone now around the
+ * carrier, as damage over time is. Nothing on a unit already carrying one.
+ */
+function bombValue(
+  state: BattleState,
+  p: TargetingProfile,
+  unit: Unit,
+  carrier: Unit,
+  status: StatusDef,
+): number {
+  if (carrier.statuses.some((s) => s.effect === "bomb")) return 0;
+  const amount = Math.max(
+    1,
+    Math.round(status.power * effectiveStat(unit, status.stat)),
+  );
+  const type = status.damageType ?? "arcane";
+  let value = 0;
+  for (const cell of blastCells(cellOf(carrier))) {
+    const victim = unitAt(state, cell);
+    if (!victim || !isAlive(victim)) continue;
+    value += hitValue(p, unit, victim, amount * resistance(victim, type));
+  }
+  return OVER_TIME * value;
 }
 
 /**
@@ -298,6 +325,9 @@ function victimValue(
       if (effect.status.effect === "guard") return guardValue(unit, victim);
       if (effect.status.effect === "silence") {
         return silenceValue(state, victim);
+      }
+      if (effect.status.effect === "bomb") {
+        return -sign * bombValue(state, p, unit, victim, effect.status);
       }
       return statusValue(p, unit, victim, effect.status, friend);
     case "modify": {

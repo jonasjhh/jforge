@@ -66,6 +66,12 @@ export function effectSummary(skill: Skill): string {
       const change = m.op === "mul" ? `×${m.value}` : signed(m.value);
       return `${m.stat} ${change} for ${m.duration}${shape}`;
     }
+    case "status":
+      if (effect.status.effect === "bomb") {
+        const st = effect.status;
+        return `bomb: ${st.damageType} damage ×${st.power} ${st.stat} after ${st.interval}, plus`;
+      }
+      return `status${shape}`;
     case "restoreMp":
       return `restores ${effect.amount} MP${shape}`;
     default:

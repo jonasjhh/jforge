@@ -55,6 +55,14 @@ function skillDamage(def: CombatantDef, skill: Skill): number {
     }
   } else if (effect.type === "damage" || effect.type === "shatter") {
     damage = def.stats.magic * effect.power;
+  } else if (effect.type === "status" && effect.status.effect === "bomb") {
+    // A delayed blast around its carrier: counted as a plus, cast slowly.
+    const { status } = effect;
+    damage = def.stats[status.stat] * status.power * AREA_REACH.plus * 0.75;
+    if (skill.mpCost > 0) {
+      damage *= Math.min(1, def.stats.maxMp / skill.mpCost / FULL_CASTS);
+    }
+    return damage;
   } else return 0;
   damage *= AREA_REACH[skill.area];
   // A split spell deals its total however many it catches.
