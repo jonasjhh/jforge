@@ -448,6 +448,10 @@ cell) and its `area` which cells it hits around the aimed one.
   weapon attacks or single-target skills, as with stealth; area skills
   and damage over time still hit it, and it still covers units behind
   it. Unlike stealth, acting doesn't end it and it gives no ambush.
+- **Coup de Grâce** (Rogue): 8 MP, a single-enemy strike x1.0 that hits
+  x2.5 against a target below 30% of its max HP (`finisher` on the
+  strike; the threshold lives in `finisher.ts`). The preview and the AI
+  see the finishing hit; the threat estimate counts the base x1.0.
 - **Drain / Blood Bolt / Summon Imp** (Warlock): damage effects can
   **drain** (heal the caster by a share of the damage dealt; nothing from
   an immune target). Skills can cost **HP**, refused unless the caster has
@@ -679,7 +683,7 @@ Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field, Curse wears an enemy down, Sacrifice gives up the Imp
 for HP and a magic boost), **Rogue** (Vanish into stealth, Shadowstep anywhere on its
 side, ambush from stealth for x2, Poison Blade poisons its hits, Smoke
-Bomb hides an ally), **Paladin** (holy blade; Aegis shields
+Bomb hides an ally, Coup de Grâce finishes the badly hurt), **Paladin** (holy blade; Aegis shields
 an ally, Last Rites keeps an ally from being knocked out), **Geomancer** (crush
 and impact; raises boulders, shatters them on crowds, heaves units back),
 **Knight** (protector of the line: heavy and slow, with a lance; Shield

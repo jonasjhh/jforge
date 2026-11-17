@@ -792,6 +792,17 @@ export const smokeBomb: Skill = {
   },
 };
 
+/** Rogue: a dagger strike that hits a badly hurt enemy far harder. */
+export const coupDeGrace: Skill = {
+  id: "coupDeGrace",
+  name: "Coup de Grâce",
+  description: "A dagger strike; against an enemy below 30% HP it deals x2.5.",
+  mpCost: 8,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 1, finisher: 2.5 },
+};
+
 /** Rogue: steps to any empty cell on its side, for half a turn. */
 export const shadowstep: Skill = {
   id: "shadowstep",
@@ -1224,6 +1235,7 @@ export const skills = [
   shadowstep,
   poisonBlade,
   smokeBomb,
+  coupDeGrace,
   aegis,
   lastRites,
   raiseBoulder,
@@ -1430,7 +1442,7 @@ export const rogue: CombatantDef = {
     speed: 15,
   },
   weapon: daggers,
-  skills: [vanish, shadowstep, poisonBlade, smokeBomb],
+  skills: [vanish, shadowstep, poisonBlade, smokeBomb, coupDeGrace],
   preferredRow: 1,
 };
 

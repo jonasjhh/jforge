@@ -3,6 +3,7 @@ import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
 import { canReach, reachableTargets } from "./reach";
 import { breakStealth, isHidden } from "./stealth";
 import { poisonOnHit } from "./coat";
+import { finisherFactor } from "./finisher";
 import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
 import { CHILL_SLOW } from "./chill";
@@ -501,7 +502,11 @@ function applySkill(
             ...(blocker ? { blockerId: blocker.id } : {}),
           });
         }
-        const power = effect.power * (blocked ? COLLISION_POWER : 1) * ambush;
+        const power =
+          effect.power *
+          (blocked ? COLLISION_POWER : 1) *
+          finisherFactor(effect, target) *
+          ambush;
         const hit = physicalHit(
           state,
           unit,

@@ -240,6 +240,11 @@ export type SkillEffect =
       /** Share of the target's defense ignored (Armor Pierce: 0.5). */
       armorPierce?: number;
       /**
+       * Power multiplier on a target below FINISH_BELOW of its max HP
+       * (Coup de Grâce: 2.5, see finisher.ts).
+       */
+      finisher?: number;
+      /**
        * Share of a full gauge a surviving target loses, unless casting
        * (Staggering Thrust: 0.25, see stagger.ts).
        */

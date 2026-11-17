@@ -1,4 +1,5 @@
 import { charged } from "./charge";
+import { finisherFactor } from "./finisher";
 import { expectedDamage, resistance, wouldKnockOut } from "./damage";
 import { AMBUSH_POWER, isStealthed } from "./stealth";
 import { spellPower } from "./status";
@@ -33,7 +34,11 @@ export function previewDamage(
   let hit: ["physical" | "magical", number, DamageType];
   if (!effect) hit = ["physical", ambush, attacker.weapon.damageType];
   else if (effect.type === "strike") {
-    hit = ["physical", effect.power * ambush, attacker.weapon.damageType];
+    hit = [
+      "physical",
+      effect.power * finisherFactor(effect, target) * ambush,
+      attacker.weapon.damageType,
+    ];
   } else if (effect.type === "damage") {
     hit = [
       "magical",

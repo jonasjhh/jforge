@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle, validateCommand } from "../battle";
 import {
+  coupDeGrace,
   fireball,
   poisonBlade,
   rogue,
@@ -14,6 +15,7 @@ import { reachableTargets } from "../reach";
 import { skillVictims } from "../skills";
 import { offenseOf } from "../threat";
 import { POISON } from "../poison";
+import { previewDamage } from "../preview";
 import type { BattleState, Cell, Skill } from "../types";
 import { def, place } from "./helpers";
 
@@ -81,7 +83,13 @@ const coated = () =>
 
 describe("Rogue skills", () => {
   it("are Vanish, Shadowstep, Poison Blade and Smoke Bomb", () => {
-    expect(rogue.skills).toEqual([vanish, shadowstep, poisonBlade, smokeBomb]);
+    expect(rogue.skills).toEqual([
+      vanish,
+      shadowstep,
+      poisonBlade,
+      smokeBomb,
+      coupDeGrace,
+    ]);
   });
 });
 
@@ -154,5 +162,33 @@ describe("Smoke Bomb", () => {
     ).toBe("ally can't be seen");
     const victims = skillVictims(state, caster, fireball, mine(1, 0));
     expect(victims.map((u) => u.id)).toContain(ALLY);
+  });
+});
+
+describe("Coup de Grâce", () => {
+  /** The foe's HP set to `share` of its max, then the hit it takes. */
+  function hitAt(share: number, skillId = coupDeGrace.id): number {
+    const s = rogueTurn();
+    const foe = unit(s, FOE);
+    foe.hp = Math.round(foe.base.maxHp * share);
+    const before = foe.hp;
+    return before - unit(cast(s, skillId, foeCell).state, FOE).hp;
+  }
+
+  it("hits like a plain strike on a healthy target", () => {
+    expect(hitAt(0.5)).toBe(hitAt(0.5, "stab"));
+  });
+
+  it("hits far harder below 30% HP", () => {
+    expect(hitAt(0.29)).toBeGreaterThan(2 * hitAt(0.29, "stab"));
+  });
+
+  it("previews the finishing hit", () => {
+    const s = rogueTurn();
+    const foe = unit(s, FOE);
+    const healthy = previewDamage(unit(s, ROGUE), foe, coupDeGrace);
+    foe.hp = Math.round(foe.base.maxHp * 0.2);
+    const hurt = previewDamage(unit(s, ROGUE), foe, coupDeGrace);
+    expect(hurt!.amount).toBeGreaterThan(2 * healthy!.amount);
   });
 });
