@@ -2,6 +2,7 @@ import {
   STAT_NAMES,
   content,
   type CombatantDef,
+  type Skill,
   type Stats,
 } from "@jforge/melee/shared";
 import { canUse } from "./gear";
@@ -29,6 +30,10 @@ export const MELEE_SKILL_LEVELS = [1, 2, 4, 6, 8, 10];
 export const meleeClassId = (id: string) => `melee-${id}`;
 export const meleeHeroId = (id: string) => `melee-hero-${id}`;
 export const meleeWeaponId = (id: string) => `melee-gear-${id}`;
+export const meleeCreatureId = (id: string) => `melee-creature-${id}`;
+
+/** Melee's summoned creatures, which char keeps as enemy types. */
+export const MELEE_CREATURES: CombatantDef[] = [content.imp, content.boulder];
 
 /** A hero of each melee class, by melee type id. */
 export const MELEE_HEROES: Record<string, string> = {
@@ -195,6 +200,36 @@ export function starterKit(library: Library, character: Character): Character {
   return { ...character, gear };
 }
 
+/** A melee creature as an enemy type, with melee's stats at MELEE_CLASS_LEVEL. */
+export function creatureFromMelee(def: CombatantDef): Archetype {
+  return {
+    ...classFromMelee(def),
+    id: meleeCreatureId(def.id),
+    kind: "enemy",
+    ...(def.obstacle ? { obstacle: true } : {}),
+  };
+}
+
+/**
+ * `skill` with its summon pointing at the enemy type char keeps for its
+ * creature, if it is one of melee's, so char compiles it from that type.
+ */
+export function withCreatureSource(skill: Skill): Skill {
+  const { effect } = skill;
+  if (effect.type !== "summon" || effect.source) return skill;
+  if (!MELEE_CREATURES.some((c) => c.id === effect.creature.id)) return skill;
+  return {
+    ...skill,
+    effect: {
+      ...effect,
+      source: {
+        archetypeId: meleeCreatureId(effect.creature.id),
+        level: MELEE_CLASS_LEVEL,
+      },
+    },
+  };
+}
+
 /** Every melee class, in melee's order. */
 export function meleeClasses(): Archetype[] {
   return content.playerTypes.map(classFromMelee);
@@ -210,8 +245,11 @@ export function withMeleeClasses(library: Library): Library {
   const skills = new Set(library.skills.map((s) => s.id));
   const gearIds = new Set(library.gear.map((g) => g.id));
   const people = new Set(library.characters.map((c) => c.id));
-  const missing = meleeClasses().filter((a) => !types.has(a.id));
-  const learned = content.playerTypes
+  const missing = [
+    ...meleeClasses(),
+    ...MELEE_CREATURES.map(creatureFromMelee),
+  ].filter((a) => !types.has(a.id));
+  const learned = [...content.playerTypes, ...MELEE_CREATURES]
     .flatMap((def) => def.skills ?? [])
     .filter((s) => !skills.has(s.id) && skills.add(s.id));
   const gear = basicGear().filter((g) => !gearIds.has(g.id));
@@ -228,7 +266,10 @@ export function withMeleeClasses(library: Library): Library {
   }
   const added: Library = {
     ...library,
-    skills: [...library.skills, ...learned.map((s) => structuredClone(s))],
+    skills: [
+      ...library.skills,
+      ...learned.map((s) => withCreatureSource(structuredClone(s))),
+    ],
     gear: [...library.gear, ...gear],
     archetypes: [...library.archetypes, ...missing],
   };

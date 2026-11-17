@@ -217,7 +217,10 @@ function isArchetype(v: unknown): boolean {
     isNumber(v.preferredRow) &&
     (v.proficiencies === undefined ||
       (Array.isArray(v.proficiencies) &&
-        v.proficiencies.every((c) => ALL_GEAR_CATEGORIES.includes(c as never))))
+        v.proficiencies.every((c) =>
+          ALL_GEAR_CATEGORIES.includes(c as never),
+        ))) &&
+    (v.obstacle === undefined || typeof v.obstacle === "boolean")
   );
 }
 

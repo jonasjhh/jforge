@@ -764,8 +764,8 @@ Ideas to build in small steps, roughly in this order when they fit:
 
 **Bootstrapped** (`modules/char`). A library of four lists, all plain data:
 
-- **Skills**: melee's own `Skill` type. The designer edits spell damage,
-  weapon strikes, heals and buffs/debuffs; other effects pass through.
+- **Skills**: melee's own `Skill` type. The designer edits every effect
+  and option melee has (see **Skill designer** below).
 - **Gear**: a slot (weapon, armor, accessory) and stat bonuses (`add` or
   `mul`). A weapon also says how it attacks (melee's `Weapon`). Weapons
   and armor can have a **category**: blade, polearm, dagger, bow, staff or
@@ -787,6 +787,28 @@ out, so it adds no stats and no weapon, and the character editor marks it
 "(can't use)" and offers only what fits. The class editor sets the list
 ("Any gear" or a choice of categories); the gear editor sets a piece's
 category.
+
+**Skill designer** (`shared/effectFields.ts`): every effect kind, every
+option on it, every kind of status and the skill's own fields (MP and HP
+cost, cast time, target, area, not on itself, only next to the caster,
+not from the front row, half a turn) are described once as data, with
+labels and defaults; the editor draws its form from that table, so a new
+option in melee is one entry there. An option at its default (a strike
+with no push, a flag that is off) is left out of the saved skill. A status
+shows the strengths its kind has (Blessing's dealt and taken, Expose's
+taken, ...), at melee's defaults until changed; picking another kind of
+status starts it from that kind's defaults. `skillProblems` checks every
+kind (power above 0, a duration, a gauge share, a summon's type).
+
+**Summons are enemy types**: a summon picks an enemy type and a level,
+saved on the effect as its `source`. The creature is compiled from the
+type then, and again whenever the roster is compiled, so edits to the
+type reach it; if the type is deleted the creature saved last is used and
+the editor says the type is gone. A creature's own summons are compiled
+one level deep (`SUMMON_DEPTH` 2), so a type that summons itself still
+compiles. Melee's Imp and boulder are enemy types too (`melee-creature-imp`,
+`melee-creature-boulder`, at melee's stats at level 3; an archetype can be
+an `obstacle`), and Summon Imp and Raise Boulder point at them.
 
 **Melee's classes** (`shared/melee.ts`): every melee class is also a char
 class (`melee-fighter`, ...), in the starter library and added to saved

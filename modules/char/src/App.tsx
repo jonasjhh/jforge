@@ -128,7 +128,13 @@ export function App() {
           onNew={() => add("skills", blankSkill)}
           onDelete={drop("skills")}
         >
-          {(skill) => <SkillEditor skill={skill} onChange={save("skills")} />}
+          {(skill) => (
+            <SkillEditor
+              skill={skill}
+              library={library}
+              onChange={save("skills")}
+            />
+          )}
         </Collection>
       )}
       {tab === "Gear" && (

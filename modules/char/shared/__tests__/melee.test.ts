@@ -6,6 +6,7 @@ import { blankCharacter, emptyLibrary, parseLibrary } from "../library";
 import {
   BASIC_ARMOR,
   MELEE_CLASS_LEVEL,
+  MELEE_CREATURES,
   MELEE_HEROES,
   MELEE_PROFICIENCIES,
   basicGear,
@@ -17,6 +18,7 @@ import {
   meleeWeaponId,
   starterKit,
   withMeleeClasses,
+  meleeCreatureId,
 } from "../melee";
 import { statsAtLevel } from "../progression";
 import { starterLibrary } from "../starter";
@@ -71,9 +73,10 @@ describe("classFromMelee", () => {
 describe("withMeleeClasses", () => {
   it("adds every melee class and the skills they learn", () => {
     const library = withMeleeClasses(emptyLibrary());
-    expect(library.archetypes.map((a) => a.id)).toEqual(
-      playerTypes.map((def) => meleeClassId(def.id)),
-    );
+    expect(library.archetypes.map((a) => a.id)).toEqual([
+      ...playerTypes.map((def) => meleeClassId(def.id)),
+      ...MELEE_CREATURES.map((def) => meleeCreatureId(def.id)),
+    ]);
     const skills = new Set(library.skills.map((s) => s.id));
     expect(skills.size).toBe(library.skills.length);
     for (const type of meleeClasses()) {
@@ -88,7 +91,9 @@ describe("withMeleeClasses", () => {
       archetypes: [renamed],
     });
     expect(library.archetypes[0]).toBe(renamed);
-    expect(library.archetypes).toHaveLength(playerTypes.length);
+    expect(library.archetypes).toHaveLength(
+      playerTypes.length + MELEE_CREATURES.length,
+    );
     expect(withMeleeClasses(library)).toBe(library);
   });
 

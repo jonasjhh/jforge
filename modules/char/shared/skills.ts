@@ -1,42 +1,61 @@
-import type { Skill, SkillEffect } from "@jforge/melee/shared";
+import {
+  FINISH_BELOW,
+  strengthsOf,
+  type Skill,
+  type SkillEffect,
+  type StatusDef,
+} from "@jforge/melee/shared";
+import { creatureOf } from "./compile";
+import { clampLevel } from "./progression";
+import { EFFECTS, EFFECT_TYPES, type EffectType } from "./effectFields";
+import type { Library } from "./types";
 
-/** The effects the skill designer can edit. Others pass through untouched. */
-export const EDITABLE_EFFECTS = ["damage", "strike", "heal", "modify"] as const;
-export type EditableEffect = (typeof EDITABLE_EFFECTS)[number];
+/** Every effect the skill designer can edit: all of melee's. */
+export const EDITABLE_EFFECTS = EFFECT_TYPES;
+export type EditableEffect = EffectType;
 
-export const EFFECT_LABELS: Record<EditableEffect, string> = {
-  damage: "Spell damage",
-  strike: "Weapon strike",
-  heal: "Heal",
-  modify: "Buff or debuff",
-};
+export const EFFECT_LABELS = Object.fromEntries(
+  EFFECT_TYPES.map((type) => [type, EFFECTS[type].label]),
+) as Record<EffectType, string>;
 
+/** True for every effect melee knows; false only for unknown data. */
 export function isEditable(effect: SkillEffect): boolean {
-  return (EDITABLE_EFFECTS as readonly string[]).includes(effect.type);
+  return effect.type in EFFECTS;
 }
 
-/** A sensible starting effect of each kind. */
-export function defaultEffect(type: EditableEffect): SkillEffect {
-  switch (type) {
-    case "damage":
-      return { type: "damage", kind: "magical", element: "fire", power: 1 };
-    case "strike":
-      return { type: "strike", power: 1.5 };
-    case "heal":
-      return { type: "heal", power: 1 };
-    case "modify":
-      return {
-        type: "modify",
-        modifier: {
-          name: "Boost",
-          stat: "attack",
-          op: "mul",
-          value: 1.5,
-          duration: 100,
-          harmful: false,
-        },
-      };
+/**
+ * A sensible starting effect of each kind. A summon takes the library's
+ * first enemy type, at level 1, when there is one.
+ */
+export function defaultEffect(
+  type: EditableEffect,
+  library?: Library,
+): SkillEffect {
+  const effect = EFFECTS[type].make();
+  const first = library?.archetypes.find((a) => a.kind === "enemy");
+  if (effect.type === "summon" && library && first) {
+    return withSummonSource(library, effect, first.id, 1);
   }
+  return effect;
+}
+
+/**
+ * A summon set to make an enemy type at a level: the creature is compiled
+ * from it now, and again whenever the roster is compiled.
+ */
+export function withSummonSource(
+  library: Library,
+  effect: Extract<SkillEffect, { type: "summon" }>,
+  archetypeId: string,
+  level: number,
+): SkillEffect {
+  const at = clampLevel(level);
+  const creature = creatureOf(library, archetypeId, at);
+  return {
+    ...effect,
+    source: { archetypeId, level: at },
+    ...(creature ? { creature } : {}),
+  };
 }
 
 /**
@@ -44,11 +63,13 @@ export function defaultEffect(type: EditableEffect): SkillEffect {
  * also gives it a target that makes sense.
  */
 export function defaultTarget(effect: SkillEffect): Skill["target"] {
-  if (effect.type === "heal") return "ally";
   if (effect.type === "modify")
     return effect.modifier.harmful ? "enemy" : "ally";
-  return "enemy";
+  if (effect.type === "status") return effect.status.harmful ? "enemy" : "ally";
+  return EFFECTS[effect.type]?.target ?? "enemy";
 }
+
+const pct = (share: number) => `${Math.round(share * 100)}%`;
 
 /** One line on what a skill does, from its data: "Fire damage x1.2, plus". */
 export function effectSummary(skill: Skill): string {
@@ -56,51 +77,89 @@ export function effectSummary(skill: Skill): string {
   const shape = skill.area === "single" ? "" : `, ${skill.area}`;
   switch (effect.type) {
     case "damage":
-      return `${effect.element} damage ×${effect.power}${effect.split ? ` each, ×${effect.split} shared` : ""}${effect.vsEmpowered ? ` (×${effect.vsEmpowered} if empowered)` : ""}${effect.burnMp ? `, burns ${effect.burnMp} MP` : ""}${effect.chill ? ", chills" : ""}${shape}`;
+      return `${effect.element} damage ×${effect.power}${effect.split ? ` each, ×${effect.split} shared` : ""}${effect.vsEmpowered ? ` (×${effect.vsEmpowered} if empowered)` : ""}${effect.drain ? `, drains ${pct(effect.drain)}` : ""}${effect.burnMp ? `, burns ${effect.burnMp} MP` : ""}${effect.chill ? ", chills" : ""}${shape}`;
     case "strike":
-      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.weaken ? ", weakens" : ""}${effect.stagger ? `, staggers ${effect.stagger * 100}%` : ""}${effect.armorPierce ? `, ignores ${effect.armorPierce * 100}% defense` : ""}${effect.finisher ? `, ×${effect.finisher} below 30% HP` : ""}${effect.mend ? `, heals the most-hurt ally ${effect.mend * 100}% of the damage` : ""}${shape}`;
+      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.push ? (effect.push > 0 ? `, pushes ${effect.push}` : `, pulls ${-effect.push}`) : ""}${effect.ignoreCover ? ", past cover" : ""}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.weaken ? `, weakens to ×${effect.weaken}` : ""}${effect.stagger ? `, staggers ${pct(effect.stagger)}` : ""}${effect.armorPierce ? `, ignores ${pct(effect.armorPierce)} defense` : ""}${effect.finisher ? `, ×${effect.finisher} below ${pct(effect.finishBelow ?? FINISH_BELOW)} HP` : ""}${effect.mend ? `, heals the most-hurt ally ${pct(effect.mend)} of the damage` : ""}${shape}`;
     case "heal":
       return `heals ×${effect.power} ${effect.of === "maxHp" ? "max HP" : "magic"}${shape}`;
     case "modify": {
       const m = effect.modifier;
-      const change = m.op === "mul" ? `×${m.value}` : signed(m.value);
-      return `${m.stat} ${change} for ${m.duration}${shape}`;
+      return `${m.stat} ${change(m)} for ${m.duration}${shape}`;
     }
     case "status":
-      if (effect.status.effect === "bomb") {
-        const st = effect.status;
-        return `bomb: ${st.damageType} damage ×${st.power} ${st.stat} after ${st.interval}, plus`;
-      }
-      if (effect.status.effect === "damage") {
-        const st = effect.status;
-        return `${st.damageType ?? ""} damage ×${st.power} ${st.stat} over ${st.ticks} ticks${shape}`;
-      }
-      if (effect.status.effect === "coat") {
-        return `coats the blade: weapon hits poison for ${effect.status.interval}`;
-      }
-      if (effect.status.effect === "stoneSkin") {
-        return `stone skin on an ally: defense ×1.5, unpushable for ${effect.status.interval}`;
-      }
-      if (effect.status.effect === "petrify") {
-        return `petrifies an enemy for ${effect.status.interval}: can't act, takes ×0.5`;
-      }
-      if (effect.status.effect === "bless") {
-        return `blesses an ally: deals ×1.2, takes ×0.8 for ${effect.status.interval}`;
-      }
-      if (effect.status.effect === "smoke") {
-        return `hides an ally: can't be singled out for ${effect.status.interval}`;
-      }
-      return `status${shape}`;
+      return `${statusSummary(effect.status)}${shape}`;
+    case "cleanse":
+      return `removes harmful statuses and debuffs${shape}`;
+    case "teleport":
+      return "moves the caster to an empty cell on its side";
+    case "gauge":
+      return `sets the turn gauge to ${pct(effect.to)}${shape}`;
+    case "summon": {
+      const level = effect.source ? ` (level ${effect.source.level})` : "";
+      const many =
+        effect.limit && effect.limit > 1 ? `, up to ${effect.limit}` : "";
+      return `summons a ${effect.creature.name}${level}${many}${effect.anySide ? ", either side" : ""}`;
+    }
+    case "shatter":
+      return `shatters a boulder: ${effect.element} damage ×${effect.power} around it`;
+    case "heave":
+      return `heaves back ${effect.rows} row${effect.rows === 1 ? "" : "s"}${shape}`;
+    case "revive":
+      return `revives with ×${effect.power} magic HP${shape}`;
+    case "rescue":
+      return "pulls an ally back, the caster takes its place";
     case "sacrifice": {
       const m = effect.modifier;
-      return `gives up a summon: heals by its HP, ${m.stat} ×${m.value} for ${m.duration}`;
+      return `gives up a summon: heals by its HP, ${m.stat} ${change(m)} for ${m.duration}`;
     }
     case "rewind":
       return `gives back the HP lost since its last turn${shape}`;
     case "restoreMp":
       return `restores ${effect.amount} MP${shape}`;
-    default:
-      return `${effect.type}${shape}`;
+  }
+}
+
+function change(m: { op: "add" | "mul"; value: number }): string {
+  return m.op === "mul" ? `×${m.value}` : signed(m.value);
+}
+
+/** What a status does, with its own strengths. */
+function statusSummary(st: StatusDef): string {
+  const s = strengthsOf(st);
+  const lasts = `for ${st.interval}`;
+  switch (st.effect) {
+    case "damage":
+      return `${st.damageType ?? ""} damage ×${st.power} ${st.stat} over ${st.ticks} ticks`;
+    case "heal":
+      return `heals ×${st.power} ${st.stat} over ${st.ticks} ticks`;
+    case "bomb":
+      return `bomb: ${st.damageType} damage ×${st.power} ${st.stat} after ${st.interval}`;
+    case "shield":
+      return `shield of ×${st.power} ${st.stat} ${lasts}`;
+    case "stealth":
+      return `stealth ${lasts}: ambush ×${s.ambush}`;
+    case "smoke":
+      return `hides an ally: can't be singled out ${lasts}`;
+    case "ward":
+      return `can't be knocked out ${lasts}`;
+    case "taunt":
+      return `taunts ${lasts}`;
+    case "guard":
+      return `guards ${lasts}`;
+    case "coat":
+      return `coats the blade: weapon hits poison ${lasts}`;
+    case "bless":
+      return `blesses: deals ×${s.dealt}, takes ×${s.taken} ${lasts}`;
+    case "stoneSkin":
+      return `stone skin: defense ×${s.defense}, unpushable ${lasts}`;
+    case "expose":
+      return `exposes: takes ×${s.taken} ${lasts}`;
+    case "weaken":
+      return `weakens: deals ×${s.dealt} ${lasts}`;
+    case "silence":
+      return `silences ${lasts}`;
+    case "petrify":
+      return `petrifies ${lasts}: can't act, takes ×${s.taken}`;
   }
 }
 
@@ -108,25 +167,51 @@ function signed(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`;
 }
 
-/** What stops a skill from being usable, in words; empty when it is fine. */
-export function skillProblems(skill: Skill): string[] {
+/**
+ * What stops a skill from being usable, in words; empty when it is fine.
+ * With the library, a summon's enemy type is checked too.
+ */
+export function skillProblems(skill: Skill, library?: Library): string[] {
   const problems: string[] = [];
   if (skill.name.trim() === "") problems.push("Give the skill a name.");
   if (skill.mpCost < 0) problems.push("MP cost can't be negative.");
+  if ((skill.hpCost ?? 0) < 0) problems.push("HP cost can't be negative.");
   const { effect } = skill;
-  if (
-    (effect.type === "damage" ||
-      effect.type === "strike" ||
-      effect.type === "heal") &&
-    effect.power <= 0
-  ) {
+  if ("power" in effect && effect.power <= 0) {
     problems.push("Power must be above 0.");
   }
   if (effect.type === "strike" && skill.target !== "enemy") {
     problems.push("A weapon strike must target an enemy.");
   }
-  if (effect.type === "modify" && effect.modifier.duration <= 0) {
+  if (
+    (effect.type === "modify" || effect.type === "sacrifice") &&
+    effect.modifier.duration <= 0
+  ) {
     problems.push("A buff or debuff needs a duration.");
+  }
+  if (effect.type === "status") {
+    if (effect.status.name.trim() === "") problems.push("Name the status.");
+    if (effect.status.interval <= 0 || effect.status.ticks < 1) {
+      problems.push("A status needs a duration.");
+    }
+  }
+  if (effect.type === "gauge" && (effect.to <= 0 || effect.to > 1)) {
+    problems.push("The gauge must be set above 0 and at most full.");
+  }
+  if (effect.type === "heave" && effect.rows < 1) {
+    problems.push("Heave at least one row.");
+  }
+  if (effect.type === "restoreMp" && effect.amount <= 0) {
+    problems.push("Restore at least 1 MP.");
+  }
+  if (effect.type === "summon") {
+    if (!effect.source) problems.push("Pick an enemy type to summon.");
+    else if (
+      library &&
+      !library.archetypes.some((a) => a.id === effect.source!.archetypeId)
+    ) {
+      problems.push("The enemy type it summons is gone.");
+    }
   }
   return problems;
 }

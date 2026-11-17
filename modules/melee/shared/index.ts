@@ -24,6 +24,7 @@ export { MOVE_GAUGE_LEFT, validateMove } from "./move";
 export { DEFEND_FACTOR, WAIT_GAUGE_LEFT } from "./stance";
 export { ambushPower, isHidden, isStealthed } from "./stealth";
 export { STRENGTH_DEFAULTS, strengthsOf, type Strengths } from "./strengths";
+export { FINISH_BELOW } from "./finisher";
 export { isTaunting } from "./taunt";
 export { guardianOf, hitVictim } from "./guard";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";

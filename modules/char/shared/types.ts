@@ -91,6 +91,8 @@ export interface Archetype {
    * can use any. Gear with no category fits everyone either way.
    */
   proficiencies?: GearCategory[];
+  /** Takes up a cell and never acts, like a boulder (for summons). */
+  obstacle?: boolean;
 }
 
 /** One character or enemy: an archetype at a level, wearing gear. */

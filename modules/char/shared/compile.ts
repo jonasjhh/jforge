@@ -36,11 +36,19 @@ export function characterStats(
   return { leveled, total: applyBonuses(leveled, bonuses) };
 }
 
+/**
+ * How deep summons are compiled: a creature's own summons are compiled one
+ * level less, and below that keep the creature they were saved with, so a
+ * type that summons itself still compiles.
+ */
+export const SUMMON_DEPTH = 2;
+
 /** The skills an archetype knows at a level, in the order it learns them. */
 export function unlockedSkills(
   library: Library,
   archetype: Archetype,
   level: number,
+  depth = SUMMON_DEPTH,
 ): Skill[] {
   const at = clampLevel(level);
   return [...archetype.skills]
@@ -48,8 +56,54 @@ export function unlockedSkills(
     .sort((a, b) => a.level - b.level)
     .flatMap((unlock) => {
       const skill = library.skills.find((s) => s.id === unlock.skillId);
-      return skill ? [skill] : [];
+      return skill ? [compileSkill(library, skill, depth)] : [];
     });
+}
+
+/**
+ * The creature an enemy type is at a level, as a summon puts it in: no
+ * gear, its own weapon. Null if the type is gone.
+ */
+export function creatureOf(
+  library: Library,
+  archetypeId: string,
+  level: number,
+  depth = SUMMON_DEPTH,
+): CombatantDef | null {
+  const archetype = library.archetypes.find((a) => a.id === archetypeId);
+  if (!archetype) return null;
+  return {
+    id: archetype.id,
+    name: archetype.name,
+    stats: statsAtLevel(archetype.baseStats, archetype.growth, level),
+    weapon: structuredClone(archetype.weapon),
+    skills: unlockedSkills(library, archetype, level, depth - 1),
+    traits: [...archetype.traits],
+    preferredRow: archetype.preferredRow,
+    portrait: archetype.portrait,
+    ...(archetype.obstacle ? { obstacle: true } : {}),
+  };
+}
+
+/**
+ * `skill` with its summon's creature made again from the enemy type and
+ * level it names, so changes to the type reach the skill. Otherwise, or
+ * when the type is gone, it is the skill as saved.
+ */
+export function compileSkill(
+  library: Library,
+  skill: Skill,
+  depth = SUMMON_DEPTH,
+): Skill {
+  const { effect } = skill;
+  if (effect.type !== "summon" || !effect.source || depth <= 0) return skill;
+  const creature = creatureOf(
+    library,
+    effect.source.archetypeId,
+    effect.source.level,
+    depth,
+  );
+  return creature ? { ...skill, effect: { ...effect, creature } } : skill;
 }
 
 /** The equipped weapon, or the archetype's own when the slot is empty. */

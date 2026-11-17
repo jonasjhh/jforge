@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { content, type Skill } from "@jforge/melee/shared";
 import { blankSkill } from "../library";
+import { starterLibrary } from "../starter";
 import {
   EDITABLE_EFFECTS,
   defaultEffect,
@@ -21,7 +22,7 @@ const withEffect = (
 
 describe("defaultEffect", () => {
   it.each(EDITABLE_EFFECTS)("makes an editable, problem-free %s", (type) => {
-    const effect = defaultEffect(type);
+    const effect = defaultEffect(type, starterLibrary());
     expect(effect.type).toBe(type);
     expect(isEditable(effect)).toBe(true);
     expect(
@@ -31,9 +32,10 @@ describe("defaultEffect", () => {
 });
 
 describe("isEditable", () => {
-  it("is false for effects the designer has no form for", () => {
-    expect(isEditable(content.cure.effect)).toBe(false);
-    expect(isEditable(content.summonImp.effect)).toBe(false);
+  it("is true for every melee effect, false for unknown data", () => {
+    expect(isEditable(content.cure.effect)).toBe(true);
+    expect(isEditable(content.summonImp.effect)).toBe(true);
+    expect(isEditable({ type: "nope" } as never)).toBe(false);
   });
 });
 
@@ -59,7 +61,9 @@ describe("effectSummary", () => {
     expect(effectSummary(withEffect(defaultEffect("modify")))).toBe(
       "attack ×1.5 for 100",
     );
-    expect(effectSummary(content.cure)).toBe("cleanse");
+    expect(effectSummary(content.cure)).toBe(
+      "removes harmful statuses and debuffs",
+    );
   });
 
   it("shows added amounts with a sign", () => {

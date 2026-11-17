@@ -2,51 +2,37 @@ import type { Skill, SkillEffect } from "@jforge/melee/shared";
 import {
   EDITABLE_EFFECTS,
   EFFECT_LABELS,
+  MAX_LEVEL,
+  SKILL_FIELDS,
+  STATUS_OPTIONS,
   defaultEffect,
   defaultTarget,
+  effectFields,
   isEditable,
+  readField,
   skillProblems,
+  withSummonSource,
+  writeField,
   type EditableEffect,
+  type FieldSpec,
+  type Library,
 } from "../shared";
 import { NumberField, SelectField, TextField } from "./fields";
-import { DAMAGE_OPTIONS, STAT_OPTIONS } from "./labels";
 
-const TARGET_OPTIONS = [
-  ["enemy", "An enemy"],
-  ["ally", "An ally"],
-  ["self", "Itself"],
-  ["any", "Any cell"],
-] as const;
-const AREA_OPTIONS = [
-  ["single", "One unit"],
-  ["plus", "Plus (5 cells)"],
-  ["square", "Square (3×3)"],
-  ["line", "Line of two"],
-  ["row", "Whole row"],
-  ["reach", "Everyone in weapon reach"],
-] as const;
 const EFFECT_OPTIONS = EDITABLE_EFFECTS.map(
   (type) => [type, EFFECT_LABELS[type]] as const,
 );
-const OP_OPTIONS = [
-  ["mul", "Multiply by"],
-  ["add", "Add"],
-] as const;
-const HARM_OPTIONS = [
-  ["no", "Helps (buff)"],
-  ["yes", "Harms (debuff)"],
-] as const;
 
 interface SkillEditorProps {
   skill: Skill;
+  library: Library;
   onChange: (skill: Skill) => void;
 }
 
-export function SkillEditor({ skill, onChange }: SkillEditorProps) {
+export function SkillEditor({ skill, library, onChange }: SkillEditorProps) {
   const set = (change: Partial<Skill>) => onChange({ ...skill, ...change });
-  const setEffect = (effect: SkillEffect) => set({ effect });
   const { effect } = skill;
-  const problems = skillProblems(skill);
+  const problems = skillProblems(skill, library);
   return (
     <>
       <TextField
@@ -60,38 +46,12 @@ export function SkillEditor({ skill, onChange }: SkillEditorProps) {
         multiline
         onChange={(description) => set({ description })}
       />
-      <div className="grid-fields wide">
-        <NumberField
-          label="MP cost"
-          value={skill.mpCost}
-          min={0}
-          onChange={(mpCost) => set({ mpCost })}
-        />
-        <NumberField
-          label="Cast time (0 = instant)"
-          value={skill.castTime ?? 0}
-          min={0}
-          step={10}
-          onChange={(castTime) => {
-            const next = { ...skill };
-            if (castTime > 0) next.castTime = castTime;
-            else delete next.castTime;
-            onChange(next);
-          }}
-        />
-        <SelectField
-          label="Target"
-          value={skill.target}
-          options={TARGET_OPTIONS}
-          onChange={(target) => set({ target })}
-        />
-        <SelectField
-          label="Area"
-          value={skill.area}
-          options={AREA_OPTIONS}
-          onChange={(area) => set({ area })}
-        />
-      </div>
+      <Fields
+        of={skill}
+        specs={SKILL_FIELDS}
+        library={library}
+        onChange={onChange}
+      />
 
       {isEditable(effect) ? (
         <fieldset className="group">
@@ -101,141 +61,32 @@ export function SkillEditor({ skill, onChange }: SkillEditorProps) {
             value={effect.type as EditableEffect}
             options={EFFECT_OPTIONS}
             onChange={(type) => {
-              const next = defaultEffect(type);
+              const next = defaultEffect(type, library);
+              if (next.type === "status") next.status.id = skill.id;
               set({ effect: next, target: defaultTarget(next) });
             }}
           />
-          <div className="grid-fields wide">
-            {(effect.type === "damage" ||
-              effect.type === "strike" ||
-              effect.type === "heal") && (
-              <NumberField
-                label={
-                  effect.type === "strike"
-                    ? "Power (× attack)"
-                    : effect.type === "heal" && effect.of === "maxHp"
-                      ? "Power (× max HP)"
-                      : "Power (× magic)"
-                }
-                value={effect.power}
-                step={0.1}
-                min={0}
-                onChange={(power) => setEffect({ ...effect, power })}
-              />
-            )}
-            {effect.type === "damage" && (
-              <>
-                <SelectField
-                  label="Damage type"
-                  value={effect.element}
-                  options={DAMAGE_OPTIONS}
-                  onChange={(element) => setEffect({ ...effect, element })}
-                />
-                <NumberField
-                  label="Drain (share healed)"
-                  value={effect.drain ?? 0}
-                  step={0.1}
-                  min={0}
-                  max={1}
-                  onChange={(drain) => {
-                    const next = { ...effect };
-                    if (drain > 0) next.drain = drain;
-                    else delete next.drain;
-                    setEffect(next);
-                  }}
-                />
-              </>
-            )}
-            {effect.type === "strike" && (
-              <NumberField
-                label="Push rows (− pulls)"
-                value={effect.push ?? 0}
-                min={-2}
-                max={2}
-                onChange={(push) => {
-                  const next = { ...effect };
-                  if (push !== 0) next.push = push;
-                  else delete next.push;
-                  setEffect(next);
-                }}
-              />
-            )}
-            {effect.type === "modify" && (
-              <>
-                <TextField
-                  label="Shown as"
-                  value={effect.modifier.name}
-                  onChange={(name) =>
-                    setEffect({
-                      ...effect,
-                      modifier: { ...effect.modifier, name },
-                    })
-                  }
-                />
-                <SelectField
-                  label="Stat"
-                  value={effect.modifier.stat}
-                  options={STAT_OPTIONS}
-                  onChange={(stat) =>
-                    setEffect({
-                      ...effect,
-                      modifier: { ...effect.modifier, stat },
-                    })
-                  }
-                />
-                <SelectField
-                  label="Change"
-                  value={effect.modifier.op}
-                  options={OP_OPTIONS}
-                  onChange={(op) =>
-                    setEffect({
-                      ...effect,
-                      modifier: { ...effect.modifier, op },
-                    })
-                  }
-                />
-                <NumberField
-                  label="Value"
-                  value={effect.modifier.value}
-                  step={0.1}
-                  onChange={(value) =>
-                    setEffect({
-                      ...effect,
-                      modifier: { ...effect.modifier, value },
-                    })
-                  }
-                />
-                <NumberField
-                  label="Duration (game time)"
-                  value={effect.modifier.duration}
-                  step={10}
-                  min={0}
-                  onChange={(duration) =>
-                    setEffect({
-                      ...effect,
-                      modifier: { ...effect.modifier, duration },
-                    })
-                  }
-                />
-                <SelectField
-                  label="Nature"
-                  value={effect.modifier.harmful ? "yes" : "no"}
-                  options={HARM_OPTIONS}
-                  onChange={(harm) =>
-                    setEffect({
-                      ...effect,
-                      modifier: { ...effect.modifier, harmful: harm === "yes" },
-                    })
-                  }
-                />
-              </>
-            )}
-          </div>
+          <Fields
+            of={effect}
+            specs={effectFields(effect)}
+            library={library}
+            onChange={(next: SkillEffect) => {
+              const kindChanged =
+                next.type === "status" &&
+                effect.type === "status" &&
+                next.status.effect !== effect.status.effect;
+              set(
+                kindChanged
+                  ? { effect: next, target: defaultTarget(next) }
+                  : { effect: next },
+              );
+            }}
+          />
         </fieldset>
       ) : (
         <p className="muted">
-          This skill's effect ({effect.type}) can't be edited here yet; the rest
-          can.
+          This skill's effect ({effect.type}) is unknown here; the rest can be
+          edited.
         </p>
       )}
       {problems.map((problem) => (
@@ -243,6 +94,168 @@ export function SkillEditor({ skill, onChange }: SkillEditorProps) {
           {problem}
         </p>
       ))}
+    </>
+  );
+}
+
+interface FieldsProps<T extends object> {
+  of: T;
+  specs: FieldSpec[];
+  library: Library;
+  onChange: (next: T) => void;
+}
+
+/** A form drawn from field specs: inputs in a grid, flags as chips below. */
+function Fields<T extends object>({
+  of,
+  specs,
+  library,
+  onChange,
+}: FieldsProps<T>) {
+  const write = (spec: FieldSpec, value: unknown) =>
+    onChange(writeField(of, spec, value));
+  const inputs = specs.filter((s) => s.kind !== "flag");
+  const flags = specs.filter((s) => s.kind === "flag");
+  return (
+    <>
+      {inputs.length > 0 && (
+        <div className="grid-fields wide">
+          {inputs.map((spec) => (
+            <Control
+              key={spec.path.join(".")}
+              spec={spec}
+              of={of}
+              library={library}
+              write={write}
+              onChange={onChange}
+            />
+          ))}
+        </div>
+      )}
+      {flags.length > 0 && (
+        <div className="chips">
+          {flags.map((spec) => (
+            <label key={spec.path.join(".")} className="chip">
+              <input
+                type="checkbox"
+                checked={readField(of, spec) === true}
+                onChange={(e) => write(spec, e.target.checked)}
+              />
+              {spec.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+interface ControlProps<T extends object> {
+  spec: FieldSpec;
+  of: T;
+  library: Library;
+  write: (spec: FieldSpec, value: unknown) => void;
+  onChange: (next: T) => void;
+}
+
+function Control<T extends object>({
+  spec,
+  of,
+  library,
+  write,
+  onChange,
+}: ControlProps<T>) {
+  const value = readField(of, spec);
+  switch (spec.kind) {
+    case "number":
+      return (
+        <NumberField
+          label={spec.label}
+          value={value as number}
+          step={spec.step}
+          min={spec.min}
+          max={spec.max}
+          onChange={(v) => write(spec, v)}
+        />
+      );
+    case "text":
+      return (
+        <TextField
+          label={spec.label}
+          value={(value as string) ?? ""}
+          onChange={(v) => write(spec, v)}
+        />
+      );
+    case "select":
+      return (
+        <SelectField
+          label={spec.label}
+          value={value as string}
+          options={spec.options}
+          onChange={(v) => write(spec, v)}
+        />
+      );
+    case "statusKind":
+      return (
+        <SelectField
+          label={spec.label}
+          value={value as string}
+          options={STATUS_OPTIONS}
+          onChange={(v) => write(spec, v)}
+        />
+      );
+    case "creature":
+      return (
+        <CreatureFields
+          effect={of as unknown as SkillEffect}
+          library={library}
+          onChange={(next) => onChange(next as unknown as T)}
+        />
+      );
+    case "flag":
+      return null;
+  }
+}
+
+interface CreatureFieldsProps {
+  effect: SkillEffect;
+  library: Library;
+  onChange: (effect: SkillEffect) => void;
+}
+
+/** A summon's enemy type and level; the creature is compiled from them. */
+function CreatureFields({ effect, library, onChange }: CreatureFieldsProps) {
+  if (effect.type !== "summon") return null;
+  const enemies = library.archetypes.filter((a) => a.kind === "enemy");
+  const options = [
+    ["", "Pick an enemy type"] as const,
+    ...enemies.map((a) => [a.id, a.name] as const),
+  ];
+  const source = effect.source;
+  return (
+    <>
+      <SelectField
+        label="Creature (enemy type)"
+        value={source?.archetypeId ?? ""}
+        options={options}
+        onChange={(id) => {
+          if (id)
+            onChange(withSummonSource(library, effect, id, source?.level ?? 1));
+        }}
+      />
+      <NumberField
+        label="Creature level"
+        value={source?.level ?? 1}
+        min={1}
+        max={MAX_LEVEL}
+        onChange={(level) => {
+          if (source) {
+            onChange(
+              withSummonSource(library, effect, source.archetypeId, level),
+            );
+          }
+        }}
+      />
     </>
   );
 }
