@@ -186,6 +186,19 @@ function strikeExtra(
 }
 
 /**
+ * MP back is worth SUPPORT_VALUE once the unit can't afford any of its
+ * other MP skills, and nothing before.
+ */
+function restoreMpValue(unit: Unit): number {
+  const spells = unit.skills.filter(
+    (s) => s.mpCost > 0 && s.effect.type !== "restoreMp",
+  );
+  return spells.length > 0 && spells.every((s) => s.mpCost > unit.mp)
+    ? SUPPORT_VALUE
+    : 0;
+}
+
+/**
  * Pinning a unit is worth SUPPORT_VALUE, as a slowing modifier is, unless
  * the hit knocks it out or it is already pinned.
  */
@@ -283,6 +296,8 @@ function victimValue(
     }
     case "rescue":
       return rescueValue(unit, victim);
+    case "restoreMp":
+      return restoreMpValue(victim);
     case "summon":
     case "teleport":
     case "revive":

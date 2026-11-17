@@ -84,9 +84,13 @@ export function offenseOf(def: CombatantDef): number {
     weaponDamage,
     ...affordable.map((s) => skillDamage(def, s)),
   );
-  // Heals, buffs, summons and the like: anything but damage and movement.
+  // Heals, buffs, summons and the like: anything but damage, movement and
+  // the caster's own MP.
   const support = affordable.filter(
-    (s) => s.effect.type !== "teleport" && skillDamage(def, s) === 0,
+    (s) =>
+      s.effect.type !== "teleport" &&
+      s.effect.type !== "restoreMp" &&
+      skillDamage(def, s) === 0,
   ).length;
   const bonus = Math.min(MAX_SUPPORT_BONUS, SUPPORT_BONUS * support);
   return best * (1 + bonus) * stats.speed;

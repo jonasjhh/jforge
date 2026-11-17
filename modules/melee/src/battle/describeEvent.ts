@@ -33,6 +33,8 @@ export function describeEvent(
       return `${name(event.unitId)} strikes from the shadows!`;
     case "teleported":
       return `${name(event.unitId)} shadowsteps`;
+    case "mpRestored":
+      return `${name(event.unitId)} regains ${event.amount} MP`;
     case "mpBurned":
       return `${name(event.unitId)} loses ${event.amount} MP`;
     case "hpPaid":

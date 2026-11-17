@@ -289,7 +289,12 @@ export type SkillEffect =
    * row and the ally the back row; the ally's gauge halves and the caster
    * braces (see rescue.ts).
    */
-  | { type: "rescue" };
+  | { type: "rescue" }
+  /**
+   * The caster regains `amount` MP, never above its max (Mana Tap, paid
+   * for with HP). Not while its MP is full.
+   */
+  | { type: "restoreMp"; amount: number };
 
 /**
  * Which cells a skill hits around the aimed cell. The two grids form one
@@ -557,6 +562,7 @@ export type BattleEvent =
   | { type: "warded"; unitId: string; name: string }
   /** `unitId` was pulled back behind its rescuer `byId`. */
   | { type: "rescued"; unitId: string; byId: string }
+  | { type: "mpRestored"; unitId: string; amount: number; mp: number }
   /** A hit aimed at `unitId` lands on its guardian `byId` instead. */
   | { type: "guarded"; unitId: string; byId: string }
   | { type: "teleported"; unitId: string; from: Position; to: Position }

@@ -145,6 +145,12 @@ export function validateSkill(
     }
   }
   if (skill.effect.type === "rescue") return rescueBlock(state, unit, target);
+  if (
+    skill.effect.type === "restoreMp" &&
+    target.mp >= effectiveStat(target, "maxMp")
+  ) {
+    return `${target.name}'s MP is already full`;
+  }
   if (skill.effect.type === "gauge") {
     if (target.casting) return `${target.name} is busy casting`;
     if (state.ready.includes(target.id))
@@ -378,6 +384,13 @@ function applySkill(
   }
   if (skill.effect.type === "rescue") {
     if (aimedAt && isAlive(aimedAt)) rescue(state, unit, aimedAt, events);
+    return;
+  }
+  if (skill.effect.type === "restoreMp") {
+    const maxMp = effectiveStat(unit, "maxMp");
+    const amount = Math.max(0, Math.min(skill.effect.amount, maxMp - unit.mp));
+    unit.mp += amount;
+    events.push({ type: "mpRestored", unitId: unit.id, amount, mp: unit.mp });
     return;
   }
   if (skill.effect.type === "teleport") {

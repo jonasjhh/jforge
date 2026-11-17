@@ -372,6 +372,13 @@ cell) and its `area` which cells it hits around the aimed one.
   the caster is busy (its gauge waits and shows the cast instead) until the
   impact, which hits whoever stands in the marked zone at that moment, so
   allies can step out. If the caster is knocked out first, it fizzles.
+- **Lightning Bolt** (Mage): lightning at x0.9 on one enemy and the unit
+  right behind it (the **line** area), 10 MP. Constructs and armored foes
+  take more from lightning.
+- **Mana Tap** (Mage): pays 10 HP to regain 15 MP, never above max, no MP
+  (`restoreMp` effect). Not allowed at full MP. The AI taps only once it
+  can't afford any of its other spells; threat ignores it (it is not
+  support for allies).
 - **Regen** (Healer): the first **effect over time**. One living ally gains
   a status that heals 0.4 x magic every 30 game time, 5 times. Statuses
   tick on game time (haste doesn't stretch them), recasting refreshes
@@ -599,7 +606,7 @@ skill may break one for a reason worth stating.
 ### Class roster plan (12 archetypes)
 
 Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
-(area magic), **Healer** (support), **Lancer** (spear: reaches behind the
+(area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled

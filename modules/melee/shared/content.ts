@@ -339,6 +339,35 @@ export const fireArrow: Skill = {
   effect: { type: "strike", power: 0.8, ignite: true },
 };
 
+/** Mage: a bolt of lightning through the target and the unit behind it. */
+export const lightningBolt: Skill = {
+  id: "lightning-bolt",
+  name: "Lightning Bolt",
+  description:
+    "Lightning (x0.9) through one enemy and the unit right behind it.",
+  mpCost: 10,
+  target: "enemy",
+  area: "line",
+  effect: {
+    type: "damage",
+    kind: "magical",
+    element: "lightning",
+    power: 0.9,
+  },
+};
+
+/** Mage: turns its own life into MP, to keep the big spells coming. */
+export const manaTap: Skill = {
+  id: "mana-tap",
+  name: "Mana Tap",
+  description: "Pay 10 HP to regain 15 MP.",
+  mpCost: 0,
+  hpCost: 10,
+  target: "self",
+  area: "single",
+  effect: { type: "restoreMp", amount: 15 },
+};
+
 /** Lancer: thrusts through the target into the unit right behind it. */
 export const skewer: Skill = {
   id: "skewer",
@@ -980,6 +1009,8 @@ export const skills = [
   pinningShot,
   quickShot,
   fireArrow,
+  lightningBolt,
+  manaTap,
   skewer,
   hook,
   haste,
@@ -1056,7 +1087,7 @@ export const mage: CombatantDef = {
     speed: 9,
   },
   weapon: staff,
-  skills: [fireball, meteor],
+  skills: [fireball, meteor, lightningBolt, manaTap],
   preferredRow: 2,
 };
 

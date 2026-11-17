@@ -66,6 +66,8 @@ export function effectSummary(skill: Skill): string {
       const change = m.op === "mul" ? `×${m.value}` : signed(m.value);
       return `${m.stat} ${change} for ${m.duration}${shape}`;
     }
+    case "restoreMp":
+      return `restores ${effect.amount} MP${shape}`;
     default:
       return `${effect.type}${shape}`;
   }
