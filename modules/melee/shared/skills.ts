@@ -1,6 +1,6 @@
 import { applyDamage, magicalHit, physicalHit } from "./damage";
 import { COLLISION_POWER, moveBy, pushBlocker, pushDestination } from "./push";
-import { canReach, reachableTargets } from "./reach";
+import { canReach, exposedEnemies, reachableTargets } from "./reach";
 import { breakStealth, isHidden } from "./stealth";
 import { poisonOnHit } from "./coat";
 import { finisherFactor } from "./finisher";
@@ -95,6 +95,12 @@ export function validateSkill(
     if (!target || !isAlive(target)) return `${skill.name} needs a unit there`;
     if (target.side !== unit.side && isHidden(target)) {
       return `${target.name} can't be seen`;
+    }
+    if (
+      target.side !== unit.side &&
+      !exposedEnemies(state, unit, skill.ignoreCover).includes(target)
+    ) {
+      return `${target.name} is behind cover`;
     }
     return null;
   }
@@ -192,21 +198,27 @@ export function validateSkill(
   if (
     skill.effect.type === "strike" &&
     !canReach(state, striker, target, {
-      ignoreCover: skill.effect.ignoreCover,
+      ignoreCover: skill.ignoreCover,
     })
   ) {
     return "Target is out of reach";
+  }
+  if (
+    !sameSide &&
+    skill.area === "single" &&
+    skill.effect.type !== "strike" &&
+    !exposedEnemies(state, unit, skill.ignoreCover).includes(target)
+  ) {
+    return `${target.name} is behind cover`;
   }
   if (!sameSide && skill.area === "single") {
     // Taunting enemies must be singled out while they can be.
     const candidates =
       skill.effect.type === "strike"
         ? reachableTargets(state, striker, {
-            ignoreCover: skill.effect.ignoreCover,
+            ignoreCover: skill.ignoreCover,
           })
-        : state.units.filter(
-            (u) => u.side !== unit.side && isAlive(u) && !isHidden(u),
-          );
+        : exposedEnemies(state, unit, skill.ignoreCover);
     return tauntBlock(candidates, target);
   }
   return null;
@@ -241,9 +253,9 @@ export function skillArea(
   cell: Cell,
 ): Cell[] {
   if (skill.area === "reach") {
-    const ignoreCover =
-      skill.effect.type === "strike" && skill.effect.ignoreCover;
-    return reachableTargets(state, unit, { ignoreCover }).map(cellOf);
+    return reachableTargets(state, unit, {
+      ignoreCover: skill.ignoreCover,
+    }).map(cellOf);
   }
   return areaCells(cell, skill.area);
 }

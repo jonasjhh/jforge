@@ -33,7 +33,13 @@ import type {
 } from "../types";
 import { def, place } from "./helpers";
 
-const calm: TargetingProfile = { finish: 3, wounded: 2, soft: 1, noise: 0 };
+const calm: TargetingProfile = {
+  near: 1,
+  finish: 3,
+  wounded: 1,
+  soft: 1,
+  noise: 0,
+};
 
 /** The AI caster stands at enemy 2,2 with the given skills, facing `foes`. */
 function battle(
@@ -100,13 +106,17 @@ describe("hitValue", () => {
 
 describe("skillValue", () => {
   it("counts every foe an area skill hits", () => {
-    const one = battle([fireball], [foe(2)]);
-    const three = battle([fireball], [foe(1), foe(2), foe(3)]);
+    // Each foe alone, with the plus aimed so it is caught the same way.
     const aim = at("player", 2);
-    const cost = skillCost(one.caster, fireball);
-    const single = skillValue(one.state, one.caster, fireball, aim) + cost;
+    const alone = (col: number) => {
+      const one = battle([fireball], [foe(col)]);
+      const cost = skillCost(one.caster, fireball);
+      return skillValue(one.state, one.caster, fireball, aim) + cost;
+    };
+    const three = battle([fireball], [foe(1), foe(2), foe(3)]);
+    const cost = skillCost(three.caster, fireball);
     const triple = skillValue(three.state, three.caster, fireball, aim) + cost;
-    expect(triple).toBeCloseTo(3 * single);
+    expect(triple).toBeCloseTo(alone(1) + alone(2) + alone(3));
   });
 
   it("counts allies caught in the area against it", () => {

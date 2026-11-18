@@ -136,6 +136,7 @@ export const SKILL_FIELDS: FieldSpec[] = [
   flag(["adjacent"], "Only next to the caster"),
   flag(["notFromFront"], "Not from the front row"),
   flag(["halfTurn"], "Half a turn (like Move)"),
+  flag(["ignoreCover"], "Can single out covered enemies"),
 ];
 
 const modifierFields = (key: string): FieldSpec[] => [
@@ -216,7 +217,6 @@ export const EFFECTS: Record<EffectType, EffectSpec> = {
         optional: true,
       }),
       opt(["mend"], "Heals most-hurt ally (share)", 0.1, 1),
-      flag(["ignoreCover"], "Ignores cover"),
       flag(["advance"], "Charges to the front first"),
       flag(["pin"], "Pins (slows)"),
       flag(["ignite"], "Sets burning"),

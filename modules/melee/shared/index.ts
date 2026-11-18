@@ -55,7 +55,9 @@ export { estimateThreat } from "./threat";
 export { createRandom } from "./rng";
 export {
   DIFFICULTIES,
+  MAX_BACK_PER_FRONT,
   THREAT_BUDGET,
+  isBackLiner,
   randomEncounter,
   type Difficulty,
   type EncounterPools,

@@ -5,6 +5,7 @@ import {
   MAX_PARTY_SIZE,
   content,
   createBattle,
+  isBackLiner,
   simulate,
 } from "@jforge/melee/shared";
 import {
@@ -443,6 +444,12 @@ describe("packFor", () => {
       sizes.add(pack.length);
     }
     expect(sizes.size).toBe(MAX_PACK_KINDS);
+  });
+
+  it("starts with a front-liner when the pool has one", () => {
+    for (const seed of SEEDS) {
+      expect(isBackLiner(packFor(pool, seed)[0]!)).toBe(false);
+    }
   });
 
   it("meets every enemy sooner or later", () => {

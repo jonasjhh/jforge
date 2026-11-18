@@ -100,3 +100,17 @@ export function areaCells(center: Cell, area: ShapeArea): Cell[] {
     return cell ? [cell] : [];
   });
 }
+
+/** The farthest a target can be: across every column and to the back row. */
+const MAX_DISTANCE = GRID_COLUMNS - 1 + GRID_ROWS - 1;
+
+/**
+ * How far `target` is from `unit`, as a share of the farthest: 0 straight
+ * ahead in the front row, 1 across every column and in the back row.
+ * Columns away plus how deep it stands on its side.
+ */
+export function farness(unit: Unit, target: Unit): number {
+  const distance =
+    Math.abs(target.position.col - unit.position.col) + target.position.row;
+  return distance / MAX_DISTANCE;
+}

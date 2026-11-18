@@ -33,7 +33,7 @@ export function makeUnit(
     base: { ...def.stats },
     weapon: { ...def.weapon },
     skills: (def.skills ?? []).map((s) => structuredClone(s)),
-    targeting: { ...(def.targeting ?? DEFAULT_TARGETING) },
+    targeting: { ...DEFAULT_TARGETING, ...def.targeting },
     resistances: resistancesFor(def),
     statuses: [],
     hp: def.stats.maxHp,

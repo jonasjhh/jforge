@@ -3,11 +3,14 @@ import { createBattle } from "../battle";
 import { playerTypes, slime, wolf } from "../content";
 import {
   DIFFICULTIES,
+  MAX_BACK_PER_FRONT,
   THREAT_BUDGET,
+  isBackLiner,
   randomEncounter,
   type Difficulty,
 } from "../encounters";
 import { simulate } from "../simulate";
+import { anywhere } from "./helpers";
 
 const threatOf = (seed: number, difficulty: Difficulty) =>
   randomEncounter(seed, difficulty)
@@ -85,6 +88,54 @@ describe("randomEncounter", () => {
     });
     const enemies = setup.placements.filter((p) => p.side === "enemy");
     expect(enemies.map((p) => p.def.id)).toEqual(["giant"]);
+  });
+
+  describe("back-liners", () => {
+    const cheap = { ...wolf, id: "cheap", threat: 1 };
+    const shooter = { ...wolf, id: "shooter", threat: 1, preferredRow: 2 };
+    const enemiesOf = (seed: number, monsters = [cheap, shooter]) =>
+      randomEncounter(seed, "hard", { party: [], monsters }).placements;
+
+    it("counts a ranged weapon or a row past the front", () => {
+      expect(isBackLiner(wolf)).toBe(false);
+      expect(isBackLiner(shooter)).toBe(true);
+      expect(isBackLiner({ ...wolf, weapon: anywhere })).toBe(true);
+    });
+
+    it("are at most two thirds of the monsters", () => {
+      for (let seed = 0; seed < 50; seed++) {
+        const enemies = enemiesOf(seed);
+        const back = enemies.filter((p) => isBackLiner(p.def)).length;
+        expect(back).toBeLessThanOrEqual(
+          MAX_BACK_PER_FRONT * (enemies.length - back),
+        );
+      }
+    });
+
+    it("come after a front-liner", () => {
+      for (let seed = 0; seed < 20; seed++) {
+        expect(isBackLiner(enemiesOf(seed)[0]!.def)).toBe(false);
+      }
+    });
+
+    it("fill a pool with no front-liner, then the rows in front", () => {
+      // A budget of 27 at 1 each fills all 15 cells, back row first.
+      const enemies = enemiesOf(1, [shooter]);
+      expect(enemies).toHaveLength(15);
+      expect(enemies.slice(0, 5).every((p) => p.position.row === 2)).toBe(true);
+    });
+  });
+
+  it("puts monsters in their preferred row while it has room", () => {
+    // Five monsters at most, so no row runs out of room.
+    const shooter = { ...wolf, id: "shooter", preferredRow: 2 };
+    const enemies = randomEncounter(3, "easy", {
+      party: [],
+      monsters: [wolf, shooter],
+    }).placements;
+    for (const p of enemies) {
+      expect(p.position.row).toBe(p.def.preferredRow ?? 0);
+    }
   });
 
   it("keeps each difficulty in its win-rate band", () => {

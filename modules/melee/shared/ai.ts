@@ -4,20 +4,24 @@ import { hitVictim } from "./guard";
 import { bestSkill } from "./aiSkills";
 import { attackTargets } from "./reach";
 import { nextRandom } from "./rng";
+import { farness } from "./grid";
 import { effectiveStat } from "./stats";
 import type { BattleState, Command, TargetingProfile, Unit } from "./types";
 
 /** Used for combatants that don't define their own targeting. */
 export const DEFAULT_TARGETING: TargetingProfile = {
+  near: 1,
   finish: 3,
-  wounded: 2,
+  wounded: 1,
   soft: 1,
   noise: 0.5,
 };
 
 /**
- * How attractive `target` is to `unit`: finish it off, pile onto the
- * wounded, pick on the soft, plus a little seeded randomness.
+ * How attractive `target` is to `unit`: one it can finish off, the
+ * wounded, the soft, less the farther away it is, plus a little seeded
+ * randomness. Distance is a cost rather than a bonus, so the nearest
+ * target scores as before and attacks don't crowd out support skills.
  */
 export function targetScore(
   state: BattleState,
@@ -31,6 +35,7 @@ export function targetScore(
   const wounded = 1 - target.hp / target.base.maxHp;
   const soft = defenseFactor(effectiveStat(target, "defense"));
   return (
+    -(p.near ?? 0) * farness(unit, target) +
     p.finish * canFinish +
     p.wounded * wounded +
     p.soft * soft +

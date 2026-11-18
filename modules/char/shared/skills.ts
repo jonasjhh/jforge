@@ -73,13 +73,17 @@ const pct = (share: number) => `${Math.round(share * 100)}%`;
 
 /** One line on what a skill does, from its data: "Fire damage x1.2, plus". */
 export function effectSummary(skill: Skill): string {
+  return `${effectText(skill)}${skill.ignoreCover ? ", past cover" : ""}`;
+}
+
+function effectText(skill: Skill): string {
   const { effect } = skill;
   const shape = skill.area === "single" ? "" : `, ${skill.area}`;
   switch (effect.type) {
     case "damage":
       return `${effect.element} damage ×${effect.power}${effect.split ? ` each, ×${effect.split} shared` : ""}${effect.vsEmpowered ? ` (×${effect.vsEmpowered} if empowered)` : ""}${effect.drain ? `, drains ${pct(effect.drain)}` : ""}${effect.burnMp ? `, burns ${effect.burnMp} MP` : ""}${effect.chill ? ", chills" : ""}${shape}`;
     case "strike":
-      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.push ? (effect.push > 0 ? `, pushes ${effect.push}` : `, pulls ${-effect.push}`) : ""}${effect.ignoreCover ? ", past cover" : ""}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.weaken ? `, weakens to ×${effect.weaken}` : ""}${effect.stagger ? `, staggers ${pct(effect.stagger)}` : ""}${effect.armorPierce ? `, ignores ${pct(effect.armorPierce)} defense` : ""}${effect.finisher ? `, ×${effect.finisher} below ${pct(effect.finishBelow ?? FINISH_BELOW)} HP` : ""}${effect.mend ? `, heals the most-hurt ally ${pct(effect.mend)} of the damage` : ""}${shape}`;
+      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.push ? (effect.push > 0 ? `, pushes ${effect.push}` : `, pulls ${-effect.push}`) : ""}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.weaken ? `, weakens to ×${effect.weaken}` : ""}${effect.stagger ? `, staggers ${pct(effect.stagger)}` : ""}${effect.armorPierce ? `, ignores ${pct(effect.armorPierce)} defense` : ""}${effect.finisher ? `, ×${effect.finisher} below ${pct(effect.finishBelow ?? FINISH_BELOW)} HP` : ""}${effect.mend ? `, heals the most-hurt ally ${pct(effect.mend)} of the damage` : ""}${shape}`;
     case "heal":
       return `heals ×${effect.power} ${effect.of === "maxHp" ? "max HP" : "magic"}${shape}`;
     case "modify": {

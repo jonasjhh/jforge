@@ -291,7 +291,8 @@ export const volley: Skill = {
   target: "enemy",
   area: "square",
   notFromFront: true,
-  effect: { type: "strike", power: 0.5, ignoreCover: true },
+  ignoreCover: true,
+  effect: { type: "strike", power: 0.5 },
 };
 
 /** Archer: a shot that pins its target, which acts less often for a while. */
@@ -477,7 +478,8 @@ export const aimedShot: Skill = {
   area: "single",
   castTime: 40,
   notFromFront: true,
-  effect: { type: "strike", power: 1.5, ignoreCover: true },
+  ignoreCover: true,
+  effect: { type: "strike", power: 1.5 },
 };
 
 /** Lancer: drags an enemy one row forward, out of cover. */
@@ -732,7 +734,7 @@ export const bloodBolt: Skill = {
 export const firebolt: Skill = {
   id: "firebolt",
   name: "Firebolt",
-  description: "Fire damage to one enemy, anywhere.",
+  description: "Fire damage to one exposed enemy, in any column.",
   mpCost: 4,
   target: "enemy",
   area: "single",
@@ -1449,7 +1451,7 @@ export const slime: CombatantDef = {
   },
   weapon: slam,
   // Clumsy: mostly flails at whatever is in reach.
-  targeting: { finish: 1, wounded: 0.5, soft: 0.5, noise: 2 },
+  targeting: { near: 1, finish: 1, wounded: 0.5, soft: 0.5, noise: 2 },
   threat: 2,
   // An ooze: melts in fire, shrugs off crushing and piercing, no poison.
   traits: ["ooze"],
@@ -1469,7 +1471,7 @@ export const wolf: CombatantDef = {
   },
   weapon: fangs,
   // A finisher: goes for the wounded and the kill.
-  targeting: { finish: 5, wounded: 3, soft: 1, noise: 0.3 },
+  targeting: { near: 1, finish: 5, wounded: 3, soft: 1, noise: 0.3 },
   threat: 3,
   // A beast: arrows and spears find its flanks.
   traits: ["beast"],
@@ -1672,7 +1674,7 @@ export const viper: CombatantDef = {
     speed: 13,
   },
   weapon: venomFangs,
-  targeting: { finish: 2, wounded: 1, soft: 2, noise: 0.5 },
+  targeting: { near: 1, finish: 2, wounded: 1, soft: 2, noise: 0.5 },
   // Beast and reptile (weak to pierce and cold); immune to its own venom.
   traits: ["beast", "reptile"],
   resistances: { poison: 0 },

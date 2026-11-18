@@ -52,6 +52,29 @@ export function reachableTargets(
   return visible.filter((u) => distance(u) === nearest);
 }
 
+/**
+ * The enemies `unit` may single out with a skill that isn't a weapon
+ * strike: every visible one in any column, but only the front-most in each
+ * (as a bow sees them), unless `ignoreCover`.
+ */
+export function exposedEnemies(
+  state: BattleState,
+  unit: Unit,
+  ignoreCover = false,
+): Unit[] {
+  const enemies = state.units.filter((u) => u.side !== unit.side && isAlive(u));
+  return enemies.filter(
+    (target) =>
+      !isHidden(target) &&
+      (ignoreCover ||
+        !enemies.some(
+          (u) =>
+            u.position.col === target.position.col &&
+            u.position.row < target.position.row,
+        )),
+  );
+}
+
 export function canReach(
   state: BattleState,
   attacker: Unit,

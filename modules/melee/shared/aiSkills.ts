@@ -22,7 +22,7 @@ import { WEAKEN_STATUS } from "./weaken";
 import { pushDestination } from "./push";
 import { RESCUE_BRACE } from "./rescue";
 import { healAmount, skillCells, skillVictims } from "./skills";
-import { cellOf, unitAt } from "./grid";
+import { cellOf, farness, unitAt } from "./grid";
 import { effectiveStat, isAlive } from "./stats";
 import { GAUGE_FULL } from "./timeline";
 import { findSkill } from "./units";
@@ -63,9 +63,11 @@ export const REVIVE_VALUE = 2;
 
 /**
  * What hitting `target` for `amount` is worth to `unit`: the finish bonus
- * if it would knock the target out, plus the wounded and soft factors
+ * if it would knock the target out, plus the wounded and soft factors less
+ * the distance cost (never below 0, so hitting one more foe never hurts),
  * scaled by how the hit compares with a plain weapon attack on it. A plain
- * attack scores exactly targetScore without its noise.
+ * attack scores exactly targetScore without its noise, unless that is
+ * below 0.
  */
 export function hitValue(
   p: TargetingProfile,
@@ -78,7 +80,9 @@ export function hitValue(
   const wounded = 1 - target.hp / target.base.maxHp;
   const soft = defenseFactor(effectiveStat(target, "defense"));
   const finish = wouldKnockOut(target, amount) ? p.finish : 0;
-  return finish + (amount / plain) * (p.wounded * wounded + p.soft * soft);
+  const far = (p.near ?? 0) * farness(unit, target);
+  const worth = Math.max(0, p.wounded * wounded + p.soft * soft - far);
+  return finish + (amount / plain) * worth;
 }
 
 /** HP actually restored by `amount` of healing, as a weighted share. */

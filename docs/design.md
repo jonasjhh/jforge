@@ -54,7 +54,16 @@ an empty front cell leaves the unit behind it exposed.
 | Sword, claws | Own column and both neighbours | Front-most unit only          |
 | Spear        | Own column and both neighbours | Front-most and the one behind |
 | Bow          | Any                            | Front-most unit only          |
-| Staff/magic  | Any                            | Any unit, ignores cover       |
+| Staff        | Any                            | Any unit, ignores cover       |
+
+**Cover holds against skills too** (done): a skill aimed at a single
+enemy (damage, a debuff, a heave) can only pick an **exposed** one, the
+front-most living unit in its column, as a bow does; any column is fine.
+Areas still land on covered units. A skill with `ignoreCover` may single
+out any visible enemy (Aimed Shot; Volley's strike also reaches past
+cover); char can set it on any skill. A staff's own weapon attack still
+reaches any unit. So a caster can't focus a frail
+unit that stands behind a friend.
 
 A weapon is data (`columns`, `depth`), so equipment can swap it and char
 can design new ones. Until units can move, a melee unit with no enemy in
@@ -286,7 +295,8 @@ Expose without new code.
   game time, 5 MP). While it lasts, an enemy that singles out a target (a
   weapon attack, or a skill with a `single` area aimed at an enemy) must
   pick a taunting unit among those it could pick: for attacks and
-  strikes, those in reach; for spells, every visible enemy. An enemy that
+  strikes, those in reach; for other skills, every exposed enemy (every
+  visible one with `ignoreCover`). An enemy that
   can't reach the Fighter is free; area skills are free; stealth wins
   over taunt (a hidden taunter binds no one). The AI casts it only with
   allies to cover, and less the more the Fighter is hurt.
@@ -367,7 +377,7 @@ Expose without new code.
   Previews and the AI use the share for the units actually hit; threat
   counts its x2 total.
 - **Aimed Shot** (Archer): a bow strike at x1.5 that **ignores cover**
-  (`ignoreCover` on a strike), so it reaches any visible enemy, back row
+  (`ignoreCover` on the skill), so it reaches any visible enemy, back row
   included, 6 MP. Its job is picking off casters and the wounded behind a
   front line; stealth still hides a unit from it. It **takes aim first**
   (cast time 40, which x1.5 makes up for) and lands on the aimed cell:
@@ -590,6 +600,10 @@ AI units attack the reachable enemy with the highest **target score**
 (done). Each factor is weighted by the unit's `targeting` profile (data, so
 char can edit it later):
 
+- **near**: a cost for a far target, up to its weight for the farthest
+  and none for the one straight ahead. Distance is columns away plus the
+  target's row, as a share of the most there can be (4 + 2). It is a cost
+  rather than a bonus so attacks don't crowd out heals and buffs;
 - **finish**: the expected hit (the damage formula without the random
   spread) would knock the target out;
 - **wounded**: how much HP the target has lost;
@@ -597,8 +611,11 @@ char can edit it later):
 - **noise**: seeded randomness, so enemies aren't fully predictable but
   battles still replay exactly.
 
-The Wolf is a finisher; the Slime is clumsy; the Viper picks on soft
-targets.
+The default profile is near 1, finish 3, wounded 1, soft 1, noise 0.5:
+enemies hit what is close, but a badly hurt unit a little farther off, or
+one they can finish anywhere, draws them away. A profile without `near`
+takes the default's. The Wolf is a finisher; the Slime is clumsy; the
+Viper picks on soft targets.
 
 **Skills** (done): an AI unit weighs every skill it can afford at every
 cell it may aim it, and uses the best one if it beats its best attack.
@@ -607,7 +624,8 @@ the same units as a target score (a plain attack on a healthy, unarmored
 target is about 1):
 
 - damage (spells, strikes, shatter): the target score scaled by the
-  expected damage compared with a plain attack, plus the finish bonus;
+  expected damage compared with a plain attack (never below 0, so one
+  more foe caught never counts against it), plus the finish bonus;
   against it for allies caught in the area;
 - heal: 4 x share of max HP restored x share missing;
 - buffs on allies and debuffs on foes: 1 each, nothing if already on;
@@ -648,8 +666,12 @@ Done. `randomEncounter(seed, difficulty)` builds a battle from the existing
 types and monsters; the same seed gives the same encounter. The party
 stands in each type's `preferredRow` in random columns. Monsters are drawn
 until a **threat budget** is spent (Slime 2, Wolf 3, Viper 2; Easy 15,
-Normal 21, Hard 27, about 30% more than Normal) and lean toward the
-front. Budgets are tuned with auto-played battles where both sides use
+Normal 21, Hard 27, about 30% more than Normal). At most **two thirds**
+of them are **back-liners** (a ranged weapon or a preferred row past the
+front; `isBackLiner`): one is drawn only while there are at most two per
+front-liner after it, so the first is always a front-liner. A pool with
+no front-liner is free. Each monster stands in its `preferredRow`, or
+the nearest row with room, in a random column. Budgets are tuned with auto-played battles where both sides use
 their skills and move, to about 100% / 90% / 55% party wins; a test keeps
 each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
@@ -791,7 +813,7 @@ category.
 **Skill designer** (`shared/effectFields.ts`): every effect kind, every
 option on it, every kind of status and the skill's own fields (MP and HP
 cost, cast time, target, area, not on itself, only next to the caster,
-not from the front row, half a turn) are described once as data, with
+not from the front row, half a turn, can single out covered enemies) are described once as data, with
 labels and defaults; the editor draws its form from that table, so a new
 option in melee is one entry there. An option at its default (a strike
 with no push, a flag that is off) is left out of the saved skill. A status
@@ -876,7 +898,9 @@ can be planned.
   rows have an **elite** on one lane (Hard, enemies 2 levels up; at least
   one row does), and the last stop is the **final battle** (Hard, 3 levels
   up). Each battle fields a **pack** of 1 to 3 kinds of enemy drawn from
-  the pool by its seed. Winning gives every member `40 x enemy threat /
+  the pool by its seed; the first is a front-liner when the pool has one,
+  so the back-liner share (see Random encounters) leaves room for more
+  than one. Winning gives every member `40 x enemy threat /
 party size` experience and sometimes gear (40%; elites and the final
   battle always), which goes in the bag. Losing or drawing **ends the
   run**. The party can **retreat** to the map (to change gear, say) until

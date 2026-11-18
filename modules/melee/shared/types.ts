@@ -238,8 +238,9 @@ export type SkillEffect =
    * at `power` times normal. `push` moves the target that many rows back
    * (negative pulls it forward). If the way is blocked by a unit (knocked
    * out or not) or the edge of the grid, it doesn't move and takes a
-   * collision instead: x1.5 damage. `ignoreCover` lets it reach units
-   * behind others in their column (the weapon's column limit still holds).
+   * collision instead: x1.5 damage. The skill's `ignoreCover` lets it
+   * reach units behind others in their column (the weapon's column limit
+   * still holds).
    * `advance` first runs the attacker to the front row of its column (the
    * way there must be clear, and it must not be there already), and it
    * strikes from there (see charge.ts). `pin` slows a target that
@@ -250,7 +251,6 @@ export type SkillEffect =
       type: "strike";
       power: number;
       push?: number;
-      ignoreCover?: boolean;
       advance?: boolean;
       pin?: boolean;
       ignite?: boolean;
@@ -411,6 +411,12 @@ export interface Skill {
   hpCost?: number;
   /** Costs only half a turn, like Move: the gauge drops to half. */
   halfTurn?: boolean;
+  /**
+   * May single out covered enemies. Without it a single-target skill aimed
+   * at an enemy needs an exposed one (the front-most in its column), as a
+   * bow does; a strike also reaches past cover (Aimed Shot, Volley).
+   */
+  ignoreCover?: boolean;
 }
 
 /** A delayed skill on its way: aimed, paid for, landing at `readyAt`. */
@@ -429,6 +435,12 @@ export interface Casting {
  * scores 0..1 and is multiplied by its weight; the highest total wins.
  */
 export interface TargetingProfile {
+  /**
+   * Cost of a far target: up to this much off its score for the farthest
+   * (see `farness` in grid.ts), none for the one straight ahead. A unit's profile is laid over
+   * DEFAULT_TARGETING, so a profile without it takes the default.
+   */
+  near?: number;
   /** Bonus when the expected hit would knock the target out. */
   finish: number;
   /** Bonus scaled by how much HP the target has lost. */

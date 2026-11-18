@@ -21,6 +21,7 @@ import {
   content,
   createRandom,
   estimateThreat,
+  isBackLiner,
   randomEncounter,
   type BattleSetup,
   type CombatantDef,
@@ -486,16 +487,23 @@ export function threatBudget(run: Run, difficulty: Difficulty): number {
 
 /**
  * The kinds of enemy in the battle with this seed: up to MAX_PACK_KINDS
- * of the pool, so one battle is wolves and vipers, the next a golem.
+ * of the pool, so one battle is wolves and vipers, the next a golem. The
+ * first is a front-liner when the pool has one, so back-liners always have
+ * a line to stand behind.
  */
 export function packFor(pool: CombatantDef[], seed: number): CombatantDef[] {
   const random = createRandom(seed ^ 0x5eed);
   const left = [...pool];
   const kinds = 1 + Math.floor(random() * MAX_PACK_KINDS);
   const pack: CombatantDef[] = [];
-  while (left.length > 0 && pack.length < kinds) {
-    pack.push(left.splice(Math.floor(random() * left.length), 1)[0]!);
-  }
+  const take = (from: CombatantDef[]) => {
+    const def = from[Math.floor(random() * from.length)]!;
+    left.splice(left.indexOf(def), 1);
+    pack.push(def);
+  };
+  const front = left.filter((def) => !isBackLiner(def));
+  if (front.length > 0) take(front);
+  while (left.length > 0 && pack.length < kinds) take(left);
   return pack;
 }
 

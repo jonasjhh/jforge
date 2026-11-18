@@ -18,8 +18,19 @@ export const THREAT_BUDGET: Record<Difficulty, number> = {
   hard: 27,
 };
 
-/** Monsters lean toward the front: weights for rows 0, 1, 2. */
-const ENEMY_ROW_WEIGHTS = [3, 2, 1];
+/**
+ * A unit that fights from behind the line: a ranged weapon, or a preferred
+ * row past the front.
+ */
+export function isBackLiner(def: CombatantDef): boolean {
+  return def.weapon.kind === "ranged" || (def.preferredRow ?? 0) > 0;
+}
+
+/**
+ * Back-liners per front-liner in an encounter: at most two thirds of its
+ * monsters fight from the back, so there is always a line to break first.
+ */
+export const MAX_BACK_PER_FRONT = 2;
 
 export interface EncounterPools {
   party: CombatantDef[];
@@ -29,8 +40,10 @@ export interface EncounterPools {
 /**
  * A battle built from the given party and monster pool. The same seed and
  * difficulty always give the same encounter. Party members stand in their
- * preferred row (in a random column); monsters are drawn at random until
- * the threat budget is spent and placed with a bias toward the front.
+ * preferred row (in a random column), or the nearest row with room.
+ * Monsters are drawn at random until the threat budget is spent, with
+ * back-liners kept to two thirds (MAX_BACK_PER_FRONT) (unless the pool has no front-liner),
+ * and stand in their preferred row the same way.
  * `budget` replaces the difficulty's own (jrpg scales it with the party).
  */
 export function randomEncounter(
@@ -64,44 +77,43 @@ export function randomEncounter(
     party = party.filter((_, i) => i !== drop);
   }
 
-  for (const def of party) {
-    // The preferred row, or the nearest row with room.
+  /** The preferred row, or the nearest row with room; false when full. */
+  const stand = (def: CombatantDef, side: Side): boolean => {
     const preferred = def.preferredRow ?? 0;
     const rows = allRows().sort(
       (a, b) => Math.abs(a - preferred) - Math.abs(b - preferred) || a - b,
     );
-    const row = rows.find((r) => freeCells("player", r).length > 0);
-    if (row === undefined) break;
-    put(def, "player", row, pick(freeCells("player", row)));
+    const row = rows.find((r) => freeCells(side, r).length > 0);
+    if (row === undefined) return false;
+    put(def, side, row, pick(freeCells(side, row)));
+    return true;
+  };
+
+  for (const def of party) {
+    if (!stand(def, "player")) break;
   }
 
-  let placed = 0;
   const cost = (def: CombatantDef) => def.threat ?? 1;
+  const anyFront = pools.monsters.some((m) => !isBackLiner(m));
+  let front = 0;
+  let back = 0;
+  // One more back-liner keeps them within their share.
+  const backFits = () => !anyFront || back + 1 <= MAX_BACK_PER_FRONT * front;
   for (;;) {
-    let affordable = pools.monsters.filter((m) => cost(m) <= budget);
-    // A pool of only big monsters still gets one: the cheapest.
-    if (affordable.length === 0 && placed === 0) {
-      const cheapest = Math.min(...pools.monsters.map(cost));
-      affordable = pools.monsters.filter((m) => cost(m) === cheapest);
+    const allowed = pools.monsters.filter((m) => !isBackLiner(m) || backFits());
+    let affordable = allowed.filter((m) => cost(m) <= budget);
+    // A pool of only big monsters still gets one: the cheapest allowed.
+    if (affordable.length === 0 && front + back === 0) {
+      const cheapest = Math.min(...allowed.map(cost));
+      affordable = allowed.filter((m) => cost(m) === cheapest);
     }
-    const rows = allRows().filter((r) => freeCells("enemy", r).length > 0);
-    if (affordable.length === 0 || rows.length === 0) break;
+    if (affordable.length === 0) break;
     const monster = pick(affordable);
-    const row = weightedRow(rows, random());
-    put(monster, "enemy", row, pick(freeCells("enemy", row)));
+    if (!stand(monster, "enemy")) break;
     budget -= cost(monster);
-    placed++;
+    if (isBackLiner(monster)) back++;
+    else front++;
   }
 
   return { placements };
-}
-
-function weightedRow(rows: number[], roll: number): number {
-  const weights = rows.map((r) => ENEMY_ROW_WEIGHTS[r] ?? 1);
-  let left = roll * weights.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < rows.length; i++) {
-    left -= weights[i]!;
-    if (left < 0) return rows[i]!;
-  }
-  return rows[rows.length - 1] ?? GRID_ROWS - 1;
 }

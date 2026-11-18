@@ -175,7 +175,8 @@ describe("Guard", () => {
     const { state, command } = guardOn(BEHIND);
     const after = act(state, command).state;
     const foe = unit(after, FOE);
-    foe.skills = [firebolt, fireball];
+    // Past cover, so the guarded ally behind the Knight can be aimed at.
+    foe.skills = [{ ...firebolt, ignoreCover: true }, fireball];
     foe.mp = 99;
     foe.base.magic = 10;
     after.phase = { kind: "awaitingCommand", unitId: FOE };
