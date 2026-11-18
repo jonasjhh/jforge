@@ -94,10 +94,12 @@ describe("bow", () => {
 });
 
 describe("staff", () => {
-  it("ignores columns and cover", () => {
+  it("reaches any column but only the front-most unit, as a bow", () => {
     expect(reach(staff, 0, [foe(4, 0), foe(4, 1), foe(4, 2)])).toEqual([
       "enemy-4-0",
-      "enemy-4-1",
+    ]);
+    expect(reach(staff, 0, [foe(4, 2), foe(1, 1)])).toEqual([
+      "enemy-1-1",
       "enemy-4-2",
     ]);
   });

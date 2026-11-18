@@ -35,12 +35,12 @@ export const bow: Weapon = {
   // at first, however fast it is.
   startGauge: -500,
 };
-/** Magic ignores cover: any enemy. */
+/** Any column, but only the front-most unit in it, as a bow. */
 export const staff: Weapon = {
   id: "staff",
   name: "Staff",
   columns: "any",
-  depth: "any",
+  depth: 1,
   damageType: "crush",
   kind: "ranged",
 };

@@ -53,16 +53,14 @@ an empty front cell leaves the unit behind it exposed.
 | ------------ | ------------------------------ | ----------------------------- |
 | Sword, claws | Own column and both neighbours | Front-most unit only          |
 | Spear        | Own column and both neighbours | Front-most and the one behind |
-| Bow          | Any                            | Front-most unit only          |
-| Staff        | Any                            | Any unit, ignores cover       |
+| Bow, staff   | Any                            | Front-most unit only          |
 
 **Cover holds against skills too** (done): a skill aimed at a single
 enemy (damage, a debuff, a heave) can only pick an **exposed** one, the
 front-most living unit in its column, as a bow does; any column is fine.
 Areas still land on covered units. A skill with `ignoreCover` may single
 out any visible enemy (Aimed Shot; Volley's strike also reaches past
-cover); char can set it on any skill. A staff's own weapon attack still
-reaches any unit. So a caster can't focus a frail
+cover); char can set it on any skill. So a caster can't focus a frail
 unit that stands behind a friend.
 
 A weapon is data (`columns`, `depth`), so equipment can swap it and char
