@@ -84,8 +84,10 @@ by Severin Meyer, under the
 ## Testing
 
 Mostly unit tests, each isolating one rule or helper (Vitest, in
-`__tests__/` folders next to the code), plus a few end-to-end smoke tests
-of the happy paths (Playwright, in `modules/<name>/e2e/`).
+`__tests__/` folders next to the code), component tests of the React
+screens (`*.test.tsx`, under happy-dom with Testing Library), plus a few
+end-to-end smoke tests of the happy paths (Playwright, in
+`modules/<name>/e2e/`).
 
 ```
 pnpm test             # unit tests

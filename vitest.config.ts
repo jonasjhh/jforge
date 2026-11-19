@@ -11,7 +11,7 @@ export default defineConfig({
       reporter: ["text-summary", "text", "json-summary", "html"],
       // Floors just under the coverage there is; `pnpm coverage` (and so CI)
       // fails if a change drops below them. Raise them as tests are added.
-      thresholds: { statements: 80, branches: 74, functions: 67, lines: 80 },
+      thresholds: { statements: 97, branches: 94, functions: 97, lines: 98 },
     },
   },
 });
