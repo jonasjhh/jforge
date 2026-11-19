@@ -1,0 +1,56 @@
+name: Nightly quality
+
+on:
+  schedule:
+    # Every night at 02:17 UTC.
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-quality
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    name: Coverage & mutation testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Coverage
+        run: pnpm coverage
+
+      - name: Mutation testing
+        if: ${{ !cancelled() }}
+        run: pnpm mutation
+
+      - name: Job summary
+        if: ${{ !cancelled() }}
+        run: node tooling/quality-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: coverage
+          retention-days: 14
+
+      - name: Upload mutation report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-report
+          path: reports/mutation
+          retention-days: 14

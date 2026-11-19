@@ -89,12 +89,19 @@ of the happy paths (Playwright, in `modules/<name>/e2e/`).
 
 ```
 pnpm test             # unit tests
-pnpm coverage         # unit tests with a coverage report
+pnpm coverage         # unit tests with a coverage report (coverage/)
+pnpm mutation         # mutation testing of modules/*/shared (reports/mutation/)
 pnpm build && pnpm e2e   # starts the Worker on :8791 and drives Chromium
 ```
 
 The end-to-end tests seed `Math.random`, so the app picks the same
 encounter every run. CI runs both, and keeps Playwright traces of failures.
+
+Every night, `.github/workflows/nightly.yml` runs coverage and mutation
+testing (Stryker, configured in `stryker.config.json`). It writes the
+coverage percentages and each module's mutation score to the job summary
+and keeps both HTML reports as artifacts for 14 days. It can also be run
+by hand from the Actions tab.
 
 ## Adding a module
 

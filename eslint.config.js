@@ -7,7 +7,14 @@ import eslintConfigPrettier from "eslint-config-prettier";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist", "**/dev-dist", ".wrangler"],
+    ignores: [
+      "**/dist",
+      "**/dev-dist",
+      ".wrangler",
+      "coverage",
+      "reports",
+      ".stryker-tmp",
+    ],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
