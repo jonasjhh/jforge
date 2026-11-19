@@ -9,6 +9,7 @@ import { tauntBlock } from "./taunt";
 import { MOVE_GAUGE_LEFT, resolveMove, validateMove } from "./move";
 import { dropGuard, resolveDefend, resolveWait } from "./stance";
 import { breakStealth } from "./stealth";
+import { worsenOnAction } from "./bleed";
 import { landCast, castSkill, validateSkill } from "./skills";
 import { applyStatus, runDueTicks } from "./status";
 import { isAlive } from "./stats";
@@ -220,6 +221,7 @@ function resolve(
   }
   if (command.type === "move") {
     resolveMove(state, unit, command.to, events);
+    worsenOnAction(unit, events);
     return;
   }
   if (command.type === "skill") {
@@ -228,6 +230,7 @@ function resolve(
     castSkill(state, unit, skill, command.cell, events);
     finishTurn(state, unit);
     if (skill.halfTurn) unit.gauge = MOVE_GAUGE_LEFT;
+    worsenOnAction(unit, events);
     return;
   }
   const aimed = getUnit(state, command.targetId);
@@ -245,6 +248,7 @@ function resolve(
   }
   poisonOnHit(state, unit, target, hit.amount, events);
   finishTurn(state, unit);
+  worsenOnAction(unit, events);
 }
 
 function finishTurn(state: BattleState, unit: Unit): void {

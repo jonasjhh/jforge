@@ -220,6 +220,7 @@ export const EFFECTS: Record<EffectType, EffectSpec> = {
       flag(["advance"], "Charges to the front first"),
       flag(["pin"], "Pins (slows)"),
       flag(["ignite"], "Sets burning"),
+      flag(["bleed"], "Leaves bleeding"),
     ],
   },
   heal: {

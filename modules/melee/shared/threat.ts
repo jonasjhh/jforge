@@ -1,6 +1,7 @@
 import { POISON } from "./poison";
 import { DEFENSE_K } from "./damage";
 import { IGNITE_BURN } from "./ignite";
+import { BLEED } from "./bleed";
 import { resistancesFor } from "./traits";
 import type { CombatantDef, Skill, SkillArea } from "./types";
 import { DAMAGE_TYPES } from "./types";
@@ -53,6 +54,9 @@ function skillDamage(def: CombatantDef, skill: Skill): number {
     if (effect.ignite) {
       damage +=
         ON_HIT_SHARE * IGNITE_BURN.power * IGNITE_BURN.ticks * def.stats.attack;
+    }
+    if (effect.bleed) {
+      damage += ON_HIT_SHARE * BLEED.power * BLEED.ticks * def.stats.attack;
     }
   } else if (effect.type === "damage" || effect.type === "shatter") {
     damage = def.stats.magic * effect.power;

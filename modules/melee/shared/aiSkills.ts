@@ -16,6 +16,7 @@ import { isPetrified } from "./petrify";
 import { strengthsOf } from "./strengths";
 import { POISON } from "./poison";
 import { IGNITE_BURN } from "./ignite";
+import { BLEED } from "./bleed";
 import { PIN_SLOW } from "./pin";
 import { staggeredGauge } from "./stagger";
 import { WEAKEN_STATUS } from "./weaken";
@@ -289,6 +290,7 @@ function strikeExtra(
     staggered +
     (effect.pin ? pinValue(victim, amount) : 0) +
     (effect.ignite ? statusValue(p, unit, victim, IGNITE_BURN, false) : 0) +
+    (effect.bleed ? statusValue(p, unit, victim, BLEED, false) : 0) +
     (effect.weaken ? statusValue(p, unit, victim, WEAKEN_STATUS, false) : 0) +
     (isCoated(unit) ? statusValue(p, unit, victim, POISON, false) : 0)
   );

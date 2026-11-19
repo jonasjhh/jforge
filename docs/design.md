@@ -240,7 +240,7 @@ and bolas deal no damage (control effects).
 
 | Type      | Effect                                         |
 | --------- | ---------------------------------------------- |
-| Slash     | Bleed: physical damage over time (later)       |
+| Slash     | Bleed: worsening damage over time (Rend)       |
 | Pierce    | Puncture: ignores part of defense              |
 | Chop      | Sunder: defense down                           |
 | Crush     | Stagger: knocks the target's gauge back        |
@@ -315,6 +315,17 @@ Expose without new code.
 - **War Cry** (Fighter): a `self` skill with the row area: the Fighter and
   every ally in its row get attack x1.3 for 150 game time, 5 MP. Weapon
   hits and strikes only; spells use magic.
+- **Rend** (Fighter, its sixth skill): a sword strike at x0.8 that leaves
+  a target it doesn't knock out **bleeding**: slash damage over time,
+  0.15 x attack every 30 game time, 5 ticks (`bleed` on a strike, the
+  "Bleeding" status in bleed.ts), 5 MP. Each time the bleeding unit
+  attacks, uses a skill or moves, every later tick deals half the first
+  tick's amount more (`worsens` on a status: 1x, 1.5x, 2x, ...);
+  defending and waiting don't worsen it, so holding still is the answer.
+  Slash resistance applies (stone and construct take half); Cure removes
+  it; a second Rend restarts it at its first amount. The AI values it as
+  a damage status, without the worsening; threat counts it as Fire
+  Arrow's burn.
 - **Shield Wall** (Knight): a `self` skill with the **row** area (the
   aimed cell's whole row, on its own side only): the Knight and every
   ally in its row get defense x1.5 for 150 game time, 6 MP. It hardens
@@ -718,10 +729,11 @@ Still open:
 - **No new skills for existing classes until there are at least 10
   distinct class archetypes.** Reached with the Geomancer (10 classes):
   new skills for existing classes may now be proposed.
-- **Five unique skills per class.** Every player class gets five skills
-  that no other class has, mixing roles (a Fighter deals damage and
-  tanks), learned at levels 1, 2, 4, 6 and 8. They are added one skill at
-  a time, each reviewed first.
+- **Five unique skills per class, and a sixth.** Every player class gets
+  five skills that no other class has, mixing roles (a Fighter deals
+  damage and tanks), learned at levels 1, 2, 4, 6 and 8. A class may get
+  a sixth, learned at level 10 (so far the Fighter's Rend). They are
+  added one skill at a time, each reviewed first.
 - **Saved data.** For now, every save may be invalidated: the library,
   the roster char publishes to melee and the run in progress all carry
   `SAVE_VERSION` (`melee/shared/save.ts`), and a save of any other version
@@ -746,7 +758,7 @@ skill may break one for a reason worth stating.
 
 ### Class roster plan (12 archetypes)
 
-Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
+Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack, Rend leaves a bleed that worsens as its target acts), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP, Frost Lance chills), **Healer** (support), **Lancer** (spear: reaches behind the
 front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an enemy and its neighbours, Rewind gives an ally back the HP it lost since its last turn), **Warlock** (spends its own HP:
@@ -780,8 +792,10 @@ to five from the roster (kept in roster order) instead of every class.
 
 Ideas to build in small steps, roughly in this order when they fit:
 
-- **Burn** (fire damage over time), e.g. on Fireball.
-- **Bleed** (physical damage over time, the slash signature effect).
+- **One "leaves a status" field on strikes**: replace the per-effect
+  flags (`ignite`, `bleed`, ...) with one field naming the status a
+  strike leaves, before more signature effects (sunder, corrode) arrive.
+  Touches char's effect fields and the existing skills.
 - **Signature effects** for the other types (puncture, sunder, stagger,
   knockback, chill, interrupt, corrode) as skills call for them.
 - **Sonic** damage type, with a future Bard.

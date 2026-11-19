@@ -55,6 +55,9 @@ export function applyStatus(
     interval: def.interval,
     nextTickAt: state.time + def.interval,
     ticksLeft: def.ticks,
+    ...(def.worsens
+      ? { growth: Math.max(1, Math.round(amount * def.worsens)) }
+      : {}),
     sourceId: caster.id,
     ...strengthsOf(def),
   });

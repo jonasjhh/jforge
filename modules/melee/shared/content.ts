@@ -436,6 +436,18 @@ export const cleave: Skill = {
   effect: { type: "strike", power: 0.7 },
 };
 
+/** Fighter: a tearing cut that leaves its target bleeding. */
+export const rend: Skill = {
+  id: "rend",
+  name: "Rend",
+  description:
+    "A tearing cut (x0.8) that leaves its target bleeding if it survives: slash damage over time that worsens each time it attacks, uses a skill or moves.",
+  mpCost: 5,
+  target: "enemy",
+  area: "single",
+  effect: { type: "strike", power: 0.8, bleed: true },
+};
+
 /**
  * Fighter: for a while, enemies that single out a target must pick the
  * Fighter while they can reach it. Area attacks still go where they like.
@@ -1313,6 +1325,7 @@ export const skills = [
   regen,
   cure,
   cleave,
+  rend,
   provoke,
   ironStance,
   secondWind,
@@ -1382,7 +1395,7 @@ export const fighter: CombatantDef = {
     speed: 10,
   },
   weapon: sword,
-  skills: [cleave, provoke, ironStance, secondWind, warCry],
+  skills: [cleave, provoke, ironStance, secondWind, warCry, rend],
   preferredRow: 0,
 };
 

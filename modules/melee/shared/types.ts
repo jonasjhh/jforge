@@ -174,6 +174,12 @@ export interface StatusDef {
   interval: number;
   ticks: number;
   /**
+   * Share of its first amount each later tick gains every time the unit
+   * carrying it attacks, uses a skill or moves; defending and waiting
+   * don't count (Bleeding: 0.5, see bleed.ts).
+   */
+  worsens?: number;
+  /**
    * Strengths (see strengths.ts): damage dealt, damage taken, defense or
    * ambush, times. Read only for the kinds STRENGTH_DEFAULTS lists, and
    * its default when left out.
@@ -196,6 +202,8 @@ export interface Status {
   interval: number;
   nextTickAt: number;
   ticksLeft: number;
+  /** HP added to `amount` each time the unit acts (see StatusDef.worsens). */
+  growth?: number;
   /** The unit that applied it. */
   sourceId: string;
   /** Its strengths, fixed when it was applied (see strengths.ts). */
@@ -245,7 +253,8 @@ export type SkillEffect =
    * way there must be clear, and it must not be there already), and it
    * strikes from there (see charge.ts). `pin` slows a target that
    * survives the hit (see pin.ts);
-   * `ignite` sets it burning (see ignite.ts).
+   * `ignite` sets it burning (see ignite.ts); `bleed` leaves it
+   * bleeding (see bleed.ts).
    */
   | {
       type: "strike";
@@ -254,6 +263,7 @@ export type SkillEffect =
       advance?: boolean;
       pin?: boolean;
       ignite?: boolean;
+      bleed?: boolean;
       /** Share of the target's defense ignored (Armor Pierce: 0.5). */
       armorPierce?: number;
       /**
@@ -628,6 +638,14 @@ export type BattleEvent =
       multiplier?: number;
       /** Damage a shield took instead of HP. */
       absorbed?: number;
+    }
+  | {
+      type: "statusWorsened";
+      unitId: string;
+      statusId: string;
+      name: string;
+      /** HP per tick from now, before resistances. */
+      amount: number;
     }
   | { type: "statusExpired"; unitId: string; statusId: string; name: string }
   | { type: "statusRemoved"; unitId: string; statusId: string; name: string }

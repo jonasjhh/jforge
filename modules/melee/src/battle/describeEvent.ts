@@ -69,6 +69,8 @@ export function describeEvent(
         : `${name(event.unitId)} crashes against the edge!`;
     case "statusRemoved":
       return `${name(event.unitId)} is cured of ${event.name}`;
+    case "statusWorsened":
+      return `${name(event.unitId)}'s ${event.name} worsens`;
     case "statusExpired":
       return `${name(event.unitId)}'s ${event.name} wears off`;
     case "castFizzled":

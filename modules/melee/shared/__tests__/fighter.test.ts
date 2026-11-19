@@ -10,6 +10,7 @@ import {
   ironStance,
   playerTypes,
   provoke,
+  rend,
   secondWind,
   vanish,
   warCry,
@@ -178,13 +179,14 @@ const cast = (skillId: string, state = fighterTurn()) =>
   act(state, { type: "skill", skillId, cell: SELF }).state;
 
 describe("the Fighter's skills", () => {
-  it("are five, none of them another class's", () => {
+  it("are six, none of them another class's", () => {
     expect(fighter.skills).toEqual([
       cleave,
       provoke,
       ironStance,
       secondWind,
       warCry,
+      rend,
     ]);
     const others = playerTypes
       .filter((t) => t !== fighter)

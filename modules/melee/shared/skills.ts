@@ -11,6 +11,7 @@ import { charge, chargeBlock, charged } from "./charge";
 import { guardianOf } from "./guard";
 import { CHILL_SLOW } from "./chill";
 import { IGNITE_BURN } from "./ignite";
+import { BLEED } from "./bleed";
 import { PIN_SLOW } from "./pin";
 import { stagger } from "./stagger";
 import { WEAKEN_STATUS } from "./weaken";
@@ -561,6 +562,9 @@ function applySkill(
         }
         if (effect.ignite && isAlive(target) && !target.obstacle) {
           applyStatus(state, unit, target, IGNITE_BURN, events);
+        }
+        if (effect.bleed && isAlive(target) && !target.obstacle) {
+          applyStatus(state, unit, target, BLEED, events);
         }
         break;
       }
