@@ -32,56 +32,57 @@ const stateOf = (label: string) =>
   screen.getByLabelText(label).getAttribute("class");
 
 describe("LevelMap", () => {
-  it("marks where the party has been and where it can go", () => {
+  it("given the party at a fork, when the map shows, then the stop passed is done and the two ahead are open", () => {
     show(forked());
+
     expect(stateOf("Battle, stop 1")).toBe("stop stop-done");
     expect(screen.getAllByRole("button")).toHaveLength(2);
     expect(stateOf("Go to Training, stop 2")).toBe("stop stop-open");
   });
 
-  it("travels to the stop tapped, or chosen with the keyboard", () => {
+  it("given the party at a fork, when a stop is tapped, then the party is there and the other is ahead", () => {
     const run = show(forked());
+
     fireEvent.click(
       screen.getByRole("button", { name: "Go to Training, stop 2" }),
     );
+
     expect(run.current.path).toEqual([0, 0]);
     expect(stateOf("Training, stop 2")).toBe("stop stop-here");
     expect(
       screen.getByLabelText("Training, stop 2").getAttribute("aria-current"),
     ).toBe("true");
     expect(stateOf("Battle, stop 2")).toBe("stop stop-ahead");
-    cleanup();
-    const keyed = show(forked());
-    fireEvent.keyDown(
-      screen.getByRole("button", { name: "Go to Battle, stop 2" }),
-      {
-        key: "Enter",
-      },
-    );
-    expect(keyed.current.path).toEqual([0, 1]);
   });
 
-  it("ignores other keys", () => {
-    const run = show(forked());
-    fireEvent.keyDown(
-      screen.getByRole("button", { name: "Go to Battle, stop 2" }),
-      {
-        key: "a",
-      },
-    );
-    expect(run.current.path).toEqual([0]);
-  });
+  it.each([
+    ["Enter", [0, 1]],
+    ["a", [0]],
+  ])(
+    "given the party at a fork, when %s is pressed on a stop, then the path is %j",
+    (key, path) => {
+      const run = show(forked());
 
-  it("draws the road walked", () => {
+      fireEvent.keyDown(
+        screen.getByRole("button", { name: "Go to Battle, stop 2" }),
+        { key },
+      );
+
+      expect(run.current.path).toEqual(path);
+    },
+  );
+
+  it("given the party past a fork, when the map shows, then the road walked is drawn and the stop not taken is missed", () => {
     show(forked({ position: 2, path: [0, 1] }));
-    const walked = document.querySelectorAll("line.road.walked");
-    expect(walked).toHaveLength(1);
+
+    expect(document.querySelectorAll("line.road.walked")).toHaveLength(1);
     expect(document.querySelectorAll("line.road")).toHaveLength(2);
     expect(stateOf("Training, stop 2")).toBe("stop stop-missed");
   });
 
-  it("marks the stop the party fell at", () => {
+  it("given a party that fell at a stop, when the map shows, then that stop is marked lost", () => {
     show(forked({ path: [0, 1], defeated: true }));
+
     expect(stateOf("Battle, stop 2")).toBe("stop stop-lost");
   });
 });

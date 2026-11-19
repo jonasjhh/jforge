@@ -18,8 +18,9 @@ const options = (label: string) =>
   Array.from(slot(label).options, (o) => o.textContent);
 
 describe("PartyPanel", () => {
-  it("shows each member's class, level and experience", () => {
+  it("given a party with an empty bag, when the panel shows, then each member's class, level, XP and weapons show, and the bag is empty", () => {
     show(at([battle]));
+
     const lines = screen.getAllByText(/ · Level /, { selector: "span" });
     expect(lines.map((l) => l.textContent)).toEqual([
       `Knight · Level 3 · 0 / ${xpToNext(3)} XP`,
@@ -29,8 +30,9 @@ describe("PartyPanel", () => {
     expect(screen.getByText("Bag: empty")).toBeTruthy();
   });
 
-  it("offers only bag gear the member's class can wear", () => {
+  it("given rings and a bow in the bag, when the panel shows, then the bag lists them and a knight is offered only what they can wear", () => {
     show(at([battle], { bag: ["gear-ring", "gear-bow", "gear-ring"] }));
+
     expect(options("Aldric: Accessory")).toEqual([
       "None",
       expect.stringMatching(/^Swift Ring \(/),
@@ -41,23 +43,37 @@ describe("PartyPanel", () => {
     ).toBeTruthy();
   });
 
-  it("swaps gear with the bag", () => {
+  it("given a ring in the bag, when a member puts it on, then they wear it and the bag is empty", () => {
     const run = show(at([battle], { bag: ["gear-ring"] }));
+
     fireEvent.change(slot("Mira: Accessory"), {
       target: { value: "gear-ring" },
     });
+
     expect(run.current.party[1]!.gear.accessory).toBe("gear-ring");
     expect(run.current.bag).toEqual([]);
+  });
+
+  it("given worn armor, when its slot is set to none, then the armor goes in the bag", () => {
+    const run = show(at([battle]));
+
     fireEvent.change(slot("Aldric: Armor"), { target: { value: "" } });
+
     expect(run.current.party[0]!.gear.armor).toBeUndefined();
     expect(run.current.bag).toEqual(["gear-mail"]);
   });
 
-  it("locks gear once the fight is on, or the run is lost", () => {
-    show(at([battle], { committed: true }));
-    expect(slot("Aldric: Weapon").disabled).toBe(true);
-    cleanup();
-    show(at([battle], { defeated: true }));
-    expect(slot("Mira: Armor").disabled).toBe(true);
-  });
+  it.each([
+    ["committed to a fight", { committed: true }],
+    ["defeated", { defeated: true }],
+  ])(
+    "given a run %s, when the panel shows, then gear can't be changed",
+    (_, changes) => {
+      show(at([battle], changes));
+
+      const weapon = slot("Aldric: Weapon");
+
+      expect(weapon.disabled).toBe(true);
+    },
+  );
 });

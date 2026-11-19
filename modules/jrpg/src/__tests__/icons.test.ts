@@ -1,24 +1,31 @@
 import { describe, expect, it } from "vitest";
+import type { Encounter } from "../../shared";
 import { iconOf } from "../icons";
 
 const battle = (rank: "normal" | "elite" | "boss") =>
   ({ kind: "battle", difficulty: "normal", seed: 1, rank }) as const;
 
 describe("iconOf", () => {
-  it("marks battles by rank", () => {
-    expect(iconOf(battle("normal"))).toBe("⚔");
-    expect(iconOf(battle("elite"))).toBe("☠");
-    expect(iconOf(battle("boss"))).toBe("♛");
-  });
-
-  it("marks every other encounter by its kind", () => {
-    expect(iconOf({ kind: "gear", gearIds: [] })).toBe("◆");
-    expect(iconOf({ kind: "training" })).toBe("▲");
-    expect(
-      iconOf({
+  it.each<[string, Encounter, string]>([
+    ["a normal battle", battle("normal"), "⚔"],
+    ["an elite battle", battle("elite"), "☠"],
+    ["a boss battle", battle("boss"), "♛"],
+    ["a gear find", { kind: "gear", gearIds: [] }, "◆"],
+    ["training", { kind: "training" }, "▲"],
+    [
+      "an ally",
+      {
         kind: "ally",
         character: { id: "a", name: "A", archetypeId: "t", gear: {} },
-      }),
-    ).toBe("☺");
-  });
+      },
+      "☺",
+    ],
+  ])(
+    "given %s, when its icon is taken, then it is %s",
+    (_, encounter, icon) => {
+      const shown = iconOf(encounter);
+
+      expect(shown).toBe(icon);
+    },
+  );
 });

@@ -18,50 +18,85 @@ beforeEach(() => localStorage.clear());
 afterEach(() => refusals.splice(0).forEach((spy) => spy.mockRestore()));
 
 describe("loadLibrary", () => {
-  it("is nothing when char saved nothing, or something broken", () => {
-    expect(loadLibrary()).toBeNull();
-    localStorage.setItem(LIBRARY_STORAGE_KEY, "nope");
-    expect(loadLibrary()).toBeNull();
+  it("given nothing saved by char, when the library is loaded, then there is none", () => {
+    const loaded = loadLibrary();
+
+    expect(loaded).toBeNull();
   });
 
-  it("is the library char saved", () => {
+  it("given a broken save, when the library is loaded, then there is none", () => {
+    localStorage.setItem(LIBRARY_STORAGE_KEY, "nope");
+
+    const loaded = loadLibrary();
+
+    expect(loaded).toBeNull();
+  });
+
+  it("given a library saved by char, when it is loaded, then it is that library", () => {
     const library = starterLibrary();
     localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(library));
-    expect(loadLibrary()).toEqual(library);
+
+    const loaded = loadLibrary();
+
+    expect(loaded).toEqual(library);
   });
 
-  it("is nothing when the browser refuses to read", () => {
+  it("given a saved library and a browser that refuses to read, when it is loaded, then there is none", () => {
     localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(starterLibrary()));
     refuse("getItem");
-    expect(loadLibrary()).toBeNull();
+
+    const loaded = loadLibrary();
+
+    expect(loaded).toBeNull();
   });
 });
 
 describe("loadRun and saveRun", () => {
   const run = startRun(starterLibrary(), 3);
 
-  it("is no run when none was saved", () => {
-    expect(loadRun()).toBeNull();
+  it("given no run saved, when the run is loaded, then there is none", () => {
+    const loaded = loadRun();
+
+    expect(loaded).toBeNull();
   });
 
-  it("reads back the run that was saved", () => {
+  it("given a run saved, when it is loaded, then it reads back unchanged", () => {
     saveRun(run);
-    expect(loadRun()).toEqual(run);
+
+    const loaded = loadRun();
+
+    expect(loaded).toEqual(run);
   });
 
-  it("forgets the run when saving none", () => {
+  it("given a run saved, when no run is saved, then the run is forgotten", () => {
     saveRun(run);
+
     saveRun(null);
+
     expect(localStorage.getItem(RUN_STORAGE_KEY)).toBeNull();
   });
 
-  it("plays on without a save when the browser refuses", () => {
+  it.each([
+    ["a run", run],
+    ["no run", null],
+  ])(
+    "given a browser that refuses to write, when %s is saved, then nothing throws",
+    (_, value) => {
+      refuse("setItem");
+      refuse("removeItem");
+
+      const save = () => saveRun(value);
+
+      expect(save).not.toThrow();
+    },
+  );
+
+  it("given a saved run and a browser that refuses to read, when the run is loaded, then there is none", () => {
     saveRun(run);
-    refuse("setItem");
-    refuse("removeItem");
-    expect(() => saveRun(run)).not.toThrow();
-    expect(() => saveRun(null)).not.toThrow();
     refuse("getItem");
-    expect(loadRun()).toBeNull();
+
+    const loaded = loadRun();
+
+    expect(loaded).toBeNull();
   });
 });

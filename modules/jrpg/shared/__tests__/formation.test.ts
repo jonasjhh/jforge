@@ -31,53 +31,69 @@ const run: Run = {
 };
 
 describe("formationOf", () => {
-  it("stands members in their class's row, from the middle out", () => {
-    expect(formationOf(run)).toEqual({
+  it("given a knight and a sage nobody has placed, when the formation is worked out, then each stands mid-row in their class's row", () => {
+    const cells = formationOf(run);
+
+    expect(cells).toEqual({
       [ALDRIC]: { col: 2, row: 0 },
       [MIRA]: { col: 2, row: 2 },
     });
+  });
+
+  it("given two front-row members, when the formation is worked out, then the second stands next to the middle", () => {
     const twins = {
       ...run,
       party: [run.party[0]!, { ...run.party[0]!, id: "b" }],
     };
-    expect(formationOf(twins).b).toEqual({ col: 1, row: 0 });
+
+    const cells = formationOf(twins);
+
+    expect(cells.b).toEqual({ col: 1, row: 0 });
   });
 
-  it("gives everyone a cell of their own, however big the party", () => {
+  it("given ten front-row members, when the formation is worked out, then each has a cell of their own", () => {
     const crowd = {
       ...run,
-      party: Array.from({ length: 5 }, (_, i) => ({
+      party: Array.from({ length: 10 }, (_, i) => ({
         ...run.party[0]!,
         id: `m${i}`,
       })),
     };
-    const cells = Object.values(
-      formationOf({
-        ...crowd,
-        party: [
-          ...crowd.party,
-          ...crowd.party.map((c) => ({ ...c, id: `x${c.id}` })),
-        ],
-      }),
-    );
+
+    const cells = Object.values(formationOf(crowd));
+
     expect(new Set(cells.map((c) => `${c.col},${c.row}`)).size).toBe(10);
   });
 
-  it("keeps where the player put someone, unless it can't be", () => {
+  it("given a member the player placed, when the formation is worked out, then they stay there", () => {
     const placed = { ...run, formation: { [MIRA]: { col: 0, row: 1 } } };
-    expect(formationOf(placed)[MIRA]).toEqual({ col: 0, row: 1 });
+
+    const cells = formationOf(placed);
+
+    expect(cells[MIRA]).toEqual({ col: 0, row: 1 });
+  });
+
+  it("given a member placed off the grid, when the formation is worked out, then they stand in their usual cell", () => {
     const off = { ...run, formation: { [MIRA]: { col: 9, row: 1 } } };
-    expect(formationOf(off)[MIRA]).toEqual({ col: 2, row: 2 });
+
+    const cells = formationOf(off);
+
+    expect(cells[MIRA]).toEqual({ col: 2, row: 2 });
+  });
+
+  it("given two members placed in one cell, when the formation is worked out, then the first keeps it and the second stands in their usual cell", () => {
     const clash = {
       ...run,
       formation: { [ALDRIC]: { col: 4, row: 1 }, [MIRA]: { col: 4, row: 1 } },
     };
+
     const cells = formationOf(clash);
+
     expect(cells[ALDRIC]).toEqual({ col: 4, row: 1 });
     expect(cells[MIRA]).toEqual({ col: 2, row: 2 });
   });
 
-  it("finds a place for a recruit without moving the others", () => {
+  it("given a placed party, when a recruit joins, then the recruit finds a cell without moving the others", () => {
     const meeting: Run = {
       ...run,
       formation: { [ALDRIC]: { col: 2, row: 2 } },
@@ -88,59 +104,85 @@ describe("formationOf", () => {
         },
       ]),
     };
+
     const cells = formationOf(resolveAlly(meeting, true));
+
     expect(cells[ALDRIC]).toEqual({ col: 2, row: 2 });
     expect(cells.new).toEqual({ col: 3, row: 2 });
   });
 });
 
 describe("moveMember", () => {
-  it("moves a member to an empty cell", () => {
+  it("given an empty cell, when a member is moved there, then they stand in it", () => {
     const moved = moveMember(run, ALDRIC, { col: 4, row: 1 });
+
     expect(formationOf(moved)).toEqual({
       [ALDRIC]: { col: 4, row: 1 },
       [MIRA]: { col: 2, row: 2 },
     });
   });
 
-  it("swaps places with whoever stands there", () => {
+  it("given a cell someone stands in, when a member is moved there, then the two swap places", () => {
     const moved = moveMember(run, ALDRIC, { col: 2, row: 2 });
+
     expect(formationOf(moved)).toEqual({
       [ALDRIC]: { col: 2, row: 2 },
       [MIRA]: { col: 2, row: 0 },
     });
   });
 
-  it("refuses cells off the grid, strangers, and standing still", () => {
-    expect(moveMember(run, ALDRIC, { col: 5, row: 0 })).toBe(run);
-    expect(moveMember(run, ALDRIC, { col: 0, row: 3 })).toBe(run);
-    expect(moveMember(run, "nobody", { col: 0, row: 0 })).toBe(run);
-    expect(moveMember(run, ALDRIC, { col: 2, row: 0 })).toBe(run);
-  });
+  it.each([
+    ["a column off the grid", ALDRIC, { col: 5, row: 0 }],
+    ["a row off the grid", ALDRIC, { col: 0, row: 3 }],
+    ["someone not in the party", "nobody", { col: 0, row: 0 }],
+    ["the cell they stand in", ALDRIC, { col: 2, row: 0 }],
+  ])(
+    "given %s, when the move is made, then the run is unchanged",
+    (_, id, cell) => {
+      const moved = moveMember(run, id, cell);
 
-  it("is locked once the party has acted in the battle", () => {
+      expect(moved).toBe(run);
+    },
+  );
+
+  it("given the party has acted in the battle, when a member is moved, then the formation is locked", () => {
     const committed = commitBattle(run);
-    expect(moveMember(committed, ALDRIC, { col: 0, row: 0 })).toBe(committed);
+
+    const moved = moveMember(committed, ALDRIC, { col: 0, row: 0 });
+
+    expect(moved).toBe(committed);
   });
 
-  it("is saved with the run", () => {
+  it("given a moved member, when the run is saved and parsed, then the formation is kept", () => {
     const moved = moveMember(run, ALDRIC, { col: 4, row: 1 });
-    expect(formationOf(parseRun(JSON.stringify(moved))!)).toEqual(
-      formationOf(moved),
-    );
+
+    const back = parseRun(JSON.stringify(moved))!;
+
+    expect(formationOf(back)).toEqual(formationOf(moved));
   });
 });
 
 describe("battleFor", () => {
-  it("stands the party in formation and leaves the enemies where they were", () => {
+  const side = (r: Run, s: string) =>
+    battleFor(r)!.placements.filter((p) => p.side === s);
+
+  it("given a moved member, when the battle is set up, then the party stands in formation and the enemies where they were", () => {
     const moved = moveMember(run, MIRA, { col: 0, row: 1 });
-    const side = (r: Run, s: string) =>
-      battleFor(r)!.placements.filter((p) => p.side === s);
+
+    const players = side(moved, "player");
+
     expect(side(moved, "enemy")).toEqual(side(run, "enemy"));
-    expect(side(moved, "player").map((p) => [p.def.name, p.position])).toEqual([
+    expect(players.map((p) => [p.def.name, p.position])).toEqual([
       ["Aldric", { col: 2, row: 0 }],
       ["Mira", { col: 0, row: 1 }],
     ]);
-    expect(() => createBattle(battleFor(moved)!, 1)).not.toThrow();
+  });
+
+  it("given a moved member, when the battle starts, then melee accepts it", () => {
+    const moved = moveMember(run, MIRA, { col: 0, row: 1 });
+
+    const start = () => createBattle(battleFor(moved)!, 1);
+
+    expect(start).not.toThrow();
   });
 });

@@ -17,41 +17,59 @@ const save = (run: Run) =>
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
 
 describe("jrpg App", () => {
-  it("starts a run from the start screen and saves it", () => {
+  it("given the start screen, when Set out is pressed, then the first level shows and the run is saved", () => {
     render(<App />);
+
     fireEvent.click(button("Set out"));
+
     expect(screen.getByRole("heading", { name: "Level 1" })).toBeTruthy();
     expect(saved()?.depth).toBe(1);
   });
 
-  it("goes into the battle at hand and can retreat before acting", () => {
+  it("given a battle entered before acting, when the party retreats, then the level shows and the run goes on", () => {
     save(startRun(library, 3));
     render(<App />);
     fireEvent.click(button("Fight"));
+
     fireEvent.click(button("← Retreat"));
+
     expect(screen.getByRole("heading", { name: "Level 1" })).toBeTruthy();
     expect(saved()?.defeated).toBe(false);
   });
 
-  it("reopens a battle the party acted in, where giving up ends the run", () => {
+  it("given a battle the party acted in, when giving up is not confirmed, then the battle stays", () => {
     save({ ...startRun(library, 3), committed: true });
     // happy-dom has no dialogs.
     const confirm = vi.fn(() => false);
     vi.stubGlobal("confirm", confirm);
     render(<App />);
+
     fireEvent.click(button("Give up"));
+
     expect(confirm).toHaveBeenCalledOnce();
     expect(button("Give up")).toBeTruthy();
-    confirm.mockReturnValue(true);
+  });
+
+  it("given a battle the party acted in, when giving up is confirmed, then the run ends", () => {
+    save({ ...startRun(library, 3), committed: true });
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
+    render(<App />);
+
     fireEvent.click(button("Give up"));
+
     expect(screen.getByText("The party has fallen")).toBeTruthy();
     expect(saved()?.defeated).toBe(true);
   });
 
-  it("abandons the run, back to the start screen", () => {
+  it("given a run, when it is abandoned, then the start screen shows and the save is gone", () => {
     save(startRun(library, 3));
     render(<App />);
+
     fireEvent.click(button("Abandon run"));
+
     expect(button("Set out")).toBeTruthy();
     expect(localStorage.getItem(RUN_STORAGE_KEY)).toBeNull();
   });

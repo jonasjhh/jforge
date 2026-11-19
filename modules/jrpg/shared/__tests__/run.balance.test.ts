@@ -22,8 +22,8 @@ const walk = (run: Run, pick: number): Run => {
   return ways.length > 0 ? travel(run, ways[pick % ways.length]!) : run;
 };
 
-describe("difficulty", () => {
-  it("keeps the first level's battles in their win-rate bands", () => {
+describe("first-level difficulty", () => {
+  it("given many first levels played by the AI, when their battles are fought, then each difficulty wins within its band", () => {
     // Auto-played runs. Every battle is counted, then taken as won, so
     // later battles aren't only fought by the parties that got lucky.
     const tally = { easy: [0, 0], normal: [0, 0], hard: [0, 0] };

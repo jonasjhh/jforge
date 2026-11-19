@@ -21,8 +21,9 @@ const arrange = () => {
 const cell = (name: string | RegExp) => screen.getByRole("gridcell", { name });
 
 describe("Formation", () => {
-  it("shows the enemies where they will stand", () => {
+  it("given a battle ahead, when the formation shows, then each enemy is in the cell where it will stand", () => {
     const { setup } = arrange();
+
     const enemies = setup.placements.filter((p) => p.side === "enemy");
     const shown = screen
       .getByRole("grid", { name: "Enemies ahead" })
@@ -33,21 +34,39 @@ describe("Formation", () => {
     ).toHaveLength(enemies.length);
   });
 
-  it("places each member in their class's row", () => {
+  it("given a knight and a sage, when the formation shows, then each stands in their class's row", () => {
     arrange();
+
     expect(cell(/^Aldric, front row/)).toBeTruthy();
     expect(cell(/^Mira, back row/)).toBeTruthy();
   });
 
-  it("moves a member: tap them, then a cell", () => {
-    const { run } = arrange();
+  it("given no member picked, when the formation shows, then empty cells can't be tapped", () => {
+    arrange();
+
     const empty = cell("middle row, column 1") as HTMLButtonElement;
+
     expect(empty.disabled).toBe(true);
+  });
+
+  it("given the formation, when a member is tapped, then they are picked and empty cells open", () => {
+    arrange();
+
     fireEvent.click(cell(/^Aldric/));
+
     expect(cell(/^Aldric/).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByText("Now tap where they should stand.")).toBeTruthy();
-    expect(empty.disabled).toBe(false);
-    fireEvent.click(empty);
+    expect((cell("middle row, column 1") as HTMLButtonElement).disabled).toBe(
+      false,
+    );
+  });
+
+  it("given a member picked, when an empty cell is tapped, then they move there", () => {
+    const { run } = arrange();
+    fireEvent.click(cell(/^Aldric/));
+
+    fireEvent.click(cell("middle row, column 1"));
+
     expect(run.current.formation?.[run.current.party[0]!.id]).toEqual({
       col: 0,
       row: 1,
@@ -56,11 +75,13 @@ describe("Formation", () => {
     expect(screen.getByText(/^Tap one of yours/)).toBeTruthy();
   });
 
-  it("swaps two members when one is moved onto the other", () => {
+  it("given a member picked, when another member is tapped, then the two swap", () => {
     const { run } = arrange();
     const [aldric, mira] = run.current.party;
     fireEvent.click(cell(/^Aldric/));
+
     fireEvent.click(cell(/^Mira/));
+
     expect(run.current.formation?.[aldric!.id]?.row).toBe(2);
     expect(run.current.formation?.[mira!.id]?.row).toBe(0);
   });

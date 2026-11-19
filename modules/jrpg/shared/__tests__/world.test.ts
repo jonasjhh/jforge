@@ -11,19 +11,34 @@ const starter = starterLibrary();
 const world = withWorld(starter);
 
 describe("withWorld", () => {
-  it("is a library char accepts, with unique ids", () => {
-    expect(parseLibrary(JSON.stringify(world))).toEqual(world);
-    for (const key of ["skills", "gear", "archetypes", "characters"] as const) {
-      const ids = world[key].map((x) => x.id);
-      expect(new Set(ids).size).toBe(ids.length);
-    }
+  it("given the world library, when it is saved and parsed, then char reads it back unchanged", () => {
+    const text = JSON.stringify(world);
+
+    const back = parseLibrary(text);
+
+    expect(back).toEqual(world);
   });
 
-  it("compiles every character into a combatant that can fight", () => {
+  it.each(["skills", "gear", "archetypes", "characters"] as const)(
+    "given the world library, when its %s are listed, then each id is unique",
+    (key) => {
+      const ids = world[key].map((x) => x.id);
+
+      expect(new Set(ids).size).toBe(ids.length);
+    },
+  );
+
+  it("given the world library, when its roster is compiled, then every character becomes a combatant", () => {
     const roster = compileRoster(world);
+
     const all = [...roster.party, ...roster.monsters];
     expect(all).toHaveLength(world.characters.length);
     expect(all.every(isCombatantDef)).toBe(true);
+  });
+
+  it("given the world's compiled roster, when a battle is set up from it, then melee accepts it", () => {
+    const roster = compileRoster(world);
+    const all = [...roster.party, ...roster.monsters];
     const placements = all.slice(0, 5).map((def, col) => ({
       def,
       side: "player" as const,
@@ -34,25 +49,33 @@ describe("withWorld", () => {
       side: "enemy" as never,
       position: { col: 0, row: 0 },
     });
-    expect(() => createBattle({ placements }, 1)).not.toThrow();
+
+    const start = () => createBattle({ placements }, 1);
+
+    expect(start).not.toThrow();
   });
 
-  it("teaches every type only skills the library has", () => {
+  it("given the world library, when each type's skills are looked up, then the library has them all", () => {
     const skills = new Set(world.skills.map((s) => s.id));
-    for (const type of world.archetypes) {
-      expect(type.skills.every((id) => skills.has(id))).toBe(true);
-    }
-  });
 
-  it("puts what was designed first", () => {
-    expect(world.characters.slice(0, starter.characters.length)).toEqual(
-      starter.characters,
+    const unknown = world.archetypes.flatMap((type) =>
+      type.skills.filter((id) => !skills.has(id)),
     );
-    expect(world.gear.slice(0, starter.gear.length)).toEqual(starter.gear);
+
+    expect(unknown).toEqual([]);
   });
 
-  it("holds every piece of gear at every tier", () => {
+  it("given a designed library, when the world is added, then the designed characters and gear come first", () => {
+    const characters = world.characters.slice(0, starter.characters.length);
+    const gear = world.gear.slice(0, starter.gear.length);
+
+    expect(characters).toEqual(starter.characters);
+    expect(gear).toEqual(starter.gear);
+  });
+
+  it("given the world library, when its gear is counted, then each piece is there at every tier", () => {
     const base = world.gear.length / GEAR_TIERS.length;
+
     expect(Number.isInteger(base)).toBe(true);
     expect(world.gear.some((g) => g.id === "gear-sword+3")).toBe(true);
   });
@@ -62,32 +85,45 @@ describe("atTier", () => {
   const mail = starter.gear.find((g) => g.id === "gear-mail")!;
   const sword = starter.gear.find((g) => g.id === "gear-sword")!;
 
-  it("leaves plain gear alone", () => {
-    expect(atTier(mail, 0)).toBe(mail);
+  it("given chain mail, when it is taken at tier 0, then it is unchanged", () => {
+    const plain = atTier(mail, 0);
+
+    expect(plain).toBe(mail);
   });
 
-  it("grows what it adds, not what it multiplies, and renames it", () => {
+  it("given chain mail, when it is taken at tier 1, then it is renamed and what it adds grows, not what it multiplies", () => {
     const fine = atTier(mail, 1);
+
     expect(fine).toMatchObject({ id: "gear-mail+1", name: "Fine Chain Mail" });
     expect(fine.bonuses).toEqual([
       { stat: "defense", op: "add", value: 12 },
       { stat: "speed", op: "mul", value: 0.9 },
     ]);
-    expect(atTier(mail, 3).bonuses[0]!.value).toBe(20);
   });
 
-  it("keeps a weapon a weapon under its new name", () => {
-    expect(atTier(sword, 2).weapon).toMatchObject({
+  it("given chain mail, when it is taken at tier 3, then its defense bonus is 20", () => {
+    const best = atTier(mail, 3);
+
+    expect(best.bonuses[0]!.value).toBe(20);
+  });
+
+  it("given a sword, when it is taken at tier 2, then it stays a weapon under its new name", () => {
+    const superior = atTier(sword, 2);
+
+    expect(superior.weapon).toMatchObject({
       id: "gear-sword+2",
       name: "Superior Iron Sword",
     });
   });
 
-  it("doesn't deepen a drawback", () => {
+  it("given gear with a drawback, when it is taken at tier 3, then the drawback is no deeper", () => {
     const heavy = {
       ...mail,
       bonuses: [{ stat: "speed" as const, op: "add" as const, value: -2 }],
     };
-    expect(atTier(heavy, 3).bonuses[0]!.value).toBe(-2);
+
+    const tiered = atTier(heavy, 3);
+
+    expect(tiered.bonuses[0]!.value).toBe(-2);
   });
 });
