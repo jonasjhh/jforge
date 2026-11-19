@@ -5,7 +5,7 @@ import type { BattleEvent, BattleState, Position, Unit } from "./types";
 // attacker to the front row of its own column, then strikes from there.
 
 /** Where a charging unit ends up: the front cell of its column. */
-export function chargeCell(unit: Unit): Position {
+function chargeCell(unit: Unit): Position {
   return { col: unit.position.col, row: 0 };
 }
 

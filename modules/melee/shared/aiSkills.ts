@@ -45,20 +45,20 @@ import type {
 /** A buff on an ally or a debuff on a foe, worth about one plain attack. */
 export const SUPPORT_VALUE = 1;
 /** Healing: weight x share of max HP restored x share of max HP missing. */
-export const HEAL_WEIGHT = 4;
+const HEAL_WEIGHT = 4;
 /** Damage and healing over time are worth less than up front. */
-export const OVER_TIME = 0.6;
+const OVER_TIME = 0.6;
 /** A delayed skill may land on an empty cell; it is worth this much. */
 export const CAST_DISCOUNT = 0.75;
 /** Spending all of its MP costs the AI this much score; less, pro rata. */
-export const MP_WEIGHT = 0.5;
+const MP_WEIGHT = 0.5;
 /** Paying all of its current HP would cost this much score. */
-export const HP_WEIGHT = 2;
+const HP_WEIGHT = 2;
 /** A full gauge given to an ally (or taken from a foe). */
-export const GAUGE_WEIGHT = 1.2;
+const GAUGE_WEIGHT = 1.2;
 /** A summoned creature; an obstacle (a boulder) is worth less. */
 export const SUMMON_VALUE = 1.5;
-export const OBSTACLE_VALUE = 0.4;
+const OBSTACLE_VALUE = 0.4;
 /** An ally back in the fight, on top of the HP it comes back with. */
 export const REVIVE_VALUE = 2;
 
@@ -520,7 +520,7 @@ export function skillCost(unit: Unit, skill: Skill): number {
   return mp + hp;
 }
 
-export interface SkillChoice {
+interface SkillChoice {
   skill: Skill;
   cell: Cell;
   value: number;

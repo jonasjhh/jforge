@@ -196,7 +196,7 @@ export function applyDamage(
 }
 
 /** What happened to a unit's damage: HP lost, shield used, ward saved it. */
-export interface Suffered {
+interface Suffered {
   lost: number;
   absorbed: number;
   shieldName?: string;

@@ -3,30 +3,18 @@
 // module depends on another.
 import {
   GRID_COLUMNS,
-  MAX_PARTY_SIZE,
   content,
   simulate,
   type BattleSetup,
   type BattleSummary,
   type CombatantDef,
   type Placement,
-  type Roster,
 } from "@jforge/melee/shared";
 
 const { fighter, healer, slime } = content;
 
 /** Who sets out when no party has been designed in char. */
-export const defaultParty: CombatantDef[] = [fighter, healer];
-
-/**
- * The adventuring party: the characters published by the char module (the
- * first five), or the default heroes when there are none.
- */
-export function partyFrom(roster: Roster): CombatantDef[] {
-  return roster.party.length > 0
-    ? roster.party.slice(0, MAX_PARTY_SIZE)
-    : defaultParty;
-}
+const defaultParty: CombatantDef[] = [fighter, healer];
 
 /** Lines the party up: spread over the columns, each in its preferred row. */
 function placeParty(party: CombatantDef[]): Placement[] {
@@ -51,8 +39,6 @@ export function openingBattleFor(party: CombatantDef[]): BattleSetup {
     ],
   };
 }
-
-export const openingBattle: BattleSetup = openingBattleFor(defaultParty);
 
 /** Auto-plays the opening battle with melee's engine. */
 export function previewOpeningBattle(

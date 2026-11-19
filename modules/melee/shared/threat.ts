@@ -20,7 +20,7 @@ import { DAMAGE_TYPES } from "./types";
  * built-in party beats about half the time on the Hard budget. A pool of
  * designed monsters then plays about as hard as the built-in one.
  */
-export const THREAT_SCALE = 0.023;
+const THREAT_SCALE = 0.023;
 /** Lowest estimate: even a harmless unit takes up a cell and a turn. */
 export const MIN_THREAT = 1;
 /** Bites that poison add this share of the poison's total damage. */

@@ -30,7 +30,7 @@ export function xpToNext(level: number): number {
   return at >= MAX_LEVEL ? 0 : 100 * at;
 }
 
-export interface Progress {
+interface Progress {
   level: number;
   xp: number;
 }

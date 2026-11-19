@@ -3,7 +3,7 @@ import { forcedTargets } from "./taunt";
 import { isAlive } from "./stats";
 import type { BattleState, Unit } from "./types";
 
-export interface ReachOptions {
+interface ReachOptions {
   /** Covered units count as exposed (a skill like Aimed Shot). */
   ignoreCover?: boolean;
 }

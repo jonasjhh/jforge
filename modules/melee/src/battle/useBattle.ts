@@ -17,12 +17,12 @@ import { hitsFrom, type Hit } from "./hits";
 /** Game time per real second at 1×. Speed 10 fills a gauge in about 1.7 s. */
 export const TIME_SCALE = 60;
 /** How long time stays frozen to show an action, at 1×. */
-export const ACTION_MS = 700;
+const ACTION_MS = 700;
 /** Longest frame step, so a background tab doesn't jump time ahead. */
 const MAX_FRAME_MS = 100;
 const LOG_LINES = 40;
 
-export interface BattleView {
+interface BattleView {
   state: BattleState;
   log: string[];
   /** Damage and heal numbers from the latest action, keyed to replay. */

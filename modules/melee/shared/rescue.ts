@@ -20,7 +20,7 @@ export const RESCUE_BRACE = {
 } as const;
 
 /** Where the rescuer and the ally end up. */
-export function rescueCells(ally: Unit): { rescuer: Position; ally: Position } {
+function rescueCells(ally: Unit): { rescuer: Position; ally: Position } {
   const { col } = ally.position;
   return { rescuer: { col, row: 1 }, ally: { col, row: 2 } };
 }

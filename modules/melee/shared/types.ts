@@ -41,14 +41,8 @@ export interface Modifier {
  * Geomancer's thrown rock is magical delivery with an impact type.
  * One type per hit. See docs/design.md, "Damage types".
  */
-export const PHYSICAL_TYPES = [
-  "slash",
-  "pierce",
-  "chop",
-  "crush",
-  "impact",
-] as const;
-export const MAGICAL_TYPES = [
+const PHYSICAL_TYPES = ["slash", "pierce", "chop", "crush", "impact"] as const;
+const MAGICAL_TYPES = [
   "fire",
   "cold",
   "lightning",
@@ -548,7 +542,7 @@ export interface Unit {
   modifiers: Modifier[];
 }
 
-export type Phase =
+type Phase =
   | { kind: "running" }
   | { kind: "awaitingCommand"; unitId: string }
   | { kind: "over"; winner: Side | null };

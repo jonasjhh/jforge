@@ -77,7 +77,7 @@ const AREA_OFFSETS: Record<
 };
 
 /** Areas fixed by shape alone; "reach" depends on the caster (see skills). */
-export type ShapeArea = Exclude<SkillArea, "reach">;
+type ShapeArea = Exclude<SkillArea, "reach">;
 
 export function areaCells(center: Cell, area: ShapeArea): Cell[] {
   if (area === "single") return [center];

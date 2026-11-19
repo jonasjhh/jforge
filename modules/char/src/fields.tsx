@@ -6,7 +6,7 @@ interface FieldProps {
 }
 
 /** A labelled form control. */
-export function Field({ label, children }: FieldProps) {
+function Field({ label, children }: FieldProps) {
   return (
     <label className="field">
       <span className="field-label">{label}</span>

@@ -94,7 +94,7 @@ export function statGrowth(id: string, base: Stats): Stats {
  * the skill can grow. An empty row: the skill grows only through the
  * caster's stats.
  */
-export type SkillGrowth = Record<string, number>;
+type SkillGrowth = Record<string, number>;
 
 /** Skill growth per caster level, by skill id. */
 export const SKILL_GROWTH: Record<string, SkillGrowth> = {

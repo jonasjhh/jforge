@@ -114,7 +114,7 @@ export const daggers: Weapon = {
 };
 
 /** Paladin: a sword that deals holy damage. */
-export const blessedBlade: Weapon = {
+const blessedBlade: Weapon = {
   id: "blessed-blade",
   name: "Blessed Blade",
   columns: 1,

@@ -58,7 +58,7 @@ export const MELEE_PROFICIENCIES: Record<string, GearCategory[]> = {
 };
 
 /** The category of each melee class's own weapon, by melee type id. */
-export const MELEE_WEAPON_CATEGORY: Record<string, GearCategory> = {
+const MELEE_WEAPON_CATEGORY: Record<string, GearCategory> = {
   fighter: "blade",
   lancer: "polearm",
   paladin: "blade",

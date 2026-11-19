@@ -3,7 +3,7 @@ import { useEffect, useRef, type MouseEvent } from "react";
 /** How long a press must last to count as a long press. */
 const LONG_PRESS_MS = 450;
 
-export interface LongPress {
+interface LongPress {
   onPointerDown: () => void;
   onPointerUp: () => void;
   onPointerLeave: () => void;

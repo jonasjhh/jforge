@@ -1,13 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { content, createBattle } from "@jforge/melee/shared";
-import {
-  defaultParty,
-  openingBattleFor,
-  partyFrom,
-  previewOpeningBattle,
-} from "../index";
+import { openingBattleFor, previewOpeningBattle } from "../index";
 
-const { archer, fighter, healer, mage, slime } = content;
+const { archer, fighter, healer, mage } = content;
 
 describe("previewOpeningBattle", () => {
   it("plays the opening battle to the end with melee's engine", () => {
@@ -18,18 +13,6 @@ describe("previewOpeningBattle", () => {
 
   it("is repeatable for a seed", () => {
     expect(previewOpeningBattle(5)).toEqual(previewOpeningBattle(5));
-  });
-});
-
-describe("partyFrom", () => {
-  it("is the default heroes when nothing was imported", () => {
-    expect(partyFrom({ party: [], monsters: [slime] })).toBe(defaultParty);
-  });
-
-  it("is the imported party, at most five", () => {
-    expect(partyFrom({ party: [mage], monsters: [] })).toEqual([mage]);
-    const many = [fighter, archer, mage, healer, fighter, archer];
-    expect(partyFrom({ party: many, monsters: [] })).toHaveLength(5);
   });
 });
 

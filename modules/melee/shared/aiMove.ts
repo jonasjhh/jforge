@@ -8,9 +8,9 @@ import { isAlive } from "./stats";
 import type { BattleState, Command, Position, Unit } from "./types";
 
 /** Weight of the best share of a foe's max HP its weapon takes per hit. */
-export const OFFENSE_WEIGHT = 2;
+const OFFENSE_WEIGHT = 2;
 /** Weight of the share of its own max HP the foes that reach it take. */
-export const DANGER_WEIGHT = 1;
+const DANGER_WEIGHT = 1;
 /**
  * A step costs half a turn; it must improve the position by this much. A
  * teleport that takes a whole turn must improve it twice as much.
@@ -51,7 +51,7 @@ export function valueAt(state: BattleState, unit: Unit, to: Position): number {
   }
 }
 
-export interface MoveChoice {
+interface MoveChoice {
   command: Command;
   /** How much better the new cell is, after the cost of getting there. */
   gain: number;

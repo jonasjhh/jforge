@@ -13,7 +13,7 @@ import {
 const ROW_LABELS = ["front", "middle", "back"];
 
 /** What a damage multiplier means: none, weak (over 1), resist, immune (0). */
-export type ResistanceKind = "weak" | "resist" | "immune";
+type ResistanceKind = "weak" | "resist" | "immune";
 
 export function resistanceKind(multiplier: number): ResistanceKind | undefined {
   if (multiplier === 0) return "immune";

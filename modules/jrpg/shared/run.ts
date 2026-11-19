@@ -37,7 +37,7 @@ import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
 // only show a run and call these functions.
 
 /** An ordinary fight, a tougher one mid-level, or the level's last. */
-export type BattleRank = "normal" | "elite" | "boss";
+type BattleRank = "normal" | "elite" | "boss";
 
 export type Encounter =
   | {
@@ -131,7 +131,7 @@ export const START_PARTY_SIZE = 2;
 /** The level a party sets out at, and enemies start from. */
 export const START_LEVEL = 1;
 /** Chance that an ordinary battle drops gear; elites and the last always do. */
-export const LOOT_CHANCE = 0.4;
+const LOOT_CHANCE = 0.4;
 /** Experience per point of enemy threat, shared out over the party. */
 export const XP_PER_THREAT = 40;
 /** Levels every enemy gains per level of the run after the first. */
@@ -464,7 +464,7 @@ export function memberDef(
 }
 
 /** The party as melee fights with it. */
-export function partyDefs(run: Run): CombatantDef[] {
+function partyDefs(run: Run): CombatantDef[] {
   return run.party.flatMap((c) => memberDef(run.library, c) ?? []);
 }
 
