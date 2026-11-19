@@ -27,7 +27,14 @@ import { skillArea } from "../skills";
 import { effectiveStat } from "../stats";
 import { cleanse, spellPower } from "../status";
 import { offenseOf } from "../threat";
-import type { BattleState, CombatantDef, Unit } from "../types";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  CombatantDef,
+  DamageType,
+  Unit,
+} from "../types";
 import { def, place } from "./helpers";
 
 const fast = (d: CombatantDef) => ({ ...d, stats: { ...d.stats, speed: 50 } });
@@ -59,98 +66,110 @@ function turnOf(hero: CombatantDef): BattleState {
   ).state;
 }
 
+const skillOn = (skillId: string, cell: Cell) =>
+  ({ type: "skill", skillId, cell }) as const;
+
 describe("Knight and Sage", () => {
-  it("are melee player types with skills of their own", () => {
-    expect(playerTypes).toContain(knight);
-    expect(playerTypes).toContain(sage);
-    expect(knight.skills).toEqual([
-      shieldWall,
-      guard,
-      shieldBash,
-      charge,
-      rescue,
+  it("given the player types, when they are listed, then the Knight and the Sage are among them", () => {
+    const types = playerTypes;
+
+    expect(types).toContain(knight);
+    expect(types).toContain(sage);
+  });
+
+  it("given the Knight and the Sage, when their skills are listed, then each has its own five", () => {
+    const skills = [knight.skills, sage.skills];
+
+    expect(skills).toEqual([
+      [shieldWall, guard, shieldBash, charge, rescue],
+      [expose, silence, manaBurn, rebuke, arcaneWave],
     ]);
-    expect(sage.skills).toEqual([
-      expose,
-      silence,
-      manaBurn,
-      rebuke,
-      arcaneWave,
-    ]);
+  });
+
+  it("given the other player types, when their skills are collected, then none of the Knight's or Sage's are among them", () => {
     const others = playerTypes
       .filter((t) => t !== knight && t !== sage)
       .flatMap((t) => t.skills ?? []);
-    for (const skill of [...knight.skills!, ...sage.skills!]) {
-      expect(others).not.toContain(skill);
-    }
+
+    const shared = [...knight.skills!, ...sage.skills!].filter((s) =>
+      others.includes(s),
+    );
+
+    expect(shared).toEqual([]);
   });
 });
 
 describe("Shield Wall", () => {
-  const cast = () =>
-    act(turnOf(knight), {
-      type: "skill",
-      skillId: shieldWall.id,
-      cell: { side: "player", col: 2, row: 0 },
-    }).state;
+  const self = { side: "player", col: 2, row: 0 } as const;
+  const walled = act(turnOf(knight), skillOn(shieldWall.id, self)).state;
+  const defense = (id: string) => effectiveStat(unit(walled, id), "defense");
 
-  it("covers the Knight's whole row, on its own side only", () => {
+  it("given the Knight, when its area is worked out, then it is the Knight's whole row, on its own side", () => {
     const state = turnOf(knight);
-    const cells = skillArea(state, unit(state, "player-2-0"), shieldWall, {
-      side: "player",
-      col: 2,
-      row: 0,
-    });
+
+    const cells = skillArea(state, unit(state, "player-2-0"), shieldWall, self);
+
     expect(cells).toEqual(
       [0, 1, 2, 3, 4].map((col) => ({ side: "player", col, row: 0 })),
     );
   });
 
-  it("raises the defense of the Knight and its row, not the row behind", () => {
-    const state = cast();
-    expect(effectiveStat(unit(state, "player-0-0"), "defense")).toBe(15);
-    expect(effectiveStat(unit(state, "player-2-0"), "defense")).toBe(
-      Math.round(knight.stats.defense * 1.5),
-    );
-    expect(effectiveStat(unit(state, "player-2-1"), "defense")).toBe(10);
-    expect(effectiveStat(unit(state, "enemy-2-0"), "defense")).toBe(0);
-  });
+  it.each([
+    ["the ally beside it", "player-0-0", 15],
+    ["the Knight", "player-2-0", Math.round(knight.stats.defense * 1.5)],
+    ["the ally behind it", "player-2-1", 10],
+    ["the foe", "enemy-2-0", 0],
+  ])(
+    "given the wall is up, when the defense of %s is read, then it is %i",
+    (_, id, expected) => {
+      const value = defense(id);
 
-  it("is aimed at the Knight only", () => {
+      expect(value).toBe(expected);
+    },
+  );
+
+  it("given the Knight, when it aims the wall at an ally, then it is refused, as it is aimed at the caster", () => {
     const state = turnOf(knight);
-    const command = {
-      type: "skill",
-      skillId: shieldWall.id,
-      cell: { side: "player", col: 0, row: 0 },
-    } as const;
-    expect(validateCommand(state, unit(state, "player-2-0"), command)).toMatch(
-      /caster/,
-    );
+    const command = skillOn(shieldWall.id, { side: "player", col: 0, row: 0 });
+
+    const problem = validateCommand(state, unit(state, "player-2-0"), command);
+
+    expect(problem).toMatch(/caster/);
   });
 });
 
 describe("Expose", () => {
-  const cast = () =>
-    act(turnOf(sage), {
-      type: "skill",
-      skillId: expose.id,
-      cell: { side: "enemy", col: 2, row: 0 },
-    }).state;
+  const before = unit(turnOf(sage), "enemy-2-0");
+  const cast = act(
+    turnOf(sage),
+    skillOn(expose.id, { side: "enemy", col: 2, row: 0 }),
+  ).state;
+  const foe = unit(cast, "enemy-2-0");
 
-  it("makes an enemy take more from every damage type; immune stays immune", () => {
-    const before = unit(turnOf(sage), "enemy-2-0");
-    const foe = unit(cast(), "enemy-2-0");
-    expect(foe.statuses[0]).toMatchObject({ id: "exposed", harmful: true });
-    expect(resistance(before, "slash")).toBe(1);
-    expect(resistance(foe, "slash")).toBe(EXPOSE_FACTOR);
-    expect(resistance(foe, "fire")).toBeCloseTo(0.5 * EXPOSE_FACTOR);
-    expect(resistance(foe, "holy")).toBe(0);
+  it("given a foe, when it is exposed, then it carries the harmful Exposed status", () => {
+    const status = foe.statuses[0];
+
+    expect(status).toMatchObject({ id: "exposed", harmful: true });
   });
 
-  it("costs 8 MP", () => {
-    expect(unit(cast(), "player-2-0").mp).toBe(
-      sage.stats.maxMp - expose.mpCost,
-    );
+  it.each<[string, DamageType, number, number]>([
+    ["slash", "slash", 1, EXPOSE_FACTOR],
+    ["fire it half resists", "fire", 0.5, 0.5 * EXPOSE_FACTOR],
+    ["holy it is immune to", "holy", 0, 0],
+  ])(
+    "given an exposed foe, when its resistance to %s is read, then it goes up by the factor",
+    (_, type, plain, exposed) => {
+      const value = resistance(foe, type);
+
+      expect(resistance(before, type)).toBe(plain);
+      expect(value).toBeCloseTo(exposed);
+    },
+  );
+
+  it("given the Sage, when it exposes a foe, then it pays 8 MP", () => {
+    const mp = unit(cast, "player-2-0").mp;
+
+    expect(mp).toBe(sage.stats.maxMp - expose.mpCost);
   });
 });
 
@@ -159,21 +178,13 @@ describe("Guard", () => {
   const BESIDE = "player-0-0";
   const BEHIND = "player-2-1";
   const FOE = "enemy-2-0";
-  const guardOn = (id: string, state = turnOf(knight)) => {
-    const at = unit(state, id).position;
-    return {
-      state,
-      command: {
-        type: "skill",
-        skillId: guard.id,
-        cell: { side: "player", ...at },
-      } as const,
-    };
-  };
+  const behind = { side: "player", col: 2, row: 1 } as const;
+  const guardOn = (id: string, state = turnOf(knight)) =>
+    skillOn(guard.id, { side: "player", ...unit(state, id).position });
   /** The Knight guards the ally behind it; then it is the foe's turn. */
   const foeTurn = () => {
-    const { state, command } = guardOn(BEHIND);
-    const after = act(state, command).state;
+    const state = turnOf(knight);
+    const after = act(state, guardOn(BEHIND, state)).state;
     const foe = unit(after, FOE);
     // Past cover, so the guarded ally behind the Knight can be aimed at.
     foe.skills = [{ ...firebolt, ignoreCover: true }, fireball];
@@ -182,97 +193,114 @@ describe("Guard", () => {
     after.phase = { kind: "awaitingCommand", unitId: FOE };
     return after;
   };
+  const guardValue = (state: BattleState) =>
+    skillValue(state, unit(state, KNIGHT), guard, behind);
 
-  it("is aimed only at an ally next to the Knight", () => {
-    const next = guardOn(BEHIND);
-    expect(
-      validateCommand(next.state, unit(next.state, KNIGHT), next.command),
-    ).toBeNull();
-    const far = guardOn(BESIDE);
-    expect(
-      validateCommand(far.state, unit(far.state, KNIGHT), far.command),
-    ).toMatch(/next to you/);
-    const self = guardOn(KNIGHT);
-    expect(
-      validateCommand(self.state, unit(self.state, KNIGHT), self.command),
-    ).toMatch(/caster/);
-  });
+  it.each([
+    ["the ally behind it", BEHIND, null],
+    ["an ally two away", BESIDE, /next to you/],
+    ["itself", KNIGHT, /caster/],
+  ])(
+    "given the Knight, when it guards %s, then it is allowed only next to it",
+    (_, id, problem) => {
+      const state = turnOf(knight);
 
-  it("puts the guard on the ally, from the Knight, for 5 MP", () => {
-    const state = foeTurn();
-    expect(unit(state, BEHIND).statuses[0]).toMatchObject({
+      const result = validateCommand(state, unit(state, KNIGHT), guardOn(id));
+
+      if (problem === null) expect(result).toBeNull();
+      else expect(result).toMatch(problem);
+    },
+  );
+
+  it("given the Knight, when it guards an ally, then the ally carries the Knight's guard, for 5 MP", () => {
+    const state = turnOf(knight);
+
+    const after = act(state, guardOn(BEHIND, state)).state;
+
+    expect(unit(after, BEHIND).statuses[0]).toMatchObject({
       effect: "guard",
       sourceId: KNIGHT,
     });
-    expect(unit(state, KNIGHT).mp).toBe(knight.stats.maxMp - guard.mpCost);
+    expect(unit(after, KNIGHT).mp).toBe(knight.stats.maxMp - guard.mpCost);
   });
 
-  it("makes an attack on the ally land on the Knight", () => {
-    const { state, events } = act(foeTurn(), {
+  it("given a guarded ally, when it is attacked, then the blow lands on the Knight", () => {
+    const state = foeTurn();
+
+    const { state: after, events } = act(state, {
       type: "attack",
       targetId: BEHIND,
     });
+
     expect(events).toContainEqual({
       type: "guarded",
       unitId: BEHIND,
       byId: KNIGHT,
     });
-    expect(unit(state, BEHIND).hp).toBe(100);
-    expect(unit(state, KNIGHT).hp).toBeLessThan(knight.stats.maxHp);
+    expect(unit(after, BEHIND).hp).toBe(100);
+    expect(unit(after, KNIGHT).hp).toBeLessThan(knight.stats.maxHp);
   });
 
-  it("covers single-target spells but not area ones", () => {
-    const at = { side: "player", col: 2, row: 1 } as const;
-    const bolt = act(foeTurn(), {
-      type: "skill",
-      skillId: firebolt.id,
-      cell: at,
-    }).state;
-    expect(unit(bolt, BEHIND).hp).toBe(100);
-    expect(unit(bolt, KNIGHT).hp).toBeLessThan(knight.stats.maxHp);
-    const ball = act(foeTurn(), {
-      type: "skill",
-      skillId: fireball.id,
-      cell: at,
-    }).state;
-    expect(unit(ball, BEHIND).hp).toBeLessThan(100);
-  });
-
-  it("ends when the Knight falls", () => {
+  it("given a guarded ally, when a single-target spell hits it, then the Knight takes it", () => {
     const state = foeTurn();
-    unit(state, KNIGHT).hp = 0;
-    const after = act(state, { type: "attack", targetId: BEHIND }).state;
+
+    const after = act(state, skillOn(firebolt.id, behind)).state;
+
+    expect(unit(after, BEHIND).hp).toBe(100);
+    expect(unit(after, KNIGHT).hp).toBeLessThan(knight.stats.maxHp);
+  });
+
+  it("given a guarded ally, when an area spell hits it, then the ally takes it", () => {
+    const state = foeTurn();
+
+    const after = act(state, skillOn(fireball.id, behind)).state;
+
     expect(unit(after, BEHIND).hp).toBeLessThan(100);
   });
 
-  it("is worth casting to the AI for a frail ally, not a tough one", () => {
-    const value = (state: BattleState) =>
-      skillValue(state, unit(state, KNIGHT), guard, {
-        side: "player",
-        col: 2,
-        row: 1,
-      });
-    expect(value(turnOf(knight))).toBeGreaterThan(0);
+  it("given a guarded ally and a fallen Knight, when the ally is attacked, then it takes the blow", () => {
+    const state = foeTurn();
+    unit(state, KNIGHT).hp = 0;
+
+    const after = act(state, { type: "attack", targetId: BEHIND }).state;
+
+    expect(unit(after, BEHIND).hp).toBeLessThan(100);
+  });
+
+  it("given a frail ally, when the AI values guarding it, then it is worth casting", () => {
+    const state = turnOf(knight);
+
+    const value = guardValue(state);
+
+    expect(value).toBeGreaterThan(0);
+  });
+
+  it("given a tough ally, when the AI values guarding it, then it is not worth casting", () => {
     const tough = turnOf(knight);
     const ally = unit(tough, BEHIND);
     ally.base.maxHp = 500;
     ally.base.defense = 50;
-    expect(value(tough)).toBeLessThanOrEqual(0);
+
+    const value = guardValue(tough);
+
+    expect(value).toBeLessThanOrEqual(0);
   });
 });
 
 describe("Shield Bash", () => {
-  it("strikes and knocks the enemy a row back", () => {
-    const { state, events } = act(turnOf(knight), {
-      type: "skill",
-      skillId: shieldBash.id,
-      cell: { side: "enemy", col: 2, row: 0 },
-    });
-    const foe = unit(state, "enemy-2-0");
+  it("given a foe in front, when the Knight bashes it, then it is hurt and knocked a row back, for the MP cost", () => {
+    const state = turnOf(knight);
+
+    const { state: after, events } = act(
+      state,
+      skillOn(shieldBash.id, { side: "enemy", col: 2, row: 0 }),
+    );
+
+    const foe = unit(after, "enemy-2-0");
     expect(foe.position).toEqual({ col: 2, row: 1 });
     expect(foe.hp).toBeLessThan(100);
     expect(events.some((e) => e.type === "pushed")).toBe(true);
-    expect(unit(state, "player-2-0").mp).toBe(
+    expect(unit(after, "player-2-0").mp).toBe(
       knight.stats.maxMp - shieldBash.mpCost,
     );
   });
@@ -295,17 +323,16 @@ describe("Charge", () => {
         1,
       ),
     ).state;
-  const command = {
-    type: "skill",
-    skillId: charge.id,
-    cell: { side: "enemy", col: 2, row: 0 },
-  } as const;
+  const command = skillOn(charge.id, { side: "enemy", col: 2, row: 0 });
   const knightIn = (s: BattleState) =>
     s.units.find((u) => u.defId === "knight")!;
 
-  it("runs the Knight to the front of its column and strikes", () => {
-    const { state, events } = act(knightAt(2), command);
-    const self = knightIn(state);
+  it("given the Knight in the back row, when it charges, then it runs to the front of its column and strikes, for the MP cost", () => {
+    const state = knightAt(2);
+
+    const { state: after, events } = act(state, command);
+
+    const self = knightIn(after);
     expect(self.position).toEqual({ col: 2, row: 0 });
     expect(events).toContainEqual({
       type: "moved",
@@ -313,32 +340,35 @@ describe("Charge", () => {
       from: { col: 2, row: 2 },
       to: { col: 2, row: 0 },
     });
-    expect(unit(state, "enemy-2-0").hp).toBeLessThan(100);
+    expect(unit(after, "enemy-2-0").hp).toBeLessThan(100);
     expect(self.mp).toBe(knight.stats.maxMp - charge.mpCost);
   });
 
-  it("hits as hard as a weapon attack from the front row", () => {
+  it("given the Knight in the back row, when its charge is previewed, then it hits as hard as a weapon attack from the front, harder than one from the back", () => {
     const back = knightAt(2);
     const front = knightAt(0);
     const foe = unit(back, "enemy-2-0");
-    expect(previewDamage(knightIn(back), foe, charge)!.amount).toBe(
-      previewDamage(knightIn(front), foe)!.amount,
-    );
-    expect(previewDamage(knightIn(back), foe)!.amount).toBeLessThan(
-      previewDamage(knightIn(front), foe)!.amount,
-    );
+    const fromFront = previewDamage(knightIn(front), foe)!.amount;
+
+    const charged = previewDamage(knightIn(back), foe, charge)!.amount;
+
+    expect(charged).toBe(fromFront);
+    expect(previewDamage(knightIn(back), foe)!.amount).toBeLessThan(fromFront);
   });
 
-  it("needs a clear way and a Knight not at the front already", () => {
-    const blocked = knightAt(2, 1);
-    expect(validateCommand(blocked, knightIn(blocked), command)).toMatch(
-      /blocked/,
-    );
-    const front = knightAt(0);
-    expect(validateCommand(front, knightIn(front), command)).toMatch(
-      /front row/,
-    );
-  });
+  it.each([
+    ["an ally ahead of it", () => knightAt(2, 1), /blocked/],
+    ["the Knight already at the front", () => knightAt(0), /front row/],
+  ])(
+    "given %s, when the Knight charges, then it is refused",
+    (_, make, problem) => {
+      const state = make();
+
+      const result = validateCommand(state, knightIn(state), command);
+
+      expect(result).toMatch(problem);
+    },
+  );
 });
 
 describe("Rescue", () => {
@@ -366,17 +396,20 @@ describe("Rescue", () => {
     ally.gauge = 600;
     return state;
   };
-  const command = {
-    type: "skill",
-    skillId: rescue.id,
-    cell: { side: "player", col: 2, row: 0 },
-  } as const;
+  const command = skillOn(rescue.id, { side: "player", col: 2, row: 0 });
+  const knightIn = (s: BattleState) =>
+    s.units.find((u) => u.defId === "knight")!;
+  const rescueValue = (state: BattleState) =>
+    skillValue(state, unit(state, KNIGHT), rescue, command.cell);
 
-  it("puts the Knight in the ally's middle row and the ally behind it", () => {
-    const { state, events } = act(rescueTurn(), command);
-    const self = state.units.find((u) => u.defId === "knight")!;
+  it("given a hurt ally beside the Knight, when it is rescued, then the Knight stands in its middle row and the ally behind it, for the MP cost", () => {
+    const state = rescueTurn();
+
+    const { state: after, events } = act(state, command);
+
+    const self = knightIn(after);
     expect(self.position).toEqual({ col: 2, row: 1 });
-    expect(unit(state, ALLY).position).toEqual({ col: 2, row: 2 });
+    expect(unit(after, ALLY).position).toEqual({ col: 2, row: 2 });
     expect(events).toContainEqual({
       type: "rescued",
       unitId: ALLY,
@@ -385,69 +418,94 @@ describe("Rescue", () => {
     expect(self.mp).toBe(knight.stats.maxMp - rescue.mpCost);
   });
 
-  it("halves the ally's gauge and braces the Knight", () => {
+  it("given an ally at gauge 600, when it is rescued, then its gauge halves and the Knight is braced x1.3 defense", () => {
     const before = rescueTurn();
     const defense = effectiveStat(unit(before, KNIGHT), "defense");
+
     const { state } = act(before, command);
+
+    const self = knightIn(state);
     expect(unit(state, ALLY).gauge).toBe(300);
-    const self = state.units.find((u) => u.defId === "knight")!;
     expect(self.modifiers).toContainEqual(
       expect.objectContaining({ source: "Braced", stat: "defense" }),
     );
     expect(effectiveStat(self, "defense")).toBeCloseTo(defense * 1.3, 0);
   });
 
-  it("never raises a gauge still below 0 (a bow's late start)", () => {
+  it("given an ally with a gauge below 0 (a bow's late start), when it is rescued, then its gauge is not raised", () => {
     const before = rescueTurn();
     unit(before, ALLY).gauge = -400;
-    expect(unit(act(before, command).state, ALLY).gauge).toBe(-400);
+
+    const { state } = act(before, command);
+
+    expect(unit(state, ALLY).gauge).toBe(-400);
   });
 
-  it("needs both cells free; a knocked-out body blocks too", () => {
-    const taken = rescueTurn([2, 1]);
-    expect(validateCommand(taken, unit(taken, KNIGHT), command)).toMatch(
-      /No room/,
-    );
-    const body = rescueTurn([2, 2]);
-    unit(body, "player-2-2").hp = 0;
-    expect(validateCommand(body, unit(body, KNIGHT), command)).toMatch(
-      /No room/,
-    );
+  it.each<[string, () => BattleState]>([
+    ["someone in the ally's middle row", () => rescueTurn([2, 1])],
+    [
+      "a knocked-out body in the ally's back row",
+      () => {
+        const body = rescueTurn([2, 2]);
+        unit(body, "player-2-2").hp = 0;
+        return body;
+      },
+    ],
+  ])("given %s, when the Knight rescues, then there is no room", (_, make) => {
+    const state = make();
+
+    const problem = validateCommand(state, unit(state, KNIGHT), command);
+
+    expect(problem).toMatch(/No room/);
   });
 
-  it("is aimed only at an ally next to the Knight, not one already behind", () => {
+  it("given an ally two away, when the Knight rescues it, then it is refused as not next to it", () => {
     const far = rescueTurn();
     unit(far, ALLY).position = { col: 3, row: 0 };
-    expect(
-      validateCommand(far, unit(far, KNIGHT), {
-        ...command,
-        cell: { side: "player", col: 3, row: 0 },
-      }),
-    ).toMatch(/next to you/);
+
+    const problem = validateCommand(far, unit(far, KNIGHT), {
+      ...command,
+      cell: { side: "player", col: 3, row: 0 },
+    });
+
+    expect(problem).toMatch(/next to you/);
+  });
+
+  it("given an ally already behind the Knight, when the Knight rescues it, then it is refused", () => {
     const placed = rescueTurn();
     unit(placed, KNIGHT).position = { col: 2, row: 1 };
     unit(placed, ALLY).position = { col: 2, row: 2 };
-    expect(
-      validateCommand(placed, unit(placed, KNIGHT), {
-        ...command,
-        cell: { side: "player", col: 2, row: 2 },
-      }),
-    ).toMatch(/already behind/);
+
+    const problem = validateCommand(placed, unit(placed, KNIGHT), {
+      ...command,
+      cell: { side: "player", col: 2, row: 2 },
+    });
+
+    expect(problem).toMatch(/already behind/);
   });
 
-  it("is worth it to the AI for a hurt front-row ally, not a healthy one", () => {
-    const value = (state: BattleState) =>
-      skillValue(state, unit(state, KNIGHT), rescue, command.cell);
-    expect(value(rescueTurn())).toBeGreaterThan(0);
+  it("given a hurt front-row ally, when the AI values rescuing it, then it is worth casting", () => {
+    const state = rescueTurn();
+
+    const value = rescueValue(state);
+
+    expect(value).toBeGreaterThan(0);
+  });
+
+  it("given a healthy front-row ally, when the AI values rescuing it, then it is not worth casting", () => {
     const healthy = rescueTurn();
     unit(healthy, ALLY).hp = 100;
-    expect(value(healthy)).toBeLessThanOrEqual(0);
+
+    const value = rescueValue(healthy);
+
+    expect(value).toBeLessThanOrEqual(0);
   });
 });
 
 describe("Silence", () => {
   const SAGE = "player-2-0";
   const FOE = "enemy-2-0";
+  const playerCell = { side: "player", col: 2, row: 0 } as const;
   /** The Sage's turn, its foe a caster with MP to spare. */
   const sageTurn = () => {
     const state = turnOf(sage);
@@ -456,61 +514,90 @@ describe("Silence", () => {
     foe.mp = 99;
     return state;
   };
-  const command = {
-    type: "skill",
-    skillId: silence.id,
-    cell: { side: "enemy", col: 2, row: 0 },
-  } as const;
+  const command = skillOn(silence.id, { side: "enemy", col: 2, row: 0 });
   /** The foe silenced; then it is the foe's turn. */
   const foeTurn = () => {
     const after = act(sageTurn(), command).state;
     after.phase = { kind: "awaitingCommand", unitId: FOE };
     return after;
   };
+  /** `state` with the foe casting a Meteor at the Sage. */
+  const casting = (state: BattleState) => {
+    unit(state, FOE).casting = {
+      skillId: meteor.id,
+      skillName: meteor.name,
+      cell: playerCell,
+      area: [playerCell],
+      startedAt: state.time,
+      readyAt: state.time + 60,
+    };
+    return state;
+  };
+  const silenceValue = (state: BattleState) =>
+    skillValue(state, unit(state, SAGE), silence, command.cell);
 
-  it("stops the enemy using skills but not attacking, for 9 MP", () => {
-    const state = foeTurn();
-    const foe = unit(state, FOE);
-    expect(foe.statuses[0]).toMatchObject({ id: "silenced", harmful: true });
-    expect(unit(state, SAGE).mp).toBe(sage.stats.maxMp - silence.mpCost);
-    const bolt = {
-      type: "skill",
-      skillId: firebolt.id,
-      cell: { side: "player", col: 2, row: 0 },
-    } as const;
-    expect(validateCommand(state, foe, bolt)).toMatch(/silenced/);
-    expect(
-      validateCommand(state, foe, { type: "attack", targetId: SAGE }),
-    ).toBeNull();
+  it("given a foe caster, when it is silenced, then it carries the harmful Silenced status, for 9 MP", () => {
+    const state = sageTurn();
+
+    const after = act(state, command).state;
+
+    expect(unit(after, FOE).statuses[0]).toMatchObject({
+      id: "silenced",
+      harmful: true,
+    });
+    expect(unit(after, SAGE).mp).toBe(sage.stats.maxMp - silence.mpCost);
   });
 
-  it("wears off after a while, and Cure removes it", () => {
+  it("given a silenced foe, when it casts, then it is refused", () => {
+    const state = foeTurn();
+
+    const problem = validateCommand(
+      state,
+      unit(state, FOE),
+      skillOn(firebolt.id, playerCell),
+    );
+
+    expect(problem).toMatch(/silenced/);
+  });
+
+  it("given a silenced foe, when it attacks, then it may", () => {
+    const state = foeTurn();
+
+    const problem = validateCommand(state, unit(state, FOE), {
+      type: "attack",
+      targetId: SAGE,
+    });
+
+    expect(problem).toBeNull();
+  });
+
+  it("given a silenced foe, when 150 time passes, then it wears off", () => {
     let state = act(sageTurn(), command).state;
     const until = state.time + 150;
+
     while (state.time <= until && state.phase.kind !== "over") {
       state = advance(state).state;
       if (state.phase.kind === "awaitingCommand") {
         state = act(state, { type: "defend" }).state;
       }
     }
+
     expect(unit(state, FOE).statuses).toEqual([]);
-    const cured = foeTurn();
-    cleanse(unit(cured, FOE), []);
-    expect(unit(cured, FOE).statuses).toEqual([]);
   });
 
-  it("makes a cast in progress fizzle", () => {
-    const state = sageTurn();
-    const cell = { side: "player", col: 2, row: 0 } as const;
-    unit(state, FOE).casting = {
-      skillId: meteor.id,
-      skillName: meteor.name,
-      cell,
-      area: [cell],
-      startedAt: state.time,
-      readyAt: state.time + 60,
-    };
+  it("given a silenced foe, when it is cleansed, then the silence goes", () => {
+    const state = foeTurn();
+
+    cleanse(unit(state, FOE), []);
+
+    expect(unit(state, FOE).statuses).toEqual([]);
+  });
+
+  it("given a foe casting, when it is silenced, then the cast fizzles", () => {
+    const state = casting(sageTurn());
+
     const { state: after, events } = act(state, command);
+
     expect(unit(after, FOE).casting).toBeUndefined();
     expect(events).toContainEqual({
       type: "castFizzled",
@@ -519,23 +606,28 @@ describe("Silence", () => {
     });
   });
 
-  it("is worth it to the AI on a foe with skills, more on one casting", () => {
-    const value = (state: BattleState) =>
-      skillValue(state, unit(state, SAGE), silence, command.cell);
+  it("given a foe with skills, when the AI values silencing it, then it is worth casting", () => {
     const idle = sageTurn();
-    expect(value(idle)).toBeGreaterThan(0);
-    const casting = sageTurn();
-    const cell = { side: "player", col: 2, row: 0 } as const;
-    unit(casting, FOE).casting = {
-      skillId: meteor.id,
-      skillName: meteor.name,
-      cell,
-      area: [cell],
-      startedAt: casting.time,
-      readyAt: casting.time + 60,
-    };
-    expect(value(casting)).toBeGreaterThan(value(idle));
-    expect(value(turnOf(sage))).toBeLessThanOrEqual(0);
+
+    const value = silenceValue(idle);
+
+    expect(value).toBeGreaterThan(0);
+  });
+
+  it("given a foe casting, when the AI values silencing it, then it is worth more than an idle one", () => {
+    const idle = silenceValue(sageTurn());
+
+    const value = silenceValue(casting(sageTurn()));
+
+    expect(value).toBeGreaterThan(idle);
+  });
+
+  it("given a foe without skills, when the AI values silencing it, then it is not worth casting", () => {
+    const plain = turnOf(sage);
+
+    const value = silenceValue(plain);
+
+    expect(value).toBeLessThanOrEqual(0);
   });
 });
 
@@ -550,38 +642,50 @@ describe("Mana Burn", () => {
     foe.mp = mp;
     return state;
   };
+  const burn = (state: BattleState) => act(state, skillOn(manaBurn.id, cell));
+  const burnValue = (state: BattleState) =>
+    skillValue(state, unit(state, "player-2-0"), manaBurn, cell);
 
-  it("hits with arcane and burns 10 MP, or what is left", () => {
-    const { state, events } = act(burnWith(25), {
-      type: "skill",
-      skillId: manaBurn.id,
-      cell,
-    });
-    expect(unit(state, FOE).hp).toBeLessThan(100);
-    expect(unit(state, FOE).mp).toBe(15);
+  it("given a foe with 25 MP, when it is burned, then it takes arcane damage and loses 10 MP, for the MP cost", () => {
+    const state = burnWith(25);
+
+    const { state: after, events } = burn(state);
+
+    expect(unit(after, FOE).hp).toBeLessThan(100);
+    expect(unit(after, FOE).mp).toBe(15);
     expect(events).toContainEqual({
       type: "mpBurned",
       unitId: FOE,
       amount: 10,
       mp: 15,
     });
-    expect(unit(state, "player-2-0").mp).toBe(
+    expect(unit(after, "player-2-0").mp).toBe(
       sage.stats.maxMp - manaBurn.mpCost,
     );
-    const low = act(burnWith(4), { type: "skill", skillId: manaBurn.id, cell });
-    expect(unit(low.state, FOE).mp).toBe(0);
-    const none = act(burnWith(0), {
-      type: "skill",
-      skillId: manaBurn.id,
-      cell,
-    });
-    expect(none.events.some((e) => e.type === "mpBurned")).toBe(false);
   });
 
-  it("is worth more to the AI on a foe with MP to lose", () => {
-    const value = (state: BattleState) =>
-      skillValue(state, unit(state, "player-2-0"), manaBurn, cell);
-    expect(value(burnWith(25))).toBeGreaterThan(value(burnWith(0)));
+  it("given a foe with 4 MP, when it is burned, then it loses what is left", () => {
+    const state = burnWith(4);
+
+    const { state: after } = burn(state);
+
+    expect(unit(after, FOE).mp).toBe(0);
+  });
+
+  it("given a foe without MP, when it is burned, then no MP burns", () => {
+    const state = burnWith(0);
+
+    const { events } = burn(state);
+
+    expect(events.some((e) => e.type === "mpBurned")).toBe(false);
+  });
+
+  it("given a foe with MP and one without, when the AI values burning them, then the one with MP is worth more", () => {
+    const empty = burnValue(burnWith(0));
+
+    const full = burnValue(burnWith(25));
+
+    expect(full).toBeGreaterThan(empty);
   });
 });
 
@@ -590,18 +694,30 @@ describe("Rebuke", () => {
   const cell = { side: "enemy", col: 2, row: 0 } as const;
   const preview = (state: BattleState) =>
     previewDamage(unit(state, "player-2-0"), unit(state, FOE), rebuke)!.amount;
-
-  it("hits x1.6 a foe with a helpful effect or casting, not a harmful one", () => {
-    const plain = turnOf(sage);
-    const hasted = turnOf(sage);
-    unit(hasted, FOE).modifiers.push({
+  const hastedTurn = () => {
+    const state = turnOf(sage);
+    unit(state, FOE).modifiers.push({
       stat: "speed",
       op: "mul",
       value: 1.5,
       source: "Haste",
     });
-    const casting = turnOf(sage);
-    unit(casting, FOE).casting = {
+    return state;
+  };
+  const plain = preview(turnOf(sage));
+
+  it("given a hasted foe, when Rebuke is previewed, then it hits x1.6", () => {
+    const state = hastedTurn();
+
+    const amount = preview(state);
+
+    // Both are rounded, so allow one point either way.
+    expect(Math.abs(amount - 1.6 * plain)).toBeLessThan(1.5);
+  });
+
+  it("given a foe casting, when Rebuke is previewed, then it hits as hard as on a hasted one", () => {
+    const state = turnOf(sage);
+    unit(state, FOE).casting = {
       skillId: "x",
       skillName: "X",
       cell,
@@ -609,34 +725,33 @@ describe("Rebuke", () => {
       startedAt: 0,
       readyAt: 60,
     };
-    const slowed = turnOf(sage);
-    unit(slowed, FOE).modifiers.push({
+
+    const amount = preview(state);
+
+    expect(amount).toBe(preview(hastedTurn()));
+  });
+
+  it("given a slowed foe, when Rebuke is previewed, then it gets no bonus", () => {
+    const state = turnOf(sage);
+    unit(state, FOE).modifiers.push({
       stat: "speed",
       op: "mul",
       value: 0.5,
       source: "Slow",
       harmful: true,
     });
-    // Both are rounded, so allow one point either way.
-    expect(Math.abs(preview(hasted) - 1.6 * preview(plain))).toBeLessThan(1.5);
-    expect(preview(casting)).toBe(preview(hasted));
-    expect(preview(slowed)).toBe(preview(plain));
+
+    const amount = preview(state);
+
+    expect(amount).toBe(plain);
   });
 
-  it("deals the bonus when it lands", () => {
-    const hasted = turnOf(sage);
-    unit(hasted, FOE).modifiers.push({
-      stat: "speed",
-      op: "mul",
-      value: 1.5,
-      source: "Haste",
-    });
-    const expected = preview(hasted);
-    const { events } = act(hasted, {
-      type: "skill",
-      skillId: rebuke.id,
-      cell,
-    });
+  it("given a hasted foe, when Rebuke lands, then it deals the bonus", () => {
+    const state = hastedTurn();
+    const expected = preview(state);
+
+    const { events } = act(state, skillOn(rebuke.id, cell));
+
     const hit = events.find((e) => e.type === "damage");
     expect(hit && hit.type === "damage" && hit.amount).toBeGreaterThanOrEqual(
       Math.floor(expected * 0.85),
@@ -664,52 +779,62 @@ describe("Arcane Wave", () => {
     return state;
   };
 
-  it("shares x2 among everyone hit, at most x1.5 each", () => {
-    const foe = unit(turnOf(sage), "enemy-2-0");
-    expect(spellPower(effect, foe, 1)).toBe(1.5);
-    expect(spellPower(effect, foe, 2)).toBe(1);
-    expect(spellPower(effect, foe, 4)).toBe(0.5);
-    expect(spellPower(effect, foe, 5)).toBe(0.4);
-  });
+  it.each([
+    [1, 1.5],
+    [2, 1],
+    [4, 0.5],
+    [5, 0.4],
+  ])(
+    "given %i foes hit, when the spell power is worked out, then each gets x%s of the shared x2, at most x1.5",
+    (count, power) => {
+      const foe = unit(turnOf(sage), "enemy-2-0");
 
-  it("hits the whole enemy row, each foe for its share", () => {
+      const share = spellPower(effect, foe, count);
+
+      expect(share).toBe(power);
+    },
+  );
+
+  it("given four foes in the enemy front row, when the wave hits, then each takes its quarter share", () => {
     const state = waveAt([0, 1, 2, 4]);
-    const sageUnit = unit(state, "player-2-0");
     const expected = previewDamage(
-      sageUnit,
+      unit(state, "player-2-0"),
       unit(state, "enemy-2-0"),
       arcaneWave,
       4,
     )!.amount;
-    const { events } = act(state, {
-      type: "skill",
-      skillId: arcaneWave.id,
-      cell,
-    });
-    const hits = events.filter((e) => e.type === "damage");
-    expect(hits.map((e) => e.type === "damage" && e.unitId).sort()).toEqual([
+
+    const { events } = act(state, skillOn(arcaneWave.id, cell));
+
+    const hits = events.filter(
+      (e): e is Extract<BattleEvent, { type: "damage" }> => e.type === "damage",
+    );
+    const outside = hits.filter(
+      (hit) =>
+        hit.amount < Math.floor(expected * 0.85) ||
+        hit.amount > Math.ceil(expected * 1.15),
+    );
+    expect(hits.map((e) => e.unitId).sort()).toEqual([
       "enemy-0-0",
       "enemy-1-0",
       "enemy-2-0",
       "enemy-4-0",
     ]);
-    for (const hit of hits) {
-      if (hit.type !== "damage") continue;
-      expect(hit.amount).toBeGreaterThanOrEqual(Math.floor(expected * 0.85));
-      expect(hit.amount).toBeLessThanOrEqual(Math.ceil(expected * 1.15));
-    }
+    expect(outside).toEqual([]);
   });
 
-  it("previews a lone foe at x1.5 and a crowded row at less each", () => {
+  it("given a lone foe, when the wave is previewed for one and for four, then four each take a third of one", () => {
     const state = waveAt([2]);
     const sageUnit = unit(state, "player-2-0");
     const foe = unit(state, "enemy-2-0");
     const one = previewDamage(sageUnit, foe, arcaneWave, 1)!.amount;
+
     const four = previewDamage(sageUnit, foe, arcaneWave, 4)!.amount;
+
     expect(Math.abs(four - one / 3)).toBeLessThan(1.5);
   });
 
-  it("counts for threat as its x2 total, not x1.5 on every foe", () => {
+  it("given the wave and a single-target x2 strike, when their offense is worked out, then they count the same for threat", () => {
     const single = {
       ...sage,
       skills: [
@@ -720,8 +845,9 @@ describe("Arcane Wave", () => {
         },
       ],
     };
-    expect(offenseOf({ ...sage, skills: [arcaneWave] })).toBeCloseTo(
-      offenseOf(single),
-    );
+
+    const wave = offenseOf({ ...sage, skills: [arcaneWave] });
+
+    expect(wave).toBeCloseTo(offenseOf(single));
   });
 });

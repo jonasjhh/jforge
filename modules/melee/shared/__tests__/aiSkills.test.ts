@@ -72,40 +72,70 @@ const ally = (col: number, row = 0) =>
   place(def(`ally${col}`), "enemy", col, row);
 
 describe("hitValue", () => {
-  it("scores a plain attack the way targetScore does without noise", () => {
+  it("given a foe at 40 HP, when a plain attack is scored, then it matches targetScore without noise", () => {
     const { state, caster } = battle([], [foe(1)]);
     const target = unit(state, "player-1-0");
     target.hp = 40;
     const plain = 10;
-    expect(hitValue(calm, caster, target, plain)).toBeCloseTo(
-      targetScore(state, caster, target),
-    );
+
+    const value = hitValue(calm, caster, target, plain);
+
+    expect(value).toBeCloseTo(targetScore(state, caster, target));
   });
 
-  it("scales with damage compared with a plain attack", () => {
+  it("given a foe, when a hit of twice the damage is scored, then it is worth twice as much", () => {
     const { state, caster } = battle([], [foe(1)]);
     const target = unit(state, "player-1-0");
-    expect(hitValue(calm, caster, target, 20)).toBeCloseTo(
-      2 * hitValue(calm, caster, target, 10),
-    );
+
+    const value = hitValue(calm, caster, target, 20);
+
+    expect(value).toBeCloseTo(2 * hitValue(calm, caster, target, 10));
   });
 
-  it("adds the finish bonus when the hit would knock the target out", () => {
+  it("given a foe at 5 HP, when a hit that knocks it out is scored, then it adds the finish bonus", () => {
     const { state, caster } = battle([], [foe(1)]);
     const target = unit(state, "player-1-0");
     target.hp = 5;
     const without = hitValue({ ...calm, finish: 0 }, caster, target, 10);
-    expect(hitValue(calm, caster, target, 10)).toBeCloseTo(without + 3);
+
+    const value = hitValue(calm, caster, target, 10);
+
+    expect(value).toBeCloseTo(without + 3);
   });
 
-  it("is worth nothing when nothing gets through", () => {
+  it("given a foe, when a hit of no damage is scored, then it is worth nothing", () => {
     const { state, caster } = battle([], [foe(1)]);
-    expect(hitValue(calm, caster, unit(state, "player-1-0"), 0)).toBe(0);
+
+    const value = hitValue(calm, caster, unit(state, "player-1-0"), 0);
+
+    expect(value).toBe(0);
   });
 });
 
 describe("skillValue", () => {
-  it("counts every foe an area skill hits", () => {
+  const heals = (hp: number) => {
+    const { state, caster } = battle([heal], [foe(0)], [ally(1)]);
+    unit(state, "enemy-1-0").hp = hp;
+    return skillValue(state, caster, heal, at("enemy", 1));
+  };
+  /** An ally of the caster with haste already on. */
+  const hasted = () => {
+    const { state, caster } = battle([haste], [foe(1)], [ally(1)]);
+    unit(state, "enemy-1-0").modifiers.push({
+      stat: "speed",
+      op: "mul",
+      value: 1.5,
+      source: haste.effect.type === "modify" ? haste.effect.modifier.name : "",
+    });
+    return { state, caster };
+  };
+  const quickens = (gauge: number) => {
+    const { state, caster } = battle([quicken], [foe(0)], [ally(1)]);
+    unit(state, "enemy-1-0").gauge = gauge;
+    return skillValue(state, caster, quicken, at("enemy", 1));
+  };
+
+  it("given three foes in a plus, when a fireball on the middle is valued, then it counts every foe hit", () => {
     // Each foe alone, with the plus aimed so it is caught the same way.
     const aim = at("player", 2);
     const alone = (col: number) => {
@@ -115,69 +145,86 @@ describe("skillValue", () => {
     };
     const three = battle([fireball], [foe(1), foe(2), foe(3)]);
     const cost = skillCost(three.caster, fireball);
+
     const triple = skillValue(three.state, three.caster, fireball, aim) + cost;
+
     expect(triple).toBeCloseTo(alone(1) + alone(2) + alone(3));
   });
 
-  it("counts allies caught in the area against it", () => {
+  it("given an ally across the line from a foe, when a fireball would spill onto it, then it is worth less than one aimed past it", () => {
     // Aimed at the front cell, the plus spills onto the ally across the
     // line; aimed one row back, it still hits the foe but not the ally.
     const { state, caster } = battle([fireball], [foe(2)], [ally(2)]);
-    expect(skillValue(state, caster, fireball, at("player", 2))).toBeLessThan(
+
+    const spilling = skillValue(state, caster, fireball, at("player", 2));
+
+    expect(spilling).toBeLessThan(
       skillValue(state, caster, fireball, at("player", 2, 1)),
     );
   });
 
-  it("discounts a delayed skill", () => {
+  it("given a meteor, when it is valued, then its cast time discounts it", () => {
     const { state, caster } = battle([meteor], [foe(2)]);
     const cost = skillCost(caster, meteor);
-    const plain = skillValue(
-      state,
-      caster,
-      { ...meteor, castTime: 0 },
-      at("player", 2),
-    );
-    expect(
-      skillValue(state, caster, meteor, at("player", 2)) + cost,
-    ).toBeCloseTo((plain + cost) * CAST_DISCOUNT);
+    const instant = { ...meteor, castTime: 0 };
+    const plain = skillValue(state, caster, instant, at("player", 2));
+
+    const delayed = skillValue(state, caster, meteor, at("player", 2));
+
+    expect(delayed + cost).toBeCloseTo((plain + cost) * CAST_DISCOUNT);
   });
 
-  it("values healing an ally by how much it restores and how hurt it is", () => {
-    const { state, caster } = battle([heal], [foe(0)], [ally(1)]);
-    const hurt = unit(state, "enemy-1-0");
-    hurt.hp = 100;
-    expect(skillValue(state, caster, heal, at("enemy", 1))).toBeLessThan(0);
-    hurt.hp = 60;
-    const lightly = skillValue(state, caster, heal, at("enemy", 1));
-    hurt.hp = 20;
-    const badly = skillValue(state, caster, heal, at("enemy", 1));
+  it("given an ally at full HP, when healing it is valued, then it is not worth the cost", () => {
+    const full = 100;
+
+    const value = heals(full);
+
+    expect(value).toBeLessThan(0);
+  });
+
+  it("given a badly and a lightly hurt ally, when healing them is valued, then the badly hurt one is worth more", () => {
+    const lightly = heals(60);
+
+    const badly = heals(20);
+
     expect(badly).toBeGreaterThan(lightly);
   });
 
-  it("buffs allies and debuffs foes, once", () => {
-    const { state, caster } = battle([haste, slow], [foe(1)], [ally(1)]);
-    const cost = skillCost(caster, haste);
-    expect(skillValue(state, caster, haste, at("enemy", 1))).toBeCloseTo(
-      SUPPORT_VALUE - cost,
-    );
-    expect(skillValue(state, caster, slow, at("player", 1))).toBeCloseTo(
-      SUPPORT_VALUE - cost,
-    );
-    unit(state, "enemy-1-0").modifiers.push({
-      stat: "speed",
-      op: "mul",
-      value: 1.5,
-      source: haste.effect.type === "modify" ? haste.effect.modifier.name : "",
-    });
-    expect(skillValue(state, caster, haste, at("enemy", 1))).toBeLessThan(0);
+  it.each([
+    ["haste on an ally", haste, at("enemy", 1)],
+    ["slow on a foe", slow, at("player", 1)],
+  ])(
+    "given %s, when it is valued, then it is worth the support value less its cost",
+    (_, skill, cell) => {
+      const { state, caster } = battle([haste, slow], [foe(1)], [ally(1)]);
+
+      const value = skillValue(state, caster, skill, cell);
+
+      expect(value).toBeCloseTo(SUPPORT_VALUE - skillCost(caster, skill));
+    },
+  );
+
+  it("given an ally already hasted, when hasting it again is valued, then it is not worth the cost", () => {
+    const { state, caster } = hasted();
+
+    const value = skillValue(state, caster, haste, at("enemy", 1));
+
+    expect(value).toBeLessThan(0);
   });
 
-  it("does not refresh a status that is already running", () => {
+  it("given a hurt ally, when Regen on it is valued, then it is worth casting", () => {
+    const { state, caster } = battle([regen], [foe(0)], [ally(1)]);
+    unit(state, "enemy-1-0").hp = 30;
+
+    const value = skillValue(state, caster, regen, at("enemy", 1));
+
+    expect(value).toBeGreaterThan(0);
+  });
+
+  it("given a hurt ally with Regen running, when Regen on it is valued, then it is not refreshed", () => {
     const { state, caster } = battle([regen], [foe(0)], [ally(1)]);
     const hurt = unit(state, "enemy-1-0");
     hurt.hp = 30;
-    const fresh = skillValue(state, caster, regen, at("enemy", 1));
-    expect(fresh).toBeGreaterThan(0);
     if (regen.effect.type !== "status") throw new Error("regen is a status");
     hurt.statuses.push({
       id: regen.effect.status.id,
@@ -190,12 +237,22 @@ describe("skillValue", () => {
       ticksLeft: 3,
       sourceId: caster.id,
     });
-    expect(skillValue(state, caster, regen, at("enemy", 1))).toBeLessThan(0);
+
+    const value = skillValue(state, caster, regen, at("enemy", 1));
+
+    expect(value).toBeLessThan(0);
   });
 
-  it("cleanses only an ally that carries something harmful", () => {
+  it("given a clean ally, when Cure on it is valued, then it is not worth the cost", () => {
     const { state, caster } = battle([cure], [foe(0)], [ally(1)]);
-    expect(skillValue(state, caster, cure, at("enemy", 1))).toBeLessThan(0);
+
+    const value = skillValue(state, caster, cure, at("enemy", 1));
+
+    expect(value).toBeLessThan(0);
+  });
+
+  it("given a slowed ally, when Cure on it is valued, then it is worth casting", () => {
+    const { state, caster } = battle([cure], [foe(0)], [ally(1)]);
     unit(state, "enemy-1-0").modifiers.push({
       stat: "speed",
       op: "mul",
@@ -203,26 +260,38 @@ describe("skillValue", () => {
       source: "Slow",
       harmful: true,
     });
-    expect(skillValue(state, caster, cure, at("enemy", 1))).toBeGreaterThan(0);
+
+    const value = skillValue(state, caster, cure, at("enemy", 1));
+
+    expect(value).toBeGreaterThan(0);
   });
 
-  it("quickens an ally more the emptier its gauge", () => {
-    const { state, caster } = battle([quicken], [foe(0)], [ally(1)]);
-    const friend = unit(state, "enemy-1-0");
-    friend.gauge = 0;
-    const empty = skillValue(state, caster, quicken, at("enemy", 1));
-    friend.gauge = 800;
-    const nearly = skillValue(state, caster, quicken, at("enemy", 1));
+  it("given an ally with an empty and a nearly full gauge, when Quicken is valued, then the empty gauge is worth more", () => {
+    const nearly = quickens(800);
+
+    const empty = quickens(0);
+
     expect(empty).toBeGreaterThan(nearly);
   });
 
-  it("summons until the limit, on its own side only", () => {
+  it("given no summon yet, when summoning on its own side is valued, then it is worth the summon value less its cost", () => {
     const { state, caster } = battle([summonImp], [foe(0)]);
+
     const value = skillValue(state, caster, summonImp, at("enemy", 0, 2));
+
     expect(value).toBeCloseTo(SUMMON_VALUE - skillCost(caster, summonImp));
-    expect(
-      skillValue(state, caster, summonImp, at("player", 4, 2)),
-    ).toBeLessThan(0);
+  });
+
+  it("given no summon yet, when summoning on the other side is valued, then it is not worth it", () => {
+    const { state, caster } = battle([summonImp], [foe(0)]);
+
+    const value = skillValue(state, caster, summonImp, at("player", 4, 2));
+
+    expect(value).toBeLessThan(0);
+  });
+
+  it("given a summon already out, when summoning again is valued, then it is not worth it", () => {
+    const { state, caster } = battle([summonImp], [foe(0)]);
     state.units.push({
       ...unit(state, "player-0-0"),
       id: "summon-1",
@@ -230,78 +299,105 @@ describe("skillValue", () => {
       defId: "imp",
       summonedBy: caster.id,
     });
-    expect(
-      skillValue(state, caster, summonImp, at("enemy", 0, 2)),
-    ).toBeLessThan(0);
+
+    const value = skillValue(state, caster, summonImp, at("enemy", 0, 2));
+
+    expect(value).toBeLessThan(0);
   });
 
-  it("heaves a melee foe back, not a ranged one", () => {
-    const melee = battle(
+  it("given a melee foe, when heaving it back is valued, then it is worth casting", () => {
+    const { state, caster } = battle(
       [upheaval],
       [place(def("brute", {}, sword), "player", 1)],
     );
-    expect(
-      skillValue(melee.state, melee.caster, upheaval, at("player", 1)),
-    ).toBeGreaterThan(0);
-    const ranged = battle([upheaval], [foe(1)]);
-    expect(
-      skillValue(ranged.state, ranged.caster, upheaval, at("player", 1)),
-    ).toBeLessThan(0);
+
+    const value = skillValue(state, caster, upheaval, at("player", 1));
+
+    expect(value).toBeGreaterThan(0);
+  });
+
+  it("given a ranged foe, when heaving it back is valued, then it is not worth it", () => {
+    const { state, caster } = battle([upheaval], [foe(1)]);
+
+    const value = skillValue(state, caster, upheaval, at("player", 1));
+
+    expect(value).toBeLessThan(0);
   });
 });
 
 describe("skillCost", () => {
-  it("charges a share of max MP and of current HP", () => {
+  it("given a caster at 50 HP, when a 50 MP, 10 HP skill is costed, then it charges a share of max MP and of current HP", () => {
     const { caster } = battle([], [foe(0)]);
     caster.hp = 50;
     const skill = { ...fireball, mpCost: 50, hpCost: 10 };
-    expect(skillCost(caster, skill)).toBeCloseTo(0.5 * 0.5 + (2 * 10) / 50);
+
+    const cost = skillCost(caster, skill);
+
+    expect(cost).toBeCloseTo(0.5 * 0.5 + (2 * 10) / 50);
   });
 });
 
 describe("bestSkill", () => {
-  it("aims an area skill where it hits the most foes", () => {
+  it("given three foes in a row, when the best skill is picked, then the fireball is aimed where it hits them all", () => {
     // Only the plus around column 2 covers all three.
     const { state, caster } = battle([fireball], [foe(1), foe(2), foe(3)]);
-    expect(bestSkill(state, caster)?.cell).toEqual(at("player", 2));
+
+    const best = bestSkill(state, caster);
+
+    expect(best?.cell).toEqual(at("player", 2));
   });
 
-  it("is null when no skill is worth its cost", () => {
+  it("given only a heal and no one hurt, when the best skill is picked, then there is none", () => {
     const { state, caster } = battle([heal], [foe(0)]);
-    expect(bestSkill(state, caster)).toBeNull();
+
+    const best = bestSkill(state, caster);
+
+    expect(best).toBeNull();
   });
 
-  it("is null when the caster cannot afford anything", () => {
+  it("given a caster without MP, when the best skill is picked, then there is none", () => {
     const { state, caster } = battle([fireball], [foe(0)]);
     caster.mp = 0;
-    expect(bestSkill(state, caster)).toBeNull();
+
+    const best = bestSkill(state, caster);
+
+    expect(best).toBeNull();
   });
 });
 
 describe("chooseCommand with skills", () => {
-  it("casts a spell when it is worth more than its weak weapon", () => {
+  it("given three foes in a row, when the caster chooses, then it casts the fireball rather than use its weak weapon", () => {
     const { state, caster } = battle([fireball], [foe(1), foe(2), foe(3)]);
-    expect(chooseCommand(state, caster)).toEqual({
+
+    const command = chooseCommand(state, caster);
+
+    expect(command).toEqual({
       type: "skill",
       skillId: fireball.id,
       cell: at("player", 2),
     });
   });
 
-  it("heals a badly hurt ally rather than attack", () => {
+  it("given a badly hurt ally, when the caster chooses, then it heals rather than attack", () => {
     const { state, caster } = battle([heal], [foe(1)], [ally(1)]);
     caster.base.attack = 2;
     unit(state, "enemy-1-0").hp = 15;
-    expect(chooseCommand(state, caster)).toMatchObject({
+
+    const command = chooseCommand(state, caster);
+
+    expect(command).toMatchObject({
       type: "skill",
       skillId: heal.id,
       cell: at("enemy", 1),
     });
   });
 
-  it("attacks when out of MP", () => {
+  it("given a caster without MP, when it chooses, then it attacks", () => {
     const { state, caster } = battle([fireball], [foe(1), foe(2), foe(3)]);
     caster.mp = 0;
-    expect(chooseCommand(state, caster)?.type).toBe("attack");
+
+    const command = chooseCommand(state, caster);
+
+    expect(command?.type).toBe("attack");
   });
 });
