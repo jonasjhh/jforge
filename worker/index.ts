@@ -6,7 +6,8 @@ import { meleeApi } from "@jforge/melee/worker";
 // Bindings of the shared Worker. Module bindings (Durable Objects, secrets)
 // are added here as modules need them.
 interface Env {
-  ASSETS: Fetcher;
+  /** The static assets binding; only its fetch is used. */
+  ASSETS: { fetch(request: Request): Promise<Response> };
 }
 
 // Every module's API, mounted at /api/<name>. Adding a module means adding

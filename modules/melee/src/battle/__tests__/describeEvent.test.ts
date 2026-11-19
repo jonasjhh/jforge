@@ -247,4 +247,37 @@ describe("describeEvent", () => {
     expect(say({ type: "timeAdvanced", time: 5 })).toBeNull();
     expect(say({ type: "turnReady", unitId: WOLF })).toBeNull();
   });
+
+  it("describes guarding and rescuing", () => {
+    expect(say({ type: "guarded", unitId: MAGE, byId: FIGHTER })).toBe(
+      "Fighter takes the blow for Mage",
+    );
+    expect(say({ type: "rescued", unitId: MAGE, byId: FIGHTER })).toBe(
+      "Fighter pulls Mage back",
+    );
+  });
+
+  it("describes MP restored and burned", () => {
+    expect(say({ type: "mpRestored", unitId: MAGE, amount: 6, mp: 20 })).toBe(
+      "Mage regains 6 MP",
+    );
+    expect(say({ type: "mpBurned", unitId: MAGE, amount: 4, mp: 10 })).toBe(
+      "Mage loses 4 MP",
+    );
+  });
+
+  it("describes a worsening status and an explosion", () => {
+    expect(
+      say({
+        type: "statusWorsened",
+        unitId: WOLF,
+        statusId: "poison",
+        name: "Poison",
+        amount: 8,
+      }),
+    ).toBe("Wolf's Poison worsens");
+    expect(say({ type: "exploded", unitId: WOLF, name: "Bomb" })).toBe(
+      "Wolf's Bomb explodes!",
+    );
+  });
 });
