@@ -731,9 +731,8 @@ Still open:
   new skills for existing classes may now be proposed.
 - **At least five unique skills per class.** Every player class gets at
   least five skills that no other class has, mixing roles (a Fighter
-  deals damage and tanks), learned at levels 1, 2, 4, 6, 8, then 10 (see
-  progression.md). They are added one skill at a time, each reviewed
-  first.
+  deals damage and tanks). They are added one skill at a time, each
+  reviewed first.
 - **Saved data.** For now, every save may be invalidated: the library,
   the roster char publishes to melee and the run in progress all carry
   `SAVE_VERSION` (`melee/shared/save.ts`), and a save of any other version

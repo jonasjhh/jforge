@@ -67,7 +67,8 @@ it wins.
   so turn order stays mostly the same at every level.
 
 - **Skills:** a class learns each skill at a set level. Melee classes
-  learn theirs at levels 1, 2, 4, 6, 8 and 10 (`MELEE_SKILL_LEVELS`). A
+  learn theirs at levels 1, 2, 4, 6, 8 and 10 (`MELEE_SKILL_LEVELS`),
+  and any after those every two levels (12, 14, ...). A
   level-up often matters more for the skill it unlocks than for its stats.
 - **Experience:** going from level L to L+1 costs 100 × L
   (`xpToNext`). Extra experience carries over and can level up more than

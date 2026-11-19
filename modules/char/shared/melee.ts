@@ -140,7 +140,9 @@ export function classFromMelee(def: CombatantDef): Archetype {
       : {}),
     skills: (def.skills ?? []).map((skill, i) => ({
       skillId: skill.id,
-      level: MELEE_SKILL_LEVELS[i] ?? MELEE_SKILL_LEVELS.at(-1)! + 2 * i,
+      level:
+        MELEE_SKILL_LEVELS[i] ??
+        MELEE_SKILL_LEVELS.at(-1)! + 2 * (i - MELEE_SKILL_LEVELS.length + 1),
     })),
     traits: [...(def.traits ?? [])],
     preferredRow: def.preferredRow ?? 0,

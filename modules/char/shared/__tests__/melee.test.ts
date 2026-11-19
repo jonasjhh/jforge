@@ -7,6 +7,7 @@ import {
   BASIC_ARMOR,
   MELEE_CLASS_LEVEL,
   MELEE_CREATURES,
+  MELEE_SKILL_LEVELS,
   MELEE_HEROES,
   MELEE_PROFICIENCIES,
   basicGear,
@@ -49,6 +50,18 @@ describe("classFromMelee", () => {
       statsAtLevel(type.baseStats, type.growth, level);
     expect(at(1).maxHp).toBeLessThan(fighter.stats.maxHp);
     expect(at(10).attack).toBeGreaterThan(fighter.stats.attack);
+  });
+
+  it("learns skills past the listed levels every two levels after", () => {
+    const many = {
+      ...fighter,
+      skills: [...fighter.skills!, content.heal, content.fireball],
+    };
+    expect(classFromMelee(many).skills.map((s) => s.level)).toEqual([
+      ...MELEE_SKILL_LEVELS,
+      12,
+      14,
+    ]);
   });
 
   it("keeps the weapon, row, icon and skills, learned one after another", () => {
