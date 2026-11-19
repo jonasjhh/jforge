@@ -26,31 +26,38 @@ function playedTurns(state: BattleState, count: number): string[] {
   return turns;
 }
 
-describe("turn order forecast", () => {
-  it("matches the turns played when everyone attacks", () => {
+describe("turnOrder", () => {
+  it("given a new battle where everyone attacks, when ten turns are forecast, then they are the turns played", () => {
     const start = createBattle({ placements: party }, 1);
-    expect(turnOrder(start, 10)).toEqual(playedTurns(start, 10));
+
+    const order = turnOrder(start, 10);
+
+    expect(order).toEqual(playedTurns(start, 10));
   });
 
-  it("still matches mid-battle, with the waiting unit first", () => {
+  it("given a unit waiting for a command, when eight turns are forecast, then it comes first and the rest are the turns played", () => {
     const waiting = advance(createBattle({ placements: party }, 1)).state;
-    expect(waiting.phase.kind).toBe("awaitingCommand");
+
     const order = turnOrder(waiting, 8);
+
+    expect(waiting.phase.kind).toBe("awaitingCommand");
     expect(order[0]).toBe(
       waiting.phase.kind === "awaitingCommand" ? waiting.phase.unitId : "",
     );
     expect(order).toEqual(playedTurns(waiting, 8));
   });
 
-  it("leaves out the knocked out and units that never act", () => {
+  it("given a unit knocked out and one with no speed, when turns are forecast, then neither is in them", () => {
     const start = createBattle({ placements: party }, 1);
     start.units.find((u) => u.id === "player-1-0")!.hp = 0;
+
     const order = turnOrder(start, 6);
+
     expect(order).not.toContain("player-1-0");
     expect(order).not.toContain("enemy-0-0");
   });
 
-  it("puts a caster's next turn after its spell lands", () => {
+  it("given a fast caster starting a long spell, when turns are forecast, then its next turn comes after the spell lands", () => {
     const caster = def("caster", { speed: 20, maxMp: 99, magic: 10 });
     const state = advance(
       createBattle(
@@ -69,7 +76,10 @@ describe("turn order forecast", () => {
       skillId: "meteor",
       cell: { side: "enemy", col: 0, row: 0 },
     }).state;
+
+    const order = turnOrder(casting, 2);
+
     // Speed 20 would act at +50; the 60-long cast pushes it past "other".
-    expect(turnOrder(casting, 2)).toEqual(["player-1-0", "player-0-0"]);
+    expect(order).toEqual(["player-1-0", "player-0-0"]);
   });
 });

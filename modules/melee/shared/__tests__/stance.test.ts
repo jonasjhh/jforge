@@ -29,32 +29,38 @@ const hero = (s: BattleState) => s.units[0]!;
 const brute = (s: BattleState) => s.units[1]!;
 
 describe("Defend", () => {
-  it("is always allowed", () => {
+  it("given the hero waiting, when Defend is checked, then it is allowed", () => {
     const state = waiting();
-    expect(validateCommand(state, hero(state), { type: "defend" })).toBeNull();
+
+    const problem = validateCommand(state, hero(state), { type: "defend" });
+
+    expect(problem).toBeNull();
   });
 
-  it("spends the whole turn and reports it", () => {
-    const { state, events } = act(waiting(), { type: "defend" });
-    expect(hero(state).gauge).toBe(0);
-    expect(hero(state).defending).toBe(true);
-    expect(state.ready).toEqual([]);
-    expect(events).toEqual([{ type: "defended", unitId: hero(state).id }]);
+  it("given the hero waiting, when it defends, then the whole turn is spent and it braces", () => {
+    const state = waiting();
+
+    const { state: after, events } = act(state, { type: "defend" });
+
+    expect(hero(after).gauge).toBe(0);
+    expect(hero(after).defending).toBe(true);
+    expect(after.ready).toEqual([]);
+    expect(events).toEqual([{ type: "defended", unitId: hero(after).id }]);
   });
 
-  it("halves the expected damage of hits, and their preview", () => {
+  it("given a braced hero, when the brute's hit is weighed, then the expected damage and its preview are halved", () => {
     const before = waiting();
     const open = expectedPhysicalDamage(brute(before), hero(before));
     const { state } = act(before, { type: "defend" });
-    expect(expectedPhysicalDamage(brute(state), hero(state))).toBe(
-      Math.round(open * DEFEND_FACTOR),
-    );
-    expect(previewDamage(brute(state), hero(state))?.amount).toBe(
-      Math.round(open * DEFEND_FACTOR),
-    );
+
+    const expected = expectedPhysicalDamage(brute(state), hero(state));
+    const preview = previewDamage(brute(state), hero(state))?.amount;
+
+    expect(expected).toBe(Math.round(open * DEFEND_FACTOR));
+    expect(preview).toBe(Math.round(open * DEFEND_FACTOR));
   });
 
-  it("halves the damage actually taken", () => {
+  it("given a braced and an open hero, when the brute hits each, then the braced one takes half", () => {
     // The brute's first hit, after the hero opened with `first`.
     const damageTaken = (first: "defend" | "wait") => {
       let step = act(waiting(), { type: first });
@@ -67,55 +73,74 @@ describe("Defend", () => {
             : advance(step.state, { stopAfterAction: true });
       }
     };
+
+    const braced = damageTaken("defend");
+
     // Same seed, so the same random spread on both hits.
-    expect(damageTaken("defend")).toBe(
-      Math.round(damageTaken("wait") * DEFEND_FACTOR),
+    expect(braced).toBe(Math.round(damageTaken("wait") * DEFEND_FACTOR));
+  });
+
+  describe("on the braced hero's next turn", () => {
+    const again = advance(act(waiting(), { type: "defend" }).state).state;
+
+    it("given the hero braced, when its next turn comes, then it is still braced", () => {
+      const phase = again.phase.kind;
+
+      expect(phase).toBe("awaitingCommand");
+      expect(hero(again).defending).toBe(true);
+    });
+
+    it.each([
+      ["waits", { type: "wait" }, undefined],
+      ["attacks", { type: "attack", targetId: "enemy-0-0" }, undefined],
+      ["defends again", { type: "defend" }, true],
+    ] as const)(
+      "given the hero braced, when it %s, then defending is %s",
+      (_, command, defending) => {
+        const { state } = act(again, command);
+
+        expect(hero(state).defending).toBe(defending);
+      },
     );
   });
 
-  it("lasts until the unit acts again, whatever it does", () => {
-    const defended = act(waiting(), { type: "defend" }).state;
-    const again = advance(defended).state;
-    expect(again.phase.kind).toBe("awaitingCommand");
-    expect(hero(again).defending).toBe(true);
-    expect(hero(act(again, { type: "wait" }).state).defending).toBeUndefined();
-    expect(
-      hero(act(again, { type: "attack", targetId: brute(again).id }).state)
-        .defending,
-    ).toBeUndefined();
-    expect(hero(act(again, { type: "defend" }).state).defending).toBe(true);
-  });
-
-  it("ends when the unit is knocked out", () => {
+  it("given a braced hero at 1 HP, when it is knocked out, then it stops bracing", () => {
     const { state } = act(waiting(), { type: "defend" });
     hero(state).hp = 1;
+
     const after = advance(state).state;
+
     expect(hero(after).hp).toBe(0);
     expect(hero(after).defending).toBeUndefined();
   });
 });
 
 describe("Wait", () => {
-  it("is always allowed", () => {
+  it("given the hero waiting, when Wait is checked, then it is allowed", () => {
     const state = waiting();
-    expect(validateCommand(state, hero(state), { type: "wait" })).toBeNull();
+
+    const problem = validateCommand(state, hero(state), { type: "wait" });
+
+    expect(problem).toBeNull();
   });
 
-  it("keeps three quarters of the gauge and reports it", () => {
-    const { state, events } = act(waiting(), { type: "wait" });
-    expect(hero(state).gauge).toBe(WAIT_GAUGE_LEFT);
-    expect(state.ready).toEqual([]);
-    expect(events).toEqual([{ type: "waited", unitId: hero(state).id }]);
+  it("given the hero waiting, when it waits, then three quarters of the gauge stay and it doesn't brace", () => {
+    const state = waiting();
+
+    const { state: after, events } = act(state, { type: "wait" });
+
+    expect(hero(after).gauge).toBe(WAIT_GAUGE_LEFT);
+    expect(hero(after).defending).toBeUndefined();
+    expect(after.ready).toEqual([]);
+    expect(events).toEqual([{ type: "waited", unitId: hero(after).id }]);
   });
 
-  it("does not brace the unit", () => {
-    const { state } = act(waiting(), { type: "wait" });
-    expect(hero(state).defending).toBeUndefined();
-  });
-
-  it("lets time move on, so the unit is ready again later", () => {
+  it("given the hero waited, when the battle advances, then time moves on", () => {
     const before = waiting();
-    const after = advance(act(before, { type: "wait" }).state).state;
+    const waited = act(before, { type: "wait" }).state;
+
+    const after = advance(waited).state;
+
     expect(after.time).toBeGreaterThan(before.time);
   });
 });

@@ -42,26 +42,30 @@ function hit(weapon: Weapon, attackerRow: number, targetRow: number): number {
 describe("rows and melee", () => {
   const base = hit(sword, 0, 0);
 
-  it("deals x1 / x0.75 / x0.5 from the front / middle / back row", () => {
-    expect(hit(sword, 1, 0)).toBe(Math.round(base * 0.75));
-    expect(hit(sword, 2, 0)).toBe(Math.round(base * 0.5));
-  });
+  it.each([
+    ["the middle row at the front", 1, 0, 0.75],
+    ["the back row at the front", 2, 0, 0.5],
+    ["the front row at the middle", 0, 1, 0.75],
+    ["the front row at the back", 0, 2, 0.5],
+    ["the back row at the back", 2, 2, 0.25],
+  ])(
+    "given a sword swung from %s, when it hits, then it deals x%d",
+    (_, from, to, factor) => {
+      const damage = hit(sword, from, to);
 
-  it("takes x1 / x0.75 / x0.5 in the front / middle / back row", () => {
-    expect(hit(sword, 0, 1)).toBe(Math.round(base * 0.75));
-    expect(hit(sword, 0, 2)).toBe(Math.round(base * 0.5));
-  });
+      expect(damage).toBe(Math.round(base * factor));
+    },
+  );
 
-  it("stacks: back row hitting back row deals x0.25", () => {
-    expect(hit(sword, 2, 2)).toBe(Math.round(base * 0.25));
-  });
-
-  it("does not apply to ranged weapons", () => {
+  it("given a bow, when it shoots from the back row at the back row, then it deals full damage", () => {
     const arrow = hit(bow, 0, 0);
-    expect(hit(bow, 2, 2)).toBe(arrow);
+
+    const far = hit(bow, 2, 2);
+
+    expect(far).toBe(arrow);
   });
 
-  it("does not apply to spells", () => {
+  it("given a Fireball, when it lands on the back row, then it deals as much as on the front", () => {
     const blast = (row: number) => {
       const mage = {
         ...def("mage", { magic: 50, maxMp: 30, speed: 50 }),
@@ -95,12 +99,16 @@ describe("rows and melee", () => {
         >
       ).amount;
     };
-    expect(blast(2)).toBe(blast(0));
+    const front = blast(0);
+
+    const back = blast(2);
+
+    expect(back).toBe(front);
   });
 });
 
 describe("AI and rows", () => {
-  it("knows a back-row target takes half and may survive", () => {
+  it("given two targets at 15 HP, front and back, when a sword-wielding AI attacks, then it finishes the front one", () => {
     // Expected sword hit: 20 in front, 10 at the back. Both targets have 15 HP:
     // only the front one can be finished.
     const brute = {
@@ -118,9 +126,9 @@ describe("AI and rows", () => {
       1,
     );
     for (const u of state.units) if (u.side === "player") u.hp = 15;
-    expect(chooseCommand(state, state.units[0]!)).toEqual({
-      type: "attack",
-      targetId: "player-3-0",
-    });
+
+    const command = chooseCommand(state, state.units[0]!);
+
+    expect(command).toEqual({ type: "attack", targetId: "player-3-0" });
   });
 });

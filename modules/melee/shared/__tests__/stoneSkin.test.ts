@@ -79,38 +79,48 @@ function skinnedFoe(): BattleState {
 }
 
 describe("Stone Skin", () => {
-  it("gives an ally defense x1.5 for 150 game time, for 6 MP", () => {
-    const { state } = cast(geoTurn(), stoneSkin.id, {
+  it("given an ally, when the Geomancer casts Stone Skin on them, then their defense is x1.5 for 150 game time, for 6 MP", () => {
+    const state = geoTurn();
+
+    const { state: after } = cast(state, stoneSkin.id, {
       side: "player",
       col: 1,
       row: 0,
     });
-    const ally = unit(state, ALLY);
+
+    const ally = unit(after, ALLY);
     expect(ally.statuses).toContainEqual(
       expect.objectContaining({ id: "stoneSkin", interval: 150 }),
     );
     expect(effectiveStat(ally, "defense")).toBe(15);
-    expect(unit(state, GEO).mp).toBe(geomancer.stats.maxMp - 6);
+    expect(unit(after, GEO).mp).toBe(geomancer.stats.maxMp - 6);
   });
 
-  it("can't be heaved: the unit stays put", () => {
-    const { state, events } = cast(skinnedFoe(), upheaval.id, foeCell);
-    expect(unit(state, FOE).position).toEqual({ col: 0, row: 0 });
+  it("given a stone-skinned foe, when it is heaved, then it stays put", () => {
+    const state = skinnedFoe();
+
+    const { state: after, events } = cast(state, upheaval.id, foeCell);
+
+    expect(unit(after, FOE).position).toEqual({ col: 0, row: 0 });
     expect(events).toContainEqual({ type: "unmoved", unitId: FOE });
   });
 
-  it("holds against a pushing strike, which lands as a normal hit", () => {
-    const pushed = cast(skinnedFoe(), shove.id, foeCell);
+  it("given a stone-skinned foe, when a pushing strike hits, then it stays put and takes a normal hit", () => {
     const plain = cast(skinnedFoe(), poke.id, foeCell);
-    expect(unit(pushed.state, FOE).position).toEqual({ col: 0, row: 0 });
-    expect(pushed.events.some((e) => e.type === "collided")).toBe(false);
+
+    const pushed = cast(skinnedFoe(), shove.id, foeCell);
+
     const hit = (events: BattleEvent[]) =>
       events.find((e): e is Damage => e.type === "damage")!.amount;
+    expect(unit(pushed.state, FOE).position).toEqual({ col: 0, row: 0 });
+    expect(pushed.events.some((e) => e.type === "collided")).toBe(false);
     expect(hit(pushed.events)).toBe(hit(plain.events));
   });
 
-  it("completes the Geomancer's five skills", () => {
-    expect(geomancer.skills).toEqual([
+  it("given the Geomancer, when its skills are listed, then Stone Skin is the fourth of five", () => {
+    const skills = geomancer.skills;
+
+    expect(skills).toEqual([
       raiseBoulder,
       shatter,
       upheaval,

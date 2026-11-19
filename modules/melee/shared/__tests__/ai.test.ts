@@ -35,63 +35,72 @@ const setHp = (id: string, hp: number) => (s: BattleState) => {
 };
 
 describe("enemy targeting", () => {
-  it("goes for a unit it can knock out, even a tough one", () => {
+  it("given a tough unit it can finish and a soft one, when the AI picks, then it finishes the tough one", () => {
     // 20 attack vs 40 defense: about 11 damage, enough to finish 8 HP.
-    const target = pick(
-      [
-        place(def("tough", { maxHp: 100, defense: 40 }), "player", 1),
-        place(def("soft", { maxHp: 100, defense: 0 }), "player", 3),
-      ],
-      { setup: setHp("player-1-0", 8) },
-    );
+    const party = [
+      place(def("tough", { maxHp: 100, defense: 40 }), "player", 1),
+      place(def("soft", { maxHp: 100, defense: 0 }), "player", 3),
+    ];
+
+    const target = pick(party, { setup: setHp("player-1-0", 8) });
+
     expect(target).toBe("player-1-0");
   });
 
-  it("prefers a wounded unit over a healthy one", () => {
-    const target = pick(
-      [
-        place(def("healthy", { maxHp: 100 }), "player", 1),
-        place(def("hurt", { maxHp: 100 }), "player", 3),
-      ],
-      { setup: setHp("player-3-0", 50) },
-    );
+  it("given a wounded and a healthy unit, when the AI picks, then it picks the wounded one", () => {
+    const party = [
+      place(def("healthy", { maxHp: 100 }), "player", 1),
+      place(def("hurt", { maxHp: 100 }), "player", 3),
+    ];
+
+    const target = pick(party, { setup: setHp("player-3-0", 50) });
+
     expect(target).toBe("player-3-0");
   });
 
-  it("prefers a soft unit when both are equally healthy", () => {
-    const target = pick([
+  it("given an armored and a robed unit, equally healthy, when the AI picks, then it picks the robed one", () => {
+    const party = [
       place(def("armored", { defense: 30 }), "player", 1),
       place(def("robed", { defense: 2 }), "player", 3),
-    ]);
+    ];
+
+    const target = pick(party);
+
     expect(target).toBe("player-3-0");
   });
 
-  it("never picks a target it cannot reach, however tempting", () => {
-    // The nearly dead mage is covered by the guard in front of it.
-    const target = pick(
-      [
-        place(def("guard", { maxHp: 100, defense: 30 }), "player", 2, 0),
-        place(def("mage", { maxHp: 100 }), "player", 2, 1),
-      ],
-      { setup: setHp("player-2-1", 1) },
-    );
+  it("given a nearly dead mage behind a guard, when the AI picks, then it picks the guard it can reach", () => {
+    const party = [
+      place(def("guard", { maxHp: 100, defense: 30 }), "player", 2, 0),
+      place(def("mage", { maxHp: 100 }), "player", 2, 1),
+    ];
+
+    const target = pick(party, { setup: setHp("player-2-1", 1) });
+
     expect(target).toBe("player-2-0");
   });
 
-  it("uses its seeded randomness to break ties, repeatably", () => {
-    const twins = [
-      place(def("left"), "player", 1),
-      place(def("right"), "player", 3),
-    ];
-    const noisy = { ...calm, noise: 1 };
+  const twins = [
+    place(def("left"), "player", 1),
+    place(def("right"), "player", 3),
+  ];
+  const noisy = { ...calm, noise: 1 };
+
+  it("given twins and a noisy AI, when it picks over twenty seeds, then both are picked", () => {
+    const seeds = Array.from({ length: 20 }, (_, seed) => seed);
+
     const picks = new Set(
-      Array.from({ length: 20 }, (_, seed) =>
-        pick(twins, { profile: noisy, seed }),
-      ),
+      seeds.map((seed) => pick(twins, { profile: noisy, seed })),
     );
+
     expect(picks).toEqual(new Set(["player-1-0", "player-3-0"]));
-    expect(pick(twins, { profile: noisy, seed: 7 })).toBe(
-      pick(twins, { profile: noisy, seed: 7 }),
-    );
+  });
+
+  it("given twins and a noisy AI, when it picks twice on one seed, then it picks the same", () => {
+    const first = pick(twins, { profile: noisy, seed: 7 });
+
+    const second = pick(twins, { profile: noisy, seed: 7 });
+
+    expect(second).toBe(first);
   });
 });

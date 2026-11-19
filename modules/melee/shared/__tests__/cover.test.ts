@@ -30,24 +30,29 @@ const at = (col: number, row: number): Cell => ({ side: "player", col, row });
 const names = (units: Unit[]) => units.map((u) => u.name).sort();
 
 describe("exposedEnemies", () => {
-  it("is the front-most enemy in each column", () => {
+  it("given a column with a front-liner and one behind, when the exposed enemies are listed, then it is the front-most in each column", () => {
     const { state, caster } = battle();
-    expect(names(exposedEnemies(state, caster))).toEqual(["front", "lone"]);
+
+    const exposed = exposedEnemies(state, caster);
+
+    expect(names(exposed)).toEqual(["front", "lone"]);
   });
 
-  it("is every enemy when cover is ignored", () => {
+  it("given cover ignored, when the exposed enemies are listed, then it is everyone", () => {
     const { state, caster } = battle();
-    expect(names(exposedEnemies(state, caster, true))).toEqual([
-      "behind",
-      "front",
-      "lone",
-    ]);
+
+    const exposed = exposedEnemies(state, caster, true);
+
+    expect(names(exposed)).toEqual(["behind", "front", "lone"]);
   });
 
-  it("uncovers the one behind once the one in front is down", () => {
+  it("given the front-liner down, when the exposed enemies are listed, then the one behind is uncovered", () => {
     const { state, caster } = battle();
     state.units.find((u) => u.name === "front")!.hp = 0;
-    expect(names(exposedEnemies(state, caster))).toEqual(["behind", "lone"]);
+
+    const exposed = exposedEnemies(state, caster);
+
+    expect(names(exposed)).toEqual(["behind", "lone"]);
   });
 });
 
@@ -57,24 +62,34 @@ describe("cover against single-target skills", () => {
     return validateSkill(state, caster, skill, cell);
   };
 
-  it("refuses a spell at a covered enemy", () => {
-    expect(check(firebolt, at(1, 2))).toBe("behind is behind cover");
-  });
+  it.each([
+    ["a spell", firebolt],
+    ["a debuff", slow],
+  ])(
+    "given a covered enemy, when %s is aimed at it, then it is behind cover",
+    (_, skill) => {
+      const problem = check(skill, at(1, 2));
 
-  it("refuses a debuff at a covered enemy", () => {
-    expect(check(slow, at(1, 2))).toBe("behind is behind cover");
-  });
+      expect(problem).toBe("behind is behind cover");
+    },
+  );
 
-  it("lets a spell hit an exposed enemy in any column, even the back row", () => {
-    expect(check(firebolt, at(1, 0))).toBeNull();
-    expect(check(firebolt, at(3, 2))).toBeNull();
-  });
+  it.each([
+    ["the front row", 1, 0, firebolt],
+    ["a lone back row", 3, 2, firebolt],
+    [
+      "a covered cell, ignoring cover",
+      1,
+      2,
+      { ...firebolt, ignoreCover: true },
+    ],
+    ["a covered cell, as an area", 1, 2, fireball],
+  ])(
+    "given an exposed or reachable enemy in %s, when a skill is aimed at it, then it is allowed",
+    (_, col, row, skill) => {
+      const problem = check(skill, at(col, row));
 
-  it("lets a skill that ignores cover single out a covered enemy", () => {
-    expect(check({ ...firebolt, ignoreCover: true }, at(1, 2))).toBeNull();
-  });
-
-  it("still lets an area land on a covered enemy", () => {
-    expect(check(fireball, at(1, 2))).toBeNull();
-  });
+      expect(problem).toBeNull();
+    },
+  );
 });

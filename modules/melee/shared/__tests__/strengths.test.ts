@@ -37,30 +37,44 @@ const [me, foe] = [
 ];
 
 describe("status strengths", () => {
-  it("default per kind, overridden by the status's own", () => {
-    expect(strengthsOf(statusOf(blessing))).toEqual({ dealt: 1.2, taken: 0.8 });
-    expect(strengthsOf({ ...statusOf(blessing), dealt: 1.1 })).toEqual({
-      dealt: 1.1,
-      taken: 0.8,
-    });
-    expect(STRENGTH_DEFAULTS.stealth).toEqual({ ambush: 2 });
+  it("given a Blessing, when its strengths are taken, then they are its kind's defaults", () => {
+    const strengths = strengthsOf(statusOf(blessing));
+
+    expect(strengths).toEqual({ dealt: 1.2, taken: 0.8 });
   });
 
-  it("a lesser Expose takes less", () => {
+  it("given a Blessing with its own dealt, when its strengths are taken, then its own overrides the default", () => {
+    const strengths = strengthsOf({ ...statusOf(blessing), dealt: 1.1 });
+
+    expect(strengths).toEqual({ dealt: 1.1, taken: 0.8 });
+  });
+
+  it("given stealth, when its default is looked up, then the ambush doubles", () => {
+    const defaults = STRENGTH_DEFAULTS.stealth;
+
+    expect(defaults).toEqual({ ambush: 2 });
+  });
+
+  it("given a lesser Expose on a foe, when its slash resistance is taken, then it takes x1.1", () => {
     const s = battle();
     applyStatus(s, me(s), foe(s), { ...statusOf(expose), taken: 1.1 }, []);
-    expect(resistance(foe(s), "slash")).toBeCloseTo(1.1);
+
+    const taken = resistance(foe(s), "slash");
+
+    expect(taken).toBeCloseTo(1.1);
   });
 
-  it("a lesser Blessing deals and takes its own factors", () => {
+  it("given a lesser Blessing, when the blessed unit deals and takes damage, then its own factors apply", () => {
     const s = battle();
     const lesser = { ...statusOf(blessing), dealt: 1.1, taken: 0.9 };
+
     applyStatus(s, me(s), me(s), lesser, []);
+
     expect(dealtFactor(me(s))).toBeCloseTo(1.1);
     expect(resistance(me(s), "slash")).toBeCloseTo(0.9);
   });
 
-  it("a stronger Stone Skin and a weaker Vanish ambush", () => {
+  it("given a Stone Skin of defense 2, when the foe's defense is taken, then it doubles", () => {
     const s = battle();
     const skin: StatusDef = {
       id: "skin",
@@ -73,27 +87,43 @@ describe("status strengths", () => {
       ticks: 1,
       defense: 2,
     };
+
     applyStatus(s, me(s), foe(s), skin, []);
+
     expect(effectiveStat(foe(s), "defense")).toBe(2 * foe(s).base.defense);
+  });
+
+  it("given a Vanish of ambush 1.5, when an attack is previewed, then it deals x1.5", () => {
+    const s = battle();
     const plain = previewDamage(me(s), foe(s))!.amount;
+
     applyStatus(s, me(s), me(s), { ...statusOf(vanish), ambush: 1.5 }, []);
+
     const ambush = previewDamage(me(s), foe(s))!.amount;
     expect(Math.abs(ambush - plain * 1.5)).toBeLessThanOrEqual(1);
   });
 
-  it("a finisher's threshold is per skill", () => {
-    const s = battle();
-    const f = foe(s);
-    f.hp = f.base.maxHp * 0.4;
-    const strike = coupDeGrace.effect as Extract<
-      SkillEffect,
-      { type: "strike" }
-    >;
-    expect(finisherFactor(strike, f)).toBe(1);
-    expect(finisherFactor({ ...strike, finishBelow: 0.5 }, f)).toBe(2.5);
-  });
+  it.each([
+    ["the default threshold", {}, 1],
+    ["a threshold of 0.5", { finishBelow: 0.5 }, 2.5],
+  ])(
+    "given a foe at 40%% HP and Coup de Grace with %s, when its finisher factor is taken, then it is %d",
+    (_, change, factor) => {
+      const s = battle();
+      const f = foe(s);
+      f.hp = f.base.maxHp * 0.4;
+      const strike = coupDeGrace.effect as Extract<
+        SkillEffect,
+        { type: "strike" }
+      >;
 
-  it("a weakened caster's damage over time is weaker too", () => {
+      const result = finisherFactor({ ...strike, ...change }, f);
+
+      expect(result).toBe(factor);
+    },
+  );
+
+  it("given a caster weakened to half, when it burns a foe, then the burn is half as strong", () => {
     const s = battle();
     const burn: StatusDef = {
       id: "burn",
@@ -114,7 +144,9 @@ describe("status strengths", () => {
       dealt: 0.5,
     };
     applyStatus(s, foe(s), me(s), weaken, []);
+
     applyStatus(s, me(s), foe(s), burn, []);
+
     const weak = foe(s).statuses.find((st) => st.id === "burn")!.amount;
     expect(Math.abs(weak - plain * 0.5)).toBeLessThanOrEqual(1);
   });

@@ -47,68 +47,106 @@ const foeOf = (s: BattleState): Unit => s.units[1]!;
 const dealt = (events: BattleEvent[]) =>
   events.flatMap((e) => (e.type === "damage" ? [e.amount] : []))[0]!;
 
-describe("damage preview", () => {
-  it("is within the random spread of a real attack", () => {
-    for (const seed of [1, 2, 3, 4, 5]) {
+describe("previewDamage", () => {
+  it.each([1, 2, 3, 4, 5])(
+    "given seed %i, when the hero attacks, then the damage is within the random spread of the preview",
+    (seed) => {
       const state = duel();
       state.rng = seed;
       const expected = previewDamage(heroOf(state), foeOf(state))!.amount;
-      const real = dealt(
-        act(state, { type: "attack", targetId: "enemy-0-0" }).events,
-      );
-      expect(Math.abs(real - expected)).toBeLessThanOrEqual(
+
+      const { events } = act(state, { type: "attack", targetId: "enemy-0-0" });
+
+      expect(Math.abs(dealt(events) - expected)).toBeLessThanOrEqual(
         Math.ceil(expected * 0.1),
       );
-    }
-  });
+    },
+  );
 
-  it("scales by skill power, and uses magic for spells", () => {
+  it("given Cleave, when its damage is previewed, then it is the attack's times its power", () => {
     const state = duel();
     const attack = previewDamage(heroOf(state), foeOf(state))!.amount;
+
     const swing = previewDamage(heroOf(state), foeOf(state), cleave)!.amount;
+
     expect(swing).toBe(Math.round(attack * 0.7));
+  });
+
+  it("given Fireball, when its damage is previewed, then it uses magic against spirit", () => {
+    const state = duel();
+
     const spell = previewDamage(heroOf(state), foeOf(state), fireball)!;
+
     // power x magic x K / (K + spirit), with magic 20 and spirit 5.
     const { power } = fireball.effect as { power: number };
     expect(spell.amount).toBe(Math.round(power * 20 * (50 / 55)));
   });
 
-  it("reports the target's resistance", () => {
+  it("given a foe weak to slash, when an attack is previewed, then the multiplier is 2", () => {
     const state = duel({}, { slash: 2, fire: 0 });
-    expect(previewDamage(heroOf(state), foeOf(state))!.multiplier).toBe(2);
+
+    const preview = previewDamage(heroOf(state), foeOf(state))!;
+
+    expect(preview.multiplier).toBe(2);
+  });
+
+  it("given a foe immune to fire, when a Fireball is previewed, then it deals nothing and knocks no one out", () => {
+    const state = duel({}, { slash: 2, fire: 0 });
+
     const spell = previewDamage(heroOf(state), foeOf(state), fireball)!;
+
     expect(spell).toMatchObject({ amount: 0, multiplier: 0, knocksOut: false });
   });
 
-  it("is null for skills that deal no damage", () => {
+  it("given Heal, when its damage is previewed, then there is none", () => {
     const state = duel();
-    expect(previewDamage(heroOf(state), heroOf(state), heal)).toBeNull();
+
+    const preview = previewDamage(heroOf(state), heroOf(state), heal);
+
+    expect(preview).toBeNull();
   });
 
-  it("flags a knockout, unless a shield soaks it or a ward holds", () => {
+  it("given a foe at 10 HP, when an attack is previewed, then it knocks out", () => {
     const state = duel({ maxHp: 10 });
-    const hero = heroOf(state);
-    const foe = foeOf(state);
-    expect(previewDamage(hero, foe)!.knocksOut).toBe(true);
-    applyStatus(state, hero, foe, statusOf(aegis), []);
-    expect(previewDamage(hero, foe)!.knocksOut).toBe(false);
-    foe.statuses = [];
-    applyStatus(state, hero, foe, statusOf(lastRites), []);
-    expect(previewDamage(hero, foe)!.knocksOut).toBe(false);
+
+    const preview = previewDamage(heroOf(state), foeOf(state))!;
+
+    expect(preview.knocksOut).toBe(true);
   });
 
-  it("ignores stealth for Shatter, which isn't an ambush", () => {
+  it.each([
+    ["a shield", aegis],
+    ["a ward", lastRites],
+  ])(
+    "given a foe at 10 HP with %s, when an attack is previewed, then it doesn't knock out",
+    (_, skill) => {
+      const state = duel({ maxHp: 10 });
+      applyStatus(state, heroOf(state), foeOf(state), statusOf(skill), []);
+
+      const preview = previewDamage(heroOf(state), foeOf(state))!;
+
+      expect(preview.knocksOut).toBe(false);
+    },
+  );
+
+  it("given a hidden hero, when Shatter is previewed, then stealth doesn't add to it", () => {
     const state = duel();
     const blast = previewDamage(heroOf(state), foeOf(state), shatter)!;
     applyStatus(state, heroOf(state), heroOf(state), statusOf(vanish), []);
-    expect(previewDamage(heroOf(state), foeOf(state), shatter)).toEqual(blast);
+
+    const hidden = previewDamage(heroOf(state), foeOf(state), shatter);
+
+    expect(hidden).toEqual(blast);
     expect(blast.amount).toBeGreaterThan(0);
   });
 
-  it("doubles out of stealth", () => {
+  it("given a hidden hero, when an attack is previewed, then it is doubled", () => {
     const state = duel();
     const plain = previewDamage(heroOf(state), foeOf(state))!.amount;
     applyStatus(state, heroOf(state), heroOf(state), statusOf(vanish), []);
-    expect(previewDamage(heroOf(state), foeOf(state))!.amount).toBe(plain * 2);
+
+    const hidden = previewDamage(heroOf(state), foeOf(state))!.amount;
+
+    expect(hidden).toBe(plain * 2);
   });
 });

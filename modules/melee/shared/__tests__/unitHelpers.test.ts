@@ -34,67 +34,96 @@ const status = (effect: Status["effect"], amount = 0): Status => ({
 const foe = (s: BattleState): Unit => s.units[1]!;
 
 describe("dropReady", () => {
-  it("takes only that unit out of the ready queue", () => {
+  it("given a unit queued twice among others, when it is dropped, then only its entries go", () => {
     const s = battle();
     s.ready = ["a", "b", "a", "c"];
+
     dropReady(s, "a");
+
     expect(s.ready).toEqual(["b", "c"]);
   });
 });
 
 describe("restoreHp", () => {
-  it("heals up to max HP and returns what was gained", () => {
-    const unit = foe(battle());
-    unit.hp = 40;
-    expect(restoreHp(unit, 6)).toBe(6);
-    expect(unit.hp).toBe(46);
-    expect(restoreHp(unit, 30)).toBe(4);
-    expect(unit.hp).toBe(50);
-    expect(restoreHp(unit, 5)).toBe(0);
-  });
+  it.each([
+    [40, 6, 6, 46],
+    [46, 30, 4, 50],
+    [50, 5, 0, 50],
+  ])(
+    "given a unit at %i of 50 HP, when %i is restored, then it gains %i and is at %i",
+    (hp, amount, gained, after) => {
+      const unit = foe(battle());
+      unit.hp = hp;
+
+      const result = restoreHp(unit, amount);
+
+      expect(result).toBe(gained);
+      expect(unit.hp).toBe(after);
+    },
+  );
 });
 
 describe("findSkill", () => {
-  it("finds the unit's own copy of a skill by id", () => {
-    const caster = battle().units[0]!;
-    expect(findSkill(caster, fireball.id)).toBe(
-      caster.skills.find((s) => s.id === fireball.id),
-    );
-    expect(findSkill(caster, "nope")).toBeUndefined();
+  const caster = battle().units[0]!;
+
+  it("given a mage, when Fireball is looked up, then it is the mage's own copy", () => {
+    const skill = findSkill(caster, fireball.id);
+
+    expect(skill).toBe(caster.skills.find((s) => s.id === fireball.id));
+  });
+
+  it("given a mage, when an unknown skill is looked up, then there is none", () => {
+    const skill = findSkill(caster, "nope");
+
+    expect(skill).toBeUndefined();
   });
 });
 
 describe("wouldKnockOut", () => {
-  it("is true when the hit reaches the target's HP", () => {
-    const unit = foe(battle());
-    unit.hp = 20;
-    expect(wouldKnockOut(unit, 20)).toBe(true);
-    expect(wouldKnockOut(unit, 19)).toBe(false);
-  });
+  it.each([
+    ["no protection", [], 20, true],
+    ["no protection", [], 19, false],
+    ["a 5 shield", [status("shield", 5)], 24, false],
+    ["a 5 shield", [status("shield", 5)], 25, true],
+    ["a ward", [status("ward")], 999, false],
+  ])(
+    "given a unit at 20 HP with %s, when a hit of %i is weighed, then it knocks out: %s",
+    (_, statuses, damage, out) => {
+      const unit = foe(battle());
+      unit.hp = 20;
+      unit.statuses = statuses;
 
-  it("counts a shield first and never finishes a warded target", () => {
-    const unit = foe(battle());
-    unit.hp = 20;
-    unit.statuses = [status("shield", 5)];
-    expect(wouldKnockOut(unit, 24)).toBe(false);
-    expect(wouldKnockOut(unit, 25)).toBe(true);
-    unit.statuses = [status("ward")];
-    expect(wouldKnockOut(unit, 999)).toBe(false);
-  });
+      const result = wouldKnockOut(unit, damage);
 
-  it("is false for no damage", () => {
+      expect(result).toBe(out);
+    },
+  );
+
+  it("given a unit at 0 HP, when no damage is weighed, then it doesn't knock out", () => {
     const unit = foe(battle());
     unit.hp = 0;
-    expect(wouldKnockOut(unit, 0)).toBe(false);
+
+    const result = wouldKnockOut(unit, 0);
+
+    expect(result).toBe(false);
   });
 });
 
 describe("canAfford", () => {
-  it("needs the MP, and more HP than an HP cost", () => {
-    const unit = foe(battle());
-    const skill = { ...fireball, mpCost: 10, hpCost: 15 };
-    expect(canAfford({ ...unit, mp: 10, hp: 16 }, skill)).toBe(true);
-    expect(canAfford({ ...unit, mp: 9, hp: 16 }, skill)).toBe(false);
-    expect(canAfford({ ...unit, mp: 10, hp: 15 }, skill)).toBe(false);
-  });
+  const skill = { ...fireball, mpCost: 10, hpCost: 15 };
+
+  it.each([
+    [10, 16, true],
+    [9, 16, false],
+    [10, 15, false],
+  ])(
+    "given a skill costing 10 MP and 15 HP and a unit with %i MP and %i HP, when it is checked, then it is affordable: %s",
+    (mp, hp, affordable) => {
+      const unit = { ...foe(battle()), mp, hp };
+
+      const result = canAfford(unit, skill);
+
+      expect(result).toBe(affordable);
+    },
+  );
 });

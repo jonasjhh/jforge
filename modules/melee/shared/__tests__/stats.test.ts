@@ -15,27 +15,36 @@ describe("effectiveStat", () => {
       1,
     ).units[0]!;
 
-  it("adds before multiplying", () => {
+  it("given an add and a multiply on attack, when attack is taken, then the add comes first", () => {
     const unit = unitWith({
       modifiers: [
         { stat: "attack", op: "add", value: 5, source: "x" },
         { stat: "attack", op: "mul", value: 2, source: "y" },
       ],
     });
-    expect(effectiveStat(unit, "attack")).toBe(30);
+
+    const attack = effectiveStat(unit, "attack");
+
+    expect(attack).toBe(30);
   });
 
-  it("never goes below 0", () => {
+  it("given a big minus on attack, when attack is taken, then it is 0", () => {
     const unit = unitWith({
       modifiers: [{ stat: "attack", op: "add", value: -50, source: "x" }],
     });
-    expect(effectiveStat(unit, "attack")).toBe(0);
+
+    const attack = effectiveStat(unit, "attack");
+
+    expect(attack).toBe(0);
   });
 
-  it("ignores modifiers for other stats", () => {
+  it("given a modifier on speed, when attack is taken, then it is unchanged", () => {
     const unit = unitWith({
       modifiers: [{ stat: "speed", op: "mul", value: 3, source: "x" }],
     });
-    expect(effectiveStat(unit, "attack")).toBe(10);
+
+    const attack = effectiveStat(unit, "attack");
+
+    expect(attack).toBe(10);
   });
 });

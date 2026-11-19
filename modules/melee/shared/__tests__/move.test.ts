@@ -29,13 +29,16 @@ const hero = (state: BattleState) =>
   state.units.find((u) => u.id === "player-2-1")!;
 
 describe("move", () => {
-  it("steps to an adjacent empty cell and costs half a turn", () => {
-    const { state, events } = act(waiting(), {
+  it("given the hero waiting, when it steps forward, then it is there with half its gauge left", () => {
+    const state = waiting();
+
+    const { state: after, events } = act(state, {
       type: "move",
       to: { col: 2, row: 0 },
     });
-    expect(hero(state).position).toEqual({ col: 2, row: 0 });
-    expect(hero(state).gauge).toBe(MOVE_GAUGE_LEFT);
+
+    expect(hero(after).position).toEqual({ col: 2, row: 0 });
+    expect(hero(after).gauge).toBe(MOVE_GAUGE_LEFT);
     expect(events).toEqual([
       {
         type: "moved",
@@ -46,36 +49,50 @@ describe("move", () => {
     ]);
   });
 
-  it("allows only one orthogonal step to an empty cell on the grid", () => {
+  describe("refused steps", () => {
     const start = waiting([
       place(def("ally", { speed: 1 }), "player", 1, 1),
       place(def("fallen", { speed: 1 }), "player", 3, 1),
     ]);
-    // The fallen ally lies at 3,1.
     start.units.find((u) => u.id === "player-3-1")!.hp = 0;
-    const move = (col: number, row: number) => () =>
-      act(start, { type: "move", to: { col, row } });
-    expect(move(3, 2)).toThrow(/adjacent/); // diagonal
-    expect(move(2, -1)).toThrow(/off the grid/);
-    expect(move(4, 1)).toThrow(/adjacent/); // two steps
-    expect(move(1, 1)).toThrow(/occupied/);
-    expect(move(3, 1)).toThrow(/occupied/); // knocked-out units block too
-    expect(move(2, 2)).not.toThrow();
+
+    it.each([
+      ["a diagonal step", 3, 2, /adjacent/],
+      ["a step off the grid", 2, -1, /off the grid/],
+      ["two steps", 4, 1, /adjacent/],
+      ["a step onto an ally", 1, 1, /occupied/],
+      ["a step onto a body", 3, 1, /occupied/],
+    ])(
+      "given %s, when the hero moves, then it is refused",
+      (_, col, row, problem) => {
+        const move = () => act(start, { type: "move", to: { col, row } });
+
+        expect(move).toThrow(problem);
+      },
+    );
+
+    it("given an empty cell next to the hero, when it moves there, then it is allowed", () => {
+      const move = () => act(start, { type: "move", to: { col: 2, row: 2 } });
+
+      expect(move).not.toThrow();
+    });
   });
 
-  it("lets a unit act again sooner than attacking does", () => {
-    const afterMove = advance(
-      act(waiting(), { type: "move", to: { col: 2, row: 0 } }).state,
-    );
-    const afterAttack = advance(
-      act(waiting(), { type: "attack", targetId: "enemy-0-0" }).state,
-    );
-    // First turn at time 100. Attack: next at 200. Move: next at 150.
-    expect(afterMove.state.time).toBe(150);
-    expect(afterAttack.state.time).toBe(200);
-  });
+  it.each([
+    ["moves", { type: "move", to: { col: 2, row: 0 } }, 150],
+    ["attacks", { type: "attack", targetId: "enemy-0-0" }, 200],
+  ] as const)(
+    "given the hero's first turn at 100, when it %s, then its next turn is at %i",
+    (_, command, time) => {
+      const state = act(waiting(), command).state;
 
-  it("can step out of a Fireball's spill and out of a sword's reach", () => {
+      const next = advance(state);
+
+      expect(next.state.time).toBe(time);
+    },
+  );
+
+  describe("stepping out of harm", () => {
     const brute = def("brute", { speed: 1 }, sword);
     const start = advance(
       createBattle(
@@ -100,11 +117,19 @@ describe("move", () => {
         (u) => u.name,
       );
 
-    expect(reached(start)).toEqual(["archer", "fighter"]);
-    expect(burned(start)).toContain("fighter");
+    it("given a fighter in a sword's reach and a Fireball's spill, when the battle starts, then both would catch it", () => {
+      const sword = reached(start);
+      const fire = burned(start);
 
-    const moved = act(start, { type: "move", to: { col: 2, row: 0 } }).state;
-    expect(reached(moved)).toEqual(["archer"]);
-    expect(burned(moved)).not.toContain("fighter");
+      expect(sword).toEqual(["archer", "fighter"]);
+      expect(fire).toContain("fighter");
+    });
+
+    it("given a fighter in harm's way, when it steps aside, then neither the sword nor the Fireball catches it", () => {
+      const moved = act(start, { type: "move", to: { col: 2, row: 0 } }).state;
+
+      expect(reached(moved)).toEqual(["archer"]);
+      expect(burned(moved)).not.toContain("fighter");
+    });
   });
 });

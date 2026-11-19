@@ -6,37 +6,59 @@ import type { BattleEvent, CombatantDef } from "../types";
 import { DAMAGE_TYPES } from "../types";
 import { def, place } from "./helpers";
 
-describe("creature traits", () => {
-  it("give each creature its trait defaults", () => {
-    expect(resistancesFor(slime)).toEqual(TRAIT_RESISTANCES.ooze);
-    expect(resistancesFor(wolf)).toEqual({ pierce: 1.5 });
-    expect(resistancesFor(imp)).toMatchObject({ holy: 2, fire: 0.5 });
-    expect(resistancesFor(boulder)).toMatchObject({ impact: 2, poison: 0 });
+describe("resistancesFor", () => {
+  it.each([
+    ["a slime", slime, TRAIT_RESISTANCES.ooze],
+    ["a wolf", wolf, { pierce: 1.5 }],
+  ])(
+    "given %s, when its resistances are taken, then they are its trait's",
+    (_, creature, table) => {
+      const resistances = resistancesFor(creature);
+
+      expect(resistances).toEqual(table);
+    },
+  );
+
+  it.each([
+    ["an imp", imp, { holy: 2, fire: 0.5 }],
+    ["a boulder", boulder, { impact: 2, poison: 0 }],
+  ])(
+    "given %s, when its resistances are taken, then they include its trait's",
+    (_, creature, table) => {
+      const resistances = resistancesFor(creature);
+
+      expect(resistances).toMatchObject(table);
+    },
+  );
+
+  it("given a viper, a beast and reptile immune to poison, when its resistances are taken, then both traits combine and its own immunity wins", () => {
+    const resistances = resistancesFor(viper);
+
+    expect(resistances).toEqual({ pierce: 1.5, cold: 1.5, poison: 0 });
   });
 
-  it("combine several traits, and let the creature override them", () => {
-    // Viper: beast (pierce x1.5) + reptile (cold x1.5), immune to poison.
-    expect(resistancesFor(viper)).toEqual({
-      pierce: 1.5,
-      cold: 1.5,
-      poison: 0,
-    });
+  it("given an ooze that is also stone, when its pierce resistance is taken, then both multiply", () => {
     const both: CombatantDef = { ...def("x"), traits: ["ooze", "stone"] };
-    // Pierce: ooze 0.5 x stone 0.5.
-    expect(resistancesFor(both).pierce).toBe(0.25);
+
+    const pierce = resistancesFor(both).pierce;
+
+    // Ooze 0.5 x stone 0.5.
+    expect(pierce).toBe(0.25);
   });
 
-  it("only use known damage types", () => {
-    for (const table of Object.values(TRAIT_RESISTANCES)) {
-      for (const type of Object.keys(table)) {
-        expect(DAMAGE_TYPES).toContain(type);
-      }
-    }
+  it("given the trait tables, when their damage types are listed, then all are known", () => {
+    const types = Object.values(TRAIT_RESISTANCES).flatMap(Object.keys);
+
+    const unknown = types.filter(
+      (type) => !(DAMAGE_TYPES as readonly string[]).includes(type),
+    );
+
+    expect(unknown).toEqual([]);
   });
 });
 
 describe("collisions", () => {
-  it("are impact damage", () => {
+  it("given a front-row enemy, when it is hooked against the edge, then the crash is impact damage", () => {
     const fast = { ...lancer, stats: { ...lancer.stats, speed: 50 } };
     const state = advance(
       createBattle(
@@ -49,12 +71,13 @@ describe("collisions", () => {
         1,
       ),
     ).state;
-    // Hooking a front-row enemy crashes it against the edge.
+
     const { events } = act(state, {
       type: "skill",
       skillId: hook.id,
       cell: { side: "enemy", col: 2, row: 0 },
     });
+
     const hit = events.find((e) => e.type === "damage") as Extract<
       BattleEvent,
       { type: "damage" }

@@ -34,28 +34,36 @@ const attacked = (state: BattleState, brute: Unit) => {
 };
 
 describe("farness", () => {
-  it("is 0 straight ahead and 1 across every column in the back row", () => {
-    const { state, brute } = battle([
-      place(def("ahead"), "player", 2, 0),
-      place(def("far"), "player", 0, 2),
-    ]);
-    expect(farness(brute, unit(state, "player-2-0"))).toBe(0);
-    expect(farness(brute, unit(state, "player-0-2"))).toBe(4 / 6);
-  });
+  const { state, brute } = battle([
+    place(def("ahead"), "player", 2, 0),
+    place(def("far"), "player", 0, 2),
+    place(def("aside"), "player", 3, 0),
+    place(def("behind"), "player", 2, 1),
+  ]);
 
-  it("counts columns away and depth alike", () => {
-    const { state, brute } = battle([
-      place(def("aside"), "player", 3, 0),
-      place(def("behind"), "player", 2, 1),
-    ]);
-    expect(farness(brute, unit(state, "player-3-0"))).toBe(
-      farness(brute, unit(state, "player-2-1")),
-    );
+  it.each([
+    ["straight ahead", "player-2-0", 0],
+    ["two columns off in the back row", "player-0-2", 4 / 6],
+  ])(
+    "given a target %s, when its farness is taken, then it is %d",
+    (_, id, far) => {
+      const result = farness(brute, unit(state, id));
+
+      expect(result).toBe(far);
+    },
+  );
+
+  it("given one target a column aside and one a row behind, when their farness is taken, then it is the same", () => {
+    const aside = farness(brute, unit(state, "player-3-0"));
+
+    const behind = farness(brute, unit(state, "player-2-1"));
+
+    expect(behind).toBe(aside);
   });
 });
 
 describe("near in targetScore", () => {
-  it("costs nothing for the target straight ahead", () => {
+  it("given a target straight ahead, when it is scored with and without near, then the scores match", () => {
     const { state, brute } = battle([place(def("ahead"), "player", 2, 0)]);
     const ahead = unit(state, "player-2-0");
     const without = targetScore(
@@ -63,42 +71,56 @@ describe("near in targetScore", () => {
       { ...brute, targeting: { ...calm, near: 0 } },
       ahead,
     );
-    expect(targetScore(state, brute, ahead)).toBeCloseTo(without);
+
+    const score = targetScore(state, brute, ahead);
+
+    expect(score).toBeCloseTo(without);
   });
 
-  it("prefers the closer of two equal targets", () => {
+  it("given two equal targets, near and far, when the AI attacks, then it picks the nearer", () => {
     const { state, brute } = battle([
       place(def("aside"), "player", 3, 0),
       place(def("far"), "player", 0, 2),
     ]);
-    expect(attacked(state, brute)).toBe("player-3-0");
+
+    const target = attacked(state, brute);
+
+    expect(target).toBe("player-3-0");
   });
 
-  it("still goes for a badly wounded target a little farther off", () => {
+  it("given a badly wounded target a little farther off, when the AI attacks, then it picks the wounded one", () => {
     const { state, brute } = battle([
       place(def("aside"), "player", 3, 0),
       place(def("hurt"), "player", 0, 1),
     ]);
     unit(state, "player-0-1").hp = 30;
-    expect(attacked(state, brute)).toBe("player-0-1");
+
+    const target = attacked(state, brute);
+
+    expect(target).toBe("player-0-1");
   });
 
-  it("goes anywhere for a target it can finish", () => {
+  it("given a target it can finish at the far corner, when the AI attacks, then it goes for it", () => {
     const { state, brute } = battle([
       place(def("ahead"), "player", 2, 0),
       place(def("dying"), "player", 0, 2),
     ]);
     unit(state, "player-0-2").hp = 5;
-    expect(attacked(state, brute)).toBe("player-0-2");
+
+    const target = attacked(state, brute);
+
+    expect(target).toBe("player-0-2");
   });
 
-  it("is ignored with a near of 0", () => {
+  it("given a near of 0, when a near and a far target are scored, then the scores match", () => {
     const { state, brute } = battle(
       [place(def("aside"), "player", 3, 0), place(def("far"), "player", 0, 2)],
       { ...calm, near: 0, soft: 0 },
     );
+
     const aside = targetScore(state, brute, unit(state, "player-3-0"));
     const far = targetScore(state, brute, unit(state, "player-0-2"));
+
     expect(aside).toBeCloseTo(far);
   });
 });

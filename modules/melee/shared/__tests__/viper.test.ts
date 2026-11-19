@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { advance, createBattle } from "../battle";
 import { viper } from "../content";
-import type { BattleEvent, BattleState, CombatantDef } from "../types";
+import type { BattleEvent, CombatantDef } from "../types";
 import { def, place } from "./helpers";
 
 type Tick = Extract<BattleEvent, { type: "statusTick" }>;
@@ -34,11 +34,13 @@ function bitten(victim: CombatantDef, until: number, victimHp?: number) {
 
 const ticks = (events: BattleEvent[]) =>
   events.filter((e): e is Tick => e.type === "statusTick");
-const firstBite = (state: BattleState) => state.time;
 
 describe("Viper venom", () => {
-  it("poisons the target of a damaging bite", () => {
-    const { events, victim } = bitten(def("archer", { maxHp: 500 }), 80);
+  it("given a victim, when the viper bites, then it is poisoned for 4 a tick", () => {
+    const victimDef = def("archer", { maxHp: 500 });
+
+    const { events, victim } = bitten(victimDef, 80);
+
     expect(events).toContainEqual({
       type: "statusApplied",
       unitId: victim.id,
@@ -51,12 +53,14 @@ describe("Viper venom", () => {
       amount: 4,
       effect: "damage",
     });
-    expect(firstBite).toBeDefined();
   });
 
-  it("deals 0.4 x attack poison damage every 30 game time", () => {
+  it("given a bitten victim, when 30 game time passes, then poison deals 0.4 x attack as poison damage", () => {
+    const victimDef = def("archer", { maxHp: 500 });
+
     // Bites at ~77, ~154, ... refresh the poison; the first tick is 30 later.
-    const { events } = bitten(def("archer", { maxHp: 500 }), 140);
+    const { events } = bitten(victimDef, 140);
+
     const first = ticks(events);
     expect(first.length).toBeGreaterThanOrEqual(1);
     expect(first[0]).toMatchObject({
@@ -67,29 +71,35 @@ describe("Viper venom", () => {
     });
   });
 
-  it("can knock a unit out on its own, which clears it", () => {
-    // 6 HP: the bite (about 9) would kill outright, so start at 13: the bite
-    // leaves about 4, and poison finishes the job.
+  it("given a victim the bite leaves nearly dead, when poison ticks, then it knocks them out and is cleared", () => {
+    // 7 HP and high defense: the bite leaves a few HP and poison finishes it.
     const tough = def("archer", { maxHp: 500, defense: 40 });
+
     const { events, victim } = bitten(tough, 400, 7);
+
     const ko = events.findIndex((e) => e.type === "knockedOut");
     expect(ko).toBeGreaterThan(-1);
     expect(events[ko - 1]?.type).toBe("statusTick");
     expect(victim.statuses).toEqual([]);
   });
 
-  it("does not take hold on a target immune to poison", () => {
+  it("given a victim immune to poison, when bitten, then the poison doesn't take hold", () => {
     const immune = {
       ...def("slime", { maxHp: 500 }),
       resistances: { poison: 0 },
     };
+
     const { events, victim } = bitten(immune, 200);
+
     expect(events.some((e) => e.type === "statusApplied")).toBe(false);
     expect(victim.statuses).toEqual([]);
   });
 
-  it("refreshes rather than stacks on a second bite", () => {
-    const { events, victim } = bitten(def("archer", { maxHp: 500 }), 160);
+  it("given a poisoned victim, when bitten again, then the poison is refreshed, not stacked", () => {
+    const victimDef = def("archer", { maxHp: 500 });
+
+    const { events, victim } = bitten(victimDef, 160);
+
     expect(events.filter((e) => e.type === "statusApplied")).toHaveLength(2);
     expect(victim.statuses).toHaveLength(1);
   });

@@ -42,35 +42,38 @@ const mine = (col: number, row: number): Cell => ({
 const damaged = (events: BattleEvent[]) =>
   events.flatMap((e) => (e.type === "damage" ? [e.unitId] : []));
 
-describe("Knocked-out bodies", () => {
-  it("block moving into their cell", () => {
+describe("knocked-out bodies", () => {
+  it.each([
+    ["moving", { type: "move", to: { col: 2, row: 1 } }],
+    ["teleporting", { type: "skill", skillId: "shadowstep", cell: mine(2, 1) }],
+  ] as const)(
+    "given an ally's body behind the hero, when %s into its cell, then the cell is occupied",
+    (_, command) => {
+      const state = withBody();
+
+      const go = () => act(state, command);
+
+      expect(go).toThrow(/occupied/);
+    },
+  );
+
+  it("given an enemy's body, when it is attacked, then it is already knocked out", () => {
     const state = withBody();
-    expect(() => act(state, { type: "move", to: { col: 2, row: 1 } })).toThrow(
-      /occupied/,
-    );
+
+    const attack = () => act(state, { type: "attack", targetId: "enemy-3-0" });
+
+    expect(attack).toThrow(/already knocked out/);
   });
 
-  it("block teleporting into their cell", () => {
+  it("given an ally's body, when a fireball lands on it, then the body is spared and the living are hit", () => {
     const state = withBody();
-    expect(() =>
-      act(state, { type: "skill", skillId: "shadowstep", cell: mine(2, 1) }),
-    ).toThrow(/occupied/);
-  });
 
-  it("can't be attacked", () => {
-    const state = withBody();
-    expect(() => act(state, { type: "attack", targetId: "enemy-3-0" })).toThrow(
-      /already knocked out/,
-    );
-  });
-
-  it("aren't hit by areas", () => {
-    const state = withBody();
     const { events } = act(state, {
       type: "skill",
       skillId: "fireball",
       cell: mine(2, 1),
     });
+
     expect(damaged(events)).not.toContain("player-2-1");
     expect(damaged(events)).toContain("player-2-0");
   });
