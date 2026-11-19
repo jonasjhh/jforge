@@ -15,68 +15,99 @@ const setUp = () => {
   return { onLongPress, hook, press: () => hook.result.current };
 };
 
+const menu = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent;
+/** Presses and holds for `ms`. */
+const hold = (press: () => ReturnType<typeof useLongPress>, ms: number) => {
+  act(() => press().onPointerDown());
+  act(() => vi.advanceTimersByTime(ms));
+};
+
 describe("useLongPress", () => {
-  it("fires once a press has been held long enough", () => {
+  it("given a press, when it is held 449 ms, then it does not fire yet", () => {
     const { onLongPress, press } = setUp();
-    act(() => press().onPointerDown());
-    act(() => vi.advanceTimersByTime(449));
+
+    hold(press, 449);
+
     expect(onLongPress).not.toHaveBeenCalled();
-    act(() => vi.advanceTimersByTime(1));
+  });
+
+  it("given a press, when it is held 450 ms, then it fires once", () => {
+    const { onLongPress, press } = setUp();
+
+    hold(press, 450);
+
     expect(onLongPress).toHaveBeenCalledOnce();
   });
 
   it.each(["onPointerUp", "onPointerLeave", "onPointerCancel"] as const)(
-    "doesn't fire when %s ends the press early",
+    "given a press ended early by %s, when time passes, then it doesn't fire",
     (end) => {
       const { onLongPress, press } = setUp();
       act(() => press().onPointerDown());
       act(() => press()[end]());
+
       act(() => vi.advanceTimersByTime(1000));
+
       expect(onLongPress).not.toHaveBeenCalled();
     },
   );
 
-  it("fires on the context menu, instead of the browser's menu", () => {
+  it("given no press, when the context menu opens, then it fires instead of the browser's menu", () => {
     const { onLongPress, press } = setUp();
-    const event = { preventDefault: vi.fn() } as unknown as MouseEvent;
+    const event = menu();
+
     act(() => press().onContextMenu(event));
+
     expect(event.preventDefault).toHaveBeenCalled();
     expect(onLongPress).toHaveBeenCalledOnce();
   });
 
-  it("fires once when the timer and the context menu both come", () => {
+  it("given a long press that fired, when the context menu opens too, then it has fired only once", () => {
     const { onLongPress, press } = setUp();
-    const event = { preventDefault: vi.fn() } as unknown as MouseEvent;
-    act(() => press().onPointerDown());
-    act(() => vi.advanceTimersByTime(450));
-    act(() => press().onContextMenu(event));
+    hold(press, 450);
+
+    act(() => press().onContextMenu(menu()));
+
     expect(onLongPress).toHaveBeenCalledOnce();
   });
 
-  it("lets the click that ends a long press be ignored, once", () => {
+  it("given no long press, when a click is consumed, then there is none to ignore", () => {
     const { press } = setUp();
-    expect(press().consumeClick()).toBe(false);
-    act(() => press().onPointerDown());
-    act(() => vi.advanceTimersByTime(450));
-    expect(press().consumeClick()).toBe(true);
-    expect(press().consumeClick()).toBe(false);
+
+    const consumed = press().consumeClick();
+
+    expect(consumed).toBe(false);
   });
 
-  it("calls the latest callback it was given", () => {
+  it("given a long press, when the clicks after it are consumed, then only the first is ignored", () => {
+    const { press } = setUp();
+    hold(press, 450);
+
+    const first = press().consumeClick();
+    const second = press().consumeClick();
+
+    expect(first).toBe(true);
+    expect(second).toBe(false);
+  });
+
+  it("given a new callback, when a press is held, then the latest callback fires", () => {
     const { onLongPress, hook, press } = setUp();
     const later = vi.fn();
     hook.rerender({ callback: later });
-    act(() => press().onPointerDown());
-    act(() => vi.advanceTimersByTime(450));
+
+    hold(press, 450);
+
     expect(later).toHaveBeenCalledOnce();
     expect(onLongPress).not.toHaveBeenCalled();
   });
 
-  it("stops a pending press when it is gone", () => {
+  it("given a pending press, when the hook is gone and time passes, then it doesn't fire", () => {
     const { onLongPress, hook, press } = setUp();
     act(() => press().onPointerDown());
+
     hook.unmount();
     vi.advanceTimersByTime(1000);
+
     expect(onLongPress).not.toHaveBeenCalled();
   });
 });

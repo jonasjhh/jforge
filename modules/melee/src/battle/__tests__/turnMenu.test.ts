@@ -64,14 +64,20 @@ const skillMenu = (skill = fireball, aim: Cell | null = null): Menu => ({
 });
 
 describe("turnKey", () => {
-  it("is null while nobody waits", () => {
+  it("given nobody waits, when the turn key is taken, then it is null", () => {
     const { state } = waiting();
-    expect(turnKey(state, null)).toBeNull();
+
+    const key = turnKey(state, null);
+
+    expect(key).toBeNull();
   });
 
-  it("names the unit and the moment", () => {
+  it("given a unit waits, when the turn key is taken, then it names the unit and the moment", () => {
     const { state, active } = waiting();
-    expect(turnKey(state, active)).toBe(`${active.id}@${state.time}`);
+
+    const key = turnKey(state, active);
+
+    expect(key).toBe(`${active.id}@${state.time}`);
   });
 });
 
@@ -79,108 +85,147 @@ describe("commandFor", () => {
   const { state, active } = waiting();
   const foe = unit(state, "foe");
 
-  it("attacks whoever stands on the cell", () => {
-    expect(commandFor(state, active, ATTACK, cell("enemy", 1))).toEqual({
-      type: "attack",
-      targetId: foe.id,
-    });
+  it("given the attack menu, when a cell with an enemy is chosen, then that enemy is attacked", () => {
+    const command = commandFor(state, active, ATTACK, cell("enemy", 1));
+
+    expect(command).toEqual({ type: "attack", targetId: foe.id });
   });
 
-  it("has nothing to attack on an empty cell", () => {
-    expect(commandFor(state, active, ATTACK, cell("enemy", 2))).toBeNull();
+  it("given the attack menu, when an empty cell is chosen, then there is no command", () => {
+    const command = commandFor(state, active, ATTACK, cell("enemy", 2));
+
+    expect(command).toBeNull();
   });
 
-  it("moves only on the unit's own side", () => {
-    expect(
-      commandFor(state, active, { kind: "move" }, cell("player", 3)),
-    ).toEqual({ type: "move", to: { col: 3, row: 0 } });
-    expect(
-      commandFor(state, active, { kind: "move" }, cell("enemy", 3)),
-    ).toBeNull();
+  it("given the move menu, when a cell on the unit's own side is chosen, then it moves there", () => {
+    const command = commandFor(
+      state,
+      active,
+      { kind: "move" },
+      cell("player", 3),
+    );
+
+    expect(command).toEqual({ type: "move", to: { col: 3, row: 0 } });
   });
 
-  it("casts a chosen skill on any cell", () => {
-    expect(commandFor(state, active, skillMenu(), cell("enemy", 2))).toEqual({
+  it("given the move menu, when a cell on the other side is chosen, then there is no command", () => {
+    const command = commandFor(
+      state,
+      active,
+      { kind: "move" },
+      cell("enemy", 3),
+    );
+
+    expect(command).toBeNull();
+  });
+
+  it("given a chosen skill, when any cell is chosen, then the skill is cast there", () => {
+    const command = commandFor(state, active, skillMenu(), cell("enemy", 2));
+
+    expect(command).toEqual({
       type: "skill",
       skillId: "fireball",
       cell: cell("enemy", 2),
     });
   });
 
-  it("does nothing while the skill list is open", () => {
-    expect(
-      commandFor(state, active, { kind: "skills" }, cell("enemy", 1)),
-    ).toBeNull();
+  it("given the skill list is open, when a cell is chosen, then there is no command", () => {
+    const command = commandFor(
+      state,
+      active,
+      { kind: "skills" },
+      cell("enemy", 1),
+    );
+
+    expect(command).toBeNull();
   });
 });
 
 describe("canTarget", () => {
   const { state, active } = waiting();
 
-  it("is false while nobody waits", () => {
-    expect(canTarget(state, null, ATTACK, cell("enemy", 1))).toBe(false);
-  });
-
-  it("is true for an enemy that can be attacked", () => {
-    expect(canTarget(state, active, ATTACK, cell("enemy", 1))).toBe(true);
-  });
-
-  it("is false where there is no command", () => {
-    expect(canTarget(state, active, ATTACK, cell("enemy", 2))).toBe(false);
-  });
-
-  it("is false when the command is not allowed", () => {
-    // The ally stands there.
-    expect(canTarget(state, active, { kind: "move" }, cell("player", 1))).toBe(
+  it.each<[string, Unit | null, Menu, Cell, boolean]>([
+    ["nobody waits", null, ATTACK, cell("enemy", 1), false],
+    ["an enemy that can be attacked", active, ATTACK, cell("enemy", 1), true],
+    ["an empty cell to attack", active, ATTACK, cell("enemy", 2), false],
+    [
+      "a move onto the ally",
+      active,
+      { kind: "move" },
+      cell("player", 1),
       false,
-    );
-    // Too far, then a free neighbouring cell.
-    expect(canTarget(state, active, { kind: "move" }, cell("player", 2))).toBe(
-      false,
-    );
-    expect(
-      canTarget(state, active, { kind: "move" }, cell("player", 0, 1)),
-    ).toBe(true);
-  });
+    ],
+    ["a move too far", active, { kind: "move" }, cell("player", 2), false],
+    [
+      "a move to a free neighbouring cell",
+      active,
+      { kind: "move" },
+      cell("player", 0, 1),
+      true,
+    ],
+  ])(
+    "given %s, when the cell is checked, then it is targetable: %s",
+    (_, who, menu, at, expected) => {
+      const ok = canTarget(state, who, menu, at);
+
+      expect(ok).toBe(expected);
+    },
+  );
 });
 
 describe("tap", () => {
   const { state, active } = waiting();
 
-  it("attacks on the first tap", () => {
-    expect(tap(state, active, ATTACK, cell("enemy", 1))).toEqual({
+  it("given the attack menu, when an enemy is tapped, then it is attacked at once", () => {
+    const result = tap(state, active, ATTACK, cell("enemy", 1));
+
+    expect(result).toEqual({
       type: "command",
       command: { type: "attack", targetId: unit(state, "foe").id },
     });
   });
 
-  it("does nothing without a command", () => {
-    expect(tap(state, active, ATTACK, cell("enemy", 2))).toBeNull();
+  it("given the attack menu, when an empty cell is tapped, then nothing happens", () => {
+    const result = tap(state, active, ATTACK, cell("enemy", 2));
+
+    expect(result).toBeNull();
   });
 
-  it("casts a single-target skill on the first tap", () => {
-    expect(tap(state, active, skillMenu(heal), cell("player", 1))).toEqual({
+  it("given a single-target skill, when its target is tapped, then it is cast at once", () => {
+    const result = tap(state, active, skillMenu(heal), cell("player", 1));
+
+    expect(result).toEqual({
       type: "command",
       command: { type: "skill", skillId: "heal", cell: cell("player", 1) },
     });
   });
 
-  it("aims an area skill first, then casts on the same cell", () => {
-    const first = tap(state, active, skillMenu(), cell("enemy", 2));
-    expect(first).toEqual({
+  it("given an area skill not yet aimed, when a cell is tapped, then it is aimed there", () => {
+    const result = tap(state, active, skillMenu(), cell("enemy", 2));
+
+    expect(result).toEqual({
       type: "aim",
       menu: skillMenu(fireball, cell("enemy", 2)),
     });
-    const aimed = (first as { menu: Menu }).menu;
-    expect(tap(state, active, aimed, cell("enemy", 2))).toEqual({
+  });
+
+  it("given an area skill aimed at a cell, when that cell is tapped again, then it is cast", () => {
+    const aimed = skillMenu(fireball, cell("enemy", 2));
+
+    const result = tap(state, active, aimed, cell("enemy", 2));
+
+    expect(result).toEqual({
       type: "command",
       command: { type: "skill", skillId: "fireball", cell: cell("enemy", 2) },
     });
   });
 
-  it("re-aims on a different cell", () => {
+  it("given an area skill aimed at a cell, when a different cell is tapped, then it is aimed anew", () => {
     const aimed = skillMenu(fireball, cell("enemy", 2));
-    expect(tap(state, active, aimed, cell("enemy", 3))).toEqual({
+
+    const result = tap(state, active, aimed, cell("enemy", 3));
+
+    expect(result).toEqual({
       type: "aim",
       menu: skillMenu(fireball, cell("enemy", 3)),
     });
@@ -188,31 +233,44 @@ describe("tap", () => {
 });
 
 describe("actionName", () => {
-  it("names the verb for each menu", () => {
-    expect(actionName(ATTACK)).toBe("Attack");
-    expect(actionName({ kind: "skills" })).toBe("Attack");
-    expect(actionName({ kind: "move" })).toBe("Move to");
-    expect(actionName(skillMenu(heal))).toBe("Heal");
-    expect(actionName(skillMenu(fireball))).toBe("Aim Fireball at");
-  });
+  it.each<[string, Menu, string]>([
+    ["the attack menu", ATTACK, "Attack"],
+    ["the skill list", { kind: "skills" }, "Attack"],
+    ["the move menu", { kind: "move" }, "Move to"],
+    ["a single-target skill", skillMenu(heal), "Heal"],
+    ["an area skill", skillMenu(fireball), "Aim Fireball at"],
+  ])(
+    "given %s, when its action is named, then it reads %s",
+    (_, menu, name) => {
+      const text = actionName(menu);
+
+      expect(text).toBe(name);
+    },
+  );
 });
 
 describe("aimedArea", () => {
   const { state, active } = waiting();
 
-  it("is null until an area skill is aimed", () => {
-    expect(aimedArea(state, active, ATTACK)).toBeNull();
-    expect(aimedArea(state, active, skillMenu())).toBeNull();
-    expect(
-      aimedArea(state, null, skillMenu(fireball, cell("enemy", 2))),
-    ).toBeNull();
-  });
+  it.each<[string, Unit | null, Menu]>([
+    ["the attack menu", active, ATTACK],
+    ["an area skill not yet aimed", active, skillMenu()],
+    ["nobody waiting", null, skillMenu(fireball, cell("enemy", 2))],
+  ])(
+    "given %s, when the aimed area is taken, then there is none",
+    (_, who, menu) => {
+      const area = aimedArea(state, who, menu);
 
-  it("is the skill's area around the aim", () => {
+      expect(area).toBeNull();
+    },
+  );
+
+  it("given an area skill aimed at a cell, when the aimed area is taken, then it is the skill's area around that cell", () => {
     const aim = cell("enemy", 2);
-    expect(aimedArea(state, active, skillMenu(fireball, aim))).toEqual(
-      skillArea(state, active, fireball, aim),
-    );
+
+    const area = aimedArea(state, active, skillMenu(fireball, aim));
+
+    expect(area).toEqual(skillArea(state, active, fireball, aim));
   });
 });
 
@@ -229,11 +287,15 @@ describe("incomingCells", () => {
     },
   });
 
-  it("is empty when nobody casts", () => {
-    expect(incomingCells(waiting().state)).toEqual([]);
+  it("given nobody casts, when incoming cells are collected, then there are none", () => {
+    const { state } = waiting();
+
+    const cells = incomingCells(state);
+
+    expect(cells).toEqual([]);
   });
 
-  it("collects the zones of living casters only", () => {
+  it("given a living caster and a fallen one, when incoming cells are collected, then only the living caster's zone shows", () => {
     const { state } = waiting();
     const zone = [cell("player", 0), cell("player", 1)];
     const [a, b, c, d] = state.units;
@@ -246,51 +308,56 @@ describe("incomingCells", () => {
         d!,
       ],
     };
-    expect(incomingCells(withCasts)).toEqual(zone);
+
+    const cells = incomingCells(withCasts);
+
+    expect(cells).toEqual(zone);
   });
 });
 
 describe("emphasized", () => {
   const { state, active } = waiting();
   const ally = unit(state, "ally");
+  const foe = unit(state, "foe");
   const poisoned = (u: Unit): Unit => {
     const copy = structuredClone(u);
     applyStatus(state, active, copy, venomFangs.onHit!, []);
     return copy;
   };
 
-  it("marks harmed allies while choosing a cleanse", () => {
-    expect(emphasized(active, skillMenu(cure), poisoned(ally))).toBe(true);
-  });
+  it.each<[string, Menu, Unit, boolean]>([
+    ["a cleanse and a harmed ally", skillMenu(cure), poisoned(ally), true],
+    ["a cleanse and a healthy ally", skillMenu(cure), ally, false],
+    ["a cleanse and a harmed enemy", skillMenu(cure), poisoned(foe), false],
+    [
+      "a cleanse and a harmed fallen ally",
+      skillMenu(cure),
+      { ...poisoned(ally), hp: 0 },
+      false,
+    ],
+    ["a heal and a harmed ally", skillMenu(heal), poisoned(ally), false],
+    ["a revive and a fallen ally", skillMenu(revive), { ...ally, hp: 0 }, true],
+    ["a revive and a standing ally", skillMenu(revive), ally, false],
+    [
+      "a revive and a fallen enemy",
+      skillMenu(revive),
+      { ...foe, hp: 0 },
+      false,
+    ],
+    [
+      "a revive and a vanished ally",
+      skillMenu(revive),
+      { ...ally, hp: 0, vanished: true },
+      false,
+    ],
+  ])(
+    "given %s, when the unit is checked, then it is marked: %s",
+    (_, menu, who, expected) => {
+      const marked = emphasized(active, menu, who);
 
-  it("leaves healthy allies, enemies, the fallen and other menus alone", () => {
-    expect(emphasized(active, skillMenu(cure), ally)).toBe(false);
-    expect(
-      emphasized(active, skillMenu(cure), poisoned(unit(state, "foe"))),
-    ).toBe(false);
-    expect(
-      emphasized(active, skillMenu(cure), { ...poisoned(ally), hp: 0 }),
-    ).toBe(false);
-    expect(emphasized(active, skillMenu(heal), poisoned(ally))).toBe(false);
-  });
-});
-
-describe("emphasized while reviving", () => {
-  const { state, active } = waiting();
-  const ally = unit(state, "ally");
-
-  it("marks fallen allies only", () => {
-    expect(emphasized(active, skillMenu(revive), { ...ally, hp: 0 })).toBe(
-      true,
-    );
-    expect(emphasized(active, skillMenu(revive), ally)).toBe(false);
-    expect(
-      emphasized(active, skillMenu(revive), { ...unit(state, "foe"), hp: 0 }),
-    ).toBe(false);
-    expect(
-      emphasized(active, skillMenu(revive), { ...ally, hp: 0, vanished: true }),
-    ).toBe(false);
-  });
+      expect(marked).toBe(expected);
+    },
+  );
 });
 
 describe("previewFor", () => {
@@ -298,38 +365,36 @@ describe("previewFor", () => {
   const foe = unit(state, "foe");
   const other = unit(state, "other");
   const ally = unit(state, "ally");
+  const aimed = skillMenu(fireball, cell("enemy", 1));
 
-  it("shows nothing while nobody waits, or on the fallen", () => {
-    expect(previewFor(state, null, ATTACK, foe)).toBeNull();
-    expect(previewFor(state, active, ATTACK, { ...foe, hp: 0 })).toBeNull();
-  });
+  it.each<[string, Unit | null, Menu, Unit]>([
+    ["nobody waiting", null, ATTACK, foe],
+    ["a fallen enemy", active, ATTACK, { ...foe, hp: 0 }],
+    ["an attack on an ally", active, ATTACK, ally],
+    ["the move menu", active, { kind: "move" }, foe],
+    ["the skill list", active, { kind: "skills" }, foe],
+    ["a single-target skill on an ally", active, skillMenu(firebolt), ally],
+    ["an area skill not yet aimed", active, skillMenu(), foe],
+    ["an aimed area skill and a unit outside it", active, aimed, other],
+  ])(
+    "given %s, when the preview is taken, then there is none",
+    (_, who, menu, target) => {
+      const preview = previewFor(state, who, menu, target);
 
-  it("shows an attack's damage on attackable enemies", () => {
-    expect(previewFor(state, active, ATTACK, foe)).toEqual(
-      previewDamage(active, foe),
-    );
-    expect(previewFor(state, active, ATTACK, ally)).toBeNull();
-  });
+      expect(preview).toBeNull();
+    },
+  );
 
-  it("shows nothing while moving or choosing a skill", () => {
-    expect(previewFor(state, active, { kind: "move" }, foe)).toBeNull();
-    expect(previewFor(state, active, { kind: "skills" }, foe)).toBeNull();
-  });
+  it.each<[string, Menu, typeof fireball | undefined]>([
+    ["an attack on an enemy", ATTACK, undefined],
+    ["a single-target skill on an enemy", skillMenu(firebolt), firebolt],
+    ["an aimed area skill and a unit inside it", aimed, fireball],
+  ])(
+    "given %s, when the preview is taken, then it shows the damage",
+    (_, menu, skill) => {
+      const preview = previewFor(state, active, menu, foe);
 
-  it("shows a single-target skill on its targets", () => {
-    const menu = skillMenu(firebolt);
-    expect(previewFor(state, active, menu, foe)).toEqual(
-      previewDamage(active, foe, firebolt),
-    );
-    expect(previewFor(state, active, menu, ally)).toBeNull();
-  });
-
-  it("waits for an area skill to be aimed, then shows it on its victims", () => {
-    expect(previewFor(state, active, skillMenu(), foe)).toBeNull();
-    const aimed = skillMenu(fireball, cell("enemy", 1));
-    expect(previewFor(state, active, aimed, foe)).toEqual(
-      previewDamage(active, foe, fireball),
-    );
-    expect(previewFor(state, active, aimed, other)).toBeNull();
-  });
+      expect(preview).toEqual(previewDamage(active, foe, skill));
+    },
+  );
 });

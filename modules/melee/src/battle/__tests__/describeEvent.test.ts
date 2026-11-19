@@ -29,13 +29,63 @@ const at = (col: number, row: number) => ({ col, row });
 
 const say = (event: BattleEvent) => describeEvent(state, event);
 
+const skill = (
+  extra: Partial<Extract<BattleEvent, { type: "skill" }>>,
+): BattleEvent => ({
+  type: "skill",
+  unitId: MAGE,
+  cell,
+  area: [cell],
+  skillId: "fireball",
+  skillName: "Fireball",
+  mp: 0,
+  ...extra,
+});
+const damage = (amount: number, extra = {}): BattleEvent => ({
+  type: "damage",
+  unitId: WOLF,
+  amount,
+  hp: 10,
+  damageType: "fire",
+  multiplier: 1,
+  ...extra,
+});
+const tick = (effect: "heal" | "damage", amount: number): BattleEvent => ({
+  type: "statusTick",
+  unitId: WOLF,
+  statusId: "s",
+  name: effect === "heal" ? "Regen" : "Poison",
+  effect,
+  amount,
+  hp: 10,
+  ...(effect === "damage" ? { damageType: "poison" as const } : {}),
+});
+const step = (to: { col: number; row: number }): BattleEvent => ({
+  type: "moved",
+  unitId: MAGE,
+  from: at(1, 1),
+  to,
+});
+const push = (toRow: number): BattleEvent => ({
+  type: "pushed",
+  unitId: WOLF,
+  from: at(0, 1),
+  to: at(0, toRow),
+});
+const status = { unitId: WOLF, statusId: "p", name: "Poison" };
+const modifier = { unitId: WOLF, source: "Slow" };
+
 describe("describeEvent", () => {
-  it("describes actions", () => {
-    expect(say({ type: "attack", unitId: WOLF, targetId: MAGE })).toBe(
+  it.each<[string, BattleEvent, string]>([
+    // Actions
+    [
+      "an attack",
+      { type: "attack", unitId: WOLF, targetId: MAGE },
       "Wolf attacks Mage",
-    );
-    expect(
-      say({
+    ],
+    [
+      "a cast begun",
+      {
         type: "castStarted",
         unitId: MAGE,
         skillId: "meteor",
@@ -44,240 +94,230 @@ describe("describeEvent", () => {
         area: [cell],
         readyAt: 10,
         mp: 0,
+      },
+      "Mage begins casting Meteor",
+    ],
+    ["a step forward", step(at(1, 0)), "Mage steps forward"],
+    ["a step back", step(at(1, 2)), "Mage steps back"],
+    ["a step left", step(at(0, 1)), "Mage steps left"],
+    ["a step right", step(at(2, 1)), "Mage steps right"],
+    ["a defend", { type: "defended", unitId: MAGE }, "Mage defends"],
+    ["a wait", { type: "waited", unitId: MAGE }, "Mage waits"],
+    // Skills
+    [
+      "a spell on one target",
+      skill({ targetId: WOLF }),
+      "Mage casts Fireball on Wolf",
+    ],
+    [
+      "a spell on an area",
+      skill({ targetId: WOLF, area: [cell, cell] }),
+      "Mage casts Fireball at Wolf",
+    ],
+    ["a spell with no target", skill({}), "Mage casts Fireball"],
+    [
+      "a weapon skill",
+      skill({
+        unitId: FIGHTER,
+        skillId: "cleave",
+        skillName: "Cleave",
+        targetId: WOLF,
       }),
-    ).toBe("Mage begins casting Meteor");
-  });
-
-  it("names the direction of a step", () => {
-    const step = (to: { col: number; row: number }) =>
-      say({ type: "moved", unitId: MAGE, from: at(1, 1), to });
-    expect(step(at(1, 0))).toBe("Mage steps forward");
-    expect(step(at(1, 2))).toBe("Mage steps back");
-    expect(step(at(0, 1))).toBe("Mage steps left");
-    expect(step(at(2, 1))).toBe("Mage steps right");
-  });
-
-  describe("skills", () => {
-    const skill = (extra: Partial<Extract<BattleEvent, { type: "skill" }>>) =>
-      say({
-        type: "skill",
-        unitId: MAGE,
-        cell,
-        area: [cell],
-        skillId: "fireball",
-        skillName: "Fireball",
-        mp: 0,
-        ...extra,
-      });
-
-    it("says who a spell was cast on, or at for an area", () => {
-      expect(skill({ targetId: WOLF })).toBe("Mage casts Fireball on Wolf");
-      expect(skill({ targetId: WOLF, area: [cell, cell] })).toBe(
-        "Mage casts Fireball at Wolf",
-      );
-      expect(skill({})).toBe("Mage casts Fireball");
-    });
-
-    it("says weapon skills are used", () => {
-      expect(
-        say({
-          type: "skill",
-          unitId: FIGHTER,
-          cell,
-          area: [cell],
-          skillId: "cleave",
-          skillName: "Cleave",
-          mp: 0,
-          targetId: WOLF,
-        }),
-      ).toBe("Fighter uses Cleave on Wolf");
-    });
-
-    it("announces a delayed skill landing", () => {
-      expect(skill({ delayed: true, skillName: "Meteor" })).toBe(
-        "Meteor strikes!",
-      );
-    });
-  });
-
-  describe("damage and healing", () => {
-    const damage = (amount: number, extra = {}) =>
-      say({
-        type: "damage",
-        unitId: WOLF,
-        amount,
-        hp: 10,
-        damageType: "fire",
-        multiplier: 1,
-        ...extra,
-      });
-
-    it("gives the amount, type and resistance", () => {
-      expect(damage(12)).toBe("Wolf takes 12 fire damage");
-      expect(damage(24, { multiplier: 2 })).toBe(
-        "Wolf takes 24 fire damage (weak)",
-      );
-      expect(damage(5, { absorbed: 7 })).toBe(
-        "Wolf takes 5 fire damage, 7 absorbed",
-      );
-    });
-
-    it("says when a shield took it all", () => {
-      expect(damage(0, { absorbed: 7 })).toBe(
-        "Wolf's shield absorbs 7 fire damage",
-      );
-    });
-
-    it("describes heals and status ticks", () => {
-      expect(say({ type: "heal", unitId: MAGE, amount: 9, hp: 50 })).toBe(
-        "Mage recovers 9 HP",
-      );
-      expect(say({ type: "revived", unitId: MAGE, hp: 24 })).toBe(
-        "Mage is back on their feet with 24 HP",
-      );
-      const tick = (effect: "heal" | "damage", amount: number) =>
-        say({
-          type: "statusTick",
-          unitId: WOLF,
-          statusId: "s",
-          name: effect === "heal" ? "Regen" : "Poison",
-          effect,
-          amount,
-          hp: 10,
-          ...(effect === "damage" ? { damageType: "poison" as const } : {}),
-        });
-      expect(tick("heal", 4)).toBe("Wolf regains 4 HP (Regen)");
-      expect(tick("damage", 3)).toBe("Wolf takes 3 poison damage (Poison)");
-      expect(tick("heal", 0)).toBeNull();
-    });
-
-    it("describes the HP cost of a skill", () => {
-      expect(say({ type: "hpPaid", unitId: MAGE, amount: 15, hp: 40 })).toBe(
-        "Mage pays 15 HP",
-      );
-    });
-  });
-
-  it("describes statuses, modifiers and defenses", () => {
-    const status = { unitId: WOLF, statusId: "p", name: "Poison" };
-    expect(say({ type: "statusApplied", ...status, ticks: 3 })).toBe(
+      "Fighter uses Cleave on Wolf",
+    ],
+    [
+      "a delayed skill landing",
+      skill({ delayed: true, skillName: "Meteor" }),
+      "Meteor strikes!",
+    ],
+    // Damage and healing
+    ["a hit", damage(12), "Wolf takes 12 fire damage"],
+    [
+      "a weak hit",
+      damage(24, { multiplier: 2 }),
+      "Wolf takes 24 fire damage (weak)",
+    ],
+    [
+      "a hit partly absorbed",
+      damage(5, { absorbed: 7 }),
+      "Wolf takes 5 fire damage, 7 absorbed",
+    ],
+    [
+      "a hit wholly absorbed",
+      damage(0, { absorbed: 7 }),
+      "Wolf's shield absorbs 7 fire damage",
+    ],
+    [
+      "a heal",
+      { type: "heal", unitId: MAGE, amount: 9, hp: 50 },
+      "Mage recovers 9 HP",
+    ],
+    [
+      "a revive",
+      { type: "revived", unitId: MAGE, hp: 24 },
+      "Mage is back on their feet with 24 HP",
+    ],
+    ["a heal tick", tick("heal", 4), "Wolf regains 4 HP (Regen)"],
+    ["a damage tick", tick("damage", 3), "Wolf takes 3 poison damage (Poison)"],
+    [
+      "an HP cost",
+      { type: "hpPaid", unitId: MAGE, amount: 15, hp: 40 },
+      "Mage pays 15 HP",
+    ],
+    // Statuses, modifiers and defenses
+    [
+      "a status gained",
+      { type: "statusApplied", ...status, ticks: 3 },
       "Wolf gains Poison",
-    );
-    expect(say({ type: "statusRemoved", ...status })).toBe(
+    ],
+    [
+      "a status cured",
+      { type: "statusRemoved", ...status },
       "Wolf is cured of Poison",
-    );
-    expect(say({ type: "statusExpired", ...status })).toBe(
+    ],
+    [
+      "a status worn off",
+      { type: "statusExpired", ...status },
       "Wolf's Poison wears off",
-    );
-    const modifier = { unitId: WOLF, source: "Slow" };
-    expect(say({ type: "modifierApplied", ...modifier, harmful: true })).toBe(
+    ],
+    [
+      "a harmful modifier",
+      { type: "modifierApplied", ...modifier, harmful: true },
       "Wolf suffers Slow",
-    );
-    expect(say({ type: "modifierApplied", ...modifier, harmful: false })).toBe(
+    ],
+    [
+      "a helpful modifier",
+      { type: "modifierApplied", ...modifier, harmful: false },
       "Wolf gains Slow",
-    );
-    expect(say({ type: "modifierExpired", ...modifier })).toBe(
+    ],
+    [
+      "a modifier worn off",
+      { type: "modifierExpired", ...modifier },
       "Wolf's Slow wears off",
-    );
-    expect(say({ type: "shieldBroken", unitId: MAGE, name: "Aegis" })).toBe(
+    ],
+    [
+      "a broken shield",
+      { type: "shieldBroken", unitId: MAGE, name: "Aegis" },
       "Mage's Aegis breaks",
-    );
-    expect(say({ type: "warded", unitId: MAGE, name: "Last Rites" })).toBe(
+    ],
+    [
+      "a ward",
+      { type: "warded", unitId: MAGE, name: "Last Rites" },
       "Mage is held by Last Rites!",
-    );
-  });
-
-  it("describes stealth and teleports", () => {
-    expect(say({ type: "ambush", unitId: WOLF })).toBe(
-      "Wolf strikes from the shadows!",
-    );
-    expect(
-      say({ type: "teleported", unitId: MAGE, from: at(0, 0), to: at(1, 1) }),
-    ).toBe("Mage shadowsteps");
-  });
-
-  it("tells boulders from creatures when summoned or gone", () => {
-    expect(say({ type: "summoned", unitId: ROCK, byId: MAGE, cell })).toBe(
-      "Mage raises a Boulder",
-    );
-    expect(say({ type: "summoned", unitId: WOLF, byId: MAGE, cell })).toBe(
-      "Mage summons Wolf",
-    );
-    expect(say({ type: "vanished", unitId: ROCK })).toBe("Boulder crumbles");
-    expect(say({ type: "vanished", unitId: WOLF })).toBe("Wolf vanishes");
-    expect(say({ type: "shattered", unitId: ROCK, byId: MAGE })).toBe(
-      "Mage shatters the Boulder!",
-    );
-  });
-
-  it("describes pushes, pulls and collisions", () => {
-    const push = (toRow: number) =>
-      say({ type: "pushed", unitId: WOLF, from: at(0, 1), to: at(0, toRow) });
-    expect(push(2)).toBe("Wolf is pushed back");
-    expect(push(0)).toBe("Wolf is pulled forward");
-    expect(say({ type: "unmoved", unitId: WOLF })).toBe("Wolf doesn't budge");
-    expect(say({ type: "defended", unitId: MAGE })).toBe("Mage defends");
-    expect(say({ type: "waited", unitId: MAGE })).toBe("Mage waits");
-    expect(say({ type: "collided", unitId: WOLF, blockerId: ROCK })).toBe(
-      "Wolf crashes into Boulder!",
-    );
-    expect(say({ type: "collided", unitId: WOLF })).toBe(
-      "Wolf crashes against the edge!",
-    );
-  });
-
-  it("only mentions a gauge change that makes the unit act now", () => {
-    expect(say({ type: "gaugeChanged", unitId: WOLF, gauge: GAUGE_FULL })).toBe(
-      "Wolf acts now",
-    );
-    expect(say({ type: "gaugeChanged", unitId: WOLF, gauge: 0 })).toBeNull();
-  });
-
-  it("describes a fizzled cast, a knockout and the result", () => {
-    expect(
-      say({ type: "castFizzled", unitId: MAGE, skillName: "Meteor" }),
-    ).toBe("Mage's Meteor fizzles");
-    expect(say({ type: "knockedOut", unitId: WOLF })).toBe(
-      "Wolf is knocked out",
-    );
-    expect(say({ type: "battleOver", winner: "player" })).toBe("Victory!");
-  });
-
-  it("skips time passing and turns coming up", () => {
-    expect(say({ type: "timeAdvanced", time: 5 })).toBeNull();
-    expect(say({ type: "turnReady", unitId: WOLF })).toBeNull();
-  });
-
-  it("describes guarding and rescuing", () => {
-    expect(say({ type: "guarded", unitId: MAGE, byId: FIGHTER })).toBe(
-      "Fighter takes the blow for Mage",
-    );
-    expect(say({ type: "rescued", unitId: MAGE, byId: FIGHTER })).toBe(
-      "Fighter pulls Mage back",
-    );
-  });
-
-  it("describes MP restored and burned", () => {
-    expect(say({ type: "mpRestored", unitId: MAGE, amount: 6, mp: 20 })).toBe(
-      "Mage regains 6 MP",
-    );
-    expect(say({ type: "mpBurned", unitId: MAGE, amount: 4, mp: 10 })).toBe(
-      "Mage loses 4 MP",
-    );
-  });
-
-  it("describes a worsening status and an explosion", () => {
-    expect(
-      say({
+    ],
+    [
+      "a worsening status",
+      {
         type: "statusWorsened",
         unitId: WOLF,
         statusId: "poison",
         name: "Poison",
         amount: 8,
-      }),
-    ).toBe("Wolf's Poison worsens");
-    expect(say({ type: "exploded", unitId: WOLF, name: "Bomb" })).toBe(
+      },
+      "Wolf's Poison worsens",
+    ],
+    [
+      "an explosion",
+      { type: "exploded", unitId: WOLF, name: "Bomb" },
       "Wolf's Bomb explodes!",
-    );
+    ],
+    // Stealth and teleports
+    [
+      "an ambush",
+      { type: "ambush", unitId: WOLF },
+      "Wolf strikes from the shadows!",
+    ],
+    [
+      "a teleport",
+      { type: "teleported", unitId: MAGE, from: at(0, 0), to: at(1, 1) },
+      "Mage shadowsteps",
+    ],
+    // Summons
+    [
+      "a boulder raised",
+      { type: "summoned", unitId: ROCK, byId: MAGE, cell },
+      "Mage raises a Boulder",
+    ],
+    [
+      "a creature summoned",
+      { type: "summoned", unitId: WOLF, byId: MAGE, cell },
+      "Mage summons Wolf",
+    ],
+    ["a boulder gone", { type: "vanished", unitId: ROCK }, "Boulder crumbles"],
+    ["a creature gone", { type: "vanished", unitId: WOLF }, "Wolf vanishes"],
+    [
+      "a boulder shattered",
+      { type: "shattered", unitId: ROCK, byId: MAGE },
+      "Mage shatters the Boulder!",
+    ],
+    // Pushes and collisions
+    ["a push back", push(2), "Wolf is pushed back"],
+    ["a pull forward", push(0), "Wolf is pulled forward"],
+    ["a unit unmoved", { type: "unmoved", unitId: WOLF }, "Wolf doesn't budge"],
+    [
+      "a collision with a unit",
+      { type: "collided", unitId: WOLF, blockerId: ROCK },
+      "Wolf crashes into Boulder!",
+    ],
+    [
+      "a collision with the edge",
+      { type: "collided", unitId: WOLF },
+      "Wolf crashes against the edge!",
+    ],
+    // Gauge, casts and results
+    [
+      "a gauge filled to act now",
+      { type: "gaugeChanged", unitId: WOLF, gauge: GAUGE_FULL },
+      "Wolf acts now",
+    ],
+    [
+      "a fizzled cast",
+      { type: "castFizzled", unitId: MAGE, skillName: "Meteor" },
+      "Mage's Meteor fizzles",
+    ],
+    ["a knockout", { type: "knockedOut", unitId: WOLF }, "Wolf is knocked out"],
+    ["the battle won", { type: "battleOver", winner: "player" }, "Victory!"],
+    // Guarding, rescuing and MP
+    [
+      "a guard",
+      { type: "guarded", unitId: MAGE, byId: FIGHTER },
+      "Fighter takes the blow for Mage",
+    ],
+    [
+      "a rescue",
+      { type: "rescued", unitId: MAGE, byId: FIGHTER },
+      "Fighter pulls Mage back",
+    ],
+    [
+      "MP restored",
+      { type: "mpRestored", unitId: MAGE, amount: 6, mp: 20 },
+      "Mage regains 6 MP",
+    ],
+    [
+      "MP burned",
+      { type: "mpBurned", unitId: MAGE, amount: 4, mp: 10 },
+      "Mage loses 4 MP",
+    ],
+  ])("given %s, when it is described, then it reads %s", (_, event, text) => {
+    const line = say(event);
+
+    expect(line).toBe(text);
   });
+
+  it.each<[string, BattleEvent]>([
+    ["a heal tick of nothing", tick("heal", 0)],
+    [
+      "a gauge change that doesn't make it act",
+      { type: "gaugeChanged", unitId: WOLF, gauge: 0 },
+    ],
+    ["time passing", { type: "timeAdvanced", time: 5 }],
+    ["a turn coming up", { type: "turnReady", unitId: WOLF }],
+  ])(
+    "given %s, when it is described, then it is left out of the log",
+    (_, event) => {
+      const line = say(event);
+
+      expect(line).toBeNull();
+    },
+  );
 });

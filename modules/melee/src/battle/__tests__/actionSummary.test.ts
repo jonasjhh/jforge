@@ -30,127 +30,123 @@ const hit = (unitId: string, amount: number, extra = {}): BattleEvent => ({
 });
 const ko = (unitId: string): BattleEvent => ({ type: "knockedOut", unitId });
 
+const meteor: BattleEvent = {
+  type: "skill",
+  unitId: mage,
+  cell: { side: "enemy", row: 0, col: 0 },
+  targetId: wolf,
+  area: [
+    { side: "enemy", row: 0, col: 0 },
+    { side: "enemy", row: 0, col: 1 },
+  ],
+  skillId: "meteor",
+  skillName: "Meteor",
+  mp: 0,
+};
+const revive: BattleEvent = {
+  type: "skill",
+  unitId: slime,
+  cell: { side: "enemy", col: 0, row: 0 },
+  targetId: wolf,
+  area: [{ side: "enemy", col: 0, row: 0 }],
+  skillId: "revive",
+  skillName: "Revive",
+  mp: 0,
+};
+const heal = (unitId: string, amount = 5): BattleEvent => ({
+  type: "heal",
+  unitId,
+  amount,
+  hp: 50,
+});
+
 describe("summarizeAction", () => {
-  it("is null without an action", () => {
-    expect(summarizeAction(state, [{ type: "turnReady", unitId: wolf }])).toBe(
-      null,
-    );
+  it("given no action among the events, when they are summed up, then there is no summary", () => {
+    const events: BattleEvent[] = [{ type: "turnReady", unitId: wolf }];
+
+    const summary = summarizeAction(state, events);
+
+    expect(summary).toBeNull();
   });
 
-  it("adds the damage a single hit dealt", () => {
-    expect(summarizeAction(state, [attack, hit(mage, 12)])).toBe(
-      "Wolf attacks Mage — 12",
-    );
-  });
-
-  it("notes weakness, resistance, immunity and shields", () => {
-    expect(
-      summarizeAction(state, [attack, hit(mage, 24, { multiplier: 2 })]),
-    ).toBe("Wolf attacks Mage — 24 (weak)");
-    expect(
-      summarizeAction(state, [attack, hit(mage, 6, { multiplier: 0.5 })]),
-    ).toBe("Wolf attacks Mage — 6 (resisted)");
-    expect(
-      summarizeAction(state, [attack, hit(mage, 0, { multiplier: 0 })]),
-    ).toBe("Wolf attacks Mage — immune");
-    expect(
-      summarizeAction(state, [attack, hit(mage, 0, { absorbed: 12 })]),
-    ).toBe("Wolf attacks Mage — absorbed");
-  });
-
-  it("marks a lone target's knockout", () => {
-    expect(summarizeAction(state, [attack, hit(mage, 30), ko(mage)])).toBe(
+  it.each<[string, BattleEvent[], string]>([
+    ["a single hit", [attack, hit(mage, 12)], "Wolf attacks Mage — 12"],
+    [
+      "a weak hit",
+      [attack, hit(mage, 24, { multiplier: 2 })],
+      "Wolf attacks Mage — 24 (weak)",
+    ],
+    [
+      "a resisted hit",
+      [attack, hit(mage, 6, { multiplier: 0.5 })],
+      "Wolf attacks Mage — 6 (resisted)",
+    ],
+    [
+      "an immune target",
+      [attack, hit(mage, 0, { multiplier: 0 })],
+      "Wolf attacks Mage — immune",
+    ],
+    [
+      "a hit a shield took",
+      [attack, hit(mage, 0, { absorbed: 12 })],
+      "Wolf attacks Mage — absorbed",
+    ],
+    [
+      "a lone target knocked out",
+      [attack, hit(mage, 30), ko(mage)],
       "Wolf attacks Mage — 30, KO",
-    );
-  });
-
-  it("counts area hits and names who fell", () => {
-    const meteor: BattleEvent = {
-      type: "skill",
-      unitId: mage,
-      cell: { side: "enemy", row: 0, col: 0 },
-      targetId: wolf,
-      area: [
-        { side: "enemy", row: 0, col: 0 },
-        { side: "enemy", row: 0, col: 1 },
-      ],
-      skillId: "meteor",
-      skillName: "Meteor",
-      mp: 0,
-    };
-    expect(
-      summarizeAction(state, [meteor, hit(wolf, 40), hit(slime, 9), ko(wolf)]),
-    ).toBe("Mage casts Meteor at Wolf — 2 hit, Wolf KO");
-  });
-
-  it("shows healing and ignores what happened before the action", () => {
-    expect(
-      summarizeAction(state, [
-        hit(slime, 3),
-        attack,
-        { type: "heal", unitId: mage, amount: 5, hp: 55 },
-      ]),
-    ).toBe("Wolf attacks Mage — +5 HP");
-  });
-
-  it("names who was revived", () => {
-    expect(
-      summarizeAction(state, [
-        {
-          type: "skill",
-          unitId: slime,
-          cell: { side: "enemy", col: 0, row: 0 },
-          targetId: wolf,
-          area: [{ side: "enemy", col: 0, row: 0 }],
-          skillId: "revive",
-          skillName: "Revive",
-          mp: 0,
-        },
-        { type: "revived", unitId: wolf, hp: 30 },
-      ]),
-    ).toMatch(/Wolf revived$/);
-  });
-
-  it("counts healed units and knockouts in a crowd", () => {
-    const heal = (unitId: string): BattleEvent => ({
-      type: "heal",
-      unitId,
-      amount: 5,
-      hp: 50,
-    });
-    expect(summarizeAction(state, [attack, heal(wolf), heal(slime)])).toBe(
+    ],
+    [
+      "an area hit with one knockout",
+      [meteor, hit(wolf, 40), hit(slime, 9), ko(wolf)],
+      "Mage casts Meteor at Wolf — 2 hit, Wolf KO",
+    ],
+    [
+      "a heal after a hit from before the action",
+      [hit(slime, 3), attack, heal(mage)],
+      "Wolf attacks Mage — +5 HP",
+    ],
+    [
+      "two healed",
+      [attack, heal(wolf), heal(slime)],
       "Wolf attacks Mage — 2 healed",
-    );
-    expect(
-      summarizeAction(state, [
-        attack,
-        hit(wolf, 50),
-        hit(slime, 50),
-        ko(wolf),
-        ko(slime),
-      ]),
-    ).toBe("Wolf attacks Mage — 2 hit, 2 KO");
-  });
-
-  it("leaves a step with no result as is", () => {
-    expect(
-      summarizeAction(state, [
+    ],
+    [
+      "two hit and knocked out",
+      [attack, hit(wolf, 50), hit(slime, 50), ko(wolf), ko(slime)],
+      "Wolf attacks Mage — 2 hit, 2 KO",
+    ],
+    [
+      "a step with no result",
+      [
         {
           type: "moved",
           unitId: mage,
           from: { row: 0, col: 0 },
           to: { row: 1, col: 0 },
         },
-      ]),
-    ).toBe("Mage steps back");
-  });
+      ],
+      "Mage steps back",
+    ],
+    ["a defend", [{ type: "defended", unitId: mage }], "Mage defends"],
+    ["a wait", [{ type: "waited", unitId: mage }], "Mage waits"],
+  ])(
+    "given %s, when the action is summed up, then it reads as expected",
+    (_, events, expected) => {
+      const summary = summarizeAction(state, events);
 
-  it("counts defending and waiting as actions", () => {
-    expect(summarizeAction(state, [{ type: "defended", unitId: mage }])).toBe(
-      "Mage defends",
-    );
-    expect(summarizeAction(state, [{ type: "waited", unitId: mage }])).toBe(
-      "Mage waits",
-    );
+      expect(summary).toBe(expected);
+    },
+  );
+
+  it("given a revive, when it is summed up, then it names who was revived", () => {
+    const events: BattleEvent[] = [
+      revive,
+      { type: "revived", unitId: wolf, hp: 30 },
+    ];
+
+    const summary = summarizeAction(state, events);
+
+    expect(summary).toMatch(/Wolf revived$/);
   });
 });

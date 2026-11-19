@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadBattleSpeed, nextSpeed, saveBattleSpeed } from "../battleSpeed";
+import {
+  loadBattleSpeed,
+  nextSpeed,
+  saveBattleSpeed,
+  type BattleSpeed,
+} from "../battleSpeed";
 
 function memoryStorage() {
   const items = new Map<string, string>();
@@ -21,25 +26,54 @@ const broken = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("battle speed", () => {
-  it("is 1 until 2 is saved, then remembered", () => {
+  it("given nothing saved, when the speed is loaded, then it is 1", () => {
     vi.stubGlobal("localStorage", memoryStorage());
-    expect(loadBattleSpeed()).toBe(1);
-    saveBattleSpeed(2);
-    expect(loadBattleSpeed()).toBe(2);
-    saveBattleSpeed(1);
-    expect(loadBattleSpeed()).toBe(1);
+
+    const speed = loadBattleSpeed();
+
+    expect(speed).toBe(1);
   });
 
-  it("falls back to 1 when storage is unavailable", () => {
+  it.each<[BattleSpeed, BattleSpeed]>([
+    [1, 2],
+    [2, 1],
+  ])(
+    "given %i saved, when the speed is loaded, then it is remembered",
+    (saved, other) => {
+      vi.stubGlobal("localStorage", memoryStorage());
+      saveBattleSpeed(other);
+      saveBattleSpeed(saved);
+
+      const speed = loadBattleSpeed();
+
+      expect(speed).toBe(saved);
+    },
+  );
+
+  it("given storage is unavailable, when 2 is saved, then nothing throws", () => {
     vi.stubGlobal("localStorage", broken);
-    expect(() => saveBattleSpeed(2)).not.toThrow();
-    expect(loadBattleSpeed()).toBe(1);
+
+    const save = () => saveBattleSpeed(2);
+
+    expect(save).not.toThrow();
+  });
+
+  it("given storage is unavailable, when the speed is loaded, then it falls back to 1", () => {
+    vi.stubGlobal("localStorage", broken);
+
+    const speed = loadBattleSpeed();
+
+    expect(speed).toBe(1);
   });
 });
 
 describe("nextSpeed", () => {
-  it("toggles between 1× and 2×", () => {
-    expect(nextSpeed(1)).toBe(2);
-    expect(nextSpeed(2)).toBe(1);
+  it.each<[BattleSpeed, BattleSpeed]>([
+    [1, 2],
+    [2, 1],
+  ])("given %i×, when the speed is toggled, then it is %i×", (from, to) => {
+    const next = nextSpeed(from);
+
+    expect(next).toBe(to);
   });
 });

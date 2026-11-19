@@ -27,42 +27,58 @@ afterEach(() => {
 const button = (name: string) => screen.getByRole("button", { name });
 const party = () => screen.getByText("Your party:").parentElement!.textContent;
 
+const encounterText = () => screen.getByText(/^Encounter #/).textContent;
+
 describe("melee App", () => {
-  it("starts a battle and comes back with the same encounter", () => {
+  it("given a hard encounter, when Start is pressed, then the battle shows", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("radio", { name: "Hard" }));
-    const encounter = screen.getByText(/^Encounter #/).textContent;
+
     fireEvent.click(button("Start"));
+
     expect(screen.getByRole("grid", { name: "Enemies" })).toBeTruthy();
+  });
+
+  it("given a hard battle started, when the player goes back, then the same encounter and difficulty are chosen", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("radio", { name: "Hard" }));
+    const encounter = encounterText();
+    fireEvent.click(button("Start"));
+
     fireEvent.click(button("← Melee"));
-    expect(screen.getByText(/^Encounter #/).textContent).toBe(encounter);
+
+    expect(encounterText()).toBe(encounter);
     expect(
       screen.getByRole("radio", { name: "Hard" }).getAttribute("aria-checked"),
     ).toBe("true");
   });
 
-  it("rerolls the encounter", () => {
+  it("given encounter #100000, when Reroll is pressed, then a new one is drawn", () => {
     const random = vi.spyOn(Math, "random").mockReturnValue(0.1);
     render(<App />);
-    expect(screen.getByText("Encounter #100000")).toBeTruthy();
     random.mockReturnValue(0.2);
+
     fireEvent.click(button("Reroll"));
+
     expect(screen.getByText("Encounter #200000")).toBeTruthy();
     random.mockRestore();
   });
 
-  it("draws from the roster char published when asked to", () => {
+  it("given a roster char published, when Custom is chosen, then the party is drawn from it", () => {
     writeRoster(localStorage, {
       party: [{ ...def("custom-hero"), name: "Gwen" }],
       monsters: [{ ...def("custom-foe"), name: "Grub" }],
     });
     render(<App />);
-    expect(party()).not.toContain("Gwen");
+    const builtIn = party();
+
     fireEvent.click(screen.getByRole("radio", { name: "Custom" }));
+
+    expect(builtIn).not.toContain("Gwen");
     expect(party()).toContain("Gwen");
   });
 
-  it("plays a fresh battle once one is over", () => {
+  it("given a battle that is over, when the next one is asked for, then a fresh battle starts", () => {
     // Seeds that differ from draw to draw, but the same on every run.
     let draw = 0;
     vi.spyOn(Math, "random").mockImplementation(
@@ -82,7 +98,9 @@ describe("melee App", () => {
         fireEvent.click(button("Defend"));
     }
     const again = screen.getByRole("button", { name: /Next battle|Try again/ });
+
     fireEvent.click(again);
+
     expect(screen.getByRole("grid", { name: "Enemies" })).toBeTruthy();
     expect(document.querySelector(".result")).toBeNull();
     vi.restoreAllMocks();

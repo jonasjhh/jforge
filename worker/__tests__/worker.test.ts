@@ -19,8 +19,11 @@ function assets(paths: string[]) {
 const html = { headers: { accept: "text/html" } };
 
 describe("the Worker's API", () => {
-  it("lists every module at /api/health", async () => {
-    const res = await app.request("/api/health", {}, assets([]).env);
+  it("given the Worker, when /api/health is asked for, then it lists every module", async () => {
+    const { env } = assets([]);
+
+    const res = await app.request("/api/health", {}, env);
+
     expect(await res.json()).toEqual({
       status: "ok",
       modules: ["melee", "jrpg", "char"],
@@ -28,23 +31,31 @@ describe("the Worker's API", () => {
   });
 
   it.each(["melee", "jrpg", "char"])(
-    "mounts %s at /api/<name>",
+    "given the %s module, when its health is asked for, then it answers ok under /api/<name>",
     async (name) => {
-      const res = await app.request(`/api/${name}/health`, {}, assets([]).env);
+      const { env } = assets([]);
+
+      const res = await app.request(`/api/${name}/health`, {}, env);
+
       expect(res.status).toBe(200);
       expect(await res.json()).toMatchObject({ module: name, status: "ok" });
     },
   );
 
-  it("has jrpg report a demo battle", async () => {
-    const res = await app.request("/api/jrpg/health", {}, assets([]).env);
+  it("given the jrpg module, when its health is asked for, then it reports a demo battle", async () => {
+    const { env } = assets([]);
+
+    const res = await app.request("/api/jrpg/health", {}, env);
+
     const body = (await res.json()) as { demo: { actions: number } };
     expect(body.demo.actions).toBeGreaterThan(0);
   });
 
-  it("answers an unknown API path with a JSON 404, not a page", async () => {
+  it("given an unknown API path, when a page is asked for there, then it answers a JSON 404 without loading assets", async () => {
     const { env, asked } = assets(["/"]);
+
     const res = await app.request("/api/nothing", html, env);
+
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: "Not found" });
     expect(asked).toEqual([]);
@@ -52,35 +63,45 @@ describe("the Worker's API", () => {
 });
 
 describe("the Worker's pages", () => {
-  it("serves an asset that exists", async () => {
+  it("given an asset that exists, when it is asked for, then it is served", async () => {
     const { env } = assets(["/melee/app.js"]);
+
     const res = await app.request("/melee/app.js", {}, env);
+
     expect(await res.text()).toBe("asset /melee/app.js");
   });
 
-  it("loads a module's app for a deep link inside it", async () => {
+  it("given a deep link inside a module, when a page is asked for, then the module's app loads", async () => {
     const { env, asked } = assets(["/jrpg/"]);
+
     const res = await app.request("/jrpg/run/3", html, env);
+
     expect(res.status).toBe(200);
     expect(asked).toEqual(["/jrpg/run/3", "/jrpg/"]);
   });
 
-  it("loads the landing page for a path outside every module", async () => {
+  it("given a path outside every module, when a page is asked for, then the landing page loads", async () => {
     const { env, asked } = assets(["/"]);
+
     await app.request("/elsewhere/page", html, env);
+
     expect(asked).toEqual(["/elsewhere/page", "/"]);
   });
 
-  it("keeps the 404 for a missing file that isn't a page", async () => {
+  it("given a missing file that isn't a page, when it is asked for, then it stays a 404", async () => {
     const { env, asked } = assets(["/melee/"]);
+
     const res = await app.request("/melee/missing.png", {}, env);
+
     expect(res.status).toBe(404);
     expect(asked).toEqual(["/melee/missing.png"]);
   });
 
-  it("keeps the 404 for anything but a GET", async () => {
+  it("given a missing path, when it is posted to, then it stays a 404", async () => {
     const { env } = assets(["/melee/"]);
+
     const res = await app.request("/melee/x", { ...html, method: "POST" }, env);
+
     expect(res.status).toBe(404);
   });
 });

@@ -37,23 +37,32 @@ const show = (unit: Unit, onClose = () => {}, time = 0, speed = 1) =>
   );
 const dialog = () => screen.getByRole("dialog", { name: "hero details" });
 
+const text = () => dialog().textContent!;
+const backdrop = (container: HTMLElement) =>
+  container.querySelector(".details-backdrop")!;
+
 describe("UnitDetails", () => {
-  it("shows HP, MP, stats and weapon", () => {
-    show(base());
-    const text = dialog().textContent!;
-    expect(text).toContain("HP 100/100 · MP 30/30");
-    expect(text).toContain("Attack20");
-    expect(text).toContain("Anywhere slash, ranged");
-    expect(text).toContain("No weaknesses or resistances.");
+  it("given a hero, when its details show, then they list HP, MP, stats and weapon", () => {
+    const hero = base();
+
+    show(hero);
+
+    expect(text()).toContain("HP 100/100 · MP 30/30");
+    expect(text()).toContain("Attack20");
+    expect(text()).toContain("Anywhere slash, ranged");
+    expect(text()).toContain("No weaknesses or resistances.");
   });
 
-  it("says a fallen unit is knocked out", () => {
-    show({ ...base(), hp: 0 });
-    expect(dialog().textContent).toContain("Knocked out");
+  it("given a fallen unit, when its details show, then they say it is knocked out", () => {
+    const fallen = { ...base(), hp: 0 };
+
+    show(fallen);
+
+    expect(text()).toContain("Knocked out");
   });
 
-  it("marks stats raised or lowered by modifiers", () => {
-    show({
+  it("given a timed rage and an untimed slow, when the details show, then stats are marked and only the timed one is listed with its time left", () => {
+    const unit: Unit = {
       ...base(),
       modifiers: [
         {
@@ -65,49 +74,53 @@ describe("UnitDetails", () => {
         },
         { stat: "speed", op: "add", value: -4, source: "Slow", harmful: true },
       ],
-    });
+    };
+
+    show(unit);
+
     expect(screen.getByText("30").className).toBe("good");
     expect(screen.getByText("6").className).toBe("bad");
-    // Only the timed modifier is listed, with the time it has left.
-    expect(dialog().textContent).toContain("Rage Attack ×1.5. 10s left.");
-    expect(dialog().textContent).not.toContain("Slow Speed");
+    expect(text()).toContain("Rage Attack ×1.5. 10s left.");
+    expect(text()).not.toContain("Slow Speed");
   });
 
-  it("lists weaknesses, resistances and immunities", () => {
-    show({ ...base(), resistances: { fire: 2, cold: 0.5, poison: 0 } });
-    const text = dialog().textContent!;
-    expect(text).toContain("Weak: fire ×2");
-    expect(text).toContain("Resists: cold ×0.5");
-    expect(text).toContain("Immune: poison");
+  it("given weaknesses, resistances and an immunity, when the details show, then each is listed", () => {
+    const unit = {
+      ...base(),
+      resistances: { fire: 2, cold: 0.5, poison: 0 },
+    };
+
+    show(unit);
+
+    expect(text()).toContain("Weak: fire ×2");
+    expect(text()).toContain("Resists: cold ×0.5");
+    expect(text()).toContain("Immune: poison");
   });
 
-  it("explains its running effects and how long they last", () => {
-    show(
-      {
-        ...base(),
-        defending: true,
-        statuses: [
-          status({}),
-          status({ id: "s2", name: "Barrier", effect: "shield", amount: 12 }),
-        ],
-        casting: {
-          skillId: "fireball",
-          skillName: "Fireball",
-          cell: { side: "enemy", col: 0, row: 0 },
-          area: [],
-          startedAt: 0,
-          readyAt: TIME_SCALE * 3,
-        },
+  it("given a defending unit casting, poisoned and shielded at 2×, when the details show, then each effect is explained with how long it lasts", () => {
+    const unit: Unit = {
+      ...base(),
+      defending: true,
+      statuses: [
+        status({}),
+        status({ id: "s2", name: "Barrier", effect: "shield", amount: 12 }),
+      ],
+      casting: {
+        skillId: "fireball",
+        skillName: "Fireball",
+        cell: { side: "enemy", col: 0, row: 0 },
+        area: [],
+        startedAt: 0,
+        readyAt: TIME_SCALE * 3,
       },
-      () => {},
-      0,
-      2,
-    );
-    const text = dialog().textContent!;
-    expect(text).toContain("Defending — hits are halved");
-    expect(text).toContain("Casting Fireball — lands in 2s.");
-    expect(text).toContain("Poison Takes 4 poison damage every 1s. 3s left.");
-    expect(text).toContain("Barrier Absorbs the next 12 damage.");
+    };
+
+    show(unit, () => {}, 0, 2);
+
+    expect(text()).toContain("Defending — hits are halved");
+    expect(text()).toContain("Casting Fireball — lands in 2s.");
+    expect(text()).toContain("Poison Takes 4 poison damage every 1s. 3s left.");
+    expect(text()).toContain("Barrier Absorbs the next 12 damage.");
   });
 
   it.each([
@@ -128,30 +141,59 @@ describe("UnitDetails", () => {
     ["petrify", "Petrified: can't act, takes ×1 damage."],
     ["bless", "Blessed: deals ×1 damage and takes ×1."],
     ["bomb", "Explodes when time runs out or it falls: 4 poison damage"],
-  ] as const)("explains a %s status", (effect, text) => {
-    show({ ...base(), statuses: [status({ effect })] });
-    expect(dialog().textContent).toContain(text);
+  ] as const)(
+    "given a %s status, when the details show, then it is explained",
+    (effect, explained) => {
+      const unit = { ...base(), statuses: [status({ effect })] };
+
+      show(unit);
+
+      expect(text()).toContain(explained);
+    },
+  );
+
+  it("given a summon, when its details show, then it is named a summon", () => {
+    const summon = { ...base(), summonedBy: "player-1-0" };
+
+    show(summon);
+
+    expect(text()).toContain("· Summon");
   });
 
-  it("names summons and obstacles, and shows no stats for an obstacle", () => {
-    show({ ...base(), summonedBy: "player-1-0" });
-    expect(dialog().textContent).toContain("· Summon");
-    cleanup();
-    show({ ...base(), obstacle: true });
-    expect(dialog().textContent).toContain("· Obstacle");
+  it("given an obstacle, when its details show, then it is named an obstacle, with no stats", () => {
+    const obstacle = { ...base(), obstacle: true };
+
+    show(obstacle);
+
+    expect(text()).toContain("· Obstacle");
     expect(dialog().querySelector("dl")).toBeNull();
   });
 
-  it("closes on Escape, Close or a tap outside, not a tap inside", () => {
+  it.each<[string, (container: HTMLElement) => void]>([
+    ["a tap inside", () => fireEvent.click(dialog())],
+    ["Enter", () => fireEvent.keyDown(window, { key: "Enter" })],
+  ])("given the details open, when %s comes, then they stay open", (_, act) => {
     const onClose = vi.fn();
     const { container } = show(base(), onClose);
-    fireEvent.click(dialog());
+
+    act(container);
+
     expect(onClose).not.toHaveBeenCalled();
-    fireEvent.keyDown(window, { key: "Enter" });
-    expect(onClose).not.toHaveBeenCalled();
-    fireEvent.keyDown(window, { key: "Escape" });
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
-    fireEvent.click(container.querySelector(".details-backdrop")!);
-    expect(onClose).toHaveBeenCalledTimes(3);
+  });
+
+  it.each<[string, (container: HTMLElement) => void]>([
+    ["Escape", () => fireEvent.keyDown(window, { key: "Escape" })],
+    [
+      "Close",
+      () => fireEvent.click(screen.getByRole("button", { name: "Close" })),
+    ],
+    ["a tap outside", (container) => fireEvent.click(backdrop(container))],
+  ])("given the details open, when %s comes, then they close", (_, act) => {
+    const onClose = vi.fn();
+    const { container } = show(base(), onClose);
+
+    act(container);
+
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });

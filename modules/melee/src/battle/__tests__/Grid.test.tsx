@@ -53,26 +53,49 @@ const props = (changes: Partial<Props> = {}): Props => ({
 const cellOf = (name: string) =>
   screen.getByText(name, { selector: ".unit-name" }).closest(".cell")!;
 
+const rowLabels = (name: string) =>
+  within(screen.getByRole("grid", { name }))
+    .getAllByRole("row")
+    .map((r) => r.getAttribute("aria-label"));
+/** Holds a press on the slime long enough to open its details. */
+const longPress = (slime: HTMLElement) => {
+  fireEvent.pointerDown(slime);
+  act(() => {
+    vi.advanceTimersByTime(500);
+  });
+  fireEvent.pointerUp(slime);
+};
+const pressable = () => {
+  vi.useFakeTimers();
+  const onInspect = vi.fn();
+  const onTarget = vi.fn();
+  render(<Grid {...props({ canTarget: () => true, onInspect, onTarget })} />);
+  const slime = screen.getByRole("gridcell", { name: "Attack slime" });
+  return { onInspect, onTarget, slime };
+};
+
 describe("Grid", () => {
-  it("lays out a side's rows, back row first for enemies", () => {
-    render(<Grid {...props()} />);
-    const rows = within(
-      screen.getByRole("grid", { name: "Enemies" }),
-    ).getAllByRole("row");
-    expect(rows.map((r) => r.getAttribute("aria-label"))).toEqual([
+  it("given the enemy side, when it is laid out, then the back row comes first", () => {
+    const side = "enemy";
+
+    render(<Grid {...props({ side })} />);
+
+    expect(rowLabels("Enemies")).toEqual([
       "Back row",
       "Middle row",
       "Front row",
     ]);
-    cleanup();
-    render(<Grid {...props({ side: "player" })} />);
-    const party = within(
-      screen.getByRole("grid", { name: "Party" }),
-    ).getAllByRole("row");
-    expect(party[0]!.getAttribute("aria-label")).toBe("Front row");
   });
 
-  it("makes targets buttons that report their cell", () => {
+  it("given the party side, when it is laid out, then the front row comes first", () => {
+    const side = "player";
+
+    render(<Grid {...props({ side })} />);
+
+    expect(rowLabels("Party")[0]).toBe("Front row");
+  });
+
+  it("given the slime is a target, when it is clicked, then its cell is reported", () => {
     const onTarget = vi.fn();
     render(
       <Grid
@@ -83,50 +106,66 @@ describe("Grid", () => {
         })}
       />,
     );
+
     fireEvent.click(screen.getByRole("gridcell", { name: "Attack slime" }));
+
     expect(onTarget).toHaveBeenCalledWith({ side: "enemy", col: 2, row: 0 });
-    // The wolf can't be reached by the active unit.
+  });
+
+  it("given the wolf is out of reach, when the grid shows, then it is no button and marked unreachable", () => {
+    const canTarget = (c: Cell) => c.col === 2 && c.row === 0;
+
+    render(<Grid {...props({ canTarget, activeId: "player-0-0" })} />);
+
     expect(cellOf("wolf").tagName).toBe("DIV");
     expect(cellOf("wolf").className).toContain("unreachable");
   });
 
-  it("names empty cells that can be stepped to, and those in cover", () => {
+  describe("moving", () => {
     const onTarget = vi.fn();
-    render(
-      <Grid
-        {...props({
-          side: "player",
-          canTarget: (c: Cell) => c.row === 1,
-          coveredCell: (c: Cell) => c.col === 3,
-          actionName: "Move",
-          onTarget,
-        })}
-      />,
-    );
-    fireEvent.click(
-      screen.getByRole("gridcell", { name: "Move Party column 1, middle row" }),
-    );
-    expect(onTarget).toHaveBeenCalledWith({ side: "player", col: 0, row: 1 });
-    expect(
-      screen.getByRole("gridcell", {
+    const moving = () =>
+      render(
+        <Grid
+          {...props({
+            side: "player",
+            canTarget: (c: Cell) => c.row === 1,
+            coveredCell: (c: Cell) => c.col === 3,
+            actionName: "Move",
+            onTarget,
+          })}
+        />,
+      );
+
+    it("given an empty cell to step to, when it is clicked, then its cell is reported", () => {
+      moving();
+
+      fireEvent.click(
+        screen.getByRole("gridcell", {
+          name: "Move Party column 1, middle row",
+        }),
+      );
+
+      expect(onTarget).toHaveBeenCalledWith({ side: "player", col: 0, row: 1 });
+    });
+
+    it("given a cell in cover, when the grid shows, then its name says so", () => {
+      moving();
+
+      const cell = screen.getByRole("gridcell", {
         name: "Move Party column 4, middle row, covered",
-      }),
-    ).toBeTruthy();
+      });
+
+      expect(cell).toBeTruthy();
+    });
   });
 
-  it("shows expected damage in a target's name", () => {
+  it("given a preview for the slime only, when the grid shows, then its name has the expected damage and the wolf's doesn't", () => {
     const slime = state.units.find(isUnit("slime"))!;
-    render(
-      <Grid
-        {...props({
-          canTarget: () => true,
-          preview: (u: Unit) =>
-            u.id === slime.id
-              ? { amount: 18, multiplier: 2, knocksOut: true }
-              : null,
-        })}
-      />,
-    );
+    const preview = (u: Unit) =>
+      u.id === slime.id ? { amount: 18, multiplier: 2, knocksOut: true } : null;
+
+    render(<Grid {...props({ canTarget: () => true, preview })} />);
+
     expect(
       screen.getByRole("gridcell", {
         name: "Attack slime, about 18 damage, weak, knocks out",
@@ -135,8 +174,9 @@ describe("Grid", () => {
     expect(screen.getByRole("gridcell", { name: "Attack wolf" })).toBeTruthy();
   });
 
-  it("marks the area, the aim, incoming hits and friendly fire", () => {
+  it("given an area, an aim, incoming hits and friendly fire, when the grid shows, then their cells are marked", () => {
     const hero: Cell = { side: "player", col: 0, row: 0 };
+
     render(
       <Grid
         {...props({
@@ -148,6 +188,7 @@ describe("Grid", () => {
         })}
       />,
     );
+
     const heroCell = cellOf("hero").className;
     expect(heroCell).toContain("in-area");
     expect(heroCell).toContain("aimed");
@@ -156,7 +197,7 @@ describe("Grid", () => {
     expect(cellOf("mage").className).toContain("emphasized");
   });
 
-  it("shows bars, badges, cover and floating numbers", () => {
+  it("given a hurt, summoned, shielded, slowed, covered wolf just hit, when the grid shows, then its cell shows all of it", () => {
     const wolf = state.units.find(isUnit("wolf"))!;
     const hurt: Unit = {
       ...wolf,
@@ -186,6 +227,7 @@ describe("Grid", () => {
         },
       ],
     };
+
     render(
       <Grid
         {...props({
@@ -198,6 +240,7 @@ describe("Grid", () => {
         })}
       />,
     );
+
     const cell = cellOf("wolf");
     expect(
       within(cell as HTMLElement).getByLabelText("HP 20 of 100"),
@@ -212,30 +255,34 @@ describe("Grid", () => {
     expect(cell.querySelector(".damage")!.textContent).toBe("12");
   });
 
-  it("opens a unit's details on a long press, without also targeting it", () => {
-    vi.useFakeTimers();
-    const onInspect = vi.fn();
-    const onTarget = vi.fn();
-    render(<Grid {...props({ canTarget: () => true, onInspect, onTarget })} />);
-    const slime = screen.getByRole("gridcell", { name: "Attack slime" });
-    fireEvent.pointerDown(slime);
-    act(() => {
-      vi.advanceTimersByTime(500);
-    });
-    fireEvent.pointerUp(slime);
+  it("given a target, when it is long-pressed and the press ends in a click, then its details open and it is not targeted", () => {
+    const { onInspect, onTarget, slime } = pressable();
+    longPress(slime);
+
     fireEvent.click(slime);
+
     expect(onInspect).toHaveBeenCalledWith(
       expect.objectContaining({ name: "slime" }),
     );
     expect(onTarget).not.toHaveBeenCalled();
+  });
+
+  it("given a long press ended, when the target is clicked again, then it is targeted", () => {
+    const { onTarget, slime } = pressable();
+    longPress(slime);
     fireEvent.click(slime);
+
+    fireEvent.click(slime);
+
     expect(onTarget).toHaveBeenCalledOnce();
   });
 
-  it("opens details on right-click", () => {
+  it("given a unit, when it is right-clicked, then its details open", () => {
     const onInspect = vi.fn();
     render(<Grid {...props({ onInspect })} />);
+
     fireEvent.contextMenu(cellOf("wolf"));
+
     expect(onInspect).toHaveBeenCalledWith(
       expect.objectContaining({ name: "wolf" }),
     );

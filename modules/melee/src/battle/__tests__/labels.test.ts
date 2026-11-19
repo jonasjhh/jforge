@@ -39,130 +39,188 @@ const preview = (multiplier: number, knocksOut = false): DamagePreview => ({
 });
 
 describe("resistanceKind", () => {
-  it("names what a damage multiplier means", () => {
-    expect([0, 0.5, 1, 1.5].map(resistanceKind)).toEqual([
-      "immune",
-      "resist",
-      undefined,
-      "weak",
-    ]);
-  });
+  it.each([
+    [0, "immune", " (immune)"],
+    [0.5, "resist", " (resisted)"],
+    [1, undefined, ""],
+    [1.5, "weak", " (weak)"],
+  ])(
+    "given a multiplier of %s, when it is named, then it is %s with the log's note",
+    (multiplier, kind, note) => {
+      const named = [resistanceKind(multiplier), resistanceNote(multiplier)];
 
-  it("gives the log's note for each", () => {
-    expect([0, 0.5, 1, 1.5].map(resistanceNote)).toEqual([
-      " (immune)",
-      " (resisted)",
-      "",
-      " (weak)",
-    ]);
-  });
+      expect(named).toEqual([kind, note]);
+    },
+  );
 });
 
 describe("resultText", () => {
-  it("is from the player's point of view", () => {
-    expect(resultText("player")).toBe("Victory!");
-    expect(resultText("enemy")).toBe("Defeat…");
-    expect(resultText(null)).toBe("Draw");
+  it.each<[Parameters<typeof resultText>[0], string]>([
+    ["player", "Victory!"],
+    ["enemy", "Defeat…"],
+    [null, "Draw"],
+  ])("given %s won, when the result is read, then it is %s", (winner, text) => {
+    const result = resultText(winner);
+
+    expect(result).toBe(text);
   });
 });
 
 describe("unitName", () => {
-  it("is the unit's name, or the id for an unknown unit", () => {
-    const state = createBattle(
-      {
-        placements: [
-          { def: content.mage, side: "player", position: { col: 0, row: 0 } },
-          { def: content.slime, side: "enemy", position: { col: 0, row: 0 } },
-        ],
-      },
-      1,
-    );
-    expect(unitName(state, "enemy-0-0")).toBe("Slime");
-    expect(unitName(state, "ghost")).toBe("ghost");
+  const state = createBattle(
+    {
+      placements: [
+        { def: content.mage, side: "player", position: { col: 0, row: 0 } },
+        { def: content.slime, side: "enemy", position: { col: 0, row: 0 } },
+      ],
+    },
+    1,
+  );
+
+  it.each([
+    ["a known unit", "enemy-0-0", "Slime"],
+    ["an unknown unit", "ghost", "ghost"],
+  ])("given %s, when it is named, then it is %s", (_, id, name) => {
+    const result = unitName(state, id);
+
+    expect(result).toBe(name);
   });
 });
 
 describe("skillCost", () => {
-  it("shows MP, HP and whether the skill is delayed", () => {
-    expect(skillCost({ ...content.fireball, mpCost: 12 })).toBe("12 MP");
-    expect(
-      skillCost({ ...content.meteor, mpCost: 24, castTime: 100, hpCost: 0 }),
-    ).toBe("24 MP · delayed");
-    expect(skillCost({ ...content.bloodBolt, mpCost: 0, hpCost: 15 })).toBe(
-      "15 HP",
-    );
-    expect(skillCost({ ...content.summonImp, mpCost: 6, hpCost: 10 })).toBe(
+  it.each([
+    ["a 12 MP skill", { ...content.fireball, mpCost: 12 }, "12 MP"],
+    [
+      "a delayed 24 MP skill",
+      { ...content.meteor, mpCost: 24, castTime: 100, hpCost: 0 },
+      "24 MP · delayed",
+    ],
+    ["a 15 HP skill", { ...content.bloodBolt, mpCost: 0, hpCost: 15 }, "15 HP"],
+    [
+      "a 10 HP, 6 MP skill",
+      { ...content.summonImp, mpCost: 6, hpCost: 10 },
       "10 HP · 6 MP",
-    );
-  });
+    ],
+    ["a free skill", { ...content.fireball, mpCost: 0 }, "0 MP"],
+  ])("given %s, when its cost is shown, then it reads %s", (_, skill, text) => {
+    const cost = skillCost(skill);
 
-  it("shows 0 MP for a free skill", () => {
-    expect(skillCost({ ...content.fireball, mpCost: 0 })).toBe("0 MP");
+    expect(cost).toBe(text);
   });
 });
 
 describe("rowHint", () => {
-  it("gives a melee unit's damage for its row", () => {
-    expect(rowHint(at(content.fighter, 0))).toBe(", front row: full damage");
-    expect(rowHint(at(content.fighter, 1))).toBe(", middle row: ×0.75 damage");
-    expect(rowHint(at(content.fighter, 2))).toBe(", back row: ×0.5 damage");
-  });
+  it.each([
+    [0, ", front row: full damage"],
+    [1, ", middle row: ×0.75 damage"],
+    [2, ", back row: ×0.5 damage"],
+  ])(
+    "given a fighter in row %i, when the row hint is read, then it gives its damage",
+    (row, hint) => {
+      const fighter = at(content.fighter, row);
 
-  it("is empty for ranged weapons, which ignore rows", () => {
-    expect(rowHint(at(content.archer, 2))).toBe("");
+      const result = rowHint(fighter);
+
+      expect(result).toBe(hint);
+    },
+  );
+
+  it("given an archer, when the row hint is read, then it is empty, as ranged weapons ignore rows", () => {
+    const archer = at(content.archer, 2);
+
+    const result = rowHint(archer);
+
+    expect(result).toBe("");
   });
 });
 
 describe("targetHint", () => {
-  it("says what to tap for each kind of skill", () => {
-    expect(targetHint(content.raiseBoulder)).toBe(
+  it.each([
+    [
+      "Raise Boulder",
+      content.raiseBoulder,
       "tap a highlighted empty cell on either side",
-    );
-    expect(targetHint(content.summonImp)).toBe(
+    ],
+    [
+      "Summon Imp",
+      content.summonImp,
       "tap a highlighted empty cell on your side",
-    );
-    expect(targetHint(content.shadowstep)).toBe(
+    ],
+    [
+      "Shadowstep",
+      content.shadowstep,
       "tap a highlighted empty cell on your side",
-    );
-    expect(targetHint(content.upheaval)).toBe("tap a highlighted unit");
-    expect(targetHint(content.vanish)).toBe("tap yourself to use it");
-    expect(targetHint(content.heal)).toBe("tap a highlighted ally");
-    expect(targetHint(content.cleave)).toBe("tap a highlighted enemy");
-    expect(targetHint(content.fireball)).toBe("tap a highlighted cell");
-  });
+    ],
+    ["Upheaval", content.upheaval, "tap a highlighted unit"],
+    ["Vanish", content.vanish, "tap yourself to use it"],
+    ["Heal", content.heal, "tap a highlighted ally"],
+    ["Cleave", content.cleave, "tap a highlighted enemy"],
+    ["Fireball", content.fireball, "tap a highlighted cell"],
+  ])(
+    "given %s, when its target hint is read, then it says what to tap",
+    (_, skill, hint) => {
+      const result = targetHint(skill);
+
+      expect(result).toBe(hint);
+    },
+  );
 });
 
 describe("damage preview badge", () => {
-  it("shows the expected damage, or Immune", () => {
-    expect(previewLabel(preview(1))).toBe("~24");
-    expect(previewLabel(preview(0))).toBe("Immune");
-    expect(previewLabel(preview(1, true))).toBe("~24 KO");
-  });
-
-  it("is gold if weak, grey if resisted or immune, red if it knocks out", () => {
-    expect(previewClasses(preview(1))).toBe("preview");
-    expect(previewClasses(preview(2))).toBe("preview weak");
-    expect(previewClasses(preview(0.5))).toBe("preview resist");
-    expect(previewClasses(preview(0))).toBe("preview resist");
-    expect(previewClasses(preview(1.5, true))).toBe("preview weak ko");
-  });
-
-  it("reads out the damage, resistance and knock-out", () => {
-    expect(previewText(preview(1))).toBe("about 24 damage");
-    expect(previewText(preview(2, true))).toBe(
+  it.each([
+    ["plain", preview(1), "~24", "preview", "about 24 damage"],
+    [
+      "immune",
+      preview(0),
+      "Immune",
+      "preview resist",
+      "about 24 damage, immune",
+    ],
+    [
+      "knocking out",
+      preview(1, true),
+      "~24 KO",
+      "preview ko",
+      "about 24 damage, knocks out",
+    ],
+    ["weak", preview(2), "~24", "preview weak", "about 24 damage, weak"],
+    [
+      "resisted",
+      preview(0.5),
+      "~24",
+      "preview resist",
+      "about 24 damage, resists",
+    ],
+    [
+      "weak and knocking out",
+      preview(1.5, true),
+      "~24 KO",
+      "preview weak ko",
       "about 24 damage, weak, knocks out",
-    );
-    expect(previewText(preview(0.5))).toBe("about 24 damage, resists");
-    expect(previewText(preview(0))).toBe("about 24 damage, immune");
-  });
+    ],
+  ])(
+    "given a %s preview, when the badge is drawn, then its label, colour and read-out match",
+    (_, p, label, classes, text) => {
+      const badge = [previewLabel(p), previewClasses(p), previewText(p)];
+
+      expect(badge).toEqual([label, classes, text]);
+    },
+  );
 });
 
 describe("aimHint", () => {
-  it("says where to tap to aim each kind of area skill", () => {
-    expect(aimHint(content.shatter)).toBe("tap one of your boulders to aim");
-    expect(aimHint(content.cleave)).toBe("tap a highlighted enemy to aim");
-    expect(aimHint(content.fireball)).toBe("tap any cell to aim");
-  });
+  it.each([
+    ["Shatter", content.shatter, "tap one of your boulders to aim"],
+    ["Cleave", content.cleave, "tap a highlighted enemy to aim"],
+    ["Fireball", content.fireball, "tap any cell to aim"],
+  ])(
+    "given %s, when its aim hint is read, then it says where to tap",
+    (_, skill, hint) => {
+      const result = aimHint(skill);
+
+      expect(result).toBe(hint);
+    },
+  );
 });
 
 describe("victimSummary", () => {
@@ -171,23 +229,23 @@ describe("victimSummary", () => {
   const ally = { ...at(content.fighter, 0), name: "Ada" };
   const ally2 = { ...ally, name: "Bo" };
 
-  it("says when nothing would be hit", () => {
-    expect(victimSummary([], "player")).toEqual({
-      hits: "would hit nothing.",
-      friends: [],
-    });
-  });
+  it.each<[string, Unit[], string, string[]]>([
+    ["nothing", [], "would hit nothing.", []],
+    ["one enemy", [enemy], "hits 1 enemy", []],
+    ["two enemies", [enemy, enemy], "hits 2 enemies", []],
+    [
+      "an enemy and two allies",
+      [enemy, ally, ally2],
+      "hits 1 enemy",
+      ["Ada", "Bo"],
+    ],
+    ["only an ally", [ally], "hits 0 enemies", ["Ada"]],
+  ])(
+    "given a blast on %s, when it is summed up for the party, then it counts enemies and names allies",
+    (_, victims, hits, friends) => {
+      const summary = victimSummary(victims, "player");
 
-  it("counts enemies from the caster's side", () => {
-    expect(victimSummary([enemy], "player").hits).toBe("hits 1 enemy");
-    expect(victimSummary([enemy, enemy], "player").hits).toBe("hits 2 enemies");
-  });
-
-  it("names the allies caught in the blast", () => {
-    expect(victimSummary([enemy, ally, ally2], "player")).toEqual({
-      hits: "hits 1 enemy",
-      friends: ["Ada", "Bo"],
-    });
-    expect(victimSummary([ally], "player").hits).toBe("hits 0 enemies");
-  });
+      expect(summary).toEqual({ hits, friends });
+    },
+  );
 });

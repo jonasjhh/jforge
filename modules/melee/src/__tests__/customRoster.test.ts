@@ -19,29 +19,42 @@ afterEach(() => {
 });
 
 describe("loadRoster", () => {
-  it("is empty when char published nothing", () => {
-    expect(loadRoster()).toEqual(EMPTY_ROSTER);
+  it("given char published nothing, when the roster is loaded, then it is empty", () => {
+    localStorage.clear();
+
+    const roster = loadRoster();
+
+    expect(roster).toEqual(EMPTY_ROSTER);
   });
 
-  it("is the roster char published", () => {
-    const roster = { party: [content.fighter], monsters: [content.slime] };
-    writeRoster(localStorage, roster);
-    expect(loadRoster()).toEqual(roster);
+  it("given char published a roster, when it is loaded, then it is that roster", () => {
+    const published = { party: [content.fighter], monsters: [content.slime] };
+    writeRoster(localStorage, published);
+
+    const roster = loadRoster();
+
+    expect(roster).toEqual(published);
   });
 
-  it("is empty when the browser refuses to read", () => {
+  it("given the browser refuses to read, when the roster is loaded, then it is empty", () => {
     writeRoster(localStorage, { party: [content.fighter], monsters: [] });
     refuse("getItem");
-    expect(loadRoster()).toEqual(EMPTY_ROSTER);
+
+    const roster = loadRoster();
+
+    expect(roster).toEqual(EMPTY_ROSTER);
   });
 
-  it("is empty when the browser blocks storage altogether", () => {
+  it("given the browser blocks storage altogether, when the roster is loaded, then it is empty", () => {
     const spy = vi
       .spyOn(window, "localStorage", "get")
       .mockImplementation(() => {
         throw new Error("blocked");
       });
-    expect(loadRoster()).toEqual(EMPTY_ROSTER);
+
+    const roster = loadRoster();
+
+    expect(roster).toEqual(EMPTY_ROSTER);
     spy.mockRestore();
   });
 });

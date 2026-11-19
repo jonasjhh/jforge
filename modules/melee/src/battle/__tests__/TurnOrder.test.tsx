@@ -11,30 +11,36 @@ const names = () =>
   screen.getAllByRole("listitem").map((li) => [li.textContent, li.className]);
 
 describe("TurnOrder", () => {
-  it("shows the next five turns in each side's colour", () => {
+  it("given a fresh battle, when the turn order shows, then it lists the next five turns in each side's colour", () => {
     const state = createBattle(sampleBattle, 1);
-    render(<TurnOrder state={state} />);
     const expected = turnOrder(state, 5).map((id) => {
       const unit = state.units.find((u) => u.id === id)!;
       return [unit.name, `turn turn-${unit.side}`];
     });
+
+    render(<TurnOrder state={state} />);
+
     expect(names()).toEqual(expected);
   });
 
-  it("marks the unit whose turn it is now", () => {
+  it("given a unit waiting for a command, when the turn order shows, then it marks that unit's turn as now", () => {
     const { state } = advance(createBattle(sampleBattle, 1));
-    expect(state.phase.kind).toBe("awaitingCommand");
+
     render(<TurnOrder state={state} />);
+
+    expect(state.phase.kind).toBe("awaitingCommand");
     expect(screen.getAllByRole("listitem")[0]!.className).toContain("turn-now");
   });
 
-  it("shows nothing once the battle is over", () => {
+  it("given the battle is over, when the turn order shows, then it is empty", () => {
     const state = createBattle(sampleBattle, 1);
-    const { container } = render(
-      <TurnOrder
-        state={{ ...state, phase: { kind: "over", winner: "player" } }}
-      />,
-    );
+    const over = {
+      ...state,
+      phase: { kind: "over", winner: "player" } as const,
+    };
+
+    const { container } = render(<TurnOrder state={over} />);
+
     expect(container.innerHTML).toBe("");
   });
 });

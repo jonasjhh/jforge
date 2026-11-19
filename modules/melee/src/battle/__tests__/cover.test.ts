@@ -53,20 +53,42 @@ const cell = (side: Cell["side"], col: number, row = 0): Cell => ({
 });
 
 describe("isCoveredAt", () => {
-  it("is true behind a living unit of the same side", () => {
+  it.each<[string, Cell["side"], { col: number; row: number }, boolean]>([
+    ["behind a living enemy", "enemy", { col: 2, row: 1 }, true],
+    ["with nothing in front", "enemy", { col: 4, row: 2 }, false],
+    [
+      "on the party side, nothing in front",
+      "player",
+      { col: 4, row: 1 },
+      false,
+    ],
+  ])(
+    "given a cell %s, when cover is checked, then it is %s",
+    (_, side, at, covered) => {
+      const state = battle();
+
+      const result = isCoveredAt(state, side, at);
+
+      expect(result).toBe(covered);
+    },
+  );
+
+  it("given the unit in front is the one asking, when cover is checked, then it doesn't count", () => {
     const state = battle();
-    expect(isCoveredAt(state, "enemy", { col: 2, row: 1 })).toBe(true);
-    expect(isCoveredAt(state, "enemy", { col: 4, row: 2 })).toBe(false);
-    expect(isCoveredAt(state, "player", { col: 4, row: 1 })).toBe(false);
+    const front = unit(state, "front").id;
+
+    const result = isCoveredAt(state, "enemy", { col: 2, row: 1 }, front);
+
+    expect(result).toBe(false);
   });
 
-  it("ignores knocked-out units and the given unit", () => {
+  it("given the unit in front is knocked out, when cover is checked, then it doesn't count", () => {
     const state = battle();
-    expect(
-      isCoveredAt(state, "enemy", { col: 2, row: 1 }, unit(state, "front").id),
-    ).toBe(false);
     unit(state, "front").hp = 0;
-    expect(isCoveredAt(state, "enemy", { col: 2, row: 1 })).toBe(false);
+
+    const result = isCoveredAt(state, "enemy", { col: 2, row: 1 });
+
+    expect(result).toBe(false);
   });
 });
 
@@ -74,49 +96,49 @@ describe("coveredFrom", () => {
   const state = battle();
   const archer = unit(state, "archer");
 
-  it("marks an enemy that only cover keeps out of an attack", () => {
-    expect(coveredFrom(state, archer, ATTACK, unit(state, "guarded"))).toBe(
-      true,
-    );
+  it.each<[string, Menu, string, boolean]>([
+    ["an attack on the guarded enemy", ATTACK, "guarded", true],
+    ["an attack on the front enemy", ATTACK, "front", false],
+    ["an attack on the lone exposed enemy", ATTACK, "lone", false],
+    ["a single-target skill on the guarded enemy", skill(), "guarded", true],
+    ["a skill that ignores cover", skill(aimedShot), "guarded", false],
+    ["an area skill", skill(fireball), "guarded", false],
+    ["the move menu", MOVE, "guarded", false],
+    ["an attack on an ally", ATTACK, "behind", false],
+  ])(
+    "given %s, when cover is marked, then it is %s",
+    (_, menu, name, covered) => {
+      const target = unit(state, name);
+
+      const result = coveredFrom(state, archer, menu, target);
+
+      expect(result).toBe(covered);
+    },
+  );
+
+  it("given nobody active, when cover is marked, then nothing is", () => {
+    const active = null;
+
+    const result = coveredFrom(state, active, ATTACK, unit(state, "guarded"));
+
+    expect(result).toBe(false);
   });
 
-  it("leaves targets and exposed enemies unmarked", () => {
-    expect(coveredFrom(state, archer, ATTACK, unit(state, "front"))).toBe(
-      false,
-    );
-    expect(coveredFrom(state, archer, ATTACK, unit(state, "lone"))).toBe(false);
-  });
-
-  it("marks covered enemies for a single-target skill", () => {
-    expect(coveredFrom(state, archer, skill(), unit(state, "guarded"))).toBe(
-      true,
-    );
-  });
-
-  it("marks nothing for a skill that ignores cover, or an area", () => {
-    const guarded = unit(state, "guarded");
-    expect(coveredFrom(state, archer, skill(aimedShot), guarded)).toBe(false);
-    expect(coveredFrom(state, archer, skill(fireball), guarded)).toBe(false);
-  });
-
-  it("marks nothing in the move menu or with nobody active", () => {
-    const guarded = unit(state, "guarded");
-    expect(coveredFrom(state, archer, MOVE, guarded)).toBe(false);
-    expect(coveredFrom(state, null, ATTACK, guarded)).toBe(false);
-  });
-
-  it("marks nothing on allies or knocked-out units", () => {
-    expect(coveredFrom(state, archer, ATTACK, unit(state, "behind"))).toBe(
-      false,
-    );
+  it("given the guarded enemy knocked out, when cover is marked, then it isn't", () => {
     const down = battle();
     unit(down, "guarded").hp = 0;
-    expect(
-      coveredFrom(down, unit(down, "archer"), ATTACK, unit(down, "guarded")),
-    ).toBe(false);
+
+    const result = coveredFrom(
+      down,
+      unit(down, "archer"),
+      ATTACK,
+      unit(down, "guarded"),
+    );
+
+    expect(result).toBe(false);
   });
 
-  it("leaves an enemy out of reach for other reasons unmarked", () => {
+  it("given an enemy out of a sword's reach anyway, when cover is marked, then it isn't", () => {
     // A sword at column 0 reaches columns 0-1; the column at 4 stays out
     // of reach with or without the unit in front.
     const swordsman = def("swordsman", {}, sword);
@@ -126,46 +148,60 @@ describe("coveredFrom", () => {
       place(def("farBehind"), "enemy", 4, 1),
       place(def("near"), "enemy", 0),
     ]);
-    const attacker = unit(s, "swordsman");
-    expect(coveredFrom(s, attacker, ATTACK, unit(s, "farBehind"))).toBe(false);
+
+    const result = coveredFrom(
+      s,
+      unit(s, "swordsman"),
+      ATTACK,
+      unit(s, "farBehind"),
+    );
+
+    expect(result).toBe(false);
   });
 });
 
 describe("coveredAfterMove", () => {
   const state = battle();
   const archer = unit(state, "archer");
-
-  it("marks a step that ends behind a living ally", () => {
-    // The archer in the middle row, with the ally ahead of the cell to its right.
+  /** The archer in the middle row, with the ally ahead of the cell to its right. */
+  const besideAlly = () => {
     const s = battle();
     const a = unit(s, "archer");
     a.position = { col: 2, row: 1 };
-    s.units.find((u) => u.name === "ally")!.position = { col: 3, row: 0 };
-    expect(coveredAfterMove(s, a, MOVE, cell("player", 3, 1))).toBe(true);
-    expect(coveredAfterMove(s, a, MOVE, cell("player", 2, 0))).toBe(false);
-  });
+    unit(s, "ally").position = { col: 3, row: 0 };
+    return { s, a };
+  };
 
-  it("does not count the moving unit as its own cover", () => {
-    expect(coveredAfterMove(state, archer, MOVE, cell("player", 2, 1))).toBe(
-      false,
-    );
-  });
+  it.each<[string, Cell, boolean]>([
+    ["behind the ally", cell("player", 3, 1), true],
+    ["in the front row", cell("player", 2, 0), false],
+  ])(
+    "given the archer beside an ally, when it steps %s, then cover is %s",
+    (_, to, covered) => {
+      const { s, a } = besideAlly();
 
-  it("marks only valid steps, and only in the move menu", () => {
-    // Column 1, middle row is taken by the ally behind; far cells are not steps.
-    expect(coveredAfterMove(state, archer, MOVE, cell("player", 1, 1))).toBe(
-      false,
-    );
-    expect(coveredAfterMove(state, archer, MOVE, cell("player", 4, 2))).toBe(
-      false,
-    );
-    expect(coveredAfterMove(state, archer, ATTACK, cell("player", 2, 1))).toBe(
-      false,
-    );
-    expect(coveredAfterMove(state, null, MOVE, cell("player", 2, 1))).toBe(
-      false,
-    );
-  });
+      const result = coveredAfterMove(s, a, MOVE, to);
+
+      expect(result).toBe(covered);
+    },
+  );
+
+  it.each<[string, Menu, Cell, boolean]>([
+    ["behind itself", MOVE, cell("player", 2, 1), true],
+    ["to a taken cell", MOVE, cell("player", 1, 1), true],
+    ["to a cell too far", MOVE, cell("player", 4, 2), true],
+    ["outside the move menu", ATTACK, cell("player", 2, 1), true],
+    ["with nobody active", MOVE, cell("player", 2, 1), false],
+  ])(
+    "given a step %s, when cover is marked, then it isn't",
+    (_, menu, to, active) => {
+      const mover = active ? archer : null;
+
+      const result = coveredAfterMove(state, mover, menu, to);
+
+      expect(result).toBe(false);
+    },
+  );
 });
 
 describe("coveredFromAction", () => {
@@ -191,36 +227,37 @@ describe("coveredFromAction", () => {
     ...extra,
   });
 
-  it("lists the party members an enemy attack couldn't single out", () => {
-    const attack: BattleEvent = {
-      type: "attack",
-      unitId: foeId,
-      targetId: unit(state, "ally").id,
-    };
-    expect(coveredFromAction(state, attack)).toEqual([behind]);
-  });
+  it.each<[string, BattleEvent]>([
+    [
+      "an enemy attack",
+      { type: "attack", unitId: foeId, targetId: unit(state, "ally").id },
+    ],
+    ["an enemy single-target skill", skillEvent("firebolt")],
+  ])(
+    "given %s, when its cover is listed, then it is the party members it couldn't single out",
+    (_, action) => {
+      const covered = coveredFromAction(state, action);
 
-  it("lists them for a single-target skill", () => {
-    expect(coveredFromAction(state, skillEvent("firebolt"))).toEqual([behind]);
-  });
+      expect(covered).toEqual([behind]);
+    },
+  );
 
-  it("lists nothing for an area, a delayed impact or other actions", () => {
-    expect(coveredFromAction(state, skillEvent("fireball"))).toEqual([]);
-    expect(
-      coveredFromAction(state, skillEvent("firebolt", { delayed: true })),
-    ).toEqual([]);
-    expect(
-      coveredFromAction(state, { type: "defended", unitId: foeId }),
-    ).toEqual([]);
-    expect(coveredFromAction(state, undefined)).toEqual([]);
-  });
+  it.each<[string, BattleEvent | undefined]>([
+    ["an area skill", skillEvent("fireball")],
+    ["a delayed impact", skillEvent("firebolt", { delayed: true })],
+    ["a defend", { type: "defended", unitId: foeId }],
+    ["no action", undefined],
+    [
+      "a party member's attack",
+      {
+        type: "attack",
+        unitId: unit(state, "archer").id,
+        targetId: unit(state, "front").id,
+      },
+    ],
+  ])("given %s, when its cover is listed, then it is empty", (_, action) => {
+    const covered = coveredFromAction(state, action);
 
-  it("lists nothing for a party member's action", () => {
-    const attack: BattleEvent = {
-      type: "attack",
-      unitId: unit(state, "archer").id,
-      targetId: unit(state, "front").id,
-    };
-    expect(coveredFromAction(state, attack)).toEqual([]);
+    expect(covered).toEqual([]);
   });
 });

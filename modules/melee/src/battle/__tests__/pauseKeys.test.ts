@@ -12,35 +12,42 @@ const press = (key: string, extra: Partial<PauseKey> = {}): PauseKey => ({
 });
 
 describe("pauseKeyAction", () => {
-  it("toggles on P, either case, and on Space", () => {
-    expect(pauseKeyAction(press("p"))).toBe("toggle");
-    expect(pauseKeyAction(press("P"))).toBe("toggle");
-    expect(pauseKeyAction(press(" "))).toBe("toggle");
-  });
+  it.each<[string, PauseKey, "toggle" | "resume" | null]>([
+    ["p", press("p"), "toggle"],
+    ["P", press("P"), "toggle"],
+    ["Space", press(" "), "toggle"],
+    ["Space on a focused control", press(" ", { onControl: true }), null],
+    ["P on a focused control", press("p", { onControl: true }), "toggle"],
+    ["Escape", press("Escape"), "resume"],
+    ["a", press("a"), null],
+    ["Enter", press("Enter"), null],
+  ])(
+    "given %s is pressed, when the action is read, then it is %s",
+    (_, key, action) => {
+      const result = pauseKeyAction(key);
 
-  it("leaves Space alone on a focused control, but not P", () => {
-    expect(pauseKeyAction(press(" ", { onControl: true }))).toBeNull();
-    expect(pauseKeyAction(press("p", { onControl: true }))).toBe("toggle");
-  });
+      expect(result).toBe(action);
+    },
+  );
 
-  it("resumes on Escape", () => {
-    expect(pauseKeyAction(press("Escape"))).toBe("resume");
-  });
+  it.each(
+    ["p", "Escape"].flatMap((key) =>
+      [
+        { repeat: true },
+        { ctrlKey: true },
+        { metaKey: true },
+        { altKey: true },
+      ].map(
+        (extra) =>
+          [`${key} ${JSON.stringify(extra)}`, press(key, extra)] as const,
+      ),
+    ),
+  )(
+    "given %s, when the action is read, then the held key or shortcut is ignored",
+    (_, key) => {
+      const result = pauseKeyAction(key);
 
-  it("ignores other keys", () => {
-    expect(pauseKeyAction(press("a"))).toBeNull();
-    expect(pauseKeyAction(press("Enter"))).toBeNull();
-  });
-
-  it("ignores held keys and shortcuts with modifiers", () => {
-    for (const extra of [
-      { repeat: true },
-      { ctrlKey: true },
-      { metaKey: true },
-      { altKey: true },
-    ]) {
-      expect(pauseKeyAction(press("p", extra))).toBeNull();
-      expect(pauseKeyAction(press("Escape", extra))).toBeNull();
-    }
-  });
+      expect(result).toBeNull();
+    },
+  );
 });

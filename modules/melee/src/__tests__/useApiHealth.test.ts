@@ -16,10 +16,22 @@ const answer = (response: Response | Error) =>
 afterEach(() => vi.unstubAllGlobals());
 
 describe("useApiHealth", () => {
-  it("is loading, then the body the endpoint answered", async () => {
-    answer(Response.json({ status: "ok" }));
+  it("given a request in flight, when the hook first renders, then it is loading", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<Response>(() => {})),
+    );
+
     const { result } = renderHook(() => useApiHealth("/api/health"));
+
     expect(result.current).toEqual({ state: "loading" });
+  });
+
+  it("given an endpoint that answers OK, when the hook renders, then it is the body it answered", async () => {
+    answer(Response.json({ status: "ok" }));
+
+    const { result } = renderHook(() => useApiHealth("/api/health"));
+
     await waitFor(() =>
       expect(result.current).toEqual({
         state: "ok",
@@ -29,9 +41,11 @@ describe("useApiHealth", () => {
     expect(fetch).toHaveBeenCalledWith("/api/health");
   });
 
-  it("is an error for a status that isn't OK", async () => {
+  it("given an endpoint that answers 503, when the hook renders, then it is an error", async () => {
     answer(new Response("down", { status: 503 }));
+
     const { result } = renderHook(() => useApiHealth("/api/health"));
+
     await waitFor(() =>
       expect(result.current).toEqual({
         state: "error",
@@ -40,9 +54,11 @@ describe("useApiHealth", () => {
     );
   });
 
-  it("is an error when the request fails", async () => {
+  it("given the request fails, when the hook renders, then it is an error", async () => {
     answer(new Error("offline"));
+
     const { result } = renderHook(() => useApiHealth("/api/health"));
+
     await waitFor(() =>
       expect(result.current).toEqual({
         state: "error",
@@ -51,7 +67,7 @@ describe("useApiHealth", () => {
     );
   });
 
-  it("ignores an answer that comes after it is gone", async () => {
+  it("given the hook is gone, when the answer comes, then it is ignored", async () => {
     let reply: (r: Response) => void = () => {};
     vi.stubGlobal(
       "fetch",
@@ -59,8 +75,10 @@ describe("useApiHealth", () => {
     );
     const { result, unmount } = renderHook(() => useApiHealth("/api/health"));
     unmount();
+
     reply(Response.json({ status: "ok" }));
     await new Promise((r) => setTimeout(r, 0));
+
     expect(result.current).toEqual({ state: "loading" });
   });
 });

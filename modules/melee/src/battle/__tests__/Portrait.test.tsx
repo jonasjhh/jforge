@@ -6,16 +6,22 @@ import { Portrait } from "../Portrait";
 afterEach(cleanup);
 
 describe("Portrait", () => {
-  it("draws a known type's icon, hidden from screen readers", () => {
-    const { container } = render(<Portrait defId="slime" className="foe" />);
+  it("given a known type, when its portrait is drawn, then it is an icon hidden from screen readers", () => {
+    const defId = "slime";
+
+    const { container } = render(<Portrait defId={defId} className="foe" />);
+
     const svg = container.querySelector("svg")!;
     expect(svg.getAttribute("class")).toBe("portrait foe");
     expect(svg.getAttribute("aria-hidden")).toBe("true");
     expect(svg.querySelector("path")!.getAttribute("d")).toBeTruthy();
   });
 
-  it("draws nothing for an unknown type", () => {
-    const { container } = render(<Portrait defId="no-such-type" />);
+  it("given an unknown type, when its portrait is drawn, then nothing is drawn", () => {
+    const defId = "no-such-type";
+
+    const { container } = render(<Portrait defId={defId} />);
+
     expect(container.innerHTML).toBe("");
   });
 });

@@ -42,9 +42,16 @@ const names = (side: "player" | "enemy") => {
   return [...counts].map(([n, k]) => (k > 1 ? `${n} ×${k}` : n)).join(", ");
 };
 
+const radio = (name: string) => screen.getByRole("radio", { name });
+const click = (role: "radio" | "button", name: string) =>
+  fireEvent.click(screen.getByRole(role, { name }));
+
 describe("melee StartScreen", () => {
-  it("shows the encounter the seed and difficulty draw", () => {
-    show();
+  it("given seed 42 on normal, when it shows, then it lists the party, the enemies and the encounter number", () => {
+    const seed = 42;
+
+    show({ encounterSeed: seed });
+
     expect(screen.getByText("Your party:").parentElement!.textContent).toBe(
       `Your party: ${names("player")}`,
     );
@@ -54,42 +61,86 @@ describe("melee StartScreen", () => {
     expect(screen.getByText("Encounter #42")).toBeTruthy();
   });
 
-  it("chooses the difficulty, rerolls and starts", () => {
+  it("given normal difficulty, when it shows, then Normal is checked", () => {
+    const difficulty = "normal";
+
+    show({ difficulty });
+
+    expect(radio("Normal").getAttribute("aria-checked")).toBe("true");
+  });
+
+  it.each<[string, "radio" | "button", string, keyof Props, unknown[]]>([
+    ["Hard", "radio", "Hard", "onDifficulty", ["hard"]],
+    [
+      "Start",
+      "button",
+      "Start",
+      "onStart",
+      [randomEncounter(42, "normal", pools)],
+    ],
+  ])(
+    "given the start screen, when %s is pressed, then it is reported",
+    (_, role, name, handler, args) => {
+      const props = show();
+
+      click(role, name);
+
+      expect(props[handler]).toHaveBeenCalledWith(...args);
+    },
+  );
+
+  it("given the start screen, when Reroll is pressed, then it is reported once", () => {
     const props = show();
-    expect(
-      screen
-        .getByRole("radio", { name: "Normal" })
-        .getAttribute("aria-checked"),
-    ).toBe("true");
-    fireEvent.click(screen.getByRole("radio", { name: "Hard" }));
-    expect(props.onDifficulty).toHaveBeenCalledWith("hard");
-    fireEvent.click(screen.getByRole("button", { name: "Reroll" }));
+
+    click("button", "Reroll");
+
     expect(props.onReroll).toHaveBeenCalledOnce();
-    fireEvent.click(screen.getByRole("button", { name: "Start" }));
-    expect(props.onStart).toHaveBeenCalledWith(
-      randomEncounter(42, "normal", pools),
-    );
   });
 
-  it("offers the custom roster only when char has published one", () => {
-    show();
+  it("given char published nothing, when it shows, then there is no roster choice", () => {
+    const imported = 0;
+
+    show({ imported });
+
     expect(screen.queryByRole("radiogroup", { name: "Roster" })).toBeNull();
-    cleanup();
-    const props = show({ imported: 3 });
-    fireEvent.click(screen.getByRole("radio", { name: "Custom" }));
-    expect(props.onCustom).toHaveBeenCalledWith(true);
-    fireEvent.click(screen.getByRole("radio", { name: "Built-in" }));
-    expect(props.onCustom).toHaveBeenCalledWith(false);
   });
 
-  it("shows whether the API answers", async () => {
+  it.each([
+    ["Custom", true],
+    ["Built-in", false],
+  ])(
+    "given char published a roster, when %s is chosen, then it is reported",
+    (name, custom) => {
+      const props = show({ imported: 3, custom: !custom });
+
+      click("radio", name);
+
+      expect(props.onCustom).toHaveBeenCalledWith(custom);
+    },
+  );
+
+  it("given the API has not answered yet, when it shows, then it says it is checking", () => {
+    health.mockReturnValue(new Promise(() => {}));
+
     show();
+
     expect(screen.getByText(/checking…/)).toBeTruthy();
-    expect(await screen.findByText("ok")).toBeTruthy();
-    expect(health).toHaveBeenCalledWith("/api/melee/health");
-    cleanup();
-    health.mockRejectedValue(new Error("offline"));
+  });
+
+  it("given the API answers, when it shows, then it reports ok from the melee health endpoint", async () => {
+    const ok = health;
+
     show();
+
+    expect(await screen.findByText("ok")).toBeTruthy();
+    expect(ok).toHaveBeenCalledWith("/api/melee/health");
+  });
+
+  it("given the API is offline, when it shows, then it reports unreachable", async () => {
+    health.mockRejectedValue(new Error("offline"));
+
+    show();
+
     expect(await screen.findByText("unreachable")).toBeTruthy();
   });
 });
