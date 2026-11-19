@@ -5,6 +5,11 @@ on:
     # Every night at 02:17 UTC.
     - cron: "17 2 * * *"
   workflow_dispatch:
+    inputs:
+      full:
+        description: "Test every mutant again, ignoring last night's results"
+        type: boolean
+        default: false
 
 concurrency:
   group: nightly-quality
@@ -31,9 +36,37 @@ jobs:
       - name: Coverage
         run: pnpm coverage
 
+      # Stryker reuses last night's results for mutants whose code and tests
+      # haven't changed. A change to the dependencies or the test setup
+      # starts afresh (the key), and so does every Sunday's run, since a
+      # change elsewhere that the tests rely on goes unnoticed otherwise.
+      - name: Restore last night's mutation results
+        if: ${{ !cancelled() }}
+        uses: actions/cache/restore@v6
+        with:
+          path: reports/stryker-incremental.json
+          key: mutation-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.json', 'vitest*.config.ts') }}-${{ github.run_id }}
+          restore-keys: mutation-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.json', 'vitest*.config.ts') }}-
+
       - name: Mutation testing
         if: ${{ !cancelled() }}
-        run: pnpm mutation
+        env:
+          FULL: ${{ inputs.full }}
+        run: |
+          if [ "$FULL" = "true" ] || [ "$(date -u +%u)" = 7 ] || [ ! -f reports/stryker-incremental.json ]; then
+            echo "_Full mutation run: every mutant was tested._" >> "$GITHUB_STEP_SUMMARY"
+            pnpm mutation --force
+          else
+            echo "_Incremental mutation run: unchanged mutants keep last night's result._" >> "$GITHUB_STEP_SUMMARY"
+            pnpm mutation
+          fi
+
+      - name: Save the mutation results for tomorrow
+        if: ${{ !cancelled() && hashFiles('reports/stryker-incremental.json') != '' }}
+        uses: actions/cache/save@v6
+        with:
+          path: reports/stryker-incremental.json
+          key: mutation-${{ hashFiles('pnpm-lock.yaml', 'stryker.config.json', 'vitest*.config.ts') }}-${{ github.run_id }}
 
       - name: Job summary
         if: ${{ !cancelled() }}

@@ -9,6 +9,9 @@ export default defineConfig({
       include: ["modules/*/{shared,src,worker}/**/*.{ts,tsx}", "worker/**"],
       exclude: ["**/__tests__/**", "**/*.d.ts", "**/main.tsx"],
       reporter: ["text-summary", "text", "json-summary", "html"],
+      // Floors just under the coverage there is; `pnpm coverage` (and so CI)
+      // fails if a change drops below them. Raise them as tests are added.
+      thresholds: { statements: 80, branches: 74, functions: 67, lines: 80 },
     },
   },
 });
