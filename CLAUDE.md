@@ -29,6 +29,11 @@ Object bindings and classes with the module name.
 
 (`pnpm check` runs all of them.)
 
+## Tests
+
+Name tests given/when/then in one sentence and write them
+arrange/act/assert; see Testing in `README.md`.
+
 ## Saved data
 
 Saved data (char's library, the roster, jrpg's run) may be invalidated at

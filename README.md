@@ -89,6 +89,13 @@ screens (`*.test.tsx`, under happy-dom with Testing Library), plus a few
 end-to-end smoke tests of the happy paths (Playwright, in
 `modules/<name>/e2e/`).
 
+Test names follow given/when/then in one sentence, under a `describe`
+for the unit: `it("given an empty cell, when a member is moved there, then
+they stand in it")`. Each test arranges, acts once and asserts, with a blank
+line between the three. A test may act and assert more than once only when
+the steps are the behaviour under test (paused, then resumed) and splitting
+it would cost much more time without reading better.
+
 ```
 pnpm test             # unit tests
 pnpm coverage         # unit tests with a coverage report (coverage/) and its floors

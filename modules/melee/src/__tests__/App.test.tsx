@@ -68,15 +68,18 @@ describe("melee App", () => {
     vi.spyOn(Math, "random").mockImplementation(
       () => (draw = (draw + 0.37) % 1),
     );
+    // At 2× the battle takes half the frames.
+    localStorage.setItem("melee.battleSpeed", "2");
     render(<App />);
     fireEvent.click(button("Start"));
-    // Let the battle run until it's over, the party never acting.
+    // Let the battle run until it's over, the party only defending. Checks
+    // for the action tabs by class, which is cheaper than a role query.
     for (let i = 0; i < 2000 && !document.querySelector(".result"); i++) {
       act(() => {
         vi.advanceTimersByTime(100);
       });
-      const defend = screen.queryByRole("button", { name: "Defend" });
-      if (defend) fireEvent.click(defend);
+      if (document.querySelector(".mode-tabs"))
+        fireEvent.click(button("Defend"));
     }
     const again = screen.getByRole("button", { name: /Next battle|Try again/ });
     fireEvent.click(again);
