@@ -25,70 +25,99 @@ const strike = (more = {}): SkillEffect => ({
 });
 
 describe("the field table", () => {
-  it("covers every effect kind melee has", () => {
-    const used = new Set(
-      [...Object.values(content)]
-        .filter(
-          (v): v is Skill => !!v && typeof v === "object" && "effect" in v,
-        )
-        .map((s) => s.effect.type),
+  it("given melee's skills, when their effect kinds are collected, then the table covers each of them", () => {
+    const skills = [...Object.values(content)].filter(
+      (v): v is Skill => !!v && typeof v === "object" && "effect" in v,
     );
+
+    const used = new Set(skills.map((s) => s.effect.type));
+
     for (const type of used) expect(EFFECT_TYPES).toContain(type);
   });
 
   it.each(library.skills.map((s) => [s.name, s] as const))(
-    "reads and writes back %s unchanged",
+    "given the starter skill %s, when each field is read and written back, then the skill is unchanged",
     (_, skill) => {
-      for (const field of SKILL_FIELDS) {
-        expect(writeField(skill, field, readField(skill, field))).toEqual(
-          skill,
-        );
-      }
-      for (const field of effectFields(skill.effect)) {
-        if (field.kind === "statusKind" || field.kind === "creature") continue;
-        const back = writeField(
-          skill.effect,
-          field,
-          readField(skill.effect, field),
-        );
-        expect(back).toEqual(skill.effect);
-      }
+      const fields = effectFields(skill.effect).filter(
+        (f) => f.kind !== "statusKind" && f.kind !== "creature",
+      );
+
+      const skillBack = SKILL_FIELDS.map((field) =>
+        writeField(skill, field, readField(skill, field)),
+      );
+      const effectBack = fields.map((field) =>
+        writeField(skill.effect, field, readField(skill.effect, field)),
+      );
+
+      for (const back of skillBack) expect(back).toEqual(skill);
+      for (const back of effectBack) expect(back).toEqual(skill.effect);
     },
   );
 
-  it("finds nothing wrong with any skill in the starter library", () => {
-    for (const skill of library.skills) {
-      expect(skillProblems(skill, library)).toEqual([]);
-      expect(effectSummary(skill)).not.toMatch(/undefined|NaN/);
-    }
+  it.each(library.skills.map((s) => [s.name, s] as const))(
+    "given the starter skill %s, when it is checked and summed up, then nothing is wrong with it",
+    (_, skill) => {
+      const problems = skillProblems(skill, library);
+      const summary = effectSummary(skill);
+
+      expect(problems).toEqual([]);
+      expect(summary).not.toMatch(/undefined|NaN/);
+    },
+  );
+
+  it("given a strike that weakens, when weaken is set to 0, then the option is left out", () => {
+    const weak = strike({ weaken: 0.75 });
+
+    const written = writeField(weak, spec(strike(), "weaken"), 0);
+
+    expect(written).not.toHaveProperty("weaken");
   });
 
-  it("leaves an option out at its default and keeps required flags", () => {
-    const weak = writeField(
-      strike({ weaken: 0.75 }),
-      spec(strike(), "weaken"),
-      0,
-    );
-    expect(weak).not.toHaveProperty("weaken");
+  it("given a strike without finishBelow, when the field is read, then it shows the default 0.3", () => {
     const finish = spec(strike(), "finishBelow");
-    expect(readField(strike(), finish)).toBe(0.3);
-    expect(writeField(strike(), finish, 0.3)).not.toHaveProperty("finishBelow");
-    expect(writeField(strike(), finish, 0.5)).toMatchObject({
-      finishBelow: 0.5,
-    });
-    expect(
-      writeField(strike({ pin: true }), spec(strike(), "pin"), false),
-    ).toEqual(strike());
-    const buff = EFFECTS.modify.make();
-    const harmful = spec(buff, "modifier.harmful");
-    expect(writeField(buff, harmful, false)).toMatchObject({
-      modifier: { harmful: false },
-    });
+
+    const value = readField(strike(), finish);
+
+    expect(value).toBe(0.3);
   });
 
-  it("does not change the effect it writes to", () => {
+  it("given a strike, when finishBelow is set to its default, then the option is left out", () => {
+    const finish = spec(strike(), "finishBelow");
+
+    const written = writeField(strike(), finish, 0.3);
+
+    expect(written).not.toHaveProperty("finishBelow");
+  });
+
+  it("given a strike, when finishBelow is set off its default, then it is kept", () => {
+    const finish = spec(strike(), "finishBelow");
+
+    const written = writeField(strike(), finish, 0.5);
+
+    expect(written).toMatchObject({ finishBelow: 0.5 });
+  });
+
+  it("given a strike that pins, when pin is cleared, then the flag is left out", () => {
+    const pinned = strike({ pin: true });
+
+    const written = writeField(pinned, spec(strike(), "pin"), false);
+
+    expect(written).toEqual(strike());
+  });
+
+  it("given a buff, when its required harmful flag is cleared, then it is kept as false", () => {
+    const buff = EFFECTS.modify.make();
+
+    const written = writeField(buff, spec(buff, "modifier.harmful"), false);
+
+    expect(written).toMatchObject({ modifier: { harmful: false } });
+  });
+
+  it("given an effect, when a field is written, then the effect itself is unchanged", () => {
     const before = strike();
+
     writeField(before, spec(before, "push"), 1);
+
     expect(before).toEqual(strike());
   });
 });
@@ -103,27 +132,46 @@ describe("statuses", () => {
     };
   };
 
-  it.each(STATUS_KINDS)("a new %s is problem-free", (kind) => {
-    expect(skillProblems(status(kind))).toEqual([]);
+  it.each(STATUS_KINDS)(
+    "given a new %s status skill, when it is checked, then it has no problems",
+    (kind) => {
+      const skill = status(kind);
+
+      const problems = skillProblems(skill);
+
+      expect(problems).toEqual([]);
+    },
+  );
+
+  it("given a bless, when its fields are listed, then its own strengths show with their defaults and no others", () => {
+    const bless = status("bless").effect;
+
+    const dealt = readField(bless, spec(bless, "status.dealt"));
+    const taken = readField(bless, spec(bless, "status.taken"));
+
+    expect(dealt).toBe(1.2);
+    expect(taken).toBe(0.8);
+    expect(spec(bless, "status.defense")).toBeUndefined();
   });
 
-  it("shows a kind's strengths with their defaults, and only its own", () => {
+  it("given a bless, when its dealt strength is lowered, then the summary shows the new strength", () => {
     const bless = status("bless").effect;
-    expect(readField(bless, spec(bless, "status.dealt"))).toBe(1.2);
-    expect(readField(bless, spec(bless, "status.taken"))).toBe(0.8);
-    expect(spec(bless, "status.defense")).toBeUndefined();
+
     const lesser = writeField(bless, spec(bless, "status.dealt"), 1.1);
+
     expect(effectSummary({ ...status("bless"), effect: lesser })).toBe(
       "blesses: deals ×1.1, takes ×0.8 for 150",
     );
   });
 
-  it("switching the kind starts from its defaults, keeping the id", () => {
+  it("given a status with its own id and power, when its kind is switched, then it starts from the new kind's defaults, keeping the id", () => {
     const effect: SkillEffect = {
       type: "status",
       status: { ...makeStatus("damage"), id: "mine", power: 9 },
     };
+
     const next = writeField(effect, spec(effect, "status.effect"), "petrify");
+
     expect(next).toEqual({
       type: "status",
       status: { ...makeStatus("petrify"), id: "mine" },

@@ -22,37 +22,44 @@ const saved = () =>
 beforeEach(() => localStorage.clear());
 
 describe("useLibrary", () => {
-  it("starts from the library on this device and saves it", () => {
+  it("given the library on this device, when the hook starts, then it holds and saves that library", () => {
     const { result } = renderHook(() => useLibrary());
+
     expect(result.current.library).toEqual(starterLibrary());
     expect(result.current.saved).toBe(true);
     expect(saved()).toEqual(starterLibrary());
   });
 
-  it("saves every change at once", () => {
+  it("given a library, when it is changed, then the change is held and saved at once", () => {
     const { result } = renderHook(() => useLibrary());
     const first = result.current.library.characters[0]!.name;
+
     act(() => result.current.update(rename("!")));
+
     expect(result.current.library.characters[0]!.name).toBe(`${first}!`);
     expect(saved().characters[0]!.name).toBe(`${first}!`);
   });
 
-  it("applies changes made together one after another", () => {
+  it("given a library, when two changes are made together, then they apply one after another", () => {
     const { result } = renderHook(() => useLibrary());
     const first = result.current.library.characters[0]!.name;
+
     act(() => {
       result.current.update(rename("a"));
       result.current.update(rename("b"));
     });
+
     expect(result.current.library.characters[0]!.name).toBe(`${first}ab`);
   });
 
-  it("says so when the browser refuses to save", () => {
+  it("given a browser that refuses to save, when the library is changed, then it says it isn't saved", () => {
     const { result } = renderHook(() => useLibrary());
     const spy = vi.spyOn(localStorage, "setItem").mockImplementation(() => {
       throw new Error("full");
     });
+
     act(() => result.current.update(rename("!")));
+
     expect(result.current.saved).toBe(false);
     spy.mockRestore();
   });

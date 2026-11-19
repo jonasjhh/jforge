@@ -21,67 +21,90 @@ const pick = (label: string, value: string, within_ = document.body) =>
     target: { value },
   });
 
+const type = (label: string, value: string) =>
+  fireEvent.change(screen.getByLabelText(label), { target: { value } });
+
 describe("SkillEditor", () => {
-  it("edits the name, description, costs and flags", () => {
+  it.each([
+    ["Name", "Zap", { name: "Zap" }],
+    ["Description", "Zaps.", { description: "Zaps." }],
+    ["MP cost", "7", { mpCost: 7 }],
+  ] as const)(
+    "given a blank skill, when %s is set to %s, then the skill has it",
+    (label, value, change) => {
+      const skill = edit();
+
+      type(label, value);
+
+      expect(skill.current).toMatchObject(change);
+    },
+  );
+
+  it("given a blank skill, when Not on itself is ticked, then the skill has the flag", () => {
     const skill = edit();
-    fireEvent.change(screen.getByLabelText("Name"), {
-      target: { value: "Zap" },
-    });
-    fireEvent.change(screen.getByLabelText("Description"), {
-      target: { value: "Zaps." },
-    });
-    fireEvent.change(screen.getByLabelText("MP cost"), {
-      target: { value: "7" },
-    });
+
     fireEvent.click(screen.getByLabelText("Not on itself"));
-    expect(skill.current).toMatchObject({
-      name: "Zap",
-      description: "Zaps.",
-      mpCost: 7,
-      notSelf: true,
-    });
+
+    expect(skill.current.notSelf).toBe(true);
   });
 
-  it("gives a new kind of effect its defaults and its usual target", () => {
+  it("given a blank skill, when its effect kind becomes heal, then it gets heal's defaults and aims at allies", () => {
     const skill = edit();
+
     pick("Kind", "heal", effectGroup());
+
     expect(skill.current.effect.type).toBe("heal");
     expect(skill.current.target).toBe("ally");
   });
 
-  it("gives a new status the skill's id", () => {
+  it("given a blank skill, when its effect kind becomes status, then the status takes the skill's id and aims at enemies", () => {
     const skill = edit();
+
     pick("Kind", "status", effectGroup());
+
     const { effect } = skill.current;
     expect(effect.type === "status" && effect.status.id).toBe("skill-1");
     expect(skill.current.target).toBe("enemy");
   });
 
-  it("re-aims the skill when its status changes kind, and only then", () => {
+  it("given a status skill, when the status is renamed, then the target is kept", () => {
     const skill = edit();
     pick("Kind", "status", effectGroup());
+
     fireEvent.change(within(effectGroup()).getByLabelText("Shown as"), {
       target: { value: "Rot" },
     });
+
     expect(skill.current.target).toBe("enemy");
+  });
+
+  it("given a status skill aimed at enemies, when its status becomes a heal, then it is re-aimed at allies", () => {
+    const skill = edit();
+    pick("Kind", "status", effectGroup());
+
     pick("Status", "heal", effectGroup());
+
     const { effect } = skill.current;
     expect(effect.type === "status" && effect.status.effect).toBe("heal");
     expect(skill.current.target).toBe("ally");
   });
 
-  it("keeps the target when another field of the effect changes", () => {
+  it("given a damage skill aimed at anyone, when its damage type changes, then the target is kept", () => {
     const skill = edit({ ...blankSkill("skill-1"), target: "any" });
+
     pick("Damage type", "cold", effectGroup());
+
     const { effect } = skill.current;
     expect(effect.type === "damage" && effect.element).toBe("cold");
     expect(skill.current.target).toBe("any");
   });
 
-  it("summons the creature of the enemy type picked", () => {
+  it("given a summon skill, when the goblin type is picked, then it summons a goblin", () => {
     const skill = edit();
     pick("Kind", "summon", effectGroup());
+
     pick("Creature (enemy type)", "type-goblin", effectGroup());
+
     const { effect } = skill.current;
     expect(effect.type === "summon" && effect.source).toEqual({
       archetypeId: "type-goblin",
@@ -89,19 +112,23 @@ describe("SkillEditor", () => {
     expect(effect.type === "summon" && effect.creature.name).toBe("Goblin");
   });
 
-  it("shows what stops the skill from being usable", () => {
+  it("given a skill with a blank name, when it is edited, then the problem is shown", () => {
     edit({ ...blankSkill("skill-1"), name: " " });
-    expect(
-      screen.getAllByRole("alert").map((alert) => alert.textContent),
-    ).toContain("Give the skill a name.");
+
+    const alerts = screen.getAllByRole("alert").map((a) => a.textContent);
+
+    expect(alerts).toContain("Give the skill a name.");
   });
 
-  it("leaves an unknown effect alone", () => {
+  it("given a skill with an unknown effect, when it is edited, then the effect is left alone", () => {
     edit({
       ...blankSkill("skill-1"),
       effect: { type: "mystery" } as unknown as Skill["effect"],
     });
-    expect(screen.queryByRole("group", { name: "Effect" })).toBeNull();
+
+    const group = screen.queryByRole("group", { name: "Effect" });
+
+    expect(group).toBeNull();
     expect(screen.getByText(/effect \(mystery\) is unknown here/)).toBeTruthy();
   });
 });

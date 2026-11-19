@@ -16,45 +16,68 @@ import { starterLibrary } from "../starter";
 import { designedLibrary } from "./designed";
 
 describe("flatStats", () => {
-  it("gives every stat the same value", () => {
-    expect(new Set(Object.values(flatStats(7)))).toEqual(new Set([7]));
-    expect(Object.keys(flatStats(7))).toHaveLength(7);
+  it("given a value, when flat stats are made, then each of the seven stats has it", () => {
+    const stats = flatStats(7);
+
+    expect(new Set(Object.values(stats))).toEqual(new Set([7]));
+    expect(Object.keys(stats)).toHaveLength(7);
   });
 });
 
 describe("nextId", () => {
-  it("counts up from 1 within a list", () => {
-    expect(nextId(emptyLibrary(), "skills")).toBe("skill-1");
-    expect(nextId(emptyLibrary(), "archetypes")).toBe("type-1");
-  });
+  it.each([
+    ["skills", "skill-1"],
+    ["archetypes", "type-1"],
+  ] as const)(
+    "given an empty library, when the next id for %s is drawn, then it counts from 1",
+    (list, id) => {
+      const next = nextId(emptyLibrary(), list);
 
-  it("skips ids in use and fills gaps", () => {
+      expect(next).toBe(id);
+    },
+  );
+
+  it("given gear-1 and gear-3, when the next gear id is drawn, then it fills the gap", () => {
     let library = emptyLibrary();
     library = upsert(library, "gear", blankGear("gear-1"));
     library = upsert(library, "gear", blankGear("gear-3"));
-    expect(nextId(library, "gear")).toBe("gear-2");
-    // The library already has unit-1 to unit-3.
-    expect(nextId(designedLibrary(), "characters")).toBe("unit-4");
+
+    const next = nextId(library, "gear");
+
+    expect(next).toBe("gear-2");
+  });
+
+  it("given characters unit-1 to unit-3, when the next character id is drawn, then it skips those in use", () => {
+    const library = designedLibrary();
+
+    const next = nextId(library, "characters");
+
+    expect(next).toBe("unit-4");
   });
 });
 
 describe("upsert", () => {
-  it("adds a new item at the end", () => {
+  it("given a skill with a new id, when it is upserted, then it is added at the end", () => {
     const library = upsert(starterLibrary(), "skills", blankSkill("new"));
+
     expect(library.skills.at(-1)?.id).toBe("new");
   });
 
-  it("replaces the item with the same id, in place", () => {
+  it("given gear with an id in use, when it is upserted, then it replaces that item in place", () => {
     const before = starterLibrary();
     const renamed = { ...before.gear[0]!, name: "Renamed" };
+
     const after = upsert(before, "gear", renamed);
+
     expect(after.gear).toHaveLength(before.gear.length);
     expect(after.gear[0]?.name).toBe("Renamed");
   });
 
-  it("leaves the library it was given alone", () => {
+  it("given a library, when an item is upserted, then the library given is unchanged", () => {
     const before = starterLibrary();
+
     upsert(before, "skills", blankSkill("new"));
+
     expect(before.skills.some((s) => s.id === "new")).toBe(false);
   });
 });
@@ -62,48 +85,72 @@ describe("upsert", () => {
 describe("remove", () => {
   const library = designedLibrary();
 
-  it("removes a skill and unlearns it everywhere", () => {
+  it("given a skill classes know, when it is removed, then it is gone and no class knows it", () => {
     const after = remove(library, "skills", "heal");
+
     expect(after.skills.some((s) => s.id === "heal")).toBe(false);
     expect(
       after.archetypes.flatMap((a) => a.skills).some((id) => id === "heal"),
     ).toBe(false);
   });
 
-  it("removes gear and takes it off whoever wore it", () => {
+  it("given a sword someone wears, when it is removed, then it is taken off them", () => {
     const after = remove(library, "gear", "gear-sword");
+
     expect(after.characters[0]?.gear).toEqual({ armor: "gear-mail" });
   });
 
-  it("removes a type together with its characters", () => {
+  it("given a type with characters, when it is removed, then its characters go too", () => {
     const after = remove(library, "archetypes", "type-squire");
+
     expect(after.characters.map((c) => c.name)).toEqual(
       library.characters.slice(1).map((c) => c.name),
     );
   });
 
-  it("removes just the character", () => {
+  it("given a character, when it is removed, then only the character goes", () => {
     const after = remove(library, "characters", "unit-1");
+
     expect(after.characters).toHaveLength(library.characters.length - 1);
     expect(after.archetypes).toHaveLength(library.archetypes.length);
   });
 });
 
 describe("blank designs", () => {
-  it("make a character melee can use straight away", () => {
-    for (const kind of ["class", "enemy"] as const) {
-      const archetype = blankArchetype("t", kind);
-      const library = {
-        ...emptyLibrary(),
-        archetypes: [archetype],
-        characters: [blankCharacter("c", archetype)],
-      };
-      expect(parseLibrary(JSON.stringify(library))).toEqual(library);
+  const blankLibrary = (kind: "class" | "enemy") => {
+    const archetype = blankArchetype("t", kind);
+    return {
+      ...emptyLibrary(),
+      archetypes: [archetype],
+      characters: [blankCharacter("c", archetype)],
+    };
+  };
+
+  it.each(["class", "enemy"] as const)(
+    "given a blank %s and a character of it, when the library is saved and read back, then it is unchanged",
+    (kind) => {
+      const library = blankLibrary(kind);
+
+      const back = parseLibrary(JSON.stringify(library));
+
+      expect(back).toEqual(library);
+    },
+  );
+
+  it.each([
+    ["class", 1, 0],
+    ["enemy", 0, 1],
+  ] as const)(
+    "given a blank %s and a character of it, when the roster is compiled, then melee can use it",
+    (kind, party, monsters) => {
+      const library = blankLibrary(kind);
+
       const roster = compileRoster(library);
-      expect(roster.party).toHaveLength(kind === "class" ? 1 : 0);
-      expect(roster.monsters).toHaveLength(kind === "enemy" ? 1 : 0);
-    }
-  });
+
+      expect(roster.party).toHaveLength(party);
+      expect(roster.monsters).toHaveLength(monsters);
+    },
+  );
 });
 
 describe("parseLibrary", () => {
@@ -112,8 +159,12 @@ describe("parseLibrary", () => {
     change: (lib: ReturnType<typeof starterLibrary>) => unknown,
   ) => JSON.stringify(change(starterLibrary()));
 
-  it("reads back an exported library", () => {
-    expect(parseLibrary(JSON.stringify(starter))).toEqual(starter);
+  it("given an exported library, when it is parsed, then it reads back unchanged", () => {
+    const text = JSON.stringify(starter);
+
+    const library = parseLibrary(text);
+
+    expect(library).toEqual(starter);
   });
 
   it.each<[string, string | null]>([
@@ -182,7 +233,9 @@ describe("parseLibrary", () => {
         return lib;
       }),
     ],
-  ])("gives null for %s", (_, text) => {
-    expect(parseLibrary(text)).toBeNull();
+  ])("given %s, when it is parsed, then there is no library", (_, text) => {
+    const library = parseLibrary(text);
+
+    expect(library).toBeNull();
   });
 });

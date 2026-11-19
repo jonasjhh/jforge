@@ -22,58 +22,77 @@ const refuse = (method: "getItem" | "setItem" | "removeItem") => {
 beforeEach(() => localStorage.clear());
 afterEach(() => refusals.splice(0).forEach((spy) => spy.mockRestore()));
 
+const renamed = () => {
+  const start = starterLibrary();
+  return upsert(start, "characters", {
+    ...start.characters[0]!,
+    name: "Renamed",
+  });
+};
+
 describe("loadLibrary", () => {
-  it("is the starter library when nothing is saved", () => {
-    expect(loadLibrary()).toEqual(starterLibrary());
+  it("given nothing saved, when the library is loaded, then it is the starter library", () => {
+    const library = loadLibrary();
+
+    expect(library).toEqual(starterLibrary());
   });
 
-  it("is the starter library when the save is not a library", () => {
+  it("given a save that is not a library, when the library is loaded, then it is the starter library", () => {
     localStorage.setItem(LIBRARY_STORAGE_KEY, "{broken");
-    expect(loadLibrary()).toEqual(starterLibrary());
+
+    const library = loadLibrary();
+
+    expect(library).toEqual(starterLibrary());
   });
 
-  it("reads back what was saved, keeping an edited character", () => {
-    const start = starterLibrary();
-    const edited = upsert(start, "characters", {
-      ...start.characters[0]!,
-      name: "Renamed",
-    });
-    saveLibrary(edited);
-    expect(loadLibrary().characters[0]!.name).toBe("Renamed");
+  it("given a saved library with an edited character, when it is loaded, then the edit is kept", () => {
+    saveLibrary(renamed());
+
+    const library = loadLibrary();
+
+    expect(library.characters[0]!.name).toBe("Renamed");
   });
 
-  it("brings back a melee hero the save lacks", () => {
+  it("given a save that lacks a melee hero, when it is loaded, then the hero is brought back", () => {
     const start = starterLibrary();
     const id = meleeHeroId("knight");
     saveLibrary({
       ...start,
       characters: start.characters.filter((c) => c.id !== id),
     });
-    expect(loadLibrary().characters.some((c) => c.id === id)).toBe(true);
+
+    const library = loadLibrary();
+
+    expect(library.characters.some((c) => c.id === id)).toBe(true);
   });
 
-  it("is the starter library when the browser refuses to read", () => {
-    saveLibrary(
-      upsert(starterLibrary(), "characters", {
-        ...starterLibrary().characters[0]!,
-        name: "Renamed",
-      }),
-    );
+  it("given a saved library and a browser that refuses to read, when it is loaded, then it is the starter library", () => {
+    saveLibrary(renamed());
     refuse("getItem");
-    expect(loadLibrary()).toEqual(starterLibrary());
+
+    const library = loadLibrary();
+
+    expect(library).toEqual(starterLibrary());
   });
 });
 
 describe("saveLibrary", () => {
-  it("saves the library and publishes its roster", () => {
-    expect(saveLibrary(starterLibrary())).toBe(true);
+  it("given the starter library, when it is saved, then the library and its roster are stored", () => {
+    const library = starterLibrary();
+
+    const ok = saveLibrary(library);
+
+    expect(ok).toBe(true);
     expect(localStorage.getItem(LIBRARY_STORAGE_KEY)).not.toBeNull();
     expect(localStorage.getItem(ROSTER_STORAGE_KEY)).not.toBeNull();
     expect(readRoster(localStorage).party.length).toBeGreaterThan(0);
   });
 
-  it("is false when the browser refuses to write", () => {
+  it("given a browser that refuses to write, when the library is saved, then saving fails", () => {
     refuse("setItem");
-    expect(saveLibrary(starterLibrary())).toBe(false);
+
+    const ok = saveLibrary(starterLibrary());
+
+    expect(ok).toBe(false);
   });
 });

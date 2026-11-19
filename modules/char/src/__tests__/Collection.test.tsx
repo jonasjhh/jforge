@@ -27,49 +27,70 @@ function show(more: { onNew?: () => string; onDelete?: () => void } = {}) {
 }
 
 describe("Collection", () => {
-  it("lists each item with its note, and names unnamed ones", () => {
+  it("given a named and an unnamed item, when the list shows, then each has its note and the unnamed one is marked", () => {
     show();
+
     const list = screen.getByRole("list", { name: "tool list" });
+
     expect(list.textContent).toContain("Axenote a");
     expect(list.textContent).toContain("(unnamed)note b");
   });
 
-  it("opens an item's editor, and closes it when picked again", () => {
+  it("given a closed item, when it is picked, then its editor opens", () => {
+    show();
+    const axe = screen.getByRole("button", { name: /Axe/ });
+
+    fireEvent.click(axe);
+
+    expect(axe.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByText("Editing a")).toBeTruthy();
+  });
+
+  it("given an open item, when it is picked again, then its editor closes", () => {
     show();
     const axe = screen.getByRole("button", { name: /Axe/ });
     fireEvent.click(axe);
-    expect(axe.getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByText("Editing a")).toBeTruthy();
+
     fireEvent.click(axe);
+
     expect(screen.queryByText("Editing a")).toBeNull();
   });
 
-  it("deletes the open item and closes its editor", () => {
+  it("given an open item, when it is deleted, then it is removed and its editor closes", () => {
     const { onDelete } = show();
     fireEvent.click(screen.getByRole("button", { name: /unnamed/ }));
+
     fireEvent.click(screen.getByRole("button", { name: "Delete tool" }));
+
     expect(onDelete).toHaveBeenCalledWith("b");
     expect(screen.queryByRole("region", { name: "Edit tool" })).toBeNull();
   });
 
-  it("opens a new item's editor, and can't add without onNew", () => {
+  it("given a way to add items, when New is pressed, then the new item's editor opens", () => {
     show({ onNew: () => "a" });
+
     fireEvent.click(screen.getByRole("button", { name: "New tool" }));
+
     expect(screen.getByText("Editing a")).toBeTruthy();
-    cleanup();
-    show();
-    expect(
-      (screen.getByRole("button", { name: "New tool" }) as HTMLButtonElement)
-        .disabled,
-    ).toBe(true);
   });
 
-  it("says when there is nothing yet", () => {
+  it("given no way to add items, when the list shows, then New is disabled", () => {
+    show();
+
+    const add = screen.getByRole("button", { name: "New tool" });
+
+    expect((add as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("given no items, when the list shows, then it says there is nothing yet", () => {
     render(
       <Collection noun="tool" items={[]} note={() => ""} onDelete={vi.fn()}>
         {() => null}
       </Collection>,
     );
-    expect(screen.getByText("Nothing here yet.")).toBeTruthy();
+
+    const empty = screen.getByText("Nothing here yet.");
+
+    expect(empty).toBeTruthy();
   });
 });

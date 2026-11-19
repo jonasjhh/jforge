@@ -24,15 +24,21 @@ import { designedLibrary } from "./designed";
 
 const { fighter, healer, mage, playerTypes } = content;
 
-describe("classFromMelee", () => {
-  it("has melee's stats", () => {
-    for (const def of playerTypes) {
-      expect(classFromMelee(def).baseStats).toEqual(def.stats);
-    }
-  });
+const playerIds = playerTypes.map((def) => [def.id, def] as const);
 
-  it("keeps the weapon, row, icon and skills", () => {
+describe("classFromMelee", () => {
+  it.each(playerIds)(
+    "given melee's %s, when it is made a class, then it has melee's stats",
+    (_, def) => {
+      const type = classFromMelee(def);
+
+      expect(type.baseStats).toEqual(def.stats);
+    },
+  );
+
+  it("given melee's healer, when it is made a class, then it keeps the weapon, row, icon and skills", () => {
     const type = classFromMelee(healer);
+
     expect(type).toMatchObject({
       id: "melee-healer",
       name: "Healer",
@@ -46,12 +52,18 @@ describe("classFromMelee", () => {
 });
 
 describe("withMeleeClasses", () => {
-  it("adds every melee class and the skills they learn", () => {
+  it("given an empty library, when melee's classes are added, then each class and creature is there", () => {
     const library = withMeleeClasses(emptyLibrary());
+
     expect(library.archetypes.map((a) => a.id)).toEqual([
       ...playerTypes.map((def) => meleeClassId(def.id)),
       ...MELEE_CREATURES.map((def) => meleeCreatureId(def.id)),
     ]);
+  });
+
+  it("given an empty library, when melee's classes are added, then each skill they learn is there once", () => {
+    const library = withMeleeClasses(emptyLibrary());
+
     const skills = new Set(library.skills.map((s) => s.id));
     expect(skills.size).toBe(library.skills.length);
     for (const type of meleeClasses()) {
@@ -59,45 +71,66 @@ describe("withMeleeClasses", () => {
     }
   });
 
-  it("keeps what the library already has, edited or not", () => {
+  it("given a library with a renamed melee class, when melee's classes are added, then the renamed one is kept", () => {
     const renamed = { ...classFromMelee(fighter), name: "Sellsword" };
+
     const library = withMeleeClasses({
       ...emptyLibrary(),
       archetypes: [renamed],
     });
+
     expect(library.archetypes[0]).toBe(renamed);
     expect(library.archetypes).toHaveLength(
       playerTypes.length + MELEE_CREATURES.length,
     );
-    expect(withMeleeClasses(library)).toBe(library);
   });
 
-  it("leaves a designed class's skills alone", () => {
+  it("given a library that has melee's classes, when they are added again, then it is unchanged", () => {
+    const library = withMeleeClasses(emptyLibrary());
+
+    const again = withMeleeClasses(library);
+
+    expect(again).toBe(library);
+  });
+
+  it("given a designed class with no skills, when melee's classes are added, then its skills are left alone", () => {
     const designed = {
       ...classFromMelee(fighter),
       id: "sellsword",
       skills: [],
     };
+
     const library = withMeleeClasses({
       ...emptyLibrary(),
       archetypes: [designed],
     });
+
     expect(library.archetypes.find((a) => a.id === "sellsword")).toBe(designed);
   });
 
-  it("is part of the starter library, which still saves and loads", () => {
+  it("given the starter library, when melee's classes are added, then it already has them", () => {
     const starter = starterLibrary();
-    expect(withMeleeClasses(starter)).toBe(starter);
-    expect(parseLibrary(JSON.stringify(starter))).toEqual(starter);
+
+    const library = withMeleeClasses(starter);
+
+    expect(library).toBe(starter);
   });
 
-  it("makes characters of every class that melee can field", () => {
-    const library = starterLibrary();
-    for (const type of meleeClasses()) {
+  it("given the starter library, when it is saved and parsed, then it reads back unchanged", () => {
+    const starter = starterLibrary();
+
+    const back = parseLibrary(JSON.stringify(starter));
+
+    expect(back).toEqual(starter);
+  });
+
+  it.each(meleeClasses().map((type) => [type.name, type] as const))(
+    "given a character of melee's %s class, when it is compiled and fielded, then melee accepts it",
+    (_, type) => {
+      const library = starterLibrary();
+
       const def = toCombatantDef(library, blankCharacter("x", type))!;
-      expect(isCombatantDef(def)).toBe(true);
-      expect(def.skills).toHaveLength(type.skills.length);
-      expect(() =>
+      const start = () =>
         createBattle(
           {
             placements: [
@@ -106,15 +139,19 @@ describe("withMeleeClasses", () => {
             ],
           },
           1,
-        ),
-      ).not.toThrow();
-    }
-  });
+        );
+
+      expect(isCombatantDef(def)).toBe(true);
+      expect(def.skills).toHaveLength(type.skills.length);
+      expect(start).not.toThrow();
+    },
+  );
 });
 
 describe("basic gear", () => {
-  it("is each class's own weapon, adding a little to its best stat", () => {
+  it("given the fighter, when its basic weapon is made, then it is the fighter's own weapon adding to attack", () => {
     const sword = basicWeapon(fighter);
+
     expect(sword).toMatchObject({
       id: meleeWeaponId("fighter"),
       name: `Fighter's ${fighter.weapon.name}`,
@@ -127,16 +164,22 @@ describe("basic gear", () => {
       depth: fighter.weapon.depth,
       damageType: fighter.weapon.damageType,
     });
-    expect(basicWeapon(mage).bonuses[0]!.stat).toBe("magic");
   });
 
-  it("has nothing that makes a stat worse", () => {
-    for (const gear of basicGear()) {
-      expect(gear.bonuses.every((b) => b.op === "add" && b.value > 0)).toBe(
-        true,
-      );
-    }
+  it("given the mage, when its basic weapon is made, then it adds to magic, its best stat", () => {
+    const staff = basicWeapon(mage);
+
+    expect(staff.bonuses[0]!.stat).toBe("magic");
   });
+
+  it.each(basicGear().map((gear) => [gear.name, gear] as const))(
+    "given the basic %s, when its bonuses are looked at, then none makes a stat worse",
+    (_, gear) => {
+      const bonuses = gear.bonuses;
+
+      expect(bonuses.every((b) => b.op === "add" && b.value > 0)).toBe(true);
+    },
+  );
 });
 
 describe("starterKit", () => {
@@ -144,84 +187,111 @@ describe("starterKit", () => {
   const type = (id: string) =>
     library.archetypes.find((a) => a.id === meleeClassId(id))!;
 
-  it("gives a melee class its weapon and armor for its role", () => {
-    const fighterKit = starterKit(
-      library,
-      blankCharacter("a", type("fighter")),
-    );
-    expect(fighterKit.gear).toEqual({
+  it("given a bare fighter, when it gets its starter kit, then it wears its own weapon and a jerkin", () => {
+    const bare = blankCharacter("a", type("fighter"));
+
+    const kitted = starterKit(library, bare);
+
+    expect(kitted.gear).toEqual({
       weapon: meleeWeaponId("fighter"),
       armor: "melee-gear-jerkin",
     });
-    expect(
-      starterKit(library, blankCharacter("b", type("mage"))).gear.armor,
-    ).toBe("melee-gear-robe");
   });
 
-  it("keeps what is worn and gives only gear the library has", () => {
+  it("given a bare mage, when it gets its starter kit, then it wears a robe", () => {
+    const bare = blankCharacter("b", type("mage"));
+
+    const kitted = starterKit(library, bare);
+
+    expect(kitted.gear.armor).toBe("melee-gear-robe");
+  });
+
+  it("given a fighter already wearing armor, when it gets its starter kit, then the armor is kept", () => {
     const worn = {
       ...blankCharacter("a", type("fighter")),
       gear: { armor: "x" },
     };
-    expect(starterKit(library, worn).gear.armor).toBe("x");
-    const bare = { ...library, gear: [] };
-    expect(starterKit(bare, blankCharacter("b", type("fighter"))).gear).toEqual(
-      {},
-    );
+
+    const kitted = starterKit(library, worn);
+
+    expect(kitted.gear.armor).toBe("x");
   });
 
-  it("gives a designed class armor only", () => {
+  it("given a library with no gear, when a fighter gets its starter kit, then it wears nothing", () => {
+    const bare = { ...library, gear: [] };
+
+    const kitted = starterKit(bare, blankCharacter("b", type("fighter")));
+
+    expect(kitted.gear).toEqual({});
+  });
+
+  it("given a designed class, when one of its characters gets a starter kit, then it gets armor only", () => {
     const starter = designedLibrary();
     const sage = starter.archetypes.find((a) => a.id === "type-scholar")!;
-    expect(starterKit(starter, blankCharacter("c", sage)).gear).toEqual({
-      armor: "melee-gear-robe",
-    });
+
+    const kitted = starterKit(starter, blankCharacter("c", sage));
+
+    expect(kitted.gear).toEqual({ armor: "melee-gear-robe" });
   });
 });
 
 describe("melee heroes", () => {
-  it("are one per class, in basic gear, and come back if missing", () => {
+  it("given an empty library, when melee's classes are added, then there is one hero per class", () => {
     const library = withMeleeClasses(emptyLibrary());
+
     expect(library.characters.map((c) => c.name)).toEqual(
       playerTypes.flatMap((def) => MELEE_HEROES[def.id] ?? []),
     );
+  });
+
+  it("given an empty library, when melee's classes are added, then each hero wears a weapon and armor, and the basic armor is added", () => {
+    const library = withMeleeClasses(emptyLibrary());
+
     for (const hero of library.characters) {
       expect(hero.gear.weapon).toBeDefined();
       expect(hero.gear.armor).toBeDefined();
     }
     expect(library.gear.slice(-BASIC_ARMOR.length)).toEqual(BASIC_ARMOR);
+  });
+
+  it("given a hero whose gear was taken off, when melee's classes are added, then the edit is kept", () => {
+    const library = withMeleeClasses(emptyLibrary());
     const edited = {
       ...library,
       characters: library.characters.map((c) =>
         c.id === meleeHeroId("fighter") ? { ...c, gear: {} } : c,
       ),
     };
-    expect(withMeleeClasses(edited)).toBe(edited);
+
+    const again = withMeleeClasses(edited);
+
+    expect(again).toBe(edited);
   });
 });
 
 describe("melee proficiencies", () => {
-  it("cover every class, its own weapon and an armor its kit can give", () => {
-    const library = withMeleeClasses(emptyLibrary());
-    for (const def of playerTypes) {
-      const type = library.archetypes.find(
-        (a) => a.id === meleeClassId(def.id),
-      )!;
-      expect(type.proficiencies).toEqual(MELEE_PROFICIENCIES[def.id]);
-      expect(canUse(type, basicWeapon(def))).toBe(true);
-      const hero = library.characters.find(
-        (c) => c.id === meleeHeroId(def.id),
-      )!;
-      expect(hero.gear.weapon).toBe(meleeWeaponId(def.id));
-      expect(hero.gear.armor).toBeDefined();
-    }
-  });
+  it.each(playerIds)(
+    "given melee's %s, when its class and hero are added, then it can use its own weapon and wears it with armor",
+    (id, def) => {
+      const library = withMeleeClasses(emptyLibrary());
 
-  it("gives an archer, who can't wear robes, the jerkin", () => {
+      const type = library.archetypes.find((a) => a.id === meleeClassId(id))!;
+      const hero = library.characters.find((c) => c.id === meleeHeroId(id))!;
+
+      expect(type.proficiencies).toEqual(MELEE_PROFICIENCIES[id]);
+      expect(canUse(type, basicWeapon(def))).toBe(true);
+      expect(hero.gear.weapon).toBe(meleeWeaponId(id));
+      expect(hero.gear.armor).toBeDefined();
+    },
+  );
+
+  it("given an archer, who can't wear robes, when its hero is added, then it wears the jerkin", () => {
     const library = withMeleeClasses(emptyLibrary());
+
     const archer = library.characters.find(
       (c) => c.id === meleeHeroId("archer"),
     )!;
+
     expect(archer.gear.armor).toBe("melee-gear-jerkin");
   });
 });

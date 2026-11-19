@@ -27,15 +27,23 @@ const sage = library.archetypes.find((a) => a.id === "type-scholar")!;
 const orphan: Character = { ...aldric, id: "lost", archetypeId: "gone" };
 
 describe("archetypeOf", () => {
-  it("finds a character's type, or nothing", () => {
-    expect(archetypeOf(library, aldric)).toBe(knight);
-    expect(archetypeOf(library, orphan)).toBeUndefined();
+  it("given a character of a known type, when its type is looked up, then that type is found", () => {
+    const found = archetypeOf(library, aldric);
+
+    expect(found).toBe(knight);
+  });
+
+  it("given a character whose type is gone, when its type is looked up, then nothing is found", () => {
+    const found = archetypeOf(library, orphan);
+
+    expect(found).toBeUndefined();
   });
 });
 
 describe("characterStats", () => {
-  it("puts gear on top of the type's own stats", () => {
+  it("given a squire with a sword and chain mail, when its stats are worked out, then the gear's bonuses go on top of the type's stats", () => {
     const stats = characterStats(library, aldric)!;
+
     // Squire: 16 attack; Iron Sword +6.
     expect(stats.base.attack).toBe(16);
     expect(stats.total.attack).toBe(22);
@@ -45,52 +53,66 @@ describe("characterStats", () => {
     expect(stats.total.speed).toBe(Math.round(stats.base.speed * 0.9));
   });
 
-  it("equals the type's stats with no gear on", () => {
-    const stats = characterStats(library, { ...aldric, gear: {} })!;
+  it("given a character with no gear on, when its stats are worked out, then they equal the type's stats", () => {
+    const unarmed = { ...aldric, gear: {} };
+
+    const stats = characterStats(library, unarmed)!;
+
     expect(stats.total).toEqual(knight.baseStats);
   });
 
-  it("puts gear on top of the stats it is given instead", () => {
+  it("given stats to start from, when a character's stats are worked out, then the gear goes on top of those instead", () => {
     const base = { ...knight.baseStats, attack: 30 };
+
     const stats = characterStats(library, aldric, base)!;
+
     expect(stats.base).toEqual(base);
     expect(stats.total.attack).toBe(36);
   });
 
-  it("is null when the type is gone", () => {
-    expect(characterStats(library, orphan)).toBeNull();
+  it("given a character whose type is gone, when its stats are worked out, then there are none", () => {
+    const stats = characterStats(library, orphan);
+
+    expect(stats).toBeNull();
   });
 });
 
 describe("archetypeSkills", () => {
-  it("gives every skill the archetype has, as listed", () => {
-    expect(archetypeSkills(library, sage).map((s) => s.name)).toEqual([
-      "Firebolt",
-      "Heal",
-      "Fireball",
-    ]);
+  it("given an archetype with skills, when its skills are listed, then each one comes in the order listed", () => {
+    const skills = archetypeSkills(library, sage);
+
+    expect(skills.map((s) => s.name)).toEqual(["Firebolt", "Heal", "Fireball"]);
   });
 
-  it("skips skills that no longer exist", () => {
+  it("given an archetype listing a skill that no longer exists, when its skills are listed, then that skill is skipped", () => {
     const type = { ...sage, skills: ["gone"] };
-    expect(archetypeSkills(library, type)).toEqual([]);
+
+    const skills = archetypeSkills(library, type);
+
+    expect(skills).toEqual([]);
   });
 });
 
 describe("characterWeapon", () => {
-  it("is the equipped weapon", () => {
-    expect(characterWeapon(library, knight, aldric).name).toBe("Iron Sword");
+  it("given a character with a weapon equipped, when its weapon is found, then it is that weapon", () => {
+    const weapon = characterWeapon(library, knight, aldric);
+
+    expect(weapon.name).toBe("Iron Sword");
   });
 
-  it("falls back to the type's own attack", () => {
+  it("given a character with no weapon, when its weapon is found, then it is the type's own attack", () => {
     const unarmed = { ...aldric, gear: {} };
-    expect(characterWeapon(library, knight, unarmed)).toBe(knight.weapon);
+
+    const weapon = characterWeapon(library, knight, unarmed);
+
+    expect(weapon).toBe(knight.weapon);
   });
 });
 
 describe("toCombatantDef", () => {
-  it("builds a combatant melee accepts", () => {
+  it("given a party character, when it is compiled, then it is a combatant melee accepts, with no threat", () => {
     const def = toCombatantDef(library, mira)!;
+
     expect(isCombatantDef(def)).toBe(true);
     expect(def).toMatchObject({
       id: "char-unit-2",
@@ -107,31 +129,37 @@ describe("toCombatantDef", () => {
     expect(def.threat).toBeUndefined();
   });
 
-  it("gives enemies a threat estimated from what they fight with", () => {
+  it("given an enemy character, when it is compiled, then its threat is estimated from what it fights with", () => {
     const def = toCombatantDef(library, goblin)!;
+
     const { threat, ...rest } = def;
     expect(threat).toBe(estimateThreat(rest));
   });
 
-  it("makes an enemy with stronger stats a bigger threat", () => {
+  it("given an enemy with doubled stats, when it is compiled, then it is a bigger threat than the plain one", () => {
     const type = archetypeOf(library, goblin)!;
     const doubled = Object.fromEntries(
       Object.entries(type.baseStats).map(([stat, v]) => [stat, v * 2]),
     ) as typeof type.baseStats;
     const low = toCombatantDef(library, goblin)!;
+
     const high = toCombatantDef(library, goblin, doubled)!;
+
     expect(high.stats.attack).toBe(type.baseStats.attack * 2);
     expect(high.threat!).toBeGreaterThan(low.threat!);
   });
 
-  it("is null when the type is gone", () => {
-    expect(toCombatantDef(library, orphan)).toBeNull();
+  it("given a character whose type is gone, when it is compiled, then there is no combatant", () => {
+    const def = toCombatantDef(library, orphan);
+
+    expect(def).toBeNull();
   });
 });
 
 describe("compileRoster", () => {
-  it("sorts characters into the party and the monster pool", () => {
+  it("given heroes and monsters, when the roster is compiled, then they are sorted into the party and the monster pool", () => {
     const roster = compileRoster(library);
+
     expect(roster.party.map((d) => d.name)).toEqual([
       "Bram",
       "Ilse",
@@ -140,14 +168,16 @@ describe("compileRoster", () => {
     expect(roster.monsters.map((d) => d.name)).toEqual(["Goblin"]);
   });
 
-  it("leaves out characters whose type is gone", () => {
+  it("given a character whose type is gone, when the roster is compiled, then it is left out", () => {
     const roster = compileRoster({ ...library, characters: [orphan] });
+
     expect(roster).toEqual({ party: [], monsters: [] });
   });
 
-  it("produces a roster a battle can start from", () => {
+  it("given the compiled roster, when a battle is started from it, then it starts", () => {
     const { party, monsters } = compileRoster(library);
-    expect(() =>
+
+    const start = () =>
       createBattle(
         {
           placements: [
@@ -160,7 +190,8 @@ describe("compileRoster", () => {
           ],
         },
         1,
-      ),
-    ).not.toThrow();
+      );
+
+    expect(start).not.toThrow();
   });
 });

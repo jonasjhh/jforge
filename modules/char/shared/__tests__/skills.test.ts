@@ -21,146 +21,181 @@ const withEffect = (
 });
 
 describe("defaultEffect", () => {
-  it.each(EDITABLE_EFFECTS)("makes an editable, problem-free %s", (type) => {
-    const effect = defaultEffect(type, starterLibrary());
-    expect(effect.type).toBe(type);
-    expect(isEditable(effect)).toBe(true);
-    expect(
-      skillProblems(withEffect(effect, { target: defaultTarget(effect) })),
-    ).toEqual([]);
-  });
+  it.each(EDITABLE_EFFECTS)(
+    "given the %s kind, when its default effect is made, then it is editable and problem-free",
+    (type) => {
+      const effect = defaultEffect(type, starterLibrary());
+
+      const skill = withEffect(effect, { target: defaultTarget(effect) });
+
+      expect(effect.type).toBe(type);
+      expect(isEditable(effect)).toBe(true);
+      expect(skillProblems(skill)).toEqual([]);
+    },
+  );
 });
 
 describe("isEditable", () => {
-  it("is true for every melee effect, false for unknown data", () => {
-    expect(isEditable(content.cure.effect)).toBe(true);
-    expect(isEditable(content.summonImp.effect)).toBe(true);
-    expect(isEditable({ type: "nope" } as never)).toBe(false);
-  });
+  it.each([
+    ["melee's cure", content.cure.effect, true],
+    ["melee's summon imp", content.summonImp.effect, true],
+    ["an unknown kind", { type: "nope" } as never, false],
+  ] as const)(
+    "given %s, when it is checked, then editable is %s",
+    (_, effect, editable) => {
+      const result = isEditable(effect);
+
+      expect(result).toBe(editable);
+    },
+  );
 });
 
 describe("defaultTarget", () => {
-  it("aims harm at enemies and help at allies", () => {
-    expect(defaultTarget(defaultEffect("damage"))).toBe("enemy");
-    expect(defaultTarget(defaultEffect("strike"))).toBe("enemy");
-    expect(defaultTarget(defaultEffect("heal"))).toBe("ally");
-    expect(defaultTarget(content.haste.effect)).toBe("ally");
-    expect(defaultTarget(content.slow.effect)).toBe("enemy");
-  });
+  it.each([
+    ["damage", defaultEffect("damage"), "enemy"],
+    ["a strike", defaultEffect("strike"), "enemy"],
+    ["a heal", defaultEffect("heal"), "ally"],
+    ["haste", content.haste.effect, "ally"],
+    ["slow", content.slow.effect, "enemy"],
+  ] as const)(
+    "given %s, when its default target is chosen, then it aims at an %s",
+    (_, effect, target) => {
+      const result = defaultTarget(effect);
+
+      expect(result).toBe(target);
+    },
+  );
 });
 
 describe("effectSummary", () => {
-  it("says what each kind of effect does", () => {
-    expect(effectSummary(content.fireball)).toBe("fire damage ×1.2, plus");
-    expect(effectSummary(withEffect({ type: "strike", power: 1.5 }))).toBe(
+  const add = (value: number) =>
+    withEffect({
+      type: "modify",
+      modifier: {
+        name: "x",
+        stat: "defense",
+        op: "add",
+        value,
+        duration: 50,
+        harmful: value < 0,
+      },
+    });
+  const strike = (more: object) =>
+    withEffect({ type: "strike", power: 1, ...more });
+
+  it.each<[string, Skill, string]>([
+    ["melee's fireball", content.fireball, "fire damage ×1.2, plus"],
+    [
+      "a strike",
+      withEffect({ type: "strike", power: 1.5 }),
       "weapon strike ×1.5",
-    );
-    expect(effectSummary(withEffect({ type: "heal", power: 2 }))).toBe(
-      "heals ×2 magic",
-    );
-    expect(effectSummary(withEffect(defaultEffect("modify")))).toBe(
-      "attack ×1.5 for 100",
-    );
-    expect(effectSummary(content.cure)).toBe(
-      "removes harmful statuses and debuffs",
-    );
-  });
+    ],
+    ["a heal", withEffect({ type: "heal", power: 2 }), "heals ×2 magic"],
+    ["a buff", withEffect(defaultEffect("modify")), "attack ×1.5 for 100"],
+    ["melee's cure", content.cure, "removes harmful statuses and debuffs"],
+    ["a gain of 5", add(5), "defense +5 for 50"],
+    ["a loss of 5", add(-5), "defense -5 for 50"],
+    ["a pull", strike({ push: -1 }), "weapon strike ×1, pulls 1"],
+    [
+      "a finisher under half HP",
+      strike({ finisher: 3, finishBelow: 0.5 }),
+      "weapon strike ×1, ×3 below 50% HP",
+    ],
+    [
+      "a heal of max HP",
+      withEffect({ type: "heal", power: 1, of: "maxHp" }),
+      "heals ×1 max HP",
+    ],
+    [
+      "a heave of one row",
+      withEffect({ type: "heave", rows: 1 }),
+      "heaves back 1 row",
+    ],
+    [
+      "a heave of two rows",
+      withEffect({ type: "heave", rows: 2 }),
+      "heaves back 2 rows",
+    ],
+    [
+      "a gauge set",
+      withEffect({ type: "gauge", to: 0.5 }),
+      "sets the turn gauge to 50%",
+    ],
+    [
+      "an MP restore",
+      withEffect({ type: "restoreMp", amount: 3 }),
+      "restores 3 MP",
+    ],
+  ])(
+    "given %s, when it is summed up, then it reads as said",
+    (_, skill, text) => {
+      const summary = effectSummary(skill);
 
-  it("shows added amounts with a sign", () => {
-    const add = (value: number) =>
-      effectSummary(
-        withEffect({
-          type: "modify",
-          modifier: {
-            name: "x",
-            stat: "defense",
-            op: "add",
-            value,
-            duration: 50,
-            harmful: value < 0,
-          },
-        }),
-      );
-    expect(add(5)).toBe("defense +5 for 50");
-    expect(add(-5)).toBe("defense -5 for 50");
-  });
+      expect(summary).toBe(text);
+    },
+  );
 
-  it("lists a strike's options in order", () => {
-    const strike = (more: object) =>
-      effectSummary(withEffect({ type: "strike", power: 1, ...more }));
-    expect(
-      strike({
-        advance: true,
-        push: 2,
-        pin: true,
-        ignite: true,
-        bleed: true,
-        weaken: 0.5,
-        stagger: 0.25,
-        armorPierce: 0.4,
-        finisher: 2,
-        mend: 0.3,
-      }),
-    ).toBe(
+  it("given a strike with every option, when it is summed up, then the options come in order", () => {
+    const skill = strike({
+      advance: true,
+      push: 2,
+      pin: true,
+      ignite: true,
+      bleed: true,
+      weaken: 0.5,
+      stagger: 0.25,
+      armorPierce: 0.4,
+      finisher: 2,
+      mend: 0.3,
+    });
+
+    const summary = effectSummary(skill);
+
+    expect(summary).toBe(
       "charging weapon strike ×1, pushes 2, pins, sets burning, bleeds, " +
         "weakens to ×0.5, staggers 25%, ignores 40% defense, " +
         "×2 below 30% HP, heals the most-hurt ally 30% of the damage",
     );
-    expect(strike({ push: -1 })).toBe("weapon strike ×1, pulls 1");
-    expect(strike({ finisher: 3, finishBelow: 0.5 })).toBe(
-      "weapon strike ×1, ×3 below 50% HP",
-    );
   });
 
-  it("lists a damage spell's options, then its area", () => {
-    expect(
-      effectSummary(
-        withEffect(
-          {
-            type: "damage",
-            kind: "magical",
-            element: "cold",
-            power: 1,
-            split: 2,
-            vsEmpowered: 1.5,
-            drain: 0.5,
-            burnMp: 4,
-            chill: true,
-          },
-          { area: "row" },
-        ),
-      ),
-    ).toBe(
+  it("given a row spell with every damage option, when it is summed up, then the options come before the area", () => {
+    const skill = withEffect(
+      {
+        type: "damage",
+        kind: "magical",
+        element: "cold",
+        power: 1,
+        split: 2,
+        vsEmpowered: 1.5,
+        drain: 0.5,
+        burnMp: 4,
+        chill: true,
+      },
+      { area: "row" },
+    );
+
+    const summary = effectSummary(skill);
+
+    expect(summary).toBe(
       "cold damage ×1 each, ×2 shared (×1.5 if empowered), drains 50%, " +
         "burns 4 MP, chills, row",
-    );
-  });
-
-  it("says what heals, heaves and summons do", () => {
-    expect(
-      effectSummary(withEffect({ type: "heal", power: 1, of: "maxHp" })),
-    ).toBe("heals ×1 max HP");
-    expect(effectSummary(withEffect({ type: "heave", rows: 1 }))).toBe(
-      "heaves back 1 row",
-    );
-    expect(effectSummary(withEffect({ type: "heave", rows: 2 }))).toBe(
-      "heaves back 2 rows",
-    );
-    expect(effectSummary(withEffect({ type: "gauge", to: 0.5 }))).toBe(
-      "sets the turn gauge to 50%",
-    );
-    expect(effectSummary(withEffect({ type: "restoreMp", amount: 3 }))).toBe(
-      "restores 3 MP",
     );
   });
 });
 
 describe("skillProblems", () => {
-  it("finds nothing wrong with melee's own skills of editable kinds", () => {
-    for (const skill of [content.fireball, content.heal, content.cleave]) {
-      expect(skillProblems(skill)).toEqual([]);
-    }
-  });
+  it.each(
+    [content.fireball, content.heal, content.cleave].map(
+      (s) => [s.name, s] as const,
+    ),
+  )(
+    "given melee's %s, when it is checked, then nothing is wrong",
+    (_, skill) => {
+      const problems = skillProblems(skill);
+
+      expect(problems).toEqual([]);
+    },
+  );
 
   it.each<[string, Skill]>([
     [
@@ -190,9 +225,14 @@ describe("skillProblems", () => {
         },
       }),
     ],
-  ])("reports: %s", (problem, skill) => {
-    expect(skillProblems(skill)).toContain(problem);
-  });
+  ])(
+    "given a skill that breaks a rule, when it is checked, then it reports: %s",
+    (problem, skill) => {
+      const problems = skillProblems(skill);
+
+      expect(problems).toContain(problem);
+    },
+  );
 });
 
 describe("skillProblems at the edges", () => {
@@ -205,75 +245,115 @@ describe("skillProblems at the edges", () => {
       withEffect({ ...defaultEffect(type), ...change } as Skill["effect"]),
     );
   const GAUGE = "The gauge must be set above 0 and at most full.";
+  const HEAVE = "Heave at least one row.";
+  const MP = "Restore at least 1 MP.";
 
-  it("takes a gauge set above 0 up to full", () => {
-    expect(problemsOf("gauge", { to: 0 })).toContain(GAUGE);
-    expect(problemsOf("gauge", { to: 0.01 })).not.toContain(GAUGE);
-    expect(problemsOf("gauge", { to: 1 })).not.toContain(GAUGE);
-    expect(problemsOf("gauge", { to: 1.01 })).toContain(GAUGE);
+  it.each([
+    ["gauge", { to: 0 }, GAUGE, true],
+    ["gauge", { to: 0.01 }, GAUGE, false],
+    ["gauge", { to: 1 }, GAUGE, false],
+    ["gauge", { to: 1.01 }, GAUGE, true],
+    ["heave", { rows: 0 }, HEAVE, true],
+    ["heave", { rows: 1 }, HEAVE, false],
+    ["restoreMp", { amount: 0 }, MP, true],
+    ["restoreMp", { amount: 1 }, MP, false],
+  ] as const)(
+    "given a %s set to %o, when it is checked, then '%s' is reported: %s",
+    (type, change, problem, reported) => {
+      const problems = problemsOf(type, change);
+
+      expect(problems.includes(problem)).toBe(reported);
+    },
+  );
+
+  const heal = (power: number) => withEffect({ type: "heal", power });
+
+  it.each<[string, Skill]>([
+    ["a heal of power just above 0", heal(0.01)],
+    ["a heal costing no MP or HP", { ...heal(1), mpCost: 0, hpCost: 0 }],
+  ])("given %s, when it is checked, then nothing is wrong", (_, skill) => {
+    const problems = skillProblems(skill);
+
+    expect(problems).toEqual([]);
   });
 
-  it("takes a heave of one row or more", () => {
-    const HEAVE = "Heave at least one row.";
-    expect(problemsOf("heave", { rows: 0 })).toContain(HEAVE);
-    expect(problemsOf("heave", { rows: 1 })).not.toContain(HEAVE);
+  it("given a negative HP cost, when it is checked, then it is reported", () => {
+    const skill = { ...heal(1), hpCost: -1 };
+
+    const problems = skillProblems(skill);
+
+    expect(problems).toContain("HP cost can't be negative.");
   });
 
-  it("takes MP restored of 1 or more", () => {
-    const MP = "Restore at least 1 MP.";
-    expect(problemsOf("restoreMp", { amount: 0 })).toContain(MP);
-    expect(problemsOf("restoreMp", { amount: 1 })).not.toContain(MP);
-  });
+  const DURATION = "A buff or debuff needs a duration.";
+  const lasting = (type: "modify" | "sacrifice", duration: number) => {
+    const effect = defaultEffect(type) as Extract<
+      Skill["effect"],
+      { type: "modify" | "sacrifice" }
+    >;
+    return withEffect({
+      ...effect,
+      modifier: { ...effect.modifier, duration },
+    });
+  };
 
-  it("takes power above 0 and costs of 0", () => {
-    const heal = (power: number) => withEffect({ type: "heal", power });
-    expect(skillProblems(heal(0.01))).toEqual([]);
-    expect(skillProblems({ ...heal(1), mpCost: 0, hpCost: 0 })).toEqual([]);
-    expect(skillProblems({ ...heal(1), hpCost: -1 })).toContain(
-      "HP cost can't be negative.",
-    );
-  });
+  it.each([
+    ["modify", 0, true],
+    ["modify", 1, false],
+    ["sacrifice", 0, true],
+    ["sacrifice", 1, false],
+  ] as const)(
+    "given a %s lasting %d, when it is checked, then a missing duration is reported: %s",
+    (type, duration, reported) => {
+      const skill = lasting(type, duration);
 
-  it("takes a buff or debuff lasting 1 or more, for sacrifices too", () => {
-    const DURATION = "A buff or debuff needs a duration.";
-    for (const type of ["modify", "sacrifice"] as const) {
-      const effect = defaultEffect(type) as Extract<
-        Skill["effect"],
-        { type: "modify" | "sacrifice" }
-      >;
-      const lasting = (duration: number) =>
-        skillProblems(
-          withEffect({
-            ...effect,
-            modifier: { ...effect.modifier, duration },
-          }),
-        );
-      expect(lasting(0)).toContain(DURATION);
-      expect(lasting(1)).not.toContain(DURATION);
-    }
-  });
+      const problems = skillProblems(skill);
 
-  it("takes a named status with a duration", () => {
+      expect(problems.includes(DURATION)).toBe(reported);
+    },
+  );
+
+  const status = (change: object) => {
     const effect = defaultEffect("status") as Extract<
       Skill["effect"],
       { type: "status" }
     >;
-    const problems = (status: Partial<typeof effect.status>) =>
-      skillProblems(
-        withEffect({ ...effect, status: { ...effect.status, ...status } }),
-      );
-    const DURATION = "A status needs a duration.";
-    expect(problems({})).toEqual([]);
-    expect(problems({ name: "  " })).toContain("Name the status.");
-    expect(problems({ interval: 0 })).toContain(DURATION);
-    expect(problems({ ticks: 0 })).toContain(DURATION);
-    expect(problems({ ticks: 1 })).not.toContain(DURATION);
+    return withEffect({ ...effect, status: { ...effect.status, ...change } });
+  };
+
+  it("given a default status, when it is checked, then nothing is wrong", () => {
+    const skill = status({});
+
+    const problems = skillProblems(skill);
+
+    expect(problems).toEqual([]);
   });
 
-  it("reports nothing but the problem it found", () => {
-    expect(problemsOf("heave", { rows: 0 })).toEqual([
-      "Heave at least one row.",
-    ]);
-    expect(problemsOf("gauge", { to: 0 })).toEqual([GAUGE]);
-  });
+  it.each([
+    ["a blank name", { name: "  " }, "Name the status.", true],
+    ["an interval of 0", { interval: 0 }, "A status needs a duration.", true],
+    ["no ticks", { ticks: 0 }, "A status needs a duration.", true],
+    ["one tick", { ticks: 1 }, "A status needs a duration.", false],
+  ] as const)(
+    "given a status with %s, when it is checked, then '%s' is reported: %s",
+    (_, change, problem, reported) => {
+      const skill = status(change);
+
+      const problems = skillProblems(skill);
+
+      expect(problems.includes(problem)).toBe(reported);
+    },
+  );
+
+  it.each([
+    ["heave", { rows: 0 }, [HEAVE]],
+    ["gauge", { to: 0 }, [GAUGE]],
+  ] as const)(
+    "given a %s with one problem, when it is checked, then only that problem is reported",
+    (type, change, expected) => {
+      const problems = problemsOf(type, change);
+
+      expect(problems).toEqual(expected);
+    },
+  );
 });

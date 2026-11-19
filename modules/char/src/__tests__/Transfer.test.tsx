@@ -20,24 +20,28 @@ const upload = (name: string, text: string) => {
 };
 
 describe("Transfer", () => {
-  it("exports the library as a JSON file", () => {
+  it("given a library, when the export link shows, then it downloads the library as JSON", () => {
     const library = starterLibrary();
-    render(<Transfer library={library} onImport={() => {}} />);
-    const link = screen.getByRole("link", { name: "Export" });
-    expect(link.getAttribute("download")).toBe("jforge-char.json");
-    const href = link.getAttribute("href")!;
     const prefix = "data:application/json;charset=utf-8,";
+
+    render(<Transfer library={library} onImport={() => {}} />);
+
+    const link = screen.getByRole("link", { name: "Export" });
+    const href = link.getAttribute("href")!;
+    expect(link.getAttribute("download")).toBe("jforge-char.json");
     expect(href.startsWith(prefix)).toBe(true);
     expect(JSON.parse(decodeURIComponent(href.slice(prefix.length)))).toEqual(
       library,
     );
   });
 
-  it("imports an exported library", async () => {
+  it("given an exported library, when it is uploaded, then it is imported", async () => {
     const library = starterLibrary();
     const onImport = vi.fn();
     render(<Transfer library={library} onImport={onImport} />);
+
     upload("backup.json", JSON.stringify(library));
+
     await waitFor(() =>
       expect(screen.getByRole("status").textContent).toBe(
         "Imported backup.json.",
@@ -46,10 +50,12 @@ describe("Transfer", () => {
     expect(onImport).toHaveBeenCalledWith(library);
   });
 
-  it("refuses a file that is not a library", async () => {
+  it("given a file that is not a library, when it is uploaded, then it is refused", async () => {
     const onImport = vi.fn();
     render(<Transfer library={starterLibrary()} onImport={onImport} />);
+
     upload("notes.json", '{"hello": 1}');
+
     await waitFor(() =>
       expect(screen.getByRole("status").textContent).toBe(
         "notes.json is not a char library.",

@@ -12,33 +12,42 @@ const summonOf = (skill: Skill) => skill.effect as Summon;
 
 describe("melee's creatures as enemy types", () => {
   const library = starterLibrary();
+  const typeOf = (id: string) =>
+    library.archetypes.find((a) => a.id === meleeCreatureId(id));
 
-  it("keeps the Imp and the boulder as enemy types", () => {
-    for (const id of ["imp", "boulder"]) {
-      const type = library.archetypes.find((a) => a.id === meleeCreatureId(id));
+  it.each(["imp", "boulder"])(
+    "given the starter library, when melee's %s is looked up, then it is an enemy type",
+    (id) => {
+      const type = typeOf(id);
+
       expect(type?.kind).toBe("enemy");
-    }
-    const boulder = library.archetypes.find(
-      (a) => a.id === meleeCreatureId("boulder"),
-    );
+    },
+  );
+
+  it("given the starter library, when the boulder is looked up, then it is an obstacle", () => {
+    const boulder = typeOf("boulder");
+
     expect(boulder?.obstacle).toBe(true);
   });
 
-  it("compiles Summon Imp and Raise Boulder to melee's own creatures", () => {
-    for (const [skill, def] of [
-      [content.summonImp, content.imp],
-      [content.raiseBoulder, content.boulder],
-    ] as const) {
+  it.each([
+    [content.summonImp.name, content.summonImp, content.imp],
+    [content.raiseBoulder.name, content.raiseBoulder, content.boulder],
+  ] as const)(
+    "given the saved %s, when it is compiled, then it summons melee's own creature",
+    (_, skill, def) => {
       const saved = library.skills.find((s) => s.id === skill.id)!;
-      expect(summonOf(saved).source?.archetypeId).toBe(meleeCreatureId(def.id));
+
       const creature = summonOf(compileSkill(library, saved)).creature;
+
+      expect(summonOf(saved).source?.archetypeId).toBe(meleeCreatureId(def.id));
       expect(creature.stats).toEqual(def.stats);
       expect(creature.obstacle ?? false).toBe(def.obstacle ?? false);
       expect(creature.skills?.map((s) => s.id)).toEqual(
         (def.skills ?? []).map((s) => s.id),
       );
-    }
-  });
+    },
+  );
 });
 
 describe("designed summons", () => {
@@ -55,14 +64,17 @@ describe("designed summons", () => {
     ),
   });
 
-  it("makes the creature from the type", () => {
-    const creature = summonOf(summon()).creature;
+  it("given a summon of the goblin type, when its creature is made, then it is a goblin with the type's stats and no problems", () => {
+    const skill = summon();
+
+    const creature = summonOf(skill).creature;
+
     expect(creature.name).toBe("Goblin");
     expect(creature.stats).toEqual(goblin.baseStats);
-    expect(skillProblems(summon(), library)).toEqual([]);
+    expect(skillProblems(skill, library)).toEqual([]);
   });
 
-  it("follows later edits to the type when compiled", () => {
+  it("given the goblin type made tougher after the summon was saved, when the summon is compiled, then the creature follows the edit", () => {
     const tougher: Library = {
       ...library,
       archetypes: library.archetypes.map((a) =>
@@ -71,25 +83,37 @@ describe("designed summons", () => {
           : a,
       ),
     };
+
     const compiled = compileSkill(tougher, summon());
+
     expect(summonOf(compiled).creature.stats.maxHp).toBe(100);
   });
 
-  it("keeps the saved creature and says so when the type is gone", () => {
+  it("given the summoned type is gone, when the summon is compiled, then the saved creature is kept", () => {
     const gone = { ...library, archetypes: [] };
-    expect(compileSkill(gone, summon())).toEqual(summon());
-    expect(skillProblems(summon(), gone)).toEqual([
-      "The enemy type it summons is gone.",
-    ]);
+
+    const compiled = compileSkill(gone, summon());
+
+    expect(compiled).toEqual(summon());
   });
 
-  it("needs a type picked", () => {
-    expect(
-      skillProblems({ ...blankSkill("s"), effect: defaultEffect("summon") }),
-    ).toEqual(["Pick an enemy type to summon."]);
+  it("given the summoned type is gone, when the summon is checked, then that is reported", () => {
+    const gone = { ...library, archetypes: [] };
+
+    const problems = skillProblems(summon(), gone);
+
+    expect(problems).toEqual(["The enemy type it summons is gone."]);
   });
 
-  it("compiles a type that summons itself, to a limited depth", () => {
+  it("given a summon with no type picked, when it is checked, then it asks for one", () => {
+    const skill = { ...blankSkill("s"), effect: defaultEffect("summon") };
+
+    const problems = skillProblems(skill);
+
+    expect(problems).toEqual(["Pick an enemy type to summon."]);
+  });
+
+  it("given a type that summons itself, when the roster is compiled, then it compiles to a limited depth", () => {
     const echo: Archetype = {
       ...goblin,
       id: "type-echo",
@@ -110,9 +134,11 @@ describe("designed summons", () => {
       skills: [...library.skills, call],
       characters: [{ ...blankCharacter("c", echo), name: "Echo" }],
     };
+
     const creature = creatureOf(lib, echo.id)!;
-    expect(creature.name).toBe("Echo");
     const monster = compileRoster(lib).monsters.find((m) => m.name === "Echo");
+
+    expect(creature.name).toBe("Echo");
     expect(summonOf(monster!.skills![0]!).creature.name).toBe("Echo");
   });
 });
