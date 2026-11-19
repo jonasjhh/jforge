@@ -40,6 +40,7 @@ import {
 } from "./turnMenu";
 import { TurnOrder } from "./TurnOrder";
 import { UnitDetails } from "./UnitDetails";
+import { coveredAfterMove, coveredFrom } from "./cover";
 import { useBattle } from "./useBattle";
 
 interface BattleScreenProps {
@@ -104,6 +105,7 @@ export function BattleScreen({
     actorId,
     lastAction,
     actionArea,
+    coveredIds,
     command: send,
   } = useBattle(setup, seed, paused || inspected !== null, speed);
   const command = (given: Command) => {
@@ -152,6 +154,9 @@ export function BattleScreen({
     emphasize: (unit: Unit) => emphasized(active, menu, unit),
     onInspect: (unit: Unit) => setInspected(unit.id),
     preview: (unit: Unit) => previewFor(state, active, menu, unit),
+    covered: (unit: Unit) =>
+      coveredIds.includes(unit.id) || coveredFrom(state, active, menu, unit),
+    coveredCell: (cell: Cell) => coveredAfterMove(state, active, menu, cell),
   };
 
   return (

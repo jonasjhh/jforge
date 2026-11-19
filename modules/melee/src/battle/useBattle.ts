@@ -10,6 +10,7 @@ import {
   type StepResult,
 } from "../../shared";
 import { findAction, summarizeAction } from "./actionSummary";
+import { coveredFromAction } from "./cover";
 import { describeEvent } from "./describeEvent";
 import { hitsFrom, type Hit } from "./hits";
 
@@ -32,6 +33,8 @@ export interface BattleView {
   lastAction: string | null;
   /** Cells covered by the area skill being shown, for the blast effect. */
   actionArea: Cell[];
+  /** Party members the enemy action being shown couldn't single out. */
+  coveredIds: string[];
   command: (command: Command) => void;
 }
 
@@ -54,6 +57,7 @@ export function useBattle(
   const [actorId, setActorId] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<string | null>(null);
   const [actionArea, setActionArea] = useState<Cell[]>([]);
+  const [coveredIds, setCoveredIds] = useState<string[]>([]);
   const stateRef = useRef(state);
   const frozenUntil = useRef(0);
   const hitKey = useRef(0);
@@ -62,7 +66,7 @@ export function useBattle(
   const speedRef = useRef(speed);
   speedRef.current = speed;
 
-  const apply = useCallback((step: StepResult) => {
+  const apply = useCallback((step: StepResult, before: BattleState) => {
     stateRef.current = step.state;
     setState(step.state);
     if (step.events.length === 0) return;
@@ -83,6 +87,7 @@ export function useBattle(
           ? action.area
           : [],
       );
+      setCoveredIds(coveredFromAction(before, action));
       frozenUntil.current = performance.now() + ACTION_MS / speedRef.current;
     }
     // Numbers to float up: from the action, or from effects over time,
@@ -105,12 +110,14 @@ export function useBattle(
       } else if (now >= frozenUntil.current) {
         setActorId(null);
         setActionArea([]);
+        setCoveredIds([]);
         const current = stateRef.current;
         apply(
           advance(current, {
             until: current.time + (dt / 1000) * TIME_SCALE * speedRef.current,
             stopAfterAction: true,
           }),
+          current,
         );
       }
       if (stateRef.current.phase.kind === "running") {
@@ -124,10 +131,19 @@ export function useBattle(
   const command = useCallback(
     (c: Command) => {
       if (stateRef.current.phase.kind !== "awaitingCommand") return;
-      apply(act(stateRef.current, c));
+      apply(act(stateRef.current, c), stateRef.current);
     },
     [apply],
   );
 
-  return { state, log, hits, actorId, lastAction, actionArea, command };
+  return {
+    state,
+    log,
+    hits,
+    actorId,
+    lastAction,
+    actionArea,
+    coveredIds,
+    command,
+  };
 }

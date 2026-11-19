@@ -63,6 +63,14 @@ out any visible enemy (Aimed Shot; Volley's strike also reaches past
 cover); char can set it on any skill. So a caster can't focus a frail
 unit that stands behind a friend.
 
+**The board shows cover when it matters** (done): while the player aims an
+attack or a single-target skill, an enemy that only cover keeps out of
+reach shows a shield in place of its bars (its name stays). In the Move
+menu, a cell where the step would end behind a living ally shows the
+shield. While an enemy's attack or single-target skill is shown, the party
+members it couldn't single out because of cover show the same shield.
+Areas show none, as they land on covered units anyway.
+
 A weapon is data (`columns`, `depth`), so equipment can swap it and char
 can design new ones. Until units can move, a melee unit with no enemy in
 range attacks the nearest occupied column instead.

@@ -25,6 +25,8 @@
   --ally: #c4d6ff;
   --ally-surface-top: #262a3c;
   --ally-surface-bottom: #1d2030;
+  /* Cover: a unit that can't be singled out. */
+  --cover: #c9d9ec;
   /* Your unit, your turn, and weaknesses: gold. */
   --turn: #ffd166;
   /* Area of effect, magic, healing, resisted damage. */
@@ -708,6 +710,43 @@ button:not(:disabled):active {
 .unit.unreachable {
   opacity: 0.45;
   filter: grayscale(0.6);
+}
+
+/* Covered: only the name stays, and a shield fills the rest of the card.
+   Hidden with visibility so the card keeps its size. */
+.cover-mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cover);
+  pointer-events: none;
+}
+
+.cover-mark svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+.unit.covered > :not(.unit-name, .cover-mark, .damage) {
+  visibility: hidden;
+}
+
+.unit.covered .cover-mark {
+  top: 1.2rem;
+}
+
+.unit.covered .cover-mark svg {
+  width: 26px;
+  height: 26px;
+}
+
+.unit.covered.unreachable {
+  opacity: 0.85;
 }
 
 .unit.targetable {

@@ -44,6 +44,10 @@ interface GridProps {
   onInspect: (unit: Unit) => void;
   /** Expected damage on a unit the current action would hit, if any. */
   preview: (unit: Unit) => DamagePreview | null;
+  /** A unit that can't be singled out right now because of cover. */
+  covered: (unit: Unit) => boolean;
+  /** An empty cell a step to would end in cover. */
+  coveredCell: (cell: Cell) => boolean;
 }
 
 // Enemies show their back row at the top; the party shows its front row at
@@ -70,6 +74,8 @@ export function Grid({
   emphasize,
   onInspect,
   preview,
+  covered,
+  coveredCell,
 }: GridProps) {
   return (
     <div
@@ -93,11 +99,13 @@ export function Grid({
             const threatened = incoming.some((c) => sameCell(c, cell));
             const onClick = () => onTarget(cell);
             if (!unit) {
+              const sheltered = coveredCell(cell);
               return (
                 <EmptyCell
                   key={col}
-                  label={`${actionName} ${SIDE_NAMES[side]} column ${col + 1}, ${ROW_NAMES[row]?.toLowerCase()} row`}
+                  label={`${actionName} ${SIDE_NAMES[side]} column ${col + 1}, ${ROW_NAMES[row]?.toLowerCase()} row${sheltered ? ", covered" : ""}`}
                   targetable={targetable}
+                  covered={sheltered}
                   inArea={inArea}
                   aimed={aimed}
                   incoming={threatened}
@@ -134,6 +142,7 @@ export function Grid({
                 onClick={onClick}
                 onInspect={() => onInspect(unit)}
                 preview={preview(unit)}
+                covered={covered(unit)}
                 actionName={actionName}
               />
             );
@@ -150,6 +159,8 @@ interface EmptyCellProps {
   inArea: boolean;
   aimed: boolean;
   incoming: boolean;
+  /** A step here would end in cover. */
+  covered: boolean;
   onClick: () => void;
 }
 
@@ -159,6 +170,7 @@ function EmptyCell({
   inArea,
   aimed,
   incoming,
+  covered,
   onClick,
 }: EmptyCellProps) {
   const classes = [
@@ -178,7 +190,9 @@ function EmptyCell({
       role="gridcell"
       aria-label={label}
       onClick={onClick}
-    />
+    >
+      {covered && <CoverMark />}
+    </button>
   ) : (
     <div className={classes} role="gridcell" />
   );
@@ -202,6 +216,8 @@ interface UnitCellProps {
   onClick: () => void;
   onInspect: () => void;
   preview: DamagePreview | null;
+  /** Can't be singled out because of cover: show a shield, not its bars. */
+  covered: boolean;
   actionName: string;
 }
 
@@ -221,6 +237,7 @@ function UnitCell({
   onClick,
   onInspect,
   preview,
+  covered,
   actionName,
 }: UnitCellProps) {
   const { consumeClick, ...press } = useLongPress(onInspect);
@@ -257,6 +274,7 @@ function UnitCell({
     unit.casting ? "casting" : "",
     unit.defending ? "defending" : "",
     emphasized ? "emphasized" : "",
+    covered ? "covered" : "",
     unit.obstacle ? "boulder" : "",
     unit.statuses.some((st) => st.effect === "stealth" || st.effect === "smoke")
       ? "stealthed"
@@ -335,6 +353,7 @@ function UnitCell({
           )}
         </span>
       </span>
+      {covered && <CoverMark label={`${unit.name} is covered`} />}
       {preview && <PreviewBadge preview={preview} />}
       {hits.map((h) => (
         <span
@@ -366,6 +385,22 @@ function UnitCell({
     <div className={classes} role="gridcell" {...press}>
       {content}
     </div>
+  );
+}
+
+/** The shield on a covered unit or on a move that ends in cover. */
+function CoverMark({ label }: { label?: string }) {
+  return (
+    <span
+      className="cover-mark"
+      role={label ? "img" : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+    >
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M8 1.5 2.5 3.5v4c0 3.2 2.3 5.7 5.5 7 3.2-1.3 5.5-3.8 5.5-7v-4z" />
+      </svg>
+    </span>
   );
 }
 
