@@ -26,11 +26,11 @@ describe("the Worker's API", () => {
 
     expect(await res.json()).toEqual({
       status: "ok",
-      modules: ["melee", "jrpg", "char"],
+      modules: ["melee", "jrpg", "char", "autob"],
     });
   });
 
-  it.each(["melee", "jrpg", "char"])(
+  it.each(["melee", "jrpg", "char", "autob"])(
     "given the %s module, when its health is asked for, then it answers ok under /api/<name>",
     async (name) => {
       const { env } = assets([]);

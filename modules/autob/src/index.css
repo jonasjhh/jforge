@@ -1,0 +1,170 @@
+/* The look (colours, buttons, panels) is melee's, imported in main.tsx;
+   these are only autob's own screens. */
+
+.run-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The hex arena: 7 hexes a row, odd rows half a hex to the right. */
+.arena {
+  display: grid;
+  gap: 2px;
+  margin: 0.75rem 0;
+  padding: 6px 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(
+    var(--enemy-surface-bottom) 0 50%,
+    var(--ally-surface-bottom) 50% 100%
+  );
+}
+
+.hex-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  margin-right: calc(100% / 15);
+}
+
+.hex-row.odd {
+  margin-right: 0;
+  margin-left: calc(100% / 15);
+}
+
+.hex-row.enemy-side + .hex-row.player-side {
+  margin-top: 6px;
+}
+
+.hex {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  min-width: 0;
+  aspect-ratio: 1 / 1.08;
+  padding: 0 2px;
+  border: 0;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: var(--line-soft);
+  color: var(--text);
+  font: inherit;
+}
+
+button.hex {
+  cursor: pointer;
+  background: var(--raised);
+}
+
+.hex.held {
+  background: var(--surface);
+}
+
+.hex.foe {
+  background: var(--enemy-surface-top);
+}
+
+.hex.foe .portrait {
+  color: var(--danger-soft);
+}
+
+.hex.picked,
+.slot.picked {
+  background: var(--turn);
+  color: var(--on-action);
+}
+
+.hex .portrait,
+.slot .portrait {
+  width: 55%;
+  height: auto;
+}
+
+.unit-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.55rem;
+  line-height: 1;
+}
+
+.bar {
+  display: block;
+  width: 70%;
+  height: 3px;
+  background: var(--bg-deep);
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--good);
+}
+
+.foe .bar.hp > span {
+  background: var(--danger);
+}
+
+.bar.mana > span {
+  background: var(--magic);
+}
+
+.bench {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.slot {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.slot.held {
+  border-style: solid;
+  background: var(--surface);
+}
+
+.shop {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.offer {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.offer strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offer.tier-2 {
+  border-color: var(--ally);
+}
+
+.offer.tier-3 {
+  border-color: var(--turn);
+}

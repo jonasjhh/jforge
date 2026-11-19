@@ -17,6 +17,7 @@ credentials, deploys and secrets are set up once, not per module.
 | `melee` | `/melee/` | —               | Battle engine: time-based turns, 5x3 grid |
 | `jrpg`  | `/jrpg/`  | `melee`, `char` | Runs through levels of encounters         |
 | `char`  | `/char/`  | `melee`         | Designer: classes, enemies, skills, gear  |
+| `autob` | `/autob/` | `melee`, `char` | Autobattler: shop, bench, hex board       |
 
 ## Layout
 
@@ -42,7 +43,9 @@ lists `"@jforge/melee": "workspace:*"` and imports
 roster in melee's format (browser storage, one origin), which `melee`
 reads without depending on char. `jrpg` depends on both: it reads char's
 library (`@jforge/char/shared`) and shows melee's battle screen
-(`@jforge/melee/battle`). A module exposes what others may import through
+(`@jforge/melee/battle`). `autob` reads char's library too, but has its
+own board and fight engine and uses only melee's unit data and look. A
+module exposes what others may import through
 the `exports` field of its `package.json`.
 
 ## Development
@@ -64,6 +67,7 @@ One module with hot reload (run `pnpm worker:dev` alongside for its API):
 pnpm dev:melee        # http://localhost:5181/melee/
 pnpm dev:jrpg         # http://localhost:5182/jrpg/
 pnpm dev:char         # http://localhost:5183/char/
+pnpm dev:autob        # http://localhost:5184/autob/
 pnpm dev:landing      # http://localhost:5180/
 ```
 

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { autobApi } from "@jforge/autob/worker";
 import { charApi } from "@jforge/char/worker";
 import { jrpgApi } from "@jforge/jrpg/worker";
 import { meleeApi } from "@jforge/melee/worker";
@@ -16,6 +17,7 @@ const modules = {
   melee: meleeApi,
   jrpg: jrpgApi,
   char: charApi,
+  autob: autobApi,
 } as const;
 
 const app = new Hono<{ Bindings: Env }>();

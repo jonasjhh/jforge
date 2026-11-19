@@ -13,7 +13,9 @@ them, is in [progression.md](progression.md).
 
 ```
 melee  <-  char  <-  jrpg
-  ^_______________/
+  ^ ^______________/
+  |          ^
+  +-------- autob
 ```
 
 | Module  | Role                                                                                                                     |
@@ -21,6 +23,7 @@ melee  <-  char  <-  jrpg
 | `melee` | Battle engine and rules: what combatants, stats, damage types, statuses and skills are. Starter content. Runs any fight. |
 | `char`  | Character creator and skill designer. Builds on melee's definitions. Stores the roster. "Test in melee".                 |
 | `jrpg`  | The game: runs through levels of encounters. Uses melee for battles and char for the party, enemies and gear.            |
+| `autob` | An autobattler: shop, bench and a hex board. Uses char's classes as units and melee's unit data, with its own engine.    |
 
 **melee never depends on char.** It accepts plain data (a party and an
 encounter); char converts its characters into that format. Otherwise the
@@ -737,7 +740,7 @@ Still open:
   the roster char publishes to melee and the run in progress all carry
   `SAVE_VERSION` (`melee/shared/save.ts`), and a save of any other version
   is ignored as if there were none (char starts from the starter library,
-  jrpg has no run). Raise it whenever a change makes old saves stale,
+  jrpg and autob have no run). Raise it whenever a change makes old saves stale,
   such as a class gaining a skill; saves are never migrated. Exported
   library files of an older version no longer import.
 
@@ -1018,6 +1021,100 @@ Still to come: a live damage preview and power budget in the skill
 designer, the remaining effect types (statuses, summons), resistances per
 type, AI targeting profiles, IndexedDB or cloud saves.
 
+## The autobattler (`modules/autob`)
+
+Autob is a single-player autobattler: a run of `ROUNDS` (30) rounds
+against monster packs, after TFT's shop, gold and board and in the manner
+of a solo trial against the house. It reuses only units: char's classes
+(stats, weapon, skills) and creatures. Its board and fights are its own;
+**melee's battle rules don't apply and melee is not changed for it**.
+The rules are pure functions in `shared/` (`run.ts` the run, `fight.ts`
+the engine), like melee's.
+
+**Units and stars** (`units.ts`). The shop sells every class of the run's
+library (char's on this device, or the starter library), copied at the
+start so later edits can't break a run. A bought copy is a 1★ unit;
+three of a class at the same star merge at once into one a star higher,
+up to 3★, keeping the place of the first (board before bench). Stars
+multiply max HP, attack and magic by 1 / 1.8 / 3.24. Each class has a
+**cost tier** 1–3: the classes ranked by melee's threat estimate at 1★
+and cut into thirds, ties by id; the tier is its price in gold. Selling
+pays back what its copies cost.
+
+**Shop and pool** (`shop.ts`). Each round the shop offers 5 units. A
+slot draws a tier by the level's odds (`SHOP_ODDS`: level 1–2 all tier
+1, level 10 5/30/65%), then a class of that tier weighted by copies left
+in the run's **pool** (18 / 15 / 12 copies per class of tier 1 / 2 / 3).
+Buying takes a copy out, selling puts its copies back. A tier with none
+left gives way to the nearest one, cheaper first. A reroll costs 2. The
+**bench** holds 9 units; a full bench still takes a copy that completes
+a merge.
+
+**Gold and levels** (`economy.ts`). Every round pays 5, plus 1 interest
+per 10 gold held (at most 5), plus a streak bonus of 1 / 2 / 3 for 2–3 /
+4 / 5+ wins or losses in a row; a win pays 1 more. Every round gives 2
+experience, and 4 more cost 4 gold. Levels run 1–10, with 2, 2, 6, 10,
+20, 36, 48, 76, 84 experience to the next. The **level is how many units
+may stand on the board**.
+
+**Monsters** (`monsters.ts`). Rounds come in stages of 5. Each round's
+pack is drawn from the run's seed: monsters at random among those the
+round's **budget** still affords (3 + 1 per round after the first, ×1.3
+on a stage's last round), each costing its threat, at most 10. The
+monsters are the library's non-obstacle enemies plus melee's monsters;
+each stage after the first adds 45% to their max HP, attack and magic.
+Each stands in its own row (or by weapon: ranged behind) in a random free
+hex, or the nearest row with room. The planning screen shows the pack
+where it will stand.
+
+**Lives and the end.** A run starts with 3 lives. A lost round (or a
+draw) costs one; losing the last loses the run. Living through round 30
+wins it. The score is the rounds lived through. The run is saved in the
+browser after every change, with `SAVE_VERSION`. A fight follows from
+the run alone, so a reload during one returns to planning and the same
+fight.
+
+**The board** (`hex.ts`). After TFT: each side has 4 rows of 7 hexes,
+row 0 at the front, and the two sides form one 8×7 arena, the enemy's on
+top, odd rows half a hex to the right. Distances are hex steps.
+
+**The fight** (`fight.ts`). Real time in ticks of 0.1 s; melee's game
+time 100 is one second. Each tick, timed effects run out, then every
+unit acts in order:
+
+- A unit with no enemy in range steps one hex along a shortest free way
+  toward a hex from which it reaches one, every 0.5 s. Melee weapons
+  reach 1 hex, ranged weapons 4. Speed 0 (an obstacle's) never acts.
+- In range, it attacks its target (the nearest enemy; ties to the
+  weakest) every 10 / speed seconds, at least 0.3 s: attack × 50 / (50 +
+  defense) × the target's resistance to the weapon's damage type,
+  ±10%, at least 1 unless immune.
+- **Mana**: +10 per attack, +5 per hit taken. When a unit has the mana
+  for its next skill (30 + 5 × the skill's MP cost) and a target for it,
+  it casts that instead of attacking, empties its mana and moves on to
+  its next skill.
+- Skills hit by their area: single; plus and square the target and its
+  neighbours; line the target and the hex behind it; row the target's
+  row; reach every one of the target's side within the caster's range.
+  Enemy skills aim at the target in range; ally skills at the most hurt
+  ally; self skills at the caster; "any" skills at an ally when they
+  help.
+- **Effects that work**: strike (power, armor pierce, finisher), magical
+  damage (power, element, drain), heal (by magic or max HP), timed stat
+  modifiers, and heal / damage over time and shields. Any other effect
+  makes a skill one autob doesn't cast.
+- A side with nobody standing loses; both at once, or still fighting
+  after 30 s, is a draw.
+
+**Balance.** A simple bot (`bot.ts`: buys copies of what it owns first,
+keeps 10 gold for interest, levels when rich, fields its strongest units
+by their preferred rows) lives through about 25 rounds on average and
+rarely wins; a test keeps it past the third stage on average, short of
+the end, winning at most a quarter of its runs.
+
+Not yet: traits and synergies, items, a choice between rewards after
+stages, the remaining skill effects.
+
 ## Phases
 
 1. **Engine core** (done): types, seeded RNG, stats and modifiers, time and
@@ -1029,6 +1126,7 @@ type, AI targeting profiles, IndexedDB or cloud saves.
 4. **char**: character builder, storage, export/import, Test in melee.
 5. **Skill designer**: form editor, validation, power budget.
 6. **jrpg**: wired to char's roster and melee battles.
+7. **autob**: a bootstrap autobattler on char's classes.
 
 Later: equipment, character attributes, levels and growth, more classes,
 multi-cell bosses, editable monster AI, cloud saves.
