@@ -1,4 +1,4 @@
-import { useEffect, useRef, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, type MouseEvent } from "react";
 
 /** How long a press must last to count as a long press. */
 const LONG_PRESS_MS = 450;
@@ -21,7 +21,9 @@ export function useLongPress(onLongPress: () => void): LongPress {
   const timer = useRef<number | undefined>(undefined);
   const fired = useRef(false);
   const callback = useRef(onLongPress);
-  callback.current = onLongPress;
+  useLayoutEffect(() => {
+    callback.current = onLongPress;
+  }, [onLongPress]);
 
   const clear = () => {
     if (timer.current !== undefined) window.clearTimeout(timer.current);

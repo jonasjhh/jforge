@@ -1,4 +1,4 @@
-import type { ModuleMeta } from "../../tooling/module-meta";
+import type { ModuleMeta } from "../../tooling/module-meta.ts";
 
 export const meta: ModuleMeta = {
   name: "melee",

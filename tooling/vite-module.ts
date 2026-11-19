@@ -3,8 +3,8 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
-import type { ModuleMeta } from "./module-meta";
-import { WORKER_DEV_PORT } from "./ports";
+import type { ModuleMeta } from "./module-meta.ts";
+import { WORKER_DEV_PORT } from "./ports.ts";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

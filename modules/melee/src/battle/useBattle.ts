@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   act,
   advance,
@@ -62,9 +68,11 @@ export function useBattle(
   const frozenUntil = useRef(0);
   const hitKey = useRef(0);
   const pausedRef = useRef(paused);
-  pausedRef.current = paused;
   const speedRef = useRef(speed);
-  speedRef.current = speed;
+  useLayoutEffect(() => {
+    pausedRef.current = paused;
+    speedRef.current = speed;
+  }, [paused, speed]);
 
   const apply = useCallback((step: StepResult, before: BattleState) => {
     stateRef.current = step.state;
