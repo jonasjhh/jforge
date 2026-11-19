@@ -98,7 +98,9 @@ The end-to-end tests seed `Math.random`, so the app picks the same
 encounter every run. CI runs both, and keeps Playwright traces of failures.
 
 Every night, `.github/workflows/nightly.yml` runs coverage and mutation
-testing (Stryker, configured in `stryker.config.json`). It writes the
+testing (Stryker, configured in `stryker.config.json`). Mutation testing
+leaves out the balance tests (`*.balance.test.ts`, see
+`vitest.stryker.config.ts`), which play hundreds of whole battles. It writes the
 coverage percentages and each module's mutation score to the job summary
 and keeps both HTML reports as artifacts for 14 days. It can also be run
 by hand from the Actions tab.
