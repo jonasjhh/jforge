@@ -8,7 +8,7 @@ import { createBattle, isCombatantDef } from "@jforge/melee/shared";
 import { GEAR_TIERS, atTier, withWorld } from "../world";
 
 const starter = starterLibrary();
-const world = withWorld(starter, 3);
+const world = withWorld(starter);
 
 describe("withWorld", () => {
   it("is a library char accepts, with unique ids", () => {
@@ -40,7 +40,7 @@ describe("withWorld", () => {
   it("teaches every type only skills the library has", () => {
     const skills = new Set(world.skills.map((s) => s.id));
     for (const type of world.archetypes) {
-      expect(type.skills.every((u) => skills.has(u.skillId))).toBe(true);
+      expect(type.skills.every((id) => skills.has(id))).toBe(true);
     }
   });
 
@@ -49,14 +49,6 @@ describe("withWorld", () => {
       starter.characters,
     );
     expect(world.gear.slice(0, starter.gear.length)).toEqual(starter.gear);
-  });
-
-  it("sets its enemies a level below the party", () => {
-    const wolf = withWorld(starter, 6).characters.find(
-      (c) => c.id === "world-wolf-1",
-    );
-    expect(wolf?.level).toBe(5);
-    expect(withWorld(starter, 1).characters.at(-1)!.level).toBe(1);
   });
 
   it("holds every piece of gear at every tier", () => {

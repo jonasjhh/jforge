@@ -6,7 +6,7 @@ import {
   statsAtLevel,
   xpToNext,
 } from "../progression";
-import { flatStats } from "../library";
+import { flatStats } from "@jforge/char/shared";
 
 describe("clampLevel", () => {
   it("keeps levels whole and within 1..MAX_LEVEL", () => {

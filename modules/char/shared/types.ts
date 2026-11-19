@@ -60,16 +60,9 @@ export interface Gear {
   weapon?: Weapon;
 }
 
-/** A skill an archetype learns once it reaches `level`. */
-export interface SkillUnlock {
-  skillId: string;
-  level: number;
-}
-
 /**
  * A class (for party members) or an enemy type: the template characters
- * are made from. Stats at a level are `baseStats` plus `growth` for every
- * level above the first.
+ * are made from. How it grows with levels is up to the game that uses it.
  */
 export interface Archetype {
   id: string;
@@ -77,12 +70,12 @@ export interface Archetype {
   kind: "class" | "enemy";
   /** The built-in melee type whose icon it wears. */
   portrait: string;
+  /** Its stats at level 1. */
   baseStats: Stats;
-  /** Added per level above 1; fractions are fine (0.5 = +1 every 2 levels). */
-  growth: Stats;
   /** What it attacks with when no weapon is equipped. */
   weapon: Weapon;
-  skills: SkillUnlock[];
+  /** The ids of the skills it has. */
+  skills: string[];
   traits: Trait[];
   /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
   preferredRow: number;
@@ -95,14 +88,11 @@ export interface Archetype {
   obstacle?: boolean;
 }
 
-/** One character or enemy: an archetype at a level, wearing gear. */
+/** One character or enemy: an archetype wearing gear. */
 export interface Character {
   id: string;
   name: string;
   archetypeId: string;
-  level: number;
-  /** Experience gathered toward the next level. */
-  xp: number;
   /** Gear ids by slot. */
   gear: Partial<Record<GearSlot, string>>;
 }

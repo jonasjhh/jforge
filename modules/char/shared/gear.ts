@@ -52,12 +52,12 @@ export function canWear(
 }
 
 /** Puts `gear` in its slot, replacing what was there. */
-export function equip(character: Character, gear: Gear): Character {
+export function equip<C extends Character>(character: C, gear: Gear): C {
   return { ...character, gear: { ...character.gear, [gear.slot]: gear.id } };
 }
 
 /** Empties a slot. */
-export function unequip(character: Character, slot: GearSlot): Character {
+export function unequip<C extends Character>(character: C, slot: GearSlot): C {
   const gear = { ...character.gear };
   delete gear[slot];
   return { ...character, gear };

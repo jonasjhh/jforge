@@ -1,5 +1,7 @@
 import { STAT_NAMES, type Stats } from "@jforge/melee/shared";
 
+// Levels and experience in a run. What a level adds is in growth.ts.
+
 export const MAX_LEVEL = 50;
 
 /** A whole level between 1 and MAX_LEVEL. */

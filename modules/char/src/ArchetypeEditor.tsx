@@ -2,11 +2,9 @@ import { TRAITS, type Skill } from "@jforge/melee/shared";
 import {
   ALL_GEAR_CATEGORIES,
   GEAR_CATEGORY_NAMES,
-  MAX_LEVEL,
-  clampLevel,
   type Archetype,
 } from "../shared";
-import { NumberField, SelectField, TextField } from "./fields";
+import { SelectField, TextField } from "./fields";
 import { PORTRAIT_OPTIONS, ROW_OPTIONS } from "./labels";
 import { StatsFields } from "./StatsFields";
 import { WeaponFields } from "./WeaponFields";
@@ -26,8 +24,6 @@ export function ArchetypeEditor({
 }: ArchetypeEditorProps) {
   const set = (change: Partial<Archetype>) =>
     onChange({ ...archetype, ...change });
-  const unlockOf = (skillId: string) =>
-    archetype.skills.find((u) => u.skillId === skillId);
   return (
     <>
       <TextField
@@ -54,62 +50,34 @@ export function ArchetypeEditor({
         stats={archetype.baseStats}
         onChange={(baseStats) => set({ baseStats })}
       />
-      <StatsFields
-        legend="Growth per level"
-        stats={archetype.growth}
-        step={0.1}
-        onChange={(growth) => set({ growth })}
-      />
       <WeaponFields
         legend="Unarmed attack"
         weapon={archetype.weapon}
         onChange={(weapon) => set({ weapon })}
       />
       <fieldset className="group">
-        <legend>Skills and the level they are learned at</legend>
+        <legend>Skills</legend>
         {skills.length === 0 && (
           <p className="muted">No skills designed yet.</p>
         )}
-        {skills.map((skill) => {
-          const unlock = unlockOf(skill.id);
-          return (
-            <div className="check-row" key={skill.id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={unlock !== undefined}
-                  onChange={(e) =>
-                    set({
-                      skills: e.target.checked
-                        ? [...archetype.skills, { skillId: skill.id, level: 1 }]
-                        : archetype.skills.filter(
-                            (u) => u.skillId !== skill.id,
-                          ),
-                    })
-                  }
-                />
-                {skill.name}
-              </label>
-              {unlock && (
-                <NumberField
-                  label={`${skill.name} level`}
-                  value={unlock.level}
-                  min={1}
-                  max={MAX_LEVEL}
-                  onChange={(level) =>
-                    set({
-                      skills: archetype.skills.map((u) =>
-                        u.skillId === skill.id
-                          ? { ...u, level: clampLevel(level) }
-                          : u,
-                      ),
-                    })
-                  }
-                />
-              )}
-            </div>
-          );
-        })}
+        {skills.map((skill) => (
+          <div className="check-row" key={skill.id}>
+            <label>
+              <input
+                type="checkbox"
+                checked={archetype.skills.includes(skill.id)}
+                onChange={(e) =>
+                  set({
+                    skills: e.target.checked
+                      ? [...archetype.skills, skill.id]
+                      : archetype.skills.filter((id) => id !== skill.id),
+                  })
+                }
+              />
+              {skill.name}
+            </label>
+          </div>
+        ))}
       </fieldset>
       <fieldset className="group">
         <legend>Gear it can use</legend>

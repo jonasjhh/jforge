@@ -2,7 +2,6 @@ import type { Skill, SkillEffect } from "@jforge/melee/shared";
 import {
   EDITABLE_EFFECTS,
   EFFECT_LABELS,
-  MAX_LEVEL,
   SKILL_FIELDS,
   STATUS_OPTIONS,
   defaultEffect,
@@ -223,7 +222,7 @@ interface CreatureFieldsProps {
   onChange: (effect: SkillEffect) => void;
 }
 
-/** A summon's enemy type and level; the creature is compiled from them. */
+/** A summon's enemy type; the creature is compiled from it. */
 function CreatureFields({ effect, library, onChange }: CreatureFieldsProps) {
   if (effect.type !== "summon") return null;
   const enemies = library.archetypes.filter((a) => a.kind === "enemy");
@@ -239,21 +238,7 @@ function CreatureFields({ effect, library, onChange }: CreatureFieldsProps) {
         value={source?.archetypeId ?? ""}
         options={options}
         onChange={(id) => {
-          if (id)
-            onChange(withSummonSource(library, effect, id, source?.level ?? 1));
-        }}
-      />
-      <NumberField
-        label="Creature level"
-        value={source?.level ?? 1}
-        min={1}
-        max={MAX_LEVEL}
-        onChange={(level) => {
-          if (source) {
-            onChange(
-              withSummonSource(library, effect, source.archetypeId, level),
-            );
-          }
+          if (id) onChange(withSummonSource(library, effect, id));
         }}
       />
     </>

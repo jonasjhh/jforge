@@ -1,14 +1,6 @@
 // Char's public API, importable by other modules as "@jforge/char/shared".
 export * from "./types";
 export {
-  MAX_LEVEL,
-  clampLevel,
-  gainXp,
-  statsAtLevel,
-  xpToNext,
-  type Progress,
-} from "./progression";
-export {
   applyBonuses,
   canUse,
   canWear,
@@ -25,7 +17,7 @@ export {
   creatureOf,
   SUMMON_DEPTH,
   toCombatantDef,
-  unlockedSkills,
+  archetypeSkills,
 } from "./compile";
 export {
   EDITABLE_EFFECTS,
@@ -78,7 +70,6 @@ export {
 export { starterLibrary } from "./starter";
 export {
   BASIC_ARMOR,
-  MELEE_CLASS_LEVEL,
   MELEE_CREATURES,
   creatureFromMelee,
   meleeCreatureId,

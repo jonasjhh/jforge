@@ -1,10 +1,4 @@
-import {
-  STAT_NAMES,
-  content,
-  type CombatantDef,
-  type Skill,
-  type Stats,
-} from "@jforge/melee/shared";
+import { content, type CombatantDef, type Skill } from "@jforge/melee/shared";
 import { canUse } from "./gear";
 import type {
   Archetype,
@@ -15,17 +9,8 @@ import type {
 } from "./types";
 
 // Melee's own classes as char classes, so every one of them can be
-// levelled, geared, edited and sent to jrpg like a designed class, each
-// with a hero of that class in basic gear.
-
-/** The level at which a melee class has exactly melee's stats. */
-export const MELEE_CLASS_LEVEL = 3;
-/** Growth per level, as a share of the stats at level 1. */
-export const MELEE_GROWTH = 0.08;
-/** Speed grows slower: it decides how often a unit acts. */
-export const MELEE_SPEED_GROWTH = 0.02;
-/** The level each skill is learned at, in melee's order. */
-export const MELEE_SKILL_LEVELS = [1, 2, 4, 6, 8, 10];
+// geared, edited and sent to jrpg like a designed class, each with a hero
+// of that class in basic gear.
 
 export const meleeClassId = (id: string) => `melee-${id}`;
 export const meleeHeroId = (id: string) => `melee-hero-${id}`;
@@ -116,34 +101,19 @@ export const BASIC_ARMOR: Gear[] = [
   },
 ];
 
-/** A melee type as a class: its stats at MELEE_CLASS_LEVEL, growing from 1. */
+/** A melee type as a class, with melee's stats. */
 export function classFromMelee(def: CombatantDef): Archetype {
-  const baseStats = {} as Stats;
-  const growth = {} as Stats;
-  const steps = MELEE_CLASS_LEVEL - 1;
-  for (const stat of STAT_NAMES) {
-    const rate = stat === "speed" ? MELEE_SPEED_GROWTH : MELEE_GROWTH;
-    const base = def.stats[stat] / (1 + rate * steps);
-    baseStats[stat] = Math.round(base * 10) / 10;
-    growth[stat] = Math.round(base * rate * 100) / 100;
-  }
   return {
     id: meleeClassId(def.id),
     name: def.name,
     kind: "class",
     portrait: def.id,
-    baseStats,
-    growth,
+    baseStats: { ...def.stats },
     weapon: structuredClone(def.weapon),
     ...(MELEE_PROFICIENCIES[def.id]
       ? { proficiencies: [...MELEE_PROFICIENCIES[def.id]!] }
       : {}),
-    skills: (def.skills ?? []).map((skill, i) => ({
-      skillId: skill.id,
-      level:
-        MELEE_SKILL_LEVELS[i] ??
-        MELEE_SKILL_LEVELS.at(-1)! + 2 * (i - MELEE_SKILL_LEVELS.length + 1),
-    })),
+    skills: (def.skills ?? []).map((skill) => skill.id),
     traits: [...(def.traits ?? [])],
     preferredRow: def.preferredRow ?? 0,
   };
@@ -202,7 +172,7 @@ export function starterKit(library: Library, character: Character): Character {
   return { ...character, gear };
 }
 
-/** A melee creature as an enemy type, with melee's stats at MELEE_CLASS_LEVEL. */
+/** A melee creature as an enemy type, with melee's stats. */
 export function creatureFromMelee(def: CombatantDef): Archetype {
   return {
     ...classFromMelee(def),
@@ -224,10 +194,7 @@ export function withCreatureSource(skill: Skill): Skill {
     ...skill,
     effect: {
       ...effect,
-      source: {
-        archetypeId: meleeCreatureId(effect.creature.id),
-        level: MELEE_CLASS_LEVEL,
-      },
+      source: { archetypeId: meleeCreatureId(effect.creature.id) },
     },
   };
 }
@@ -284,8 +251,6 @@ export function withMeleeClasses(library: Library): Library {
           id: meleeHeroId(def.id),
           name: MELEE_HEROES[def.id]!,
           archetypeId: meleeClassId(def.id),
-          level: 1,
-          xp: 0,
           gear: {},
         }),
       ),

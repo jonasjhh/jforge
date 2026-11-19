@@ -2,6 +2,7 @@ import { useState } from "react";
 import { archetypeOf, type Library } from "@jforge/char/shared";
 import {
   MIN_LEVEL_LENGTH,
+  START_LEVEL,
   START_PARTY_SIZE,
   drawParty,
   heroes,
@@ -56,7 +57,7 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
       <section className="panel" aria-label="Setting out">
         <h2>Setting out</h2>
         <p className="muted small">
-          Choose {START_PARTY_SIZE} to set out, at Level {run.baseLevel}. The
+          Choose {START_PARTY_SIZE} to set out, at Level {START_LEVEL}. The
           others may be met on the road. Class characters you design in{" "}
           <a href="/char/">Char</a> join them; your enemies and gear join the
           world's own.

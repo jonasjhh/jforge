@@ -61,7 +61,6 @@ const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
 const at = (encounters: Encounter[], changes: Partial<Run> = {}): Run => ({
   ...startRun(library, 1),
   party: pair(library),
-  baseLevel: 3,
   map: roadOf(encounters),
   position: 0,
   path: [0],
@@ -79,8 +78,6 @@ const ally: Encounter = {
     id: "new",
     name: "Nell",
     archetypeId: "melee-sage",
-    level: 1,
-    xp: 0,
     gear: {},
   },
 };
@@ -136,24 +133,13 @@ describe("startRun", () => {
     expect(drawn.size).toBeGreaterThan(8);
   });
 
-  it("raises the party to its highest level, at least the start level", () => {
+  it("sets the party out at the start level", () => {
     for (const seed of SEEDS) {
       const run = startRun(library, seed);
-      expect(run.party.every((c) => c.level === START_LEVEL)).toBe(true);
-      expect(run.baseLevel).toBe(START_LEVEL);
+      expect(
+        run.party.every((c) => c.level === START_LEVEL && c.xp === 0),
+      ).toBe(true);
     }
-    const veteran = {
-      ...library,
-      characters: library.characters.map((c) =>
-        c.name === "Aldric" ? { ...c, level: 9, xp: 50 } : c,
-      ),
-    };
-    const withHim = SEEDS.map((seed) => startRun(veteran, seed)).find((run) =>
-      run.party.some((c) => c.name === "Aldric"),
-    )!;
-    expect(withHim.party.map((c) => c.level)).toEqual([9, 9]);
-    expect(withHim.baseLevel).toBe(9);
-    expect(withHim.party.find((c) => c.name === "Aldric")!.xp).toBe(50);
   });
 
   it("counts every melee class and designed class character as a hero", () => {
@@ -549,7 +535,9 @@ describe("difficulty", () => {
 
 describe("monsterPool", () => {
   it("levels enemies up with the party and the depth", () => {
-    const run = at([battle]);
+    const run = at([battle], {
+      party: pair(library).map((c) => ({ ...c, level: START_LEVEL })),
+    });
     expect(enemyLevelBonus(run)).toBe(0);
     const later = {
       ...run,
@@ -679,17 +667,6 @@ describe("resolveAlly", () => {
     const run = resolveAlly(at([ally]), true);
     expect(run.position).toBe(1);
     expect(run.party.at(-1)).toMatchObject({ name: "Nell", level: 3, xp: 0 });
-  });
-
-  it("keeps a recruit's own level when it is higher", () => {
-    const veteran: Encounter = {
-      kind: "ally",
-      character: { ...ally.character, level: 9, xp: 40 },
-    };
-    expect(resolveAlly(at([veteran]), true).party.at(-1)).toMatchObject({
-      level: 9,
-      xp: 40,
-    });
   });
 
   it("moves on without them when declined or when the party is full", () => {

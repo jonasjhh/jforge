@@ -334,10 +334,10 @@ export type SkillEffect =
       /** May be placed on either side (boulders), not just the caster's. */
       anySide?: boolean;
       /**
-       * The enemy type and level char made `creature` from; char compiles
-       * it again from these, melee only reads `creature`.
+       * The enemy type char made `creature` from; char compiles it again
+       * from it, melee only reads `creature`.
        */
-      source?: { archetypeId: string; level: number };
+      source?: { archetypeId: string };
     }
   /**
    * Destroys one of the caster's obstacles (a boulder); every unit in the

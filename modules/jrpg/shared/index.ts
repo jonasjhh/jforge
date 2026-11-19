@@ -66,3 +66,6 @@ export * from "./run";
 export * from "./labels";
 export { GEAR_TIERS, atTier, withWorld } from "./world";
 export { formationOf, moveMember } from "./formation";
+export * from "./learning";
+export * from "./growth";
+export * from "./progression";

@@ -4,8 +4,9 @@ How a character's numbers come about and what they do, from the battle
 engine (melee) through design (char) to a run (jrpg). Each section names
 the code it describes; when a number there changes, change it here too.
 
-In short: stats decide battles; levels raise stats and unlock skills;
-gear adds on top. In jrpg, enemies keep pace with whatever the party
+In short: stats decide battles; levels (jrpg's) raise stats and unlock
+skills; gear adds on top. Char designs everything at level 1 and knows no
+levels. In jrpg, enemies keep pace with whatever the party
 gains, so progression changes how the party fights more than how easily
 it wins.
 
@@ -39,7 +40,7 @@ it wins.
 
 ## 2. Gear (`modules/char/shared/gear.ts`)
 
-- **Stats with gear:** (stat at level + every add) × every multiplier,
+- **Stats with gear:** (stat before gear + every add) × every multiplier,
   rounded. HP is always at least 1.
 - **Weapons:** a weapon also replaces the class's unarmed attack, so it
   changes reach, damage type and melee or ranged, not only numbers.
@@ -49,27 +50,41 @@ it wins.
   piece's positive adds by +50%, +100% and +150%. Multipliers and
   drawbacks stay the same.
 
-## 3. Levels (`modules/char/shared/progression.ts`)
+## 3. Levels (`modules/jrpg/shared/progression.ts`, `growth.ts`, `learning.ts`)
 
-- **Stats at a level:** base + growth × (level − 1), rounded. Levels run
-  from 1 to 50 (`MAX_LEVEL`).
-- **Melee classes** (`melee.ts`): they have exactly melee's stats at
-  level 3 (`MELEE_CLASS_LEVEL`). They grow 8% of their level-1 value per
-  level (`MELEE_GROWTH`); speed grows 2% (`MELEE_SPEED_GROWTH`).
+Levels belong to jrpg: a run keeps each member's level and experience.
+Char's classes and enemy types have their level-1 stats.
 
-  | Class                                  | Level 1            | Level 3            | Level 10           |
-  | -------------------------------------- | ------------------ | ------------------ | ------------------ |
-  | Fighter: HP / attack / defense / speed | 103 / 19 / 16 / 10 | 120 / 22 / 18 / 10 | 178 / 33 / 27 / 11 |
-  | Mage: HP / MP / magic / spirit         | 60 / 52 / 21 / 16  | 70 / 60 / 24 / 18  | 104 / 89 / 36 / 27 |
+- **Stats at a level:** base + growth × (level − 1), rounded, before
+  gear. Levels run from 1 to 50 (`MAX_LEVEL`).
+- **Stat growth** (`STAT_GROWTH`): one table with a row per class and
+  enemy type. Melee's classes and creatures grow 8% of their level-1
+  stats per level, speed 2%; the world's enemies have their own rows. A
+  designed type with no row grows by those same shares
+  (`DEFAULT_GROWTH`, `DEFAULT_SPEED_GROWTH`). Melee's classes have
+  exactly melee's stats at level 1.
+
+  | Class                                  | Level 1            | Level 3            | Level 10            |
+  | -------------------------------------- | ------------------ | ------------------ | ------------------- |
+  | Fighter: HP / attack / defense / speed | 120 / 22 / 18 / 10 | 139 / 26 / 21 / 10 | 206 / 38 / 31 / 12  |
+  | Mage: HP / MP / magic / spirit         | 70 / 60 / 24 / 18  | 81 / 70 / 28 / 21  | 120 / 103 / 41 / 31 |
 
   Growth is linear, but defense and spirit give diminishing returns, so
   offence gains more from levels than toughness does. Speed barely moves,
   so turn order stays mostly the same at every level.
 
-- **Skills:** a class learns each skill at a set level. Melee classes
-  learn theirs at levels 1, 2, 4, 6, 8 and 10 (`MELEE_SKILL_LEVELS`),
-  and any after those every two levels (12, 14, ...). A
-  level-up often matters more for the skill it unlocks than for its stats.
+- **Skill growth** (`SKILL_GROWTH`): one table with a row per skill, of
+  what each caster level above 1 adds to any of its numbers (power, a
+  status's power or ticks, MP cost, ...); counts and costs stay whole.
+  Every row is empty for now, so skills grow through the caster's stats
+  only: a level-5 witch's Fireball hits harder than a level-1 one because
+  her magic is higher.
+- **Summons** are at their summoner's level, grown by their type's row.
+- **Skills learned** (`LEARNING_ORDER`): each class has its own order;
+  it knows two skills at level 1 and learns one more each level until it
+  knows them all. When a class gains a skill, its order is rebalanced. A
+  class with no order, and every enemy, knows all its skills. A level-up
+  early on often matters more for the skill it brings than for its stats.
 - **Experience:** going from level L to L+1 costs 100 × L
   (`xpToNext`). Extra experience carries over and can level up more than
   once at a time (`gainXp`).
@@ -82,8 +97,8 @@ A unit's threat estimates how dangerous it is:
 - **Offence:** stats, weapon reach and area skills.
 - **Durability:** HP, defense and spirit, with bonuses for support and
   revives.
-- **Growth:** threat grows with level and gear. A level-3 hero at about 8
-  gains about 2.3 with two levels.
+- **Growth:** threat grows with level and gear. Melee's Fighter in basic
+  gear is about 5.5 at level 1 and about 8.1 at level 3.
 
 Threat decides how many enemies make up an encounter and how much
 experience they pay.
@@ -92,16 +107,15 @@ experience they pay.
 
 ### What the party gains
 
-- **Start:** the two chosen heroes set out at the higher of their levels,
-  and at least level 3 (`START_LEVEL`).
+- **Start:** the two chosen heroes set out at level 1 (`START_LEVEL`).
 - **Experience per battle:** each member gains `40 × total enemy threat ÷
 party size` (`XP_PER_THREAT`, `xpFor`).
-  - The first battle pays about 100 each to a party of two.
-  - Level 3 to 4 costs 300, so that takes about three battles.
+  - The first battle on Normal pays a party of two about 150 each.
+  - Level 1 to 2 costs 100 and 2 to 3 costs 200, so the first levels
+    come about one battle each, then slow down.
   - A bigger party splits the experience: four members level about half
     as fast per battle as two.
-- **Recruits** join at the level of the weakest member, if that is higher
-  than their own.
+- **Recruits** join at the level of the weakest member.
 - **Training** gives one member a level.
 - **Gear** comes from finds and drops, which are a tier better per depth,
   with some luck.
@@ -110,13 +124,14 @@ party size` (`XP_PER_THREAT`, `xpFor`).
 
 ### How enemies keep pace
 
-- **Enemy level** (`enemyLevelBonus`): designed enemies' levels go up by
-  the party's average levels gained since the start, plus 1 per depth
+- **Enemy level** (`enemyLevelBonus`): enemies start at level 1
+  (`START_LEVEL`) and go up by the party's average levels gained since
+  the start, plus 1 per depth
   (`ENEMY_LEVELS_PER_DEPTH`). Elite battles add 2 more and the final
   battle of a level adds 3 (`RANK_LEVELS`).
 - **Enemy count** (`threatBudget`): the total threat of an encounter's
   enemies is the party's own total threat × a share (`BUDGET_SHARE`: Easy
-  0.6, Normal 0.8, Hard 0.9) × 1.06 per depth (`DEPTH_GROWTH`).
+  0.52, Normal 0.68, Hard 0.8) × 1.06 per depth (`DEPTH_GROWTH`).
 
 ### What follows from this
 
@@ -127,7 +142,7 @@ party size` (`XP_PER_THREAT`, `xpFor`).
   - Battles get somewhat harder with depth on purpose: +1 enemy level and
     +6% budget per level of the run.
 - **Real advantages come from what the threat estimate misses:**
-  - skills unlocked by level, especially those threat barely counts,
+  - skills learned by level, especially those threat barely counts,
     such as Provoke pulling attacks off frail allies;
   - speed, which counts for more than its threat;
   - a party that works together: healing, buffs, area attacks on clumped
@@ -142,11 +157,10 @@ party size` (`XP_PER_THREAT`, `xpFor`).
 
   | Depth | Easy | Normal | Hard |
   | ----- | ---- | ------ | ---- |
-  | 1     | 94%  | 76%    | 56%  |
-  | 5     | 84%  | 61%    | 36%  |
+  | 1     | 96%  | 74%    | 60%  |
 
-  These were measured before the branching map, the chosen party, basic
-  gear and gear restrictions, so they may no longer be accurate.
+  Measured with the party starting at level 1 and the budget shares
+  above. Deeper levels have not been measured since.
 
 ### Where to change the feel
 
@@ -157,3 +171,5 @@ party size` (`XP_PER_THREAT`, `xpFor`).
   `DEPTH_GROWTH`.
 - **To speed up or slow down levelling:** change `XP_PER_THREAT` or
   `xpToNext`.
+- **To make a class or skill scale differently:** change its row in
+  `STAT_GROWTH` or `SKILL_GROWTH`.

@@ -2,13 +2,10 @@ import {
   basicGear,
   blankCharacter,
   canWear,
-  clampLevel,
   equip,
-  gainXp,
   parseLibrary,
   starterKit,
   starterLibrary,
-  toCombatantDef,
   unequip,
   type Character,
   type Gear,
@@ -29,7 +26,10 @@ import {
   type Placement,
   type Position,
 } from "@jforge/melee/shared";
+import { levelledDef } from "./growth";
+import { withLearnedSkills } from "./learning";
 import { formationOf } from "./formation";
+import { clampLevel, gainXp } from "./progression";
 import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
 
 // A run: the party travels through levels, each a map of encounters
@@ -55,6 +55,16 @@ export type Encounter =
   /** A place to train: one member gains a level. */
   | { kind: "training" };
 
+/**
+ * A party member: a character designed in char, at a level of the run.
+ * Char knows no levels; the run keeps them.
+ */
+export interface Member extends Character {
+  level: number;
+  /** Experience gathered toward the next level. */
+  xp: number;
+}
+
 /** A place on the level's map. */
 export interface Stop {
   encounter: Encounter;
@@ -69,11 +79,9 @@ export interface Run {
   seed: number;
   /** The level the party is on, from 1. Enemies grow with it. */
   depth: number;
-  /** The party's average level when it set out; enemies keep pace from it. */
-  baseLevel: number;
   /** What the run is made of, copied at the start so edits don't break it. */
   library: Library;
-  party: Character[];
+  party: Member[];
   /** Gear ids nobody wears. */
   bag: string[];
   /** The level's map: rows of stops, travelled first row to last. */
@@ -120,8 +128,8 @@ export const RANK_LEVELS: Record<BattleRank, number> = {
   boss: 3,
 };
 export const START_PARTY_SIZE = 2;
-/** The lowest level a party sets out at. */
-export const START_LEVEL = 3;
+/** The level a party sets out at, and enemies start from. */
+export const START_LEVEL = 1;
 /** Chance that an ordinary battle drops gear; elites and the last always do. */
 export const LOOT_CHANCE = 0.4;
 /** Experience per point of enemy threat, shared out over the party. */
@@ -133,9 +141,9 @@ export const ENEMY_LEVELS_PER_DEPTH = 1;
  * threat, so encounters keep pace with levels, gear and party size.
  */
 export const BUDGET_SHARE: Record<Difficulty, number> = {
-  easy: 0.6,
-  normal: 0.8,
-  hard: 0.9,
+  easy: 0.52,
+  normal: 0.68,
+  hard: 0.8,
 };
 
 /** Every level deeper, the enemies' share grows by this much of itself. */
@@ -146,7 +154,7 @@ const isClass = (library: Library, character: Character) =>
     (a) => a.id === character.archetypeId && a.kind === "class",
   );
 
-const averageLevel = (party: Character[]) =>
+const averageLevel = (party: Member[]) =>
   Math.round(party.reduce((sum, c) => sum + c.level, 0) / party.length);
 
 /** The designs a run starts from: `library`, or the starter library. */
@@ -156,7 +164,7 @@ export function runLibrary(library: Library | null): Library {
 
 /** Everyone who could set out: every class character of the run's world. */
 export function heroes(source: Library | null): Character[] {
-  const world = withWorld(runLibrary(source), 1);
+  const world = withWorld(runLibrary(source));
   return world.characters.filter((c) => isClass(world, c));
 }
 
@@ -174,8 +182,7 @@ export function drawParty(source: Library | null, seed: number): Character[] {
 /**
  * A new run. The party is the heroes `chosen` by id (unknown ids and
  * repeats are skipped, at most START_PARTY_SIZE), or drawn by the seed if
- * none are, all raised to the level of the highest among them
- * (START_LEVEL at least).
+ * none are, all at START_LEVEL.
  */
 export function startRun(
   source: Library | null,
@@ -188,16 +195,12 @@ export function startRun(
     .filter((c): c is Character => !!c)
     .slice(0, START_PARTY_SIZE);
   const drawn = picked.length > 0 ? picked : drawParty(source, seed);
-  const baseLevel = Math.max(START_LEVEL, ...drawn.map((c) => c.level));
-  const party = drawn.map((c) =>
-    c.level >= baseLevel ? c : { ...c, level: baseLevel, xp: 0 },
-  );
-  const library = withWorld(runLibrary(source), baseLevel);
+  const party = drawn.map((c) => ({ ...c, level: START_LEVEL, xp: 0 }));
+  const library = withWorld(runLibrary(source));
   return {
     version: SAVE_VERSION,
     seed,
     depth: 1,
-    baseLevel,
     library,
     party,
     bag: [],
@@ -448,30 +451,39 @@ export function gearOf(run: Run, id: string | undefined): Gear | undefined {
   return run.library.gear.find((g) => g.id === id);
 }
 
+/**
+ * A party member as melee fights with it at its level (see growth.ts),
+ * knowing only the skills its class has learned by then (learning.ts).
+ */
+export function memberDef(
+  library: Library,
+  member: Member,
+): CombatantDef | null {
+  const def = levelledDef(library, member, member.level);
+  return def && withLearnedSkills(def, member.archetypeId, member.level);
+}
+
 /** The party as melee fights with it. */
 export function partyDefs(run: Run): CombatantDef[] {
-  return run.party.flatMap((c) => toCombatantDef(run.library, c) ?? []);
+  return run.party.flatMap((c) => memberDef(run.library, c) ?? []);
 }
 
 /** Levels the enemies have gained: the party's own, plus the depth's. */
 export function enemyLevelBonus(run: Run): number {
-  const gained = Math.max(0, averageLevel(run.party) - run.baseLevel);
+  const gained = Math.max(0, averageLevel(run.party) - START_LEVEL);
   return gained + ENEMY_LEVELS_PER_DEPTH * (run.depth - 1);
 }
 
 /**
- * Who the party can meet: the library's enemies, levelled up as the party
- * and the run's depth grow, or melee's own monsters when none were
- * designed.
+ * Who the party can meet: the library's enemies, from START_LEVEL up as
+ * the party and the run's depth grow, or melee's own monsters when none
+ * were designed.
  */
 export function monsterPool(run: Run, tougher = 0): CombatantDef[] {
-  const extra = enemyLevelBonus(run) + tougher;
+  const level = START_LEVEL + enemyLevelBonus(run) + tougher;
   const designed = run.library.characters
     .filter((c) => !isClass(run.library, c))
-    .flatMap(
-      (c) =>
-        toCombatantDef(run.library, { ...c, level: c.level + extra }) ?? [],
-    );
+    .flatMap((c) => levelledDef(run.library, c, level) ?? []);
   return designed.length > 0 ? designed : content.monsters;
 }
 
@@ -521,7 +533,7 @@ export function battleFor(run: Run): BattleSetup | null {
   // The enemies stand where the seed puts them, the party in formation.
   const cells = formationOf(run);
   const party = run.party.flatMap((member): Placement[] => {
-    const def = toCombatantDef(run.library, member);
+    const def = memberDef(run.library, member);
     return def ? [{ def, side: "player", position: cells[member.id]! }] : [];
   });
   return { placements: [...party, ...drawn.placements] };
@@ -602,7 +614,7 @@ export function recruitOf(run: Run): Character | null {
 
 /**
  * Leaves an ally encounter. A recruit joins in their starting kit, at the
- * level of the party's weakest member if that is higher than its own. Only
+ * level of the party's weakest member. Only
  * if the party is full, the recruit can take the place of `replaceId`: that
  * member leaves, their gear goes in the bag and the recruit stands where
  * they stood.
@@ -622,8 +634,7 @@ export function resolveAlly(
   if (!room && !leaving) return next;
   const staying = run.party.filter((c) => c !== leaving);
   const lowest = Math.min(...staying.map((c) => c.level));
-  const joined =
-    ally.level >= lowest ? ally : { ...ally, level: lowest, xp: 0 };
+  const joined: Member = { ...ally, level: lowest, xp: 0 };
   if (!leaving) return { ...next, party: [...run.party, joined] };
   const cell = formationOf(run)[leaving.id];
   const formation = { ...run.formation };
@@ -693,7 +704,7 @@ export function changeGear(
   // No changing gear once the fight is on.
   if (!character || run.committed) return run;
   const bag = [...run.bag];
-  let changed: Character;
+  let changed: Member;
   if (gearId !== null) {
     const at = bag.indexOf(gearId);
     const gear = gearOf(run, gearId);
@@ -752,12 +763,13 @@ export function parseRun(text: string | null): Run | null {
     !library ||
     !whole(run.seed) ||
     !whole(run.depth) ||
-    !whole(run.baseLevel) ||
     !whole(run.position) ||
     typeof run.defeated !== "boolean" ||
     !Array.isArray(run.party) ||
     run.party.length === 0 ||
-    !run.party.every((c) => toCombatantDef(library, c)) ||
+    !run.party.every(
+      (c) => whole(c.level) && whole(c.xp) && memberDef(library, c),
+    ) ||
     !Array.isArray(run.bag) ||
     !run.bag.every((id) => typeof id === "string") ||
     !Array.isArray(run.path) ||

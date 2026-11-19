@@ -3,11 +3,10 @@ import {
   GEAR_SLOTS,
   archetypeOf,
   canWear,
-  xpToNext,
   type Character,
   type GearSlot,
 } from "@jforge/char/shared";
-import { changeGear, gearOf, gearSummary, type Run } from "../shared";
+import { changeGear, gearOf, gearSummary, xpToNext, type Run } from "../shared";
 
 const SLOT_LABELS: Record<GearSlot, string> = {
   weapon: "Weapon",

@@ -6,7 +6,6 @@ import {
   type StatusDef,
 } from "@jforge/melee/shared";
 import { creatureOf } from "./compile";
-import { clampLevel } from "./progression";
 import { EFFECTS, EFFECT_TYPES, type EffectType } from "./effectFields";
 import type { Library } from "./types";
 
@@ -25,7 +24,7 @@ export function isEditable(effect: SkillEffect): boolean {
 
 /**
  * A sensible starting effect of each kind. A summon takes the library's
- * first enemy type, at level 1, when there is one.
+ * first enemy type, when there is one.
  */
 export function defaultEffect(
   type: EditableEffect,
@@ -34,26 +33,24 @@ export function defaultEffect(
   const effect = EFFECTS[type].make();
   const first = library?.archetypes.find((a) => a.kind === "enemy");
   if (effect.type === "summon" && library && first) {
-    return withSummonSource(library, effect, first.id, 1);
+    return withSummonSource(library, effect, first.id);
   }
   return effect;
 }
 
 /**
- * A summon set to make an enemy type at a level: the creature is compiled
- * from it now, and again whenever the roster is compiled.
+ * A summon set to make an enemy type: the creature is compiled from it
+ * now, and again whenever the roster is compiled.
  */
 export function withSummonSource(
   library: Library,
   effect: Extract<SkillEffect, { type: "summon" }>,
   archetypeId: string,
-  level: number,
 ): SkillEffect {
-  const at = clampLevel(level);
-  const creature = creatureOf(library, archetypeId, at);
+  const creature = creatureOf(library, archetypeId);
   return {
     ...effect,
-    source: { archetypeId, level: at },
+    source: { archetypeId },
     ...(creature ? { creature } : {}),
   };
 }
@@ -99,10 +96,9 @@ function effectText(skill: Skill): string {
     case "gauge":
       return `sets the turn gauge to ${pct(effect.to)}${shape}`;
     case "summon": {
-      const level = effect.source ? ` (level ${effect.source.level})` : "";
       const many =
         effect.limit && effect.limit > 1 ? `, up to ${effect.limit}` : "";
-      return `summons a ${effect.creature.name}${level}${many}${effect.anySide ? ", either side" : ""}`;
+      return `summons a ${effect.creature.name}${many}${effect.anySide ? ", either side" : ""}`;
     }
     case "shatter":
       return `shatters a boulder: ${effect.element} damage ×${effect.power} around it`;

@@ -5,7 +5,7 @@ test("sets out, meets the first battle and can retreat to the map", async ({
 }) => {
   await page.goto("/jrpg/");
   await expect(page.getByRole("region", { name: "Setting out" })).toContainText(
-    "Level 3",
+    "Level 1",
   );
   await page.getByRole("button", { name: "Draw again" }).click();
   // Choosing the party: letting one go leaves a place to fill.
@@ -18,7 +18,7 @@ test("sets out, meets the first battle and can retreat to the map", async ({
   await expect(page.getByRole("heading", { name: "Level 1" })).toBeVisible();
   await expect(page.getByRole("group", { name: "Map" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Party" })).toContainText(
-    "Level 3",
+    "Level 1",
   );
   await expect(page.getByRole("region", { name: "Encounter" })).toContainText(
     "Battle",

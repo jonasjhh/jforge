@@ -40,10 +40,9 @@ function archetype(
   name: string,
   portrait: string,
   base: StatRow,
-  growth: StatRow,
   weapon: Weapon,
   preferredRow: number,
-  skills: [skillId: string, level: number][] = [],
+  skills: string[] = [],
   traits: Archetype["traits"] = [],
 ): Archetype {
   return {
@@ -52,9 +51,8 @@ function archetype(
     kind,
     portrait,
     baseStats: stats(base),
-    growth: stats(growth),
     weapon: { ...weapon, id: `world-${id}-weapon` },
-    skills: skills.map(([skillId, level]) => ({ skillId, level })),
+    skills,
     traits,
     preferredRow,
   };
@@ -67,7 +65,6 @@ const ENEMY_TYPES: Archetype[] = [
     "Wolf",
     "wolf",
     [50, 0, 15, 0, 5, 4, 16],
-    [5, 0, 1.6, 0, 0.5, 0.4, 0.5],
     c.fangs,
     0,
     [],
@@ -79,7 +76,6 @@ const ENEMY_TYPES: Archetype[] = [
     "Slime",
     "slime",
     [90, 0, 10, 0, 8, 6, 7],
-    [10, 0, 1, 0, 1, 0.8, 0.1],
     c.slam,
     0,
     [],
@@ -91,7 +87,6 @@ const ENEMY_TYPES: Archetype[] = [
     "Viper",
     "viper",
     [38, 0, 11, 0, 3, 4, 17],
-    [4, 0, 1.2, 0, 0.3, 0.4, 0.5],
     c.venomFangs,
     0,
     [],
@@ -103,10 +98,9 @@ const ENEMY_TYPES: Archetype[] = [
     "Bandit Archer",
     "archer",
     [48, 12, 13, 0, 5, 5, 12],
-    [5, 1, 1.5, 0, 0.5, 0.5, 0.3],
     c.bow,
     2,
-    [[c.aimedShot.id, 4]],
+    [c.aimedShot.id],
   ),
   archetype(
     "enemy",
@@ -114,14 +108,9 @@ const ENEMY_TYPES: Archetype[] = [
     "Hedge Witch",
     "mage",
     [42, 30, 4, 13, 4, 9, 11],
-    [4, 4, 0.2, 1.6, 0.4, 1, 0.2],
     c.staff,
     2,
-    [
-      [c.firebolt.id, 1],
-      [c.slow.id, 4],
-      [c.fireball.id, 7],
-    ],
+    [c.firebolt.id, c.slow.id, c.fireball.id],
   ),
   archetype(
     "enemy",
@@ -129,14 +118,9 @@ const ENEMY_TYPES: Archetype[] = [
     "Bone Priest",
     "healer",
     [50, 35, 5, 11, 5, 11, 10],
-    [5, 4, 0.3, 1.3, 0.5, 1.2, 0.2],
     c.staff,
     2,
-    [
-      [c.heal.id, 1],
-      [c.regen.id, 4],
-      [c.revive.id, 8],
-    ],
+    [c.heal.id, c.regen.id, c.revive.id],
     ["undead"],
   ),
   archetype(
@@ -145,7 +129,6 @@ const ENEMY_TYPES: Archetype[] = [
     "Stone Golem",
     "geomancer",
     [130, 0, 17, 0, 14, 6, 6],
-    [14, 0, 1.6, 0, 1.4, 0.5, 0.1],
     c.slam,
     0,
     [],
@@ -157,10 +140,9 @@ const ENEMY_TYPES: Archetype[] = [
     "Imp",
     "warlock",
     [36, 20, 9, 12, 4, 7, 15],
-    [4, 3, 0.8, 1.4, 0.4, 0.7, 0.4],
     c.claws,
     1,
-    [[c.firebolt.id, 2]],
+    [c.firebolt.id],
     ["demon"],
   ),
   archetype(
@@ -169,10 +151,9 @@ const ENEMY_TYPES: Archetype[] = [
     "Raider",
     "lancer",
     [70, 8, 15, 0, 9, 5, 11],
-    [8, 1, 1.7, 0, 1, 0.5, 0.2],
     c.spear,
     0,
-    [[c.skewer.id, 5]],
+    [c.skewer.id],
   ),
 ];
 
@@ -335,21 +316,20 @@ export function atTier(gear: Gear, tier: number): Gear {
   };
 }
 
-const enemy = (type: Archetype, level: number): Character => ({
+const enemy = (type: Archetype): Character => ({
   id: `${type.id}-1`,
   name: type.name,
   archetypeId: type.id,
-  level,
-  xp: 0,
   gear: {},
 });
 
 /**
- * The library a run plays with: `library` plus the world's enemies (at
- * `level`), melee's classes and heroes, gear, and every piece of gear at every
- * tier. What was designed comes first, so it sets out and shows up first.
+ * The library a run plays with: `library` plus the world's enemies,
+ * melee's classes and heroes, gear, and every piece of gear at every tier.
+ * What was designed comes first, so it sets out and shows up first. How
+ * the enemies grow with levels is in growth.ts.
  */
-export function withWorld(designed: Library, level: number): Library {
+export function withWorld(designed: Library): Library {
   const library = withMeleeClasses(designed);
   const have = new Set(library.skills.map((s) => s.id));
   const gear = [...library.gear, ...GEAR];
@@ -363,9 +343,6 @@ export function withWorld(designed: Library, level: number): Library {
     ],
     gear: GEAR_TIERS.flatMap((_, tier) => gear.map((g) => atTier(g, tier))),
     archetypes: [...library.archetypes, ...ENEMY_TYPES],
-    characters: [
-      ...library.characters,
-      ...ENEMY_TYPES.map((type) => enemy(type, Math.max(1, level - 1))),
-    ],
+    characters: [...library.characters, ...ENEMY_TYPES.map(enemy)],
   };
 }

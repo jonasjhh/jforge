@@ -1,22 +1,18 @@
 import { expect, test } from "@playwright/test";
 
-test("edits a character and sees its stats follow level and gear", async ({
+test("edits a character and sees its stats follow its gear", async ({
   page,
 }) => {
   await page.goto("/char/");
   await page.getByRole("button", { name: /Aldric/ }).click();
   const stats = page.getByRole("table", { name: "Stats" });
   const attack = stats.getByRole("row", { name: /Attack/ });
-  // Knight hero at level 1 with the Knight's Lance (+3): 16 attack, 19.
-  await expect(attack).toContainText("16");
-  await expect(attack).toContainText("19");
-
-  await page.getByLabel("Level").fill("5");
-  await expect(attack).toContainText("20");
-  await expect(attack).toContainText("23");
+  // Knight hero with the Knight's Lance (+3): 18 attack, 21.
+  await expect(attack).toContainText("18");
+  await expect(attack).toContainText("21");
 
   await page.getByLabel("Weapon").selectOption("None");
-  await expect(attack).not.toContainText("23");
+  await expect(attack).not.toContainText("21");
 });
 
 test("a designed character plays in melee and shows up in jrpg", async ({

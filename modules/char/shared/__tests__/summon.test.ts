@@ -44,7 +44,7 @@ describe("melee's creatures as enemy types", () => {
 describe("designed summons", () => {
   const library = starterLibrary();
   const goblin = library.archetypes.find((a) => a.id === "type-goblin")!;
-  const summon = (level: number): Skill => ({
+  const summon = (): Skill => ({
     ...blankSkill("call"),
     name: "Call",
     target: "any",
@@ -52,15 +52,14 @@ describe("designed summons", () => {
       library,
       defaultEffect("summon") as Summon,
       goblin.id,
-      level,
     ),
   });
 
-  it("makes the creature from the type at the level", () => {
-    const creature = summonOf(summon(4)).creature;
+  it("makes the creature from the type", () => {
+    const creature = summonOf(summon()).creature;
     expect(creature.name).toBe("Goblin");
-    expect(creature.stats.maxHp).toBe(45 + 6 * 3);
-    expect(skillProblems(summon(4), library)).toEqual([]);
+    expect(creature.stats).toEqual(goblin.baseStats);
+    expect(skillProblems(summon(), library)).toEqual([]);
   });
 
   it("follows later edits to the type when compiled", () => {
@@ -72,14 +71,14 @@ describe("designed summons", () => {
           : a,
       ),
     };
-    const compiled = compileSkill(tougher, summon(1));
+    const compiled = compileSkill(tougher, summon());
     expect(summonOf(compiled).creature.stats.maxHp).toBe(100);
   });
 
   it("keeps the saved creature and says so when the type is gone", () => {
     const gone = { ...library, archetypes: [] };
-    expect(compileSkill(gone, summon(2))).toEqual(summon(2));
-    expect(skillProblems(summon(2), gone)).toEqual([
+    expect(compileSkill(gone, summon())).toEqual(summon());
+    expect(skillProblems(summon(), gone)).toEqual([
       "The enemy type it summons is gone.",
     ]);
   });
@@ -95,14 +94,14 @@ describe("designed summons", () => {
       ...goblin,
       id: "type-echo",
       name: "Echo",
-      skills: [{ skillId: "call-echo", level: 1 }],
+      skills: ["call-echo"],
     };
     const call: Skill = {
-      ...summon(1),
+      ...summon(),
       id: "call-echo",
       effect: {
-        ...summonOf(summon(1)),
-        source: { archetypeId: echo.id, level: 1 },
+        ...summonOf(summon()),
+        source: { archetypeId: echo.id },
       },
     };
     const lib: Library = {
@@ -111,7 +110,7 @@ describe("designed summons", () => {
       skills: [...library.skills, call],
       characters: [{ ...blankCharacter("c", echo), name: "Echo" }],
     };
-    const creature = creatureOf(lib, echo.id, 1)!;
+    const creature = creatureOf(lib, echo.id)!;
     expect(creature.name).toBe("Echo");
     const monster = compileRoster(lib).monsters.find((m) => m.name === "Echo");
     expect(summonOf(monster!.skills![0]!).creature.name).toBe("Echo");

@@ -811,13 +811,18 @@ Ideas to build in small steps, roughly in this order when they fit:
   `mul`). A weapon also says how it attacks (melee's `Weapon`). Weapons
   and armor can have a **category**: blade, polearm, dagger, bow, staff or
   focus; heavy armor, light armor or robe. Accessories have none.
-- **Types**: a class or an enemy type. Stats at level 1, growth per level,
-  an unarmed attack, traits, an icon, and the level each skill is learned
-  at. An enemy's threat is not typed in: it is estimated from the
-  compiled character (stats, weapon, skills), so a higher level or better
-  gear means fewer of it per encounter. The character editor shows it.
-- **Characters**: a type at a level (1 to 50), wearing gear. Characters of
-  a class form the party; characters of an enemy type the monster pool.
+- **Types**: a class or an enemy type. Stats at level 1, an unarmed
+  attack, traits, an icon, and the skills it has. An enemy's threat is
+  not typed in: it is estimated from the compiled character (stats,
+  weapon, skills), so stronger stats or better gear mean fewer of it per
+  encounter. The character editor shows it.
+- **Characters**: a type wearing gear. Characters of a class form the
+  party; characters of an enemy type the monster pool.
+
+**Char knows no levels or progression**: it designs classes, enemy types
+and skills at level 1. How they grow, when skills are learned and what
+experience is for belong to the game that uses them (jrpg: see **Levels
+and growth** under The run).
 
 **Gear restrictions** (`canUse`, `canWear` in `shared/gear.ts`): a type
 can list the categories it is **proficient** with. Its characters can use
@@ -841,22 +846,21 @@ taken, ...), at melee's defaults until changed; picking another kind of
 status starts it from that kind's defaults. `skillProblems` checks every
 kind (power above 0, a duration, a gauge share, a summon's type).
 
-**Summons are enemy types**: a summon picks an enemy type and a level,
-saved on the effect as its `source`. The creature is compiled from the
+**Summons are enemy types**: a summon picks an enemy type, saved on the
+effect as its `source`. The creature is compiled from the
 type then, and again whenever the roster is compiled, so edits to the
 type reach it; if the type is deleted the creature saved last is used and
 the editor says the type is gone. A creature's own summons are compiled
-one level deep (`SUMMON_DEPTH` 2), so a type that summons itself still
+one step deep (`SUMMON_DEPTH` 2), so a type that summons itself still
 compiles. Melee's Imp and boulder are enemy types too (`melee-creature-imp`,
-`melee-creature-boulder`, at melee's stats at level 3; an archetype can be
+`melee-creature-boulder`, with melee's stats; an archetype can be
 an `obstacle`), and Summon Imp and Raise Boulder point at them.
 
 **Melee's classes** (`shared/melee.ts`): every melee class is also a char
 class (`melee-fighter`, ...), in the starter library and added to saved
-libraries when they load, so each can be levelled, geared, edited and
-used by jrpg. At level 3 it has exactly melee's stats; they grow 8% of the
-level-1 value per level (speed 2%). Skills are learned in melee's order at
-levels 1, 2, 4, 6, 8. An edited copy is kept; a deleted one comes back.
+libraries when they load, so each can be geared, edited and used by
+jrpg. Its level-1 stats are melee's own and it has all of melee's skills
+for it. An edited copy is kept; a deleted one comes back.
 Their proficiencies (`MELEE_PROFICIENCIES`) include their own weapon's
 category:
 
@@ -885,14 +889,14 @@ hero or piece is kept and a deleted one comes back. Melee's Custom roster
 gets the heroes too and fields five of its party characters per
 encounter.
 
-**Stats**: `round(base + growth x (level - 1))`, then gear the way melee
-applies modifiers: `(stat + adds) x muls`, rounded. Experience: a level
-costs `100 x level`; `gainXp` levels up as often as it pays for.
+**Stats**: the stats before gear (the type's own, or what a game passes
+in, such as jrpg's levelled stats), then gear the way melee applies
+modifiers: `(stat + adds) x muls`, rounded.
 
 **Import into melee and jrpg**: melee owns a roster format (`shared/roster.ts`:
 party and monster pool as `CombatantDef`s under one storage key). Char
-compiles every character into a `CombatantDef` (levels and gear worked into
-plain stats) and writes the roster on every change; melee offers it as the
+compiles every character into a `CombatantDef` (gear worked into plain
+stats) and writes the roster on every change; melee offers it as the
 **Custom** roster on its start screen, and jrpg sets out with the imported
 party. All modules share one origin, so no server is involved. Char depends
 on melee, never the other way round.
@@ -929,7 +933,7 @@ party size` experience and sometimes gear (40%; elites and the final
   battle seed, so coming back never rerolls its luck. Starting a battle
   over is allowed (the ↺ button, once the party has acted).
 - **Ally**: a traveller who isn't in the party offers to join, at the
-  level of the party's weakest member if that is higher, with char's
+  level of the party's weakest member, with char's
   `starterKit` in their empty slots (heroes already wear theirs).
   The party holds five; when it is full the recruit can take a member's
   place, standing where they stood, and the one who leaves puts their gear
@@ -968,19 +972,44 @@ Fine, Superior, Masterwork: each adds half again to what the piece adds);
 finds are a tier better per depth, with some luck.
 
 **The player chooses the party**: two of the heroes (every class
-character in char's library: melee's heroes and any designed), both raised to the level of the
-higher one and at least level 3. The start screen preselects two drawn by
+character in char's library: melee's heroes and any designed), both at
+level 1 (`START_LEVEL`). The start screen preselects two drawn by
 the run's seed and can draw again; choosing a third lets go of the first.
 Whoever doesn't set out can be met as an ally.
 
-Enemies gain the party's average levels gained plus one per depth. The
-**threat budget** of a battle is a share of the party's own estimated
-threat (Easy 0.6, Normal 0.8, Hard 0.9), so encounters keep pace with
-levels, gear and party size, and the share grows 6% per depth, so deeper
-levels are harder. Auto-played parties win about 94% / 76% / 56% of the
-first level's battles and 84% / 61% / 36% of the fifth's (every battle
-counted, not only those of parties that got that far); a test keeps the
-first level in its bands. The run is saved in the browser after every
+**Levels and growth** (`shared/progression.ts`, `growth.ts`,
+`learning.ts`): jrpg owns them; char's designs are level 1.
+
+- **Party levels**: a run keeps each member's level (1 to 50) and
+  experience. A level costs `100 x level`; `gainXp` levels up as often as
+  it pays for.
+- **Stat growth** (`STAT_GROWTH`): one table, a row per class and enemy
+  type, of what each level above 1 adds to each stat:
+  `round(base + growth x (level - 1))`, before gear. Melee's classes and
+  creatures grow 8% of their level-1 stats per level (speed 2%); the
+  world's enemies have their own rows. A designed type with no row grows
+  by those same shares.
+- **Skill growth** (`SKILL_GROWTH`): one table, a row per skill, of what
+  each level of the caster above 1 adds to any of the skill's numbers (by
+  path: power, a status's power or ticks, MP cost, ...). Every row is
+  empty for now: skills grow only through the caster's stats, so a level-5
+  Hedge Witch's Fireball does more than a level-1 one through her magic.
+- **Summons** match their summoner's level, grown by their enemy type's
+  row.
+- **Skills learned** (`LEARNING_ORDER`): each class learns its skills in
+  its own order, two at level 1 and one more every level after, until it
+  knows them all. When a class gains a skill, its order is rebalanced in
+  the same change. A class with no order, and every enemy, knows all its
+  skills.
+
+Enemies start at level 1 and gain the party's average levels gained plus
+one per depth. The **threat budget** of a battle is a share of the
+party's own estimated threat (Easy 0.52, Normal 0.68, Hard 0.8), so
+encounters keep pace with levels, gear and party size, and the share
+grows 6% per depth, so deeper levels are harder. Auto-played parties win
+about 96% / 74% / 60% of the first level's battles (every battle counted,
+not only those of parties that got that far); a test keeps the first
+level in its bands. The run is saved in the browser after every
 encounter, with `SAVE_VERSION`; a run of another version is dropped.
 
 Not yet: shops.

@@ -12,7 +12,6 @@ import {
   upsert,
 } from "../library";
 import { compileRoster } from "../compile";
-import { MAX_LEVEL } from "../progression";
 import { starterLibrary } from "../starter";
 import { designedLibrary } from "./designed";
 
@@ -67,9 +66,7 @@ describe("remove", () => {
     const after = remove(library, "skills", "heal");
     expect(after.skills.some((s) => s.id === "heal")).toBe(false);
     expect(
-      after.archetypes
-        .flatMap((a) => a.skills)
-        .some((u) => u.skillId === "heal"),
+      after.archetypes.flatMap((a) => a.skills).some((id) => id === "heal"),
     ).toBe(false);
   });
 
@@ -117,14 +114,6 @@ describe("parseLibrary", () => {
 
   it("reads back an exported library", () => {
     expect(parseLibrary(JSON.stringify(starter))).toEqual(starter);
-  });
-
-  it("brings levels back into range", () => {
-    const text = broken((lib) => {
-      lib.characters[0]!.level = 999;
-      return lib;
-    });
-    expect(parseLibrary(text)?.characters[0]?.level).toBe(MAX_LEVEL);
   });
 
   it.each<[string, string | null]>([
@@ -178,10 +167,10 @@ describe("parseLibrary", () => {
       })),
     ],
     [
-      "a character with no level",
+      "a character whose type is not named by id",
       broken((lib) => ({
         ...lib,
-        characters: [{ ...lib.characters[0], level: "3" }],
+        characters: [{ ...lib.characters[0], archetypeId: 3 }],
       })),
     ],
     [

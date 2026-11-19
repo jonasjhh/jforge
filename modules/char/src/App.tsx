@@ -100,7 +100,7 @@ export function App() {
           items={library.characters}
           note={(c) => {
             const archetype = archetypeOf(library, c);
-            return `Lv ${c.level} ${archetype?.name ?? "?"}`;
+            return archetype?.name ?? "?";
           }}
           onNew={
             firstArchetype &&

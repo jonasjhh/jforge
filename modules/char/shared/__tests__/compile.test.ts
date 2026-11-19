@@ -11,7 +11,7 @@ import {
   characterWeapon,
   compileRoster,
   toCombatantDef,
-  unlockedSkills,
+  archetypeSkills,
 } from "../compile";
 import { designedLibrary } from "./designed";
 import type { Character } from "../types";
@@ -34,26 +34,27 @@ describe("archetypeOf", () => {
 });
 
 describe("characterStats", () => {
-  it("levels first, then puts gear on top", () => {
+  it("puts gear on top of the type's own stats", () => {
     const stats = characterStats(library, aldric)!;
-    // Squire level 3: 16 + 2 x 2 attack; Iron Sword +6.
-    expect(stats.leveled.attack).toBe(20);
-    expect(stats.total.attack).toBe(26);
+    // Squire: 16 attack; Iron Sword +6.
+    expect(stats.base.attack).toBe(16);
+    expect(stats.total.attack).toBe(22);
     // Chain Mail: +8 defense, speed x0.9.
-    expect(stats.leveled.defense).toBe(15);
-    expect(stats.total.defense).toBe(23);
-    expect(stats.total.speed).toBe(Math.round(stats.leveled.speed * 0.9));
+    expect(stats.base.defense).toBe(12);
+    expect(stats.total.defense).toBe(20);
+    expect(stats.total.speed).toBe(Math.round(stats.base.speed * 0.9));
   });
 
-  it("equals the levelled stats with no gear on", () => {
+  it("equals the type's stats with no gear on", () => {
     const stats = characterStats(library, { ...aldric, gear: {} })!;
-    expect(stats.total).toEqual(stats.leveled);
+    expect(stats.total).toEqual(knight.baseStats);
   });
 
-  it("grows with level", () => {
-    const low = characterStats(library, { ...aldric, level: 1 })!;
-    const high = characterStats(library, { ...aldric, level: 10 })!;
-    expect(high.total.maxHp).toBeGreaterThan(low.total.maxHp);
+  it("puts gear on top of the stats it is given instead", () => {
+    const base = { ...knight.baseStats, attack: 30 };
+    const stats = characterStats(library, aldric, base)!;
+    expect(stats.base).toEqual(base);
+    expect(stats.total.attack).toBe(36);
   });
 
   it("is null when the type is gone", () => {
@@ -61,19 +62,18 @@ describe("characterStats", () => {
   });
 });
 
-describe("unlockedSkills", () => {
-  const names = (level: number) =>
-    unlockedSkills(library, sage, level).map((s) => s.name);
-
-  it("gives the skills learned up to that level, earliest first", () => {
-    expect(names(1)).toEqual(["Firebolt"]);
-    expect(names(3)).toEqual(["Firebolt", "Heal"]);
-    expect(names(4)).toEqual(["Firebolt", "Heal", "Fireball"]);
+describe("archetypeSkills", () => {
+  it("gives every skill the archetype has, as listed", () => {
+    expect(archetypeSkills(library, sage).map((s) => s.name)).toEqual([
+      "Firebolt",
+      "Heal",
+      "Fireball",
+    ]);
   });
 
   it("skips skills that no longer exist", () => {
-    const type = { ...sage, skills: [{ skillId: "gone", level: 1 }] };
-    expect(unlockedSkills(library, type, 5)).toEqual([]);
+    const type = { ...sage, skills: ["gone"] };
+    expect(archetypeSkills(library, type)).toEqual([]);
   });
 });
 
@@ -99,7 +99,11 @@ describe("toCombatantDef", () => {
       preferredRow: 2,
       stats: characterStats(library, mira)!.total,
     });
-    expect(def.skills?.map((s) => s.name)).toEqual(["Firebolt", "Heal"]);
+    expect(def.skills?.map((s) => s.name)).toEqual([
+      "Firebolt",
+      "Heal",
+      "Fireball",
+    ]);
     expect(def.threat).toBeUndefined();
   });
 
@@ -109,9 +113,14 @@ describe("toCombatantDef", () => {
     expect(threat).toBe(estimateThreat(rest));
   });
 
-  it("makes a higher-level enemy a bigger threat", () => {
-    const low = toCombatantDef(library, { ...goblin, level: 1 })!;
-    const high = toCombatantDef(library, { ...goblin, level: 20 })!;
+  it("makes an enemy with stronger stats a bigger threat", () => {
+    const type = archetypeOf(library, goblin)!;
+    const doubled = Object.fromEntries(
+      Object.entries(type.baseStats).map(([stat, v]) => [stat, v * 2]),
+    ) as typeof type.baseStats;
+    const low = toCombatantDef(library, goblin)!;
+    const high = toCombatantDef(library, goblin, doubled)!;
+    expect(high.stats.attack).toBe(type.baseStats.attack * 2);
     expect(high.threat!).toBeGreaterThan(low.threat!);
   });
 

@@ -7,7 +7,6 @@ import {
   type Stats,
 } from "@jforge/melee/shared";
 import { compileRoster } from "./compile";
-import { clampLevel } from "./progression";
 import {
   ALL_GEAR_CATEGORIES,
   GEAR_CATEGORIES,
@@ -87,7 +86,7 @@ export function remove(
   if (collection === "skills") {
     next.archetypes = next.archetypes.map((a) => ({
       ...a,
-      skills: a.skills.filter((unlock) => unlock.skillId !== id),
+      skills: a.skills.filter((skillId) => skillId !== id),
     }));
   } else if (collection === "gear") {
     next.characters = next.characters.map((c) => ({
@@ -138,15 +137,6 @@ export function blankArchetype(id: string, kind: Archetype["kind"]): Archetype {
       spirit: 10,
       speed: 10,
     },
-    growth: {
-      maxHp: 8,
-      maxMp: 2,
-      attack: 1.5,
-      magic: 1,
-      defense: 1,
-      spirit: 1,
-      speed: 0.2,
-    },
     weapon: {
       id: `${id}-weapon`,
       name: kind === "class" ? "Fists" : "Claws",
@@ -166,8 +156,6 @@ export function blankCharacter(id: string, archetype: Archetype): Character {
     id,
     name: archetype.name,
     archetypeId: archetype.id,
-    level: 1,
-    xp: 0,
     gear: {},
   };
 }
@@ -206,12 +194,9 @@ function isArchetype(v: unknown): boolean {
     (v.kind === "class" || v.kind === "enemy") &&
     typeof v.portrait === "string" &&
     isStats(v.baseStats) &&
-    isStats(v.growth) &&
     isRecord(v.weapon) &&
     Array.isArray(v.skills) &&
-    v.skills.every(
-      (u) => isRecord(u) && typeof u.skillId === "string" && isNumber(u.level),
-    ) &&
+    v.skills.every((id) => typeof id === "string") &&
     Array.isArray(v.traits) &&
     v.traits.every((t) => TRAITS.includes(t as never)) &&
     isNumber(v.preferredRow) &&
@@ -228,8 +213,6 @@ function isCharacter(v: unknown): boolean {
   return (
     named(v) &&
     typeof v.archetypeId === "string" &&
-    isNumber(v.level) &&
-    isNumber(v.xp) &&
     isRecord(v.gear) &&
     Object.values(v.gear).every((id) => typeof id === "string")
   );
@@ -271,10 +254,6 @@ export function parseLibrary(text: string | null): Library | null {
     archetypes,
     characters,
   } as Library;
-  library.characters = library.characters.map((c) => ({
-    ...c,
-    level: clampLevel(c.level),
-  }));
   const roster = compileRoster(library);
   return [...roster.party, ...roster.monsters].every(isCombatantDef)
     ? library
