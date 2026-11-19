@@ -82,8 +82,10 @@ const coated = () =>
   advance(cast(rogueTurn(), poisonBlade.id, mine(2, 0)).state).state;
 
 describe("Rogue skills", () => {
-  it("are Vanish, Shadowstep, Poison Blade and Smoke Bomb", () => {
-    expect(rogue.skills).toEqual([
+  it("given the Rogue, when its skills are listed, then they are Vanish, Shadowstep, Poison Blade, Smoke Bomb and Coup de Grâce", () => {
+    const skills = rogue.skills;
+
+    expect(skills).toEqual([
       vanish,
       shadowstep,
       poisonBlade,
@@ -94,74 +96,123 @@ describe("Rogue skills", () => {
 });
 
 describe("Poison Blade", () => {
-  it("coats the Rogue's blade for 450 game time", () => {
-    const { state } = cast(rogueTurn(), poisonBlade.id, mine(2, 0));
+  it("given the Rogue, when it coats its blade, then the coat lasts 450 game time, for the MP cost", () => {
+    const start = rogueTurn();
+
+    const { state } = cast(start, poisonBlade.id, mine(2, 0));
+
     const coat = unit(state, ROGUE).statuses.find((s) => s.effect === "coat");
     expect(coat).toMatchObject({ harmful: false, interval: 450 });
     expect(unit(state, ROGUE).mp).toBe(rogue.stats.maxMp - poisonBlade.mpCost);
   });
 
-  it("makes weapon attacks poison, as the Viper's bite does", () => {
-    const plain = act(rogueTurn(), { type: "attack", targetId: FOE }).state;
-    expect(poisonOn(plain)).toBeUndefined();
-    const after = act(coated(), { type: "attack", targetId: FOE }).state;
-    expect(poisonOn(after)).toMatchObject({
+  it("given an uncoated blade, when the Rogue attacks, then the foe isn't poisoned", () => {
+    const start = rogueTurn();
+
+    const { state } = act(start, { type: "attack", targetId: FOE });
+
+    expect(poisonOn(state)).toBeUndefined();
+  });
+
+  it("given a coated blade, when the Rogue attacks, then the foe is poisoned as by the Viper's bite", () => {
+    const start = coated();
+
+    const { state } = act(start, { type: "attack", targetId: FOE });
+
+    expect(poisonOn(state)).toMatchObject({
       amount: Math.round(POISON.power * rogue.stats.attack),
       ticksLeft: POISON.ticks,
     });
   });
 
-  it("poisons through strike skills too", () => {
-    expect(poisonOn(cast(rogueTurn(), stab.id, foeCell).state)).toBeUndefined();
-    expect(poisonOn(cast(coated(), stab.id, foeCell).state)).toBeDefined();
-  });
+  it.each([
+    ["an uncoated", rogueTurn, false],
+    ["a coated", coated, true],
+  ])(
+    "given %s blade, when the Rogue stabs, then the foe is poisoned: %s",
+    (_, start, poisoned) => {
+      const state = start();
 
-  it("makes the AI value a coated strike more", () => {
+      const { state: after } = cast(state, stab.id, foeCell);
+
+      expect(poisonOn(after) !== undefined).toBe(poisoned);
+    },
+  );
+
+  it("given a coated blade, when the AI values a stab, then it is worth more than uncoated", () => {
     const value = (s: BattleState) =>
       skillValue(s, unit(s, ROGUE), stab, foeCell);
-    expect(value(coated())).toBeGreaterThan(value(rogueTurn()));
+    const plain = value(rogueTurn());
+
+    const withCoat = value(coated());
+
+    expect(withCoat).toBeGreaterThan(plain);
   });
 
-  it("raises the Rogue's threat like a venomous weapon", () => {
-    const without = { ...rogue, skills: [vanish, shadowstep, smokeBomb] };
-    expect(offenseOf(rogue)).toBeGreaterThan(offenseOf(without));
+  it("given the Rogue with and without Poison Blade, when its offense is weighed, then the blade adds threat", () => {
+    const without = offenseOf({
+      ...rogue,
+      skills: [vanish, shadowstep, smokeBomb],
+    });
+
+    const offense = offenseOf(rogue);
+
+    expect(offense).toBeGreaterThan(without);
   });
 });
 
 describe("Smoke Bomb", () => {
   const smoked = () => cast(rogueTurn(), smokeBomb.id, mine(1, 0)).state;
 
-  it("hides another ally, not the Rogue", () => {
+  it("given the Rogue, when it smoke-bombs itself, then it is refused", () => {
     const state = rogueTurn();
-    expect(
-      validateCommand(state, unit(state, ROGUE), {
-        type: "skill",
-        skillId: smokeBomb.id,
-        cell: mine(2, 0),
-      }),
-    ).toBe("Smoke Bomb can't target its caster");
-    const ally = unit(smoked(), ALLY);
-    expect(ally.statuses).toContainEqual(
+
+    const problem = validateCommand(state, unit(state, ROGUE), {
+      type: "skill",
+      skillId: smokeBomb.id,
+      cell: mine(2, 0),
+    });
+
+    expect(problem).toBe("Smoke Bomb can't target its caster");
+  });
+
+  it("given an ally, when the Rogue smoke-bombs it, then the ally is hidden in smoke for 100", () => {
+    const start = rogueTurn();
+
+    const { state } = cast(start, smokeBomb.id, mine(1, 0));
+
+    expect(unit(state, ALLY).statuses).toContainEqual(
       expect.objectContaining({ effect: "smoke", interval: 100 }),
     );
   });
 
-  it("keeps enemies from singling the ally out, but areas still hit it", () => {
+  describe("on a smoked ally", () => {
     const state = smoked();
     const foe = unit(state, FOE);
-    const picks = reachableTargets(state, foe).map((u) => u.id);
-    expect(picks).toContain(ROGUE);
-    expect(picks).not.toContain(ALLY);
     const caster = { ...foe, skills: [fireball, smite], mp: 100 };
-    expect(
-      validateCommand(state, caster, {
+
+    it("given a smoked ally, when an enemy's targets are listed, then the ally is not among them", () => {
+      const picks = reachableTargets(state, foe).map((u) => u.id);
+
+      expect(picks).toContain(ROGUE);
+      expect(picks).not.toContain(ALLY);
+    });
+
+    it("given a smoked ally, when an enemy casts a single-target skill at it, then it can't be seen", () => {
+      const problem = validateCommand(state, caster, {
         type: "skill",
         skillId: smite.id,
         cell: mine(1, 0),
-      }),
-    ).toBe("ally can't be seen");
-    const victims = skillVictims(state, caster, fireball, mine(1, 0));
-    expect(victims.map((u) => u.id)).toContain(ALLY);
+      });
+
+      expect(problem).toBe("ally can't be seen");
+    });
+
+    it("given a smoked ally, when an enemy's area skill is aimed at it, then it is among the victims", () => {
+      const victims = skillVictims(state, caster, fireball, mine(1, 0));
+
+      expect(victims.map((u) => u.id)).toContain(ALLY);
+    });
   });
 });
 
@@ -175,20 +226,30 @@ describe("Coup de Grâce", () => {
     return before - unit(cast(s, skillId, foeCell).state, FOE).hp;
   }
 
-  it("hits like a plain strike on a healthy target", () => {
-    expect(hitAt(0.5)).toBe(hitAt(0.5, "stab"));
+  it("given a foe at half HP, when it is finished, then it hits like a plain stab", () => {
+    const stabbed = hitAt(0.5, "stab");
+
+    const hit = hitAt(0.5);
+
+    expect(hit).toBe(stabbed);
   });
 
-  it("hits far harder below 30% HP", () => {
-    expect(hitAt(0.29)).toBeGreaterThan(2 * hitAt(0.29, "stab"));
+  it("given a foe below 30% HP, when it is finished, then it hits more than twice as hard as a stab", () => {
+    const stabbed = hitAt(0.29, "stab");
+
+    const hit = hitAt(0.29);
+
+    expect(hit).toBeGreaterThan(2 * stabbed);
   });
 
-  it("previews the finishing hit", () => {
+  it("given a foe at 20% HP, when the finisher is previewed, then it shows the finishing hit", () => {
     const s = rogueTurn();
     const foe = unit(s, FOE);
     const healthy = previewDamage(unit(s, ROGUE), foe, coupDeGrace);
     foe.hp = Math.round(foe.base.maxHp * 0.2);
+
     const hurt = previewDamage(unit(s, ROGUE), foe, coupDeGrace);
+
     expect(hurt!.amount).toBeGreaterThan(2 * healthy!.amount);
   });
 });

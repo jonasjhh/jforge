@@ -34,8 +34,12 @@ const broken = {
 };
 
 describe("isCombatantDef", () => {
-  it("accepts the built-in types", () => {
-    expect([...playerTypes, ...monsters].every(isCombatantDef)).toBe(true);
+  it("given the built-in types, when they are checked, then each is a combatant", () => {
+    const types = [...playerTypes, ...monsters];
+
+    const rejected = types.filter((t) => !isCombatantDef(t));
+
+    expect(rejected).toEqual([]);
   });
 
   it.each([
@@ -65,9 +69,14 @@ describe("isCombatantDef", () => {
       "a skill with no effect",
       { ...fighter, skills: [{ id: "x", name: "X" }] },
     ],
-  ])("rejects %s", (_, value) => {
-    expect(isCombatantDef(value)).toBe(false);
-  });
+  ])(
+    "given a value with %s, when it is checked, then it is rejected",
+    (_, value) => {
+      const result = isCombatantDef(value);
+
+      expect(result).toBe(false);
+    },
+  );
 });
 
 /** A roster as writeRoster saves it. */
@@ -75,8 +84,12 @@ const saved = (data: object) =>
   JSON.stringify({ version: SAVE_VERSION, ...data });
 
 describe("parseRoster", () => {
-  it("reads back what was written", () => {
-    expect(parseRoster(saved(roster))).toEqual(roster);
+  it("given a saved roster, when it is parsed, then it reads back what was written", () => {
+    const text = saved(roster);
+
+    const parsed = parseRoster(text);
+
+    expect(parsed).toEqual(roster);
   });
 
   it.each([
@@ -88,67 +101,94 @@ describe("parseRoster", () => {
     ["a broken combatant", saved({ party: [{ id: "x" }], monsters: [] })],
     ["no version", JSON.stringify(roster)],
     ["another version", saved({ ...roster, version: SAVE_VERSION - 1 })],
-  ])("gives null for %s", (_, text) => {
-    expect(parseRoster(text)).toBeNull();
+  ])("given %s, when it is parsed, then it gives null", (_, text) => {
+    const parsed = parseRoster(text);
+
+    expect(parsed).toBeNull();
   });
 
-  it("gives combatants a battle can use", () => {
+  it("given a parsed roster, when a battle is built from it, then the combatants are usable", () => {
     const parsed = parseRoster(saved(roster))!;
-    expect(() =>
-      createBattle(
-        {
-          placements: [
-            place(parsed.party[0]!, "player", 0),
-            place(parsed.monsters[0]!, "enemy", 0),
-          ],
-        },
-        1,
-      ),
-    ).not.toThrow();
+    const placements = [
+      place(parsed.party[0]!, "player", 0),
+      place(parsed.monsters[0]!, "enemy", 0),
+    ];
+
+    const create = () => createBattle({ placements }, 1);
+
+    expect(create).not.toThrow();
   });
 });
 
 describe("readRoster and writeRoster", () => {
-  it("round-trips through a store under melee's key", () => {
+  it("given a store, when a roster is written, then it is saved under melee's key", () => {
     const store = memoryStore();
-    expect(writeRoster(store, roster)).toBe(true);
+
+    const ok = writeRoster(store, roster);
+
+    expect(ok).toBe(true);
     expect(store.getItem(ROSTER_STORAGE_KEY)).not.toBeNull();
-    expect(readRoster(store)).toEqual(roster);
   });
 
-  it("is empty when nothing usable is saved", () => {
-    expect(readRoster(memoryStore())).toBe(EMPTY_ROSTER);
-    expect(readRoster(memoryStore({ [ROSTER_STORAGE_KEY]: "nope" }))).toBe(
-      EMPTY_ROSTER,
-    );
+  it("given a written roster, when it is read, then it round-trips", () => {
+    const store = memoryStore();
+    writeRoster(store, roster);
+
+    const read = readRoster(store);
+
+    expect(read).toEqual(roster);
   });
 
-  it("survives a store that throws", () => {
-    expect(readRoster(broken)).toBe(EMPTY_ROSTER);
-    expect(writeRoster(broken, roster)).toBe(false);
+  it.each([
+    ["nothing saved", {}],
+    ["something unusable saved", { [ROSTER_STORAGE_KEY]: "nope" }],
+  ])("given %s, when the roster is read, then it is empty", (_, items) => {
+    const store = memoryStore(items);
+
+    const read = readRoster(store);
+
+    expect(read).toBe(EMPTY_ROSTER);
+  });
+
+  it("given a store that throws, when the roster is read, then it is empty", () => {
+    const store = broken;
+
+    const read = readRoster(store);
+
+    expect(read).toBe(EMPTY_ROSTER);
+  });
+
+  it("given a store that throws, when the roster is written, then it reports failure", () => {
+    const store = broken;
+
+    const ok = writeRoster(store, roster);
+
+    expect(ok).toBe(false);
   });
 });
 
 describe("encounterPools", () => {
-  it("is the built-in pools unless custom is chosen", () => {
-    expect(encounterPools(roster, false)).toEqual({
-      party: playerTypes,
-      monsters,
-    });
-  });
+  it.each<[string, Roster, boolean, Roster]>([
+    ["custom not chosen", roster, false, { party: playerTypes, monsters }],
+    ["custom chosen", roster, true, roster],
+    [
+      "custom chosen with no monsters imported",
+      { party: [fighter], monsters: [] },
+      true,
+      { party: [fighter], monsters },
+    ],
+    [
+      "custom chosen with no party imported",
+      { party: [], monsters: [slime] },
+      true,
+      { party: playerTypes, monsters: [slime] },
+    ],
+  ])(
+    "given %s, when the pools are taken, then each side is imported or built in",
+    (_, imported, custom, pools) => {
+      const result = encounterPools(imported, custom);
 
-  it("uses the imported sides when custom", () => {
-    expect(encounterPools(roster, true)).toEqual(roster);
-  });
-
-  it("keeps a side built in when nothing was imported for it", () => {
-    expect(encounterPools({ party: [fighter], monsters: [] }, true)).toEqual({
-      party: [fighter],
-      monsters,
-    });
-    expect(encounterPools({ party: [], monsters: [slime] }, true)).toEqual({
-      party: playerTypes,
-      monsters: [slime],
-    });
-  });
+      expect(result).toEqual(pools);
+    },
+  );
 });

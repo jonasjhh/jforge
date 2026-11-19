@@ -54,42 +54,52 @@ function turnsUntil(state: BattleState, id: string, time: number): number {
 }
 
 describe("Haste and Slow", () => {
-  it("Haste speeds an ally up by x1.5 until it expires", () => {
-    const { state, events } = cast(chronoTurn(), "haste", ally);
+  it("given an ally, when the Chronomancer hastes it, then its speed is x1.5 until time 170, for the MP cost", () => {
+    const state = chronoTurn();
+
+    const { state: after, events } = cast(state, "haste", ally);
+
     expect(events).toContainEqual({
       type: "modifierApplied",
       unitId: "player-0-0",
       source: "Haste",
       harmful: false,
     });
-    expect(effectiveStat(unit(state, "player-0-0"), "speed")).toBe(15);
-    expect(state.units[0]!.mp).toBe(chronomancer.stats.maxMp - haste.mpCost);
+    expect(effectiveStat(unit(after, "player-0-0"), "speed")).toBe(15);
+    expect(after.units[0]!.mp).toBe(chronomancer.stats.maxMp - haste.mpCost);
     // Lasts 150: expires at time 170.
-    expect(unit(state, "player-0-0").modifiers[0]!.expiresAt).toBe(170);
+    expect(unit(after, "player-0-0").modifiers[0]!.expiresAt).toBe(170);
   });
 
-  it("Slow halves an enemy's speed, so it acts less often", () => {
-    const slowed = cast(chronoTurn(), "slow", foeCell).state;
-    expect(effectiveStat(unit(slowed, "enemy-0-0"), "speed")).toBe(5);
-    expect(turnsUntil(slowed, "enemy-0-0", 160)).toBeLessThan(
-      turnsUntil(chronoTurn(), "enemy-0-0", 160),
-    );
+  it("given an enemy, when the Chronomancer slows it, then its speed halves", () => {
+    const state = chronoTurn();
+
+    const { state: slowed } = cast(state, "slow", foeCell);
+
     expect(slow.effect.type).toBe("modify");
+    expect(effectiveStat(unit(slowed, "enemy-0-0"), "speed")).toBe(5);
   });
 
-  it("refreshes rather than stacks", () => {
+  it("given a slowed enemy, when the battle plays to time 160, then it acts less often", () => {
+    const slowed = cast(chronoTurn(), "slow", foeCell).state;
+    const normal = turnsUntil(chronoTurn(), "enemy-0-0", 160);
+
+    const turns = turnsUntil(slowed, "enemy-0-0", 160);
+
+    expect(turns).toBeLessThan(normal);
+  });
+
+  it("given a hasted ally, when it is hasted again, then the haste refreshes rather than stacks", () => {
     const once = cast(chronoTurn(), "haste", ally).state;
     const chronoAgain = advance(once).state; // the Chronomancer's next turn
-    expect(chronoAgain.phase).toEqual({
-      kind: "awaitingCommand",
-      unitId: "player-4-2",
-    });
+
     const twice = cast(chronoAgain, "haste", ally).state;
+
     expect(unit(twice, "player-0-0").modifiers).toHaveLength(1);
     expect(effectiveStat(unit(twice, "player-0-0"), "speed")).toBe(15);
   });
 
-  it("Cure removes Slow but not Haste", () => {
+  it("given a unit both slowed and hasted, when it is cured, then Slow is removed and Haste kept", () => {
     const healer = {
       ...def("healer", { magic: 10, maxMp: 20, speed: 50 }),
       skills: [cure],
@@ -123,11 +133,13 @@ describe("Haste and Slow", () => {
       },
     );
     const waiting = advance(state).state;
+
     const { state: after, events } = cast(waiting, "cure", {
       side: "player",
       col: 0,
       row: 0,
     });
+
     expect(after.units[0]!.modifiers.map((m) => m.source)).toEqual(["Haste"]);
     expect(events).toContainEqual({
       type: "statusRemoved",
@@ -139,16 +151,24 @@ describe("Haste and Slow", () => {
 });
 
 describe("Quicken", () => {
-  it("makes the ally act next, right away", () => {
-    const { state, events } = cast(chronoTurn(), "quicken", ally);
+  it("given an ally, when the Chronomancer quickens it, then its gauge fills, for the MP cost", () => {
+    const state = chronoTurn();
+
+    const { state: after, events } = cast(state, "quicken", ally);
+
     expect(events).toContainEqual({
       type: "gaugeChanged",
       unitId: "player-0-0",
       gauge: 1000,
     });
-    expect(state.units[0]!.mp).toBe(chronomancer.stats.maxMp - quicken.mpCost);
+    expect(after.units[0]!.mp).toBe(chronomancer.stats.maxMp - quicken.mpCost);
+  });
+
+  it("given a quickened ally, when the battle advances, then the ally acts next, at the same time", () => {
+    const { state } = cast(chronoTurn(), "quicken", ally);
+
     const next = advance(state).state;
-    // Still time 20: the ally acts before anything else happens.
+
     expect(next.phase).toEqual({
       kind: "awaitingCommand",
       unitId: "player-0-0",
@@ -156,9 +176,11 @@ describe("Quicken", () => {
     expect(next.time).toBe(20);
   });
 
-  it("can't target the Chronomancer itself", () => {
-    expect(() => cast(chronoTurn(), "quicken", self)).toThrow(
-      /can't target its caster/,
-    );
+  it("given the Chronomancer, when it quickens itself, then it is refused", () => {
+    const state = chronoTurn();
+
+    const quickenSelf = () => cast(state, "quicken", self);
+
+    expect(quickenSelf).toThrow(/can't target its caster/);
   });
 });

@@ -42,12 +42,19 @@ const hide = (s: BattleState, id: string) => {
 };
 
 describe("Vanish", () => {
-  it("gives the Rogue Stealth, and only targets the Rogue", () => {
+  it("given an ally, when the Rogue vanishes onto it, then it is refused", () => {
     const start = rogueTurn();
-    expect(() => cast(start, "vanish", mine(0, 0))).toThrow(
-      /only target its caster/,
-    );
+
+    const vanishAlly = () => cast(start, "vanish", mine(0, 0));
+
+    expect(vanishAlly).toThrow(/only target its caster/);
+  });
+
+  it("given the Rogue, when it vanishes, then it is stealthed, for the MP cost", () => {
+    const start = rogueTurn();
+
     const { state, events } = cast(start, "vanish", mine(2, 0));
+
     expect(events).toContainEqual({
       type: "statusApplied",
       unitId: "player-2-0",
@@ -58,37 +65,39 @@ describe("Vanish", () => {
     expect(rogueOf(state).mp).toBe(rogue.stats.maxMp - vanish.mpCost);
   });
 
-  it("wears off after 150 game time", () => {
+  it("given a stealthed Rogue at time 20 and nobody acting, when time runs to 200, then the stealth expires", () => {
     const { state } = cast(rogueTurn(), "vanish", mine(2, 0));
     // Freeze everyone so nobody acts (an attack would end the stealth).
     for (const u of state.units) u.base.speed = 0;
+
     const { events } = advance(state, { until: 200 });
+
     expect(events).toContainEqual({
       type: "statusExpired",
       unitId: "player-2-0",
       statusId: "stealth",
       name: "Stealth",
     });
-    const expiredAt = state.time + 150;
-    expect(expiredAt).toBe(170);
+    // Lasts 150 from time 20.
+    expect(state.time + 150).toBe(170);
   });
 });
 
 describe("Stealth", () => {
-  it("keeps the AI from picking the Rogue, even when it could finish it", () => {
+  it("given a stealthed Rogue at 1 HP, when an AI that loves finishing chooses, then it attacks the ally instead", () => {
     const state = rogueTurn();
     rogueOf(state).hp = 1;
     hide(state, "player-2-0");
     const foe = state.units.find((u) => u.id === "enemy-2-0")!;
     foe.weapon = { ...foe.weapon, columns: "any", depth: "any" };
     foe.targeting = { finish: 9, wounded: 9, soft: 0, noise: 0 };
-    expect(chooseCommand(state, foe)).toEqual({
-      type: "attack",
-      targetId: "player-0-0",
-    });
+
+    const command = chooseCommand(state, foe);
+
+    expect(command).toEqual({ type: "attack", targetId: "player-0-0" });
   });
 
-  it("blocks single-target attacks and skills on a stealthed enemy, but not areas", () => {
+  describe("on a stealthed enemy", () => {
     const mage = {
       ...def("mage", { magic: 30, maxMp: 50, speed: 50 }),
       skills: [firebolt, fireball],
@@ -106,23 +115,38 @@ describe("Stealth", () => {
     ).state;
     hide(state, "enemy-1-1");
     const cell: Cell = { side: "enemy", col: 1, row: 1 };
-    expect(() => act(state, { type: "attack", targetId: "enemy-1-1" })).toThrow(
-      /out of reach/,
-    );
-    expect(() => cast(state, "firebolt", cell)).toThrow(/can't be seen/);
-    const { events } = cast(state, "fireball", cell);
-    expect(
-      events.some((e) => e.type === "damage" && e.unitId === "enemy-1-1"),
-    ).toBe(true);
+
+    it("given a stealthed enemy, when it is attacked, then it is out of reach", () => {
+      const attack = () =>
+        act(state, { type: "attack", targetId: "enemy-1-1" });
+
+      expect(attack).toThrow(/out of reach/);
+    });
+
+    it("given a stealthed enemy, when a single-target skill is cast at it, then it can't be seen", () => {
+      const bolt = () => cast(state, "firebolt", cell);
+
+      expect(bolt).toThrow(/can't be seen/);
+    });
+
+    it("given a stealthed enemy, when an area skill lands on it, then it is hit", () => {
+      const { events } = cast(state, "fireball", cell);
+
+      expect(
+        events.some((e) => e.type === "damage" && e.unitId === "enemy-1-1"),
+      ).toBe(true);
+    });
   });
 
-  it("makes the next attack an ambush for x2, and ends", () => {
+  it("given a stealthed Rogue, when it attacks, then it ambushes for x2 and the stealth ends", () => {
+    const amount = (events: BattleEvent[]) =>
+      events.find((e): e is Damage => e.type === "damage")!.amount;
     const plain = act(rogueTurn(), { type: "attack", targetId: "enemy-2-0" });
     const hidden = rogueTurn();
     hide(hidden, "player-2-0");
+
     const ambush = act(hidden, { type: "attack", targetId: "enemy-2-0" });
-    const amount = (events: BattleEvent[]) =>
-      events.find((e): e is Damage => e.type === "damage")!.amount;
+
     expect(ambush.events).toContainEqual({
       type: "ambush",
       unitId: "player-2-0",
@@ -135,8 +159,11 @@ describe("Stealth", () => {
 });
 
 describe("Shadowstep", () => {
-  it("moves the Rogue to any empty cell on its side, for half a turn", () => {
-    const { state, events } = cast(rogueTurn(), "shadowstep", mine(4, 2));
+  it("given an empty cell on its side, when the Rogue shadowsteps there, then it teleports for half a turn and the MP cost", () => {
+    const start = rogueTurn();
+
+    const { state, events } = cast(start, "shadowstep", mine(4, 2));
+
     expect(events).toContainEqual({
       type: "teleported",
       unitId: "player-2-0",
@@ -148,18 +175,26 @@ describe("Shadowstep", () => {
     expect(rogueOf(state).mp).toBe(rogue.stats.maxMp - shadowstep.mpCost);
   });
 
-  it("is refused on an occupied cell or the enemy side", () => {
-    const start = rogueTurn();
-    expect(() => cast(start, "shadowstep", mine(0, 0))).toThrow(/occupied/);
-    expect(() =>
-      cast(start, "shadowstep", { side: "enemy", col: 4, row: 2 }),
-    ).toThrow(/own side/);
-  });
+  it.each<[string, Cell, RegExp]>([
+    ["an occupied cell", mine(0, 0), /occupied/],
+    ["the enemy side", { side: "enemy", col: 4, row: 2 }, /own side/],
+  ])(
+    "given %s, when the Rogue shadowsteps there, then it is refused",
+    (_, cell, error) => {
+      const start = rogueTurn();
 
-  it("keeps the Rogue hidden", () => {
+      const step = () => cast(start, "shadowstep", cell);
+
+      expect(step).toThrow(error);
+    },
+  );
+
+  it("given a stealthed Rogue, when it shadowsteps, then it stays hidden", () => {
     const start = rogueTurn();
     hide(start, "player-2-0");
+
     const { state } = cast(start, "shadowstep", mine(4, 2));
+
     expect(rogueOf(state).statuses.map((s) => s.id)).toEqual(["stealth"]);
   });
 });

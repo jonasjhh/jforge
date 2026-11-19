@@ -41,39 +41,43 @@ const stone = (s: BattleState, id = FOE) =>
   applyStatus(s, unit(s, GEO), unit(s, id), STONE, []);
 
 describe("Petrify", () => {
-  it("turns an enemy to stone for 60 game time, for 8 MP", () => {
-    const { state } = act(geoTurn(), {
+  it("given an enemy, when the Geomancer petrifies it, then it is stone, for 8 MP", () => {
+    const state = geoTurn();
+
+    const { state: after } = act(state, {
       type: "skill",
       skillId: petrifySkill.id,
       cell: foeCell,
     });
-    expect(unit(state, FOE).statuses).toContainEqual(
+
+    expect(unit(after, FOE).statuses).toContainEqual(
       expect.objectContaining({ id: "petrified", effect: "petrify" }),
     );
-    expect(unit(state, GEO).mp).toBe(geomancer.stats.maxMp - 8);
+    expect(unit(after, GEO).mp).toBe(geomancer.stats.maxMp - 8);
   });
 
-  it("freezes the gauge until the stone wears off", () => {
+  it("given a petrified enemy, when 60 game time passes, then its gauge stays frozen until the stone wears off", () => {
     const s = geoTurn();
     stone(s);
-    const foe = unit(s, FOE);
-    const gauge = foe.gauge;
+    const gauge = unit(s, FOE).gauge;
     const end = s.time + 60;
-    // The Geomancer waits out its turns while time passes.
+    const moved: number[] = [];
     let state = s;
+
+    // The Geomancer waits out its turns while time passes.
     while (state.time < end - 1) {
-      state = act(state, { type: "wait" }).state;
-      state = advance(state).state;
-      if (state.time < end - 1) {
-        expect(unit(state, FOE).gauge).toBe(gauge);
-      }
+      state = advance(act(state, { type: "wait" }).state).state;
+      if (state.time < end - 1 && unit(state, FOE).gauge !== gauge)
+        moved.push(state.time);
     }
+
+    expect(moved).toEqual([]);
     expect(
       unit(state, FOE).statuses.some((st) => st.effect === "petrify"),
     ).toBe(false);
   });
 
-  it("breaks a cast in progress", () => {
+  it("given an enemy casting, when it is petrified, then the cast fizzles", () => {
     const s = geoTurn();
     const foe = unit(s, FOE);
     foe.casting = {
@@ -85,7 +89,9 @@ describe("Petrify", () => {
       readyAt: s.time + 100,
     };
     const events: Parameters<typeof applyStatus>[4] = [];
+
     applyStatus(s, unit(s, GEO), foe, STONE, events);
+
     expect(foe.casting).toBeUndefined();
     expect(events).toContainEqual({
       type: "castFizzled",
@@ -94,51 +100,59 @@ describe("Petrify", () => {
     });
   });
 
-  it("takes a unit waiting to act out of line, until it wears off", () => {
+  it("given an enemy waiting to act, when it is petrified, then it is taken out of line", () => {
     const s = geoTurn();
-    const foe = unit(s, FOE);
-    foe.gauge = GAUGE_FULL;
+    unit(s, FOE).gauge = GAUGE_FULL;
     s.ready.push(FOE);
+
     stone(s);
+
     expect(s.ready).not.toContain(FOE);
     expect(turnOrder(s, 3)[0]).not.toBe(FOE);
   });
 
-  it("halves the damage the stone takes", () => {
+  it("given an enemy, when it is petrified, then it takes half the damage", () => {
     const s = geoTurn();
     const before = previewDamage(unit(s, GEO), unit(s, FOE))!.amount;
+
     stone(s);
+
     const after = previewDamage(unit(s, GEO), unit(s, FOE))!.amount;
     expect(Math.abs(after - before * 0.5)).toBeLessThanOrEqual(1);
   });
 
-  it("can't be quickened out of", () => {
+  it("given a petrified ally, when it is quickened, then it is refused", () => {
     const s = geoTurn();
     stone(s, "player-1-0");
-    expect(
-      validateSkill(s, unit(s, GEO), quicken, {
-        side: "player",
-        col: 1,
-        row: 0,
-      }),
-    ).toBe("ally is turned to stone");
+
+    const problem = validateSkill(s, unit(s, GEO), quicken, {
+      side: "player",
+      col: 1,
+      row: 0,
+    });
+
+    expect(problem).toBe("ally is turned to stone");
   });
 
-  it("the AI petrifies the dangerous foe, not the harmless one", () => {
+  it("given a dangerous and a harmless foe, when the AI values Petrify, then the dangerous one is worth it and more", () => {
     const s = geoTurn(def("brute", { maxHp: 1000, speed: 10, attack: 60 }));
     const value = (cell: Cell) =>
       skillValue(s, unit(s, GEO), petrifySkill, cell);
-    expect(value(foeCell)).toBeGreaterThan(0);
-    expect(value(foeCell)).toBeGreaterThan(
-      value({ side: "enemy", col: 1, row: 0 }),
-    );
+    const harmless = value({ side: "enemy", col: 1, row: 0 });
+
+    const dangerous = value(foeCell);
+
+    expect(dangerous).toBeGreaterThan(0);
+    expect(dangerous).toBeGreaterThan(harmless);
   });
 
-  it("the AI would rather finish a foe about to fall", () => {
+  it("given a dangerous foe about to fall, when the AI values Petrify, then it is worth less than on a healthy one", () => {
     const s = geoTurn(def("brute", { maxHp: 1000, speed: 10, attack: 60 }));
     const healthy = skillValue(s, unit(s, GEO), petrifySkill, foeCell);
     unit(s, FOE).hp = 5;
+
     const dying = skillValue(s, unit(s, GEO), petrifySkill, foeCell);
+
     expect(dying).toBeLessThan(healthy);
   });
 });

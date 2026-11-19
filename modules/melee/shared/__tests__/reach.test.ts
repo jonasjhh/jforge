@@ -27,31 +27,88 @@ function reachIn(state: BattleState, attackerId: string): string[] {
 
 const fullFrontRow = [0, 1, 2, 3, 4].map((col) => foe(col, 0));
 
-describe("sword", () => {
-  it("reaches its own column and both neighbours", () => {
-    expect(reach(sword, 2, fullFrontRow)).toEqual([
-      "enemy-1-0",
-      "enemy-2-0",
-      "enemy-3-0",
-    ]);
-  });
+describe("weapon reach", () => {
+  it.each<[string, Weapon, number, Placement[], string[]]>([
+    [
+      "a sword in the middle facing a full front row",
+      sword,
+      2,
+      fullFrontRow,
+      ["enemy-1-0", "enemy-2-0", "enemy-3-0"],
+    ],
+    [
+      "a sword at the edge facing a full front row",
+      sword,
+      0,
+      fullFrontRow,
+      ["enemy-0-0", "enemy-1-0"],
+    ],
+    [
+      "a sword facing a unit covered by one in front",
+      sword,
+      2,
+      [foe(2, 0), foe(2, 1)],
+      ["enemy-2-0"],
+    ],
+    [
+      "a sword facing units whose front cells are empty",
+      sword,
+      2,
+      [foe(2, 1), foe(3, 2)],
+      ["enemy-2-1", "enemy-3-2"],
+    ],
+    [
+      "a sword with no unit in range",
+      sword,
+      0,
+      [foe(4, 0), foe(3, 1)],
+      ["enemy-3-1"],
+    ],
+    [
+      "a sword with two columns equally near",
+      sword,
+      2,
+      [foe(0, 0), foe(4, 0)],
+      ["enemy-0-0", "enemy-4-0"],
+    ],
+    [
+      "a spear facing a column of three",
+      spear,
+      2,
+      [foe(2, 0), foe(2, 1), foe(2, 2)],
+      ["enemy-2-0", "enemy-2-1"],
+    ],
+    [
+      "a bow facing columns far and near",
+      bow,
+      0,
+      [foe(4, 0), foe(4, 1), foe(2, 2)],
+      ["enemy-2-2", "enemy-4-0"],
+    ],
+    [
+      "a staff facing a column of three",
+      staff,
+      0,
+      [foe(4, 0), foe(4, 1), foe(4, 2)],
+      ["enemy-4-0"],
+    ],
+    [
+      "a staff facing two columns",
+      staff,
+      0,
+      [foe(4, 2), foe(1, 1)],
+      ["enemy-1-1", "enemy-4-2"],
+    ],
+  ])(
+    "given %s, when its targets are listed, then it reaches the front-most it can",
+    (_, weapon, col, enemies, reached) => {
+      const targets = reach(weapon, col, enemies);
 
-  it("reaches two columns at the edge of the grid", () => {
-    expect(reach(sword, 0, fullFrontRow)).toEqual(["enemy-0-0", "enemy-1-0"]);
-  });
+      expect(targets).toEqual(reached);
+    },
+  );
 
-  it("cannot reach a unit covered by one in front", () => {
-    expect(reach(sword, 2, [foe(2, 0), foe(2, 1)])).toEqual(["enemy-2-0"]);
-  });
-
-  it("reaches a unit whose front cell is empty", () => {
-    expect(reach(sword, 2, [foe(2, 1), foe(3, 2)])).toEqual([
-      "enemy-2-1",
-      "enemy-3-2",
-    ]);
-  });
-
-  it("opens the unit behind once the one in front is knocked out", () => {
+  it("given the unit in front knocked out, when a sword's targets are listed, then the unit behind is open", () => {
     const state = createBattle(
       {
         placements: [
@@ -63,88 +120,51 @@ describe("sword", () => {
       1,
     );
     state.units.find((u) => u.id === "enemy-2-0")!.hp = 0;
-    expect(reachIn(state, "player-2-0")).toEqual(["enemy-2-1"]);
-  });
 
-  it("attacks the nearest occupied column when none is in range", () => {
-    expect(reach(sword, 0, [foe(4, 0), foe(3, 1)])).toEqual(["enemy-3-1"]);
-    expect(reach(sword, 2, [foe(0, 0), foe(4, 0)])).toEqual([
-      "enemy-0-0",
-      "enemy-4-0",
-    ]);
-  });
-});
+    const targets = reachIn(state, "player-2-0");
 
-describe("spear", () => {
-  it("also reaches the unit behind the front-most, but no deeper", () => {
-    expect(reach(spear, 2, [foe(2, 0), foe(2, 1), foe(2, 2)])).toEqual([
-      "enemy-2-0",
-      "enemy-2-1",
-    ]);
-  });
-});
-
-describe("bow", () => {
-  it("reaches any column, but only the front-most unit in each", () => {
-    expect(reach(bow, 0, [foe(4, 0), foe(4, 1), foe(2, 2)])).toEqual([
-      "enemy-2-2",
-      "enemy-4-0",
-    ]);
-  });
-});
-
-describe("staff", () => {
-  it("reaches any column but only the front-most unit, as a bow", () => {
-    expect(reach(staff, 0, [foe(4, 0), foe(4, 1), foe(4, 2)])).toEqual([
-      "enemy-4-0",
-    ]);
-    expect(reach(staff, 0, [foe(4, 2), foe(1, 1)])).toEqual([
-      "enemy-1-1",
-      "enemy-4-2",
-    ]);
+    expect(targets).toEqual(["enemy-2-1"]);
   });
 });
 
 describe("reach in battle", () => {
-  it("rejects a player attack on a covered target", () => {
-    const setup = {
-      placements: [
-        place(def("hero", { speed: 20 }, sword), "player", 2),
-        foe(2, 0),
-        foe(2, 1),
-      ],
-    };
-    const waiting = advance(createBattle(setup, 1)).state;
-    expect(() =>
-      act(waiting, { type: "attack", targetId: "enemy-2-1" }),
-    ).toThrow(/out of reach/);
-    expect(() =>
-      act(waiting, { type: "attack", targetId: "enemy-2-0" }),
-    ).not.toThrow();
-  });
+  const waiting = advance(
+    createBattle(
+      {
+        placements: [
+          place(def("hero", { speed: 20 }, sword), "player", 2),
+          foe(2, 0),
+          foe(2, 1),
+        ],
+      },
+      1,
+    ),
+  ).state;
 
-  it("makes the AI hit the front line before what it covers", () => {
-    // Two swordsmen attack a party where the guard covers the archer.
+  it.each([
+    ["the covered target", "enemy-2-1", true],
+    ["the target in front", "enemy-2-0", false],
+  ])(
+    "given a swordsman facing a covered target, when it attacks %s, then it is out of reach: %s",
+    (_, targetId, refused) => {
+      const attack = () => act(waiting, { type: "attack", targetId });
+
+      if (refused) expect(attack).toThrow(/out of reach/);
+      else expect(attack).not.toThrow();
+    },
+  );
+
+  it("given two AI swordsmen facing a guard covering an archer, when they fight, then they knock out the guard before hitting the archer", () => {
     const brute = def("brute", { attack: 30, speed: 12 }, sword);
-    const setup = {
-      placements: [
-        place(def("guard", { maxHp: 60, attack: 0 }), "player", 2, 0),
-        place(def("archer", { maxHp: 60, attack: 0 }), "player", 2, 2),
-        place(brute, "enemy", 1),
-        place(brute, "enemy", 3),
-      ],
-    };
-    const battle = advance(
-      createBattle(
-        {
-          placements: setup.placements.map((p) => ({
-            ...p,
-            control: "ai" as const,
-          })),
-        },
-        3,
-      ),
-    );
+    const placements = [
+      place(def("guard", { maxHp: 60, attack: 0 }), "player", 2, 0),
+      place(def("archer", { maxHp: 60, attack: 0 }), "player", 2, 2),
+      place(brute, "enemy", 1),
+      place(brute, "enemy", 3),
+    ].map((p) => ({ ...p, control: "ai" as const }));
+
+    const battle = advance(createBattle({ placements }, 3));
+
     const hits = battle.events.flatMap((e) =>
       e.type === "attack" && e.unitId.startsWith("enemy") ? [e.targetId] : [],
     );
@@ -159,9 +179,13 @@ describe("reach in battle", () => {
     expect(firstArcherHit).toBeGreaterThan(guardDown);
   });
 
-  it("plays the sample battle to a winner for many seeds", () => {
+  it("given many seeds, when the sample battle is simulated, then each has a winner", () => {
+    const draws: number[] = [];
+
     for (let seed = 0; seed < 50; seed++) {
-      expect(simulate(sampleBattle, seed).winner).not.toBeNull();
+      if (simulate(sampleBattle, seed).winner === null) draws.push(seed);
     }
+
+    expect(draws).toEqual([]);
   });
 });

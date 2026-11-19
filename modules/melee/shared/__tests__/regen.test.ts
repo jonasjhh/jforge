@@ -57,9 +57,29 @@ const ticksOf = (events: BattleEvent[]) =>
   );
 const patient = (s: BattleState) => s.units.find((u) => u.id === "player-1-0")!;
 
+/** The game times of the first five Regen ticks on the patient. */
+function tickTimes(mods?: Modifier[]) {
+  const { state } = castRegen({ patientMods: mods });
+  const times: number[] = [];
+  let current = state;
+  for (let i = 0; i < 40 && times.length < 5; i++) {
+    if (current.phase.kind === "awaitingCommand") {
+      current = act(current, { type: "attack", targetId: "enemy-0-0" }).state;
+      continue;
+    }
+    const step = advance(current, { until: current.time + 10 });
+    if (ticksOf(step.events).length) times.push(step.state.time);
+    current = step.state;
+  }
+  return times;
+}
+
 describe("Regen", () => {
-  it("costs MP and puts Regen on the target", () => {
-    const { state, events } = castRegen();
+  it("given a wounded ally, when Regen is cast on it, then MP is spent and Regen is put on it", () => {
+    const options = {};
+
+    const { state, events } = castRegen(options);
+
     expect(state.units[0]!.mp).toBe(40 - regen.mpCost);
     expect(events).toContainEqual({
       type: "statusApplied",
@@ -70,11 +90,12 @@ describe("Regen", () => {
     });
   });
 
-  it("heals power x magic every 30 game time, 5 times, then wears off", () => {
+  it("given Regen on an ally at 50 HP, when 300 game time passes, then it heals power x magic 5 times and wears off", () => {
     const { state } = castRegen();
+
     const { events, state: after } = runUntil(state, 300);
-    const ticks = ticksOf(events);
-    expect(ticks.map((t) => t.amount)).toEqual([6, 6, 6, 6, 6]);
+
+    expect(ticksOf(events).map((t) => t.amount)).toEqual([6, 6, 6, 6, 6]);
     expect(patient(after).hp).toBe(80);
     expect(events).toContainEqual({
       type: "statusExpired",
@@ -85,55 +106,51 @@ describe("Regen", () => {
     expect(patient(after).statuses).toEqual([]);
   });
 
-  it("ticks at the same game times even while the target is hasted", () => {
+  it("given Regen on an ally, when time passes, then it ticks every 30 game time", () => {
+    const mods = undefined;
+
+    const times = tickTimes(mods);
+
+    expect(times).toEqual([50, 80, 110, 140, 170]);
+  });
+
+  it("given Regen on a hasted ally, when time passes, then it ticks at the same game times", () => {
     const haste: Modifier = {
       stat: "speed",
       op: "mul",
       value: 2,
       source: "haste",
     };
-    const tickTimes = (mods?: Modifier[]) => {
-      const { state } = castRegen({ patientMods: mods });
-      const times: number[] = [];
-      let current = state;
-      for (let i = 0; i < 40 && times.length < 5; i++) {
-        if (current.phase.kind === "awaitingCommand") {
-          current = act(current, {
-            type: "attack",
-            targetId: "enemy-0-0",
-          }).state;
-          continue;
-        }
-        const step = advance(current, { until: current.time + 10 });
-        if (ticksOf(step.events).length) times.push(step.state.time);
-        current = step.state;
-      }
-      return times;
-    };
-    expect(tickTimes([haste])).toEqual(tickTimes());
-    expect(tickTimes()).toEqual([50, 80, 110, 140, 170]);
+
+    const times = tickTimes([haste]);
+
+    expect(times).toEqual([50, 80, 110, 140, 170]);
   });
 
-  it("never heals above max HP", () => {
+  it("given Regen on an ally 3 HP short, when 300 game time passes, then it never heals above max HP", () => {
     const { state } = castRegen({ patientHp: 97 });
+
     const { events, state: after } = runUntil(state, 300);
+
     expect(ticksOf(events).map((t) => t.amount)).toEqual([3, 0, 0, 0, 0]);
     expect(patient(after).hp).toBe(100);
   });
 
-  it("refreshes instead of stacking when cast again", () => {
+  it("given Regen on an ally, when it is cast again before a tick, then it refreshes instead of stacking", () => {
     const first = castRegen().state;
     // Second cast on the healer's next turn (time 40), before any tick.
     const healerTurn = advance(first).state;
-    expect(healerTurn.phase).toEqual({
-      kind: "awaitingCommand",
-      unitId: "player-0-0",
-    });
+
     const again = act(healerTurn, {
       type: "skill",
       skillId: "regen",
       cell: { side: "player", col: 1, row: 0 },
     }).state;
+
+    expect(healerTurn.phase).toEqual({
+      kind: "awaitingCommand",
+      unitId: "player-0-0",
+    });
     expect(patient(again).statuses).toHaveLength(1);
     expect(patient(again).statuses[0]).toMatchObject({
       ticksLeft: 5,
@@ -141,13 +158,15 @@ describe("Regen", () => {
     });
   });
 
-  it("is cleared when the target is knocked out", () => {
+  it("given Regen on an ally at 1 HP before a brute, when it is knocked out, then Regen is cleared", () => {
     const { state } = castRegen();
     patient(state).hp = 1;
     const brute = state.units.find((u) => u.id === "enemy-0-0")!;
     brute.base.attack = 500;
     brute.base.speed = 100;
+
     const { state: after, events } = runUntil(state, 200);
+
     expect(patient(after).hp).toBe(0);
     expect(patient(after).statuses).toEqual([]);
     expect(ticksOf(events).every((t) => t.amount >= 0)).toBe(true);

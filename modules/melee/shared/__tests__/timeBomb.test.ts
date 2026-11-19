@@ -54,38 +54,39 @@ function waitForBlast(state: BattleState) {
 }
 
 describe("Chronomancer skills", () => {
-  it("are Haste, Slow, Quicken, Time Bomb and Rewind", () => {
-    expect(chronomancer.skills).toEqual([
-      haste,
-      slow,
-      quicken,
-      timeBomb,
-      rewind,
-    ]);
+  it("given the Chronomancer, when its skills are listed, then they are Haste, Slow, Quicken, Time Bomb and Rewind", () => {
+    const skills = chronomancer.skills;
+
+    expect(skills).toEqual([haste, slow, quicken, timeBomb, rewind]);
   });
 });
 
 describe("Time Bomb", () => {
-  it("plants a bomb worth the caster's magic and deals nothing yet", () => {
-    const { events, state } = plant(chronoTurn([foe(2, 0)]), at(2, 0));
+  it("given a foe, when a bomb is planted on it, then it is worth the caster's magic, deals nothing yet and costs MP", () => {
+    const state = chronoTurn([foe(2, 0)]);
+
+    const { events, state: after } = plant(state, at(2, 0));
+
+    const bomb = unit(after, "enemy-2-0").statuses[0]!;
     expect(events.some((e) => e.type === "damage")).toBe(false);
-    const bomb = unit(state, "enemy-2-0").statuses[0]!;
     expect(bomb).toMatchObject({ effect: "bomb", amount: MAGIC });
-    expect(unit(state, "player-2-2").mp).toBe(
+    expect(unit(after, "player-2-2").mp).toBe(
       chronomancer.stats.maxMp - timeBomb.mpCost,
     );
   });
 
-  it("explodes when its time runs out, on the carrier and its neighbours", () => {
+  it("given a bomb on a foe among others, when its time runs out, then it explodes for arcane on the carrier and its neighbours", () => {
     const foes = [foe(2, 0), foe(1, 0), foe(3, 0), foe(2, 1), foe(0, 0)];
     const { state } = plant(chronoTurn(foes), at(2, 0));
+
     const { events, state: after } = waitForBlast(state);
+
+    const hits = events.filter((e): e is Damage => e.type === "damage");
     expect(events).toContainEqual({
       type: "exploded",
       unitId: "enemy-2-0",
       name: "Time Bomb",
     });
-    const hits = events.filter((e): e is Damage => e.type === "damage");
     expect(hits.map((e) => e.unitId).sort()).toEqual([
       "enemy-1-0",
       "enemy-2-0",
@@ -98,22 +99,26 @@ describe("Time Bomb", () => {
     expect(events.some((e) => e.type === "statusExpired")).toBe(false);
   });
 
-  it("stays on the carrier's side of the field", () => {
+  it("given a bomb on a front-row foe opposite an ally, when it explodes, then only the carrier's side is hit", () => {
     const { state } = plant(
       chronoTurn([foe(2, 0), place(def("ally"), "player", 2, 0)]),
       at(2, 0),
     );
+
     const { events } = waitForBlast(state);
+
     const hits = events.filter((e): e is Damage => e.type === "damage");
     expect(hits.map((e) => e.unitId)).toEqual(["enemy-2-0"]);
   });
 
-  it("goes off at once when the carrier falls, and only once", () => {
+  it("given a bomb carrier, when it is knocked out, then the bomb goes off at once, only once", () => {
     const { state } = plant(chronoTurn([foe(2, 0), foe(1, 0)]), at(2, 0));
     const carrier = unit(state, "enemy-2-0");
     carrier.hp = 0;
     const events: BattleEvent[] = [];
+
     knockOutIfDown(state, carrier, events);
+
     expect(events.map((e) => e.type)).toEqual([
       "knockedOut",
       "exploded",
@@ -122,36 +127,50 @@ describe("Time Bomb", () => {
     expect(events[2]).toMatchObject({ unitId: "enemy-1-0", amount: MAGIC });
   });
 
-  it("sets off a bomb on a neighbour it knocks out", () => {
+  it("given bombs on two neighbours, when the first knocks out the second, then the second goes off too", () => {
     const { state: one } = plant(
       chronoTurn([foe(2, 0), foe(1, 0, 5), foe(0, 0)]),
       at(2, 0),
     );
     const { state: two } = plant(advance(one).state, at(1, 0));
-    // The first bomb was planted earlier, so it goes off first.
+
     const { events } = waitForBlast(two);
+
+    // The first bomb was planted earlier, so it goes off first.
     const blasts = events.filter((e) => e.type === "exploded");
-    expect(blasts.map((e) => e.unitId)).toEqual(["enemy-2-0", "enemy-1-0"]);
     const hits = events.filter((e): e is Damage => e.type === "damage");
+    expect(blasts.map((e) => e.unitId)).toEqual(["enemy-2-0", "enemy-1-0"]);
     expect(hits.map((e) => e.unitId)).toContain("enemy-0-0");
   });
 
-  it("is worth more to the AI the more foes stand around the target", () => {
-    const lone = chronoTurn([foe(2, 0)]);
-    const crowd = chronoTurn([foe(2, 0), foe(1, 0), foe(3, 0)]);
+  describe("as the AI sees it", () => {
     const value = (s: BattleState) =>
       skillValue(s, unit(s, "player-2-2"), timeBomb, at(2, 0));
-    expect(value(lone)).toBeGreaterThan(0);
-    expect(value(crowd)).toBeGreaterThan(value(lone));
-    const { state: planted } = plant(crowd, at(2, 0));
-    const again = advance(planted).state;
-    expect(
-      skillValue(again, unit(again, "player-2-2"), timeBomb, at(2, 0)),
-    ).toBeLessThan(0);
+
+    it("given a lone foe and a crowd, when the AI values a bomb, then both are worth it and the crowd more", () => {
+      const lone = value(chronoTurn([foe(2, 0)]));
+
+      const crowd = value(chronoTurn([foe(2, 0), foe(1, 0), foe(3, 0)]));
+
+      expect(lone).toBeGreaterThan(0);
+      expect(crowd).toBeGreaterThan(lone);
+    });
+
+    it("given a bomb already on the target, when the AI values another, then it is not worth it", () => {
+      const crowd = chronoTurn([foe(2, 0), foe(1, 0), foe(3, 0)]);
+      const again = advance(plant(crowd, at(2, 0)).state).state;
+
+      const result = value(again);
+
+      expect(result).toBeLessThan(0);
+    });
   });
 
-  it("counts toward the Chronomancer's threat as damage", () => {
+  it("given the Chronomancer with and without Time Bomb, when its offense is weighed, then the bomb counts as damage", () => {
     const without = { ...chronomancer, skills: [haste, slow, quicken, rewind] };
-    expect(offenseOf(chronomancer)).toBeGreaterThan(offenseOf(without));
+
+    const offense = offenseOf(chronomancer);
+
+    expect(offense).toBeGreaterThan(offenseOf(without));
   });
 });

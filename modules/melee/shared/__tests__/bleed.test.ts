@@ -43,13 +43,21 @@ const rended = (state = fighterTurn()) =>
 const bleeding = (u: Unit) => u.statuses.find((s) => s.id === BLEED.id);
 
 describe("Rend", () => {
-  it("strikes at x0.8 and leaves a surviving target bleeding slash", () => {
+  it("given a sturdy foe, when Rend is previewed, then it strikes at x0.8", () => {
     const state = fighterTurn();
     const [self, target] = state.units;
-    const cut = previewDamage(self!, target!, rend)!.amount;
     const plain = previewDamage(self!, target!)!.amount;
+
+    const cut = previewDamage(self!, target!, rend)!.amount;
+
     expect(Math.abs(cut - plain * 0.8)).toBeLessThan(1);
+  });
+
+  it("given a sturdy foe, when the Fighter rends it, then it bleeds slash and the MP is spent", () => {
+    const state = fighterTurn();
+
     const after = rended(state).state;
+
     const status = bleeding(unit(after, FOE))!;
     expect(status).toMatchObject({ damageType: "slash", ticksLeft: 5 });
     expect(status.amount).toBe(Math.round(BLEED.power * fighter.stats.attack));
@@ -57,23 +65,26 @@ describe("Rend", () => {
     expect(unit(after, FIGHTER).mp).toBe(fighter.stats.maxMp - rend.mpCost);
   });
 
-  it("leaves no bleed on a target it knocks out", () => {
-    const after = rended(fighterTurn(1)).state;
+  it("given a foe at 1 HP, when the Fighter rends it, then no bleed is left", () => {
+    const state = fighterTurn(1);
+
+    const after = rended(state).state;
+
     expect(unit(after, FOE).statuses).toEqual([]);
   });
 
-  it("bleeds half on a construct, which resists slash", () => {
+  it("given a bleeding construct, when the bleed ticks, then it takes half, as it resists slash", () => {
     const after = rended(fighterTurn(10_000, ["construct"])).state;
-    const foe = unit(after, FOE);
-    const status = bleeding(foe)!;
-    after.time = status.nextTickAt;
+    after.time = bleeding(unit(after, FOE))!.nextTickAt;
     const events: BattleEvent[] = [];
+
     runDueTicks(after, events);
+
     const tick = events.find((e): e is Tick => e.type === "statusTick")!;
     expect(tick.multiplier).toBe(0.5);
   });
 
-  it("is worth more to the AI than the same cut without the bleed", () => {
+  it("given the same cut without the bleed, when the AI values both, then Rend is worth more", () => {
     const state = fighterTurn();
     const self = unit(state, FIGHTER);
     const plain = {
@@ -81,9 +92,11 @@ describe("Rend", () => {
       id: "plain",
       effect: { type: "strike" as const, power: 0.8 },
     };
-    expect(skillValue(state, self, rend, at(2, 0))).toBeGreaterThan(
-      skillValue(state, self, plain, at(2, 0)),
-    );
+    const cut = skillValue(state, self, plain, at(2, 0));
+
+    const value = skillValue(state, self, rend, at(2, 0));
+
+    expect(value).toBeGreaterThan(cut);
   });
 });
 
@@ -107,45 +120,61 @@ describe("Bleeding", () => {
   }
   const amount = (s: BattleState) => bleeding(unit(s, "player-2-0"))!.amount;
 
-  it("worsens by half its first amount each time the unit attacks", () => {
+  it("given a bleeding unit, when it attacks, then the bleed worsens by half its first amount", () => {
     const state = bleedingTurn();
     const first = amount(state);
+
     const { state: after, events } = act(state, {
       type: "attack",
       targetId: "enemy-2-0",
     });
+
     expect(amount(after)).toBe(first + Math.round(first * 0.5));
     expect(events).toContainEqual(
       expect.objectContaining({ type: "statusWorsened", name: "Bleeding" }),
     );
   });
 
-  it("worsens when the unit moves, but not when it defends or waits", () => {
+  it("given a bleeding unit, when it moves, then the bleed worsens", () => {
     const state = bleedingTurn();
     const first = amount(state);
-    const moved = act(state, {
+
+    const { state: moved } = act(state, {
       type: "move",
       to: { col: 3, row: 0 },
-    }).state;
+    });
+
     expect(amount(moved)).toBeGreaterThan(first);
-    expect(amount(act(state, { type: "defend" }).state)).toBe(first);
-    expect(amount(act(state, { type: "wait" }).state)).toBe(first);
   });
 
-  it("keeps growing by the same step with every action", () => {
-    const state = bleedingTurn();
-    const victim = unit(state, "player-2-0");
+  it.each(["defend", "wait"] as const)(
+    "given a bleeding unit, when it chooses %s, then the bleed stays the same",
+    (type) => {
+      const state = bleedingTurn();
+      const first = amount(state);
+
+      const { state: after } = act(state, { type });
+
+      expect(amount(after)).toBe(first);
+    },
+  );
+
+  it("given a bleeding unit, when it acts twice, then the bleed grows by the same step each time", () => {
+    const victim = unit(bleedingTurn(), "player-2-0");
     const status = bleeding(victim)!;
     const first = status.amount;
+
     worsenOnAction(victim, []);
     worsenOnAction(victim, []);
+
     expect(status.amount).toBe(first + 2 * status.growth!);
   });
 
-  it("is removed by Cure, as other harmful statuses are", () => {
-    const state = bleedingTurn();
-    const victim = unit(state, "player-2-0");
+  it("given a bleeding unit, when it is cured, then the bleed is removed", () => {
+    const victim = unit(bleedingTurn(), "player-2-0");
+
     cleanse(victim, []);
+
     expect(bleeding(victim)).toBeUndefined();
   });
 });

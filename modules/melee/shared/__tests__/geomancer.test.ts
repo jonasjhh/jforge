@@ -70,32 +70,51 @@ function nextGeoTurn(state: BattleState): BattleState {
   return s;
 }
 
+const asCommander = (s: BattleState, unitId: string): BattleState => ({
+  ...s,
+  phase: { kind: "awaitingCommand", unitId },
+});
+
 describe("Raise Boulder", () => {
-  it("raises a boulder in an empty cell on either side, for 6 MP", () => {
-    const one = cast(geoTurn(), "raise-boulder", E(2, 0));
-    const rock = unitAt(one.state, E(2, 0))!;
-    expect(rock).toMatchObject({
+  it("given an empty enemy cell, when the Geomancer raises a boulder there, then an enemy-side obstacle it summoned stands there, for 6 MP", () => {
+    const state = geoTurn();
+
+    const { state: after } = cast(state, "raise-boulder", E(2, 0));
+
+    expect(unitAt(after, E(2, 0))).toMatchObject({
       defId: "boulder",
       side: "enemy",
       obstacle: true,
       summonedBy: "player-4-1",
     });
-    expect(one.state.units[0]!.mp).toBe(100 - raiseBoulder.mpCost);
-    const two = cast(nextGeoTurn(one.state), "raise-boulder", P(2, 0));
-    expect(unitAt(two.state, P(2, 0))).toMatchObject({
+    expect(after.units[0]!.mp).toBe(100 - raiseBoulder.mpCost);
+  });
+
+  it("given an empty player cell, when the Geomancer raises a boulder there, then it stands on the player side", () => {
+    const state = geoTurn();
+
+    const { state: after } = cast(state, "raise-boulder", P(2, 0));
+
+    expect(unitAt(after, P(2, 0))).toMatchObject({
       defId: "boulder",
       side: "player",
     });
   });
 
-  it("is refused on an occupied cell", () => {
-    expect(() => cast(geoTurn(), "raise-boulder", P(0, 0))).toThrow(/occupied/);
+  it("given an occupied cell, when a boulder is raised there, then it is refused", () => {
+    const state = geoTurn();
+
+    const raise = () => cast(state, "raise-boulder", P(0, 0));
+
+    expect(raise).toThrow(/occupied/);
   });
 
-  it("keeps at most two: a third replaces the oldest", () => {
+  it("given two boulders, when a third is raised, then it replaces the oldest", () => {
     let s = cast(geoTurn(), "raise-boulder", E(1, 0)).state;
-    s = cast(nextGeoTurn(s), "raise-boulder", E(2, 0)).state;
-    const { state, events } = cast(nextGeoTurn(s), "raise-boulder", E(3, 0));
+    s = nextGeoTurn(cast(nextGeoTurn(s), "raise-boulder", E(2, 0)).state);
+
+    const { state, events } = cast(s, "raise-boulder", E(3, 0));
+
     expect(
       boulders(state)
         .map((b) => b.position.col)
@@ -105,51 +124,58 @@ describe("Raise Boulder", () => {
     expect(unitAt(state, E(1, 0))).toBeUndefined();
   });
 
-  it("never acts, and doesn't decide the battle", () => {
+  it("given only a boulder left on the player side, when the battle advances, then the enemy wins", () => {
     const s = cast(geoTurn(), "raise-boulder", P(2, 0)).state;
     for (const u of s.units) if (u.side === "player" && !u.summonedBy) u.hp = 0;
-    expect(advance(s).state.phase).toEqual({ kind: "over", winner: "enemy" });
+
+    const { state } = advance(s);
+
+    expect(state.phase).toEqual({ kind: "over", winner: "enemy" });
   });
 
-  it("blocks movement and gives cover to the unit behind it", () => {
+  it("given a boulder behind the ally, when the ally steps back onto it, then it is refused", () => {
     const s = cast(geoTurn(), "raise-boulder", P(0, 1)).state;
-    // The ally at 0,0 can't step back onto the boulder.
-    expect(() => {
-      const turn = {
-        ...s,
-        phase: { kind: "awaitingCommand" as const, unitId: "player-0-0" },
-      };
-      act(turn, { type: "move", to: { col: 0, row: 1 } });
-    }).toThrow(/occupied/);
-    // An enemy swordsman facing column 4 can't reach the Geomancer behind a boulder at 4,0.
+
+    const step = () =>
+      act(asCommander(s, "player-0-0"), {
+        type: "move",
+        to: { col: 0, row: 1 },
+      });
+
+    expect(step).toThrow(/occupied/);
+  });
+
+  it("given a boulder in front of the Geomancer, when an enemy swordsman's targets are listed, then it reaches the boulder, not the Geomancer", () => {
     const covered = cast(
       geoTurn([place(def("brute", { speed: 1 }, sword), "enemy", 4, 0)]),
       "raise-boulder",
       P(4, 0),
     ).state;
     const brute = covered.units.find((u) => u.id === "enemy-4-0")!;
+
     const reached = reachableTargets(covered, brute).map((u) => u.defId);
+
     expect(reached).toContain("boulder");
     expect(reached).not.toContain("geomancer");
   });
 
-  it("can be attacked and vanishes when destroyed, freeing its cell", () => {
+  it("given a boulder at 1 HP, when it is attacked, then it vanishes, freeing its cell", () => {
     const s = cast(geoTurn(), "raise-boulder", E(1, 0)).state;
     const rock = unitAt(s, E(1, 0))!;
     rock.hp = 1;
-    const turn = {
-      ...s,
-      phase: { kind: "awaitingCommand" as const, unitId: "player-0-0" },
-    };
-    const { state, events } = act(turn, { type: "attack", targetId: rock.id });
+
+    const { state, events } = act(asCommander(s, "player-0-0"), {
+      type: "attack",
+      targetId: rock.id,
+    });
+
     expect(events).toContainEqual({ type: "vanished", unitId: rock.id });
     expect(unitAt(state, E(1, 0))).toBeUndefined();
   });
 
-  it("can't be helped by ally skills", () => {
-    // Raise one on our side, then try to target it with an ally-only skill.
+  it("given a boulder on the player side, when an ally-only skill targets it, then it is refused", () => {
     const s = cast(geoTurn(), "raise-boulder", P(2, 0)).state;
-    const healer = {
+    s.units[0] = {
       ...s.units[0]!,
       skills: [
         {
@@ -157,23 +183,21 @@ describe("Raise Boulder", () => {
           name: "H",
           description: "",
           mpCost: 0,
-          target: "ally" as const,
-          area: "single" as const,
-          effect: { type: "cleanse" as const },
+          target: "ally",
+          area: "single",
+          effect: { type: "cleanse" },
         },
       ],
     };
-    s.units[0] = healer;
-    const turn = {
-      ...s,
-      phase: { kind: "awaitingCommand" as const, unitId: "player-4-1" },
-    };
-    expect(() => cast(turn, "h", P(2, 0))).toThrow(/boulder/);
+
+    const help = () => cast(asCommander(s, "player-4-1"), "h", P(2, 0));
+
+    expect(help).toThrow(/boulder/);
   });
 });
 
 describe("Shatter", () => {
-  it("destroys the boulder and hits everyone around it, friend or foe", () => {
+  it("given a boulder among friends and foes, when it is shattered, then it goes and everyone around it takes impact damage", () => {
     const s = cast(
       geoTurn([
         place(def("near", { maxHp: 1000, speed: 1 }), "enemy", 2, 1),
@@ -184,21 +208,22 @@ describe("Shatter", () => {
       "raise-boulder",
       E(2, 0),
     ).state;
+
     const { state, events } = cast(nextGeoTurn(s), "shatter", E(2, 0));
+
+    const hits = events.filter((e): e is Damage => e.type === "damage");
     expect(events.some((e) => e.type === "shattered")).toBe(true);
-    const hit = events
-      .filter((e): e is Damage => e.type === "damage")
-      .map((e) => e.unitId)
-      .sort();
-    expect(hit).toEqual(["enemy-2-1", "enemy-3-0", "player-2-0"]);
-    expect(
-      events.find((e): e is Damage => e.type === "damage")!.damageType,
-    ).toBe("impact");
+    expect(hits.map((e) => e.unitId).sort()).toEqual([
+      "enemy-2-1",
+      "enemy-3-0",
+      "player-2-0",
+    ]);
+    expect(hits[0]!.damageType).toBe("impact");
     expect(unitAt(state, E(2, 0))).toBeUndefined();
     expect(shatter.mpCost).toBe(8);
   });
 
-  it("doesn't count its own boulder among the victims", () => {
+  it("given a boulder beside a foe, when Shatter's victims are listed, then the boulder itself is not among them", () => {
     const s = nextGeoTurn(
       cast(
         geoTurn([place(def("near", { maxHp: 1000, speed: 1 }), "enemy", 2, 1)]),
@@ -208,69 +233,96 @@ describe("Shatter", () => {
     );
     const caster = s.units.find((u) => u.id === "player-4-1")!;
     const skill = caster.skills.find((k) => k.id === "shatter")!;
-    expect(skillVictims(s, caster, skill, E(2, 0)).map((u) => u.id)).toEqual([
-      "enemy-2-1",
-    ]);
+
+    const victims = skillVictims(s, caster, skill, E(2, 0));
+
+    expect(victims.map((u) => u.id)).toEqual(["enemy-2-1"]);
   });
 
-  it("needs one of the Geomancer's own boulders", () => {
-    expect(() => cast(geoTurn(), "shatter", E(0, 0))).toThrow(/your boulders/);
+  it("given no boulder of the Geomancer's, when it shatters a cell, then it is refused", () => {
+    const state = geoTurn();
+
+    const fire = () => cast(state, "shatter", E(0, 0));
+
+    expect(fire).toThrow(/your boulders/);
   });
 });
 
 describe("Upheaval", () => {
-  it("heaves an enemy, an ally or a boulder one row back", () => {
-    const enemy = cast(geoTurn(), "upheaval", E(0, 0));
-    expect(enemy.events).toContainEqual({
+  it("given an enemy, when it is heaved, then it is pushed one row back, for the MP cost", () => {
+    const state = geoTurn();
+
+    const { state: after, events } = cast(state, "upheaval", E(0, 0));
+
+    expect(events).toContainEqual({
       type: "pushed",
       unitId: "enemy-0-0",
       from: { col: 0, row: 0 },
       to: { col: 0, row: 1 },
     });
-    const ally = cast(geoTurn(), "upheaval", P(0, 0));
-    expect(
-      ally.state.units.find((u) => u.id === "player-0-0")!.position,
-    ).toEqual({ col: 0, row: 1 });
-    const s = cast(geoTurn(), "raise-boulder", E(3, 0)).state;
-    const rock = cast(nextGeoTurn(s), "upheaval", E(3, 0));
-    expect(boulders(rock.state)[0]!.position).toEqual({ col: 3, row: 1 });
-    expect(enemy.state.units[0]!.mp).toBe(100 - upheaval.mpCost);
+    expect(after.units[0]!.mp).toBe(100 - upheaval.mpCost);
   });
 
-  it("does nothing when the way is blocked, and deals no damage", () => {
-    const { events, state } = cast(
-      geoTurn([place(def("behind", { speed: 1 }), "enemy", 0, 1)]),
-      "upheaval",
-      E(0, 0),
-    );
+  it("given an ally, when it is heaved, then it moves one row back", () => {
+    const state = geoTurn();
+
+    const { state: after } = cast(state, "upheaval", P(0, 0));
+
+    expect(after.units.find((u) => u.id === "player-0-0")!.position).toEqual({
+      col: 0,
+      row: 1,
+    });
+  });
+
+  it("given a boulder, when it is heaved, then it moves one row back", () => {
+    const s = nextGeoTurn(cast(geoTurn(), "raise-boulder", E(3, 0)).state);
+
+    const { state } = cast(s, "upheaval", E(3, 0));
+
+    expect(boulders(state)[0]!.position).toEqual({ col: 3, row: 1 });
+  });
+
+  it("given the way back blocked, when an enemy is heaved, then it stays put and takes no damage", () => {
+    const state = geoTurn([place(def("behind", { speed: 1 }), "enemy", 0, 1)]);
+
+    const { events, state: after } = cast(state, "upheaval", E(0, 0));
+
     expect(events).toContainEqual({ type: "unmoved", unitId: "enemy-0-0" });
     expect(events.some((e) => e.type === "damage")).toBe(false);
-    expect(state.units.find((u) => u.id === "enemy-0-0")!.position).toEqual({
+    expect(after.units.find((u) => u.id === "enemy-0-0")!.position).toEqual({
       col: 0,
       row: 0,
     });
   });
 
-  it("can't heave an enemy it can't see", () => {
+  it("given a hidden enemy, when it is heaved, then it can't be seen", () => {
     const s = geoTurn();
     const foe = s.units.find((u) => u.id === "enemy-0-0")!;
     applyStatus(s, foe, foe, statusOf(vanish), []);
-    expect(() => cast(s, "upheaval", E(0, 0))).toThrow(/can't be seen/);
+
+    const heave = () => cast(s, "upheaval", E(0, 0));
+
+    expect(heave).toThrow(/can't be seen/);
   });
 
-  it("needs a unit in the cell", () => {
-    expect(() => cast(geoTurn(), "upheaval", E(4, 2))).toThrow(/needs a unit/);
+  it("given an empty cell, when it is heaved, then it is refused", () => {
+    const state = geoTurn();
+
+    const heave = () => cast(state, "upheaval", E(4, 2));
+
+    expect(heave).toThrow(/needs a unit/);
   });
 });
 
 describe("Geomancer damage types", () => {
-  it("the Rod deals crush damage", () => {
+  it("given a target, when the Geomancer attacks with its Rod, then it deals crush damage", () => {
     const s = geoTurn([
       place(def("target", { maxHp: 1000, speed: 1 }), "enemy", 2, 0),
     ]);
-    const hit = act(s, { type: "attack", targetId: "enemy-2-0" }).events.find(
-      (e): e is Damage => e.type === "damage",
-    )!;
+
+    const { events } = act(s, { type: "attack", targetId: "enemy-2-0" });
+
+    const hit = events.find((e): e is Damage => e.type === "damage")!;
     expect(hit.damageType).toBe("crush");
   });
 });

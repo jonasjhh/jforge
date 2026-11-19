@@ -66,46 +66,54 @@ const provoked = () =>
   }).state;
 
 describe("Provoke", () => {
-  it("is the Fighter's, and puts a taunt on it for 5 MP", () => {
-    expect(fighter.skills).toContain(provoke);
-    const state = provoked();
-    const self = unit(state, FIGHTER);
+  it("given the Fighter, when it provokes, then a taunt is put on it for 5 MP", () => {
+    const state = fighterTurn();
+
+    const after = act(state, {
+      type: "skill",
+      skillId: "provoke",
+      cell: { side: "player", col: 1, row: 0 },
+    }).state;
+
+    const self = unit(after, FIGHTER);
     expect(self.statuses[0]).toMatchObject({ id: "taunt", effect: "taunt" });
     expect(self.mp).toBe(fighter.stats.maxMp - provoke.mpCost);
   });
 
-  it("makes enemies attack the Fighter, not its allies", () => {
-    const state = provoked();
-    const foe = unit(state, FOE);
-    expect(
-      validateCommand(state, foe, { type: "attack", targetId: ALLY }),
-    ).toMatch(/provoking/);
-    expect(
-      validateCommand(state, foe, { type: "attack", targetId: FIGHTER }),
-    ).toBeNull();
-  });
-
-  it("binds single-target skills but not area ones", () => {
-    const state = provoked();
-    const foe = unit(state, FOE);
-    const at = { side: "player", col: 3, row: 0 } as const;
-    expect(
-      validateCommand(state, foe, {
+  it.each([
+    ["attacks the ally", { type: "attack", targetId: ALLY }, /provoking/],
+    ["attacks the Fighter", { type: "attack", targetId: FIGHTER }, null],
+    [
+      "casts a single-target skill at the ally",
+      {
         type: "skill",
         skillId: firebolt.id,
-        cell: at,
-      }),
-    ).toMatch(/provoking/);
-    expect(
-      validateCommand(state, foe, {
+        cell: { side: "player", col: 3, row: 0 },
+      },
+      /provoking/,
+    ],
+    [
+      "casts an area skill at the ally",
+      {
         type: "skill",
         skillId: fireball.id,
-        cell: at,
-      }),
-    ).toBeNull();
-  });
+        cell: { side: "player", col: 3, row: 0 },
+      },
+      null,
+    ],
+  ] as const)(
+    "given the Fighter provoking, when the foe %s, then the check gives %s",
+    (_, command, problem) => {
+      const state = provoked();
 
-  it("doesn't bind an enemy that can't reach the Fighter", () => {
+      const result = validateCommand(state, unit(state, FOE), command);
+
+      if (problem) expect(result).toMatch(problem);
+      else expect(result).toBeNull();
+    },
+  );
+
+  it("given a foe that can't reach the provoking Fighter, when it attacks the ally, then it is allowed", () => {
     const short = { columns: 0, depth: 1 } as const;
     const state = fighterTurn({
       weapon: { ...def("x").weapon, ...short, kind: "melee" },
@@ -115,36 +123,44 @@ describe("Provoke", () => {
     foe.position = { col: 3, row: 0 };
     const self = unit(state, FIGHTER);
     applyStatus(state, self, self, statusOf(provoke), []);
-    expect(
-      validateCommand(state, foe, { type: "attack", targetId: ALLY }),
-    ).toBeNull();
+
+    const problem = validateCommand(state, foe, {
+      type: "attack",
+      targetId: ALLY,
+    });
+
+    expect(problem).toBeNull();
   });
 
-  it("doesn't bind while the Fighter is hidden", () => {
+  it("given the provoking Fighter hidden, when the foe attacks the ally, then it is allowed", () => {
     const state = provoked();
     const self = unit(state, FIGHTER);
     applyStatus(state, self, self, statusOf(vanish), []);
-    const foe = unit(state, FOE);
-    expect(
-      validateCommand(state, foe, { type: "attack", targetId: ALLY }),
-    ).toBeNull();
+
+    const problem = validateCommand(state, unit(state, FOE), {
+      type: "attack",
+      targetId: ALLY,
+    });
+
+    expect(problem).toBeNull();
   });
 
-  it("turns an AI that wants the soft ally onto the Fighter", () => {
+  it("given an AI that wants the soft ally, when the Fighter provokes, then it attacks the Fighter", () => {
     const state = provoked();
     const foe = unit(state, FOE);
     foe.skills = [];
     foe.targeting = { finish: 0, wounded: 0, soft: 10, noise: 0 };
-    expect(chooseCommand(state, foe)).toEqual({
-      type: "attack",
-      targetId: FIGHTER,
-    });
+
+    const command = chooseCommand(state, foe);
+
+    expect(command).toEqual({ type: "attack", targetId: FIGHTER });
   });
 
-  it("wears off after a while", () => {
+  it("given the Fighter provoking, when the battle runs on, then the taunt expires after 150", () => {
     let state = provoked();
     const from = state.time;
     let expiredAt: number | null = null;
+
     while (expiredAt === null && state.time < from + 1000) {
       const step = advance(state, { stopAfterAction: true });
       state = step.state;
@@ -157,21 +173,30 @@ describe("Provoke", () => {
       }
       if (state.ready.length > 0) state = act(state, { type: "wait" }).state;
     }
+
     expect(expiredAt).not.toBeNull();
     expect(expiredAt! - from).toBeCloseTo(150, 0);
   });
 
-  it("is cast by the AI only with allies to cover", () => {
-    const state = fighterTurn();
-    const self = unit(state, FIGHTER);
-    self.targeting = { finish: 0, wounded: 0, soft: 0, noise: 0 };
-    self.skills = [provoke];
-    expect(chooseCommand(state, self)).toMatchObject({ skillId: "provoke" });
-    unit(state, ALLY).hp = 0;
-    expect(chooseCommand(state, self)).not.toMatchObject({
-      skillId: "provoke",
-    });
-  });
+  it.each([
+    ["an ally to cover", 1, true],
+    ["no ally standing", 0, false],
+  ])(
+    "given an AI Fighter with %s, when it chooses, then it provokes: %s",
+    (_, allyHp, provokes) => {
+      const state = fighterTurn();
+      const self = unit(state, FIGHTER);
+      self.targeting = { finish: 0, wounded: 0, soft: 0, noise: 0 };
+      self.skills = [provoke];
+      if (!allyHp) unit(state, ALLY).hp = 0;
+
+      const command = chooseCommand(state, self);
+
+      expect(command?.type === "skill" && command.skillId === "provoke").toBe(
+        provokes,
+      );
+    },
+  );
 });
 
 const SELF = { side: "player", col: 1, row: 0 } as const;
@@ -179,8 +204,14 @@ const cast = (skillId: string, state = fighterTurn()) =>
   act(state, { type: "skill", skillId, cell: SELF }).state;
 
 describe("the Fighter's skills", () => {
-  it("are six, none of them another class's", () => {
-    expect(fighter.skills).toEqual([
+  it("given the Fighter, when its skills are listed, then they are six, none of them another class's", () => {
+    const others = playerTypes
+      .filter((t) => t !== fighter)
+      .flatMap((t) => t.skills ?? []);
+
+    const skills = fighter.skills!;
+
+    expect(skills).toEqual([
       cleave,
       provoke,
       ironStance,
@@ -188,21 +219,21 @@ describe("the Fighter's skills", () => {
       warCry,
       rend,
     ]);
-    const others = playerTypes
-      .filter((t) => t !== fighter)
-      .flatMap((t) => t.skills ?? []);
-    for (const skill of fighter.skills!) expect(others).not.toContain(skill);
+    expect(skills.filter((s) => others.includes(s))).toEqual([]);
   });
 });
 
 describe("Iron Stance", () => {
-  it("doubles the Fighter's own defense, no one else's", () => {
-    const state = cast(ironStance.id);
-    expect(effectiveStat(unit(state, FIGHTER), "defense")).toBe(
+  it("given the Fighter beside an ally, when it takes Iron Stance, then only its own defense doubles, for the MP cost", () => {
+    const state = fighterTurn();
+
+    const after = cast(ironStance.id, state);
+
+    expect(effectiveStat(unit(after, FIGHTER), "defense")).toBe(
       fighter.stats.defense * 2,
     );
-    expect(effectiveStat(unit(state, ALLY), "defense")).toBe(0);
-    expect(unit(state, FIGHTER).mp).toBe(
+    expect(effectiveStat(unit(after, ALLY), "defense")).toBe(0);
+    expect(unit(after, FIGHTER).mp).toBe(
       fighter.stats.maxMp - ironStance.mpCost,
     );
   });
@@ -215,34 +246,47 @@ describe("Second Wind", () => {
     return state;
   };
 
-  it("heals a quarter of the Fighter's max HP, whatever its magic", () => {
-    const state = cast(secondWind.id, hurt(30));
-    expect(unit(state, FIGHTER).hp).toBe(30 + fighter.stats.maxHp / 4);
+  it("given the Fighter at 30 HP, when it takes a Second Wind, then it heals a quarter of its max HP", () => {
+    const state = hurt(30);
+
+    const after = cast(secondWind.id, state);
+
+    expect(unit(after, FIGHTER).hp).toBe(30 + fighter.stats.maxHp / 4);
   });
 
-  it("stops at max HP", () => {
-    const state = cast(secondWind.id, hurt(fighter.stats.maxHp - 5));
-    expect(unit(state, FIGHTER).hp).toBe(fighter.stats.maxHp);
+  it("given the Fighter 5 HP short, when it takes a Second Wind, then it stops at max HP", () => {
+    const state = hurt(fighter.stats.maxHp - 5);
+
+    const after = cast(secondWind.id, state);
+
+    expect(unit(after, FIGHTER).hp).toBe(fighter.stats.maxHp);
   });
 
-  it("is worth casting to the AI only when hurt", () => {
-    const value = (state: BattleState) =>
-      skillValue(state, unit(state, FIGHTER), secondWind, SELF);
-    expect(value(hurt(30))).toBeGreaterThan(0);
-    expect(value(fighterTurn())).toBeLessThanOrEqual(0);
-  });
+  it.each([
+    ["hurt", () => hurt(30), true],
+    ["unhurt", () => fighterTurn(), false],
+  ])(
+    "given the Fighter %s, when the AI values Second Wind, then it is worth casting: %s",
+    (_, make, worth) => {
+      const state = make();
+
+      const value = skillValue(state, unit(state, FIGHTER), secondWind, SELF);
+
+      expect(value > 0).toBe(worth);
+    },
+  );
 });
 
 describe("War Cry", () => {
-  it("raises the attack of the Fighter and its row by x1.3", () => {
+  it("given the Fighter beside an ally, when it cries, then both their attacks rise x1.3 and the foe's doesn't", () => {
     const before = fighterTurn();
+
     const after = cast(warCry.id, before);
-    for (const id of [FIGHTER, ALLY]) {
-      const was = effectiveStat(unit(before, id), "attack");
-      expect(effectiveStat(unit(after, id), "attack")).toBeCloseTo(was * 1.3);
-    }
-    expect(effectiveStat(unit(after, FOE), "attack")).toBe(
-      effectiveStat(unit(before, FOE), "attack"),
-    );
+
+    const attack = (s: BattleState, id: string) =>
+      effectiveStat(unit(s, id), "attack");
+    expect(attack(after, FIGHTER)).toBeCloseTo(attack(before, FIGHTER) * 1.3);
+    expect(attack(after, ALLY)).toBeCloseTo(attack(before, ALLY) * 1.3);
+    expect(attack(after, FOE)).toBe(attack(before, FOE));
   });
 });
