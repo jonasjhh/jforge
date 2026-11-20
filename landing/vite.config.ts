@@ -37,7 +37,7 @@ export default defineConfig({
         name: "jforge",
         short_name: "jforge",
         description:
-          "Game forge: build characters and skills, test them in battle.",
+          "Game forge: design classes and skills, then play them in battle games.",
         start_url: "/",
         scope: "/",
         display: "standalone",
