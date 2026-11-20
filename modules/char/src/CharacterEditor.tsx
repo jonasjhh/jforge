@@ -9,6 +9,7 @@ import {
   unequip,
   toCombatantDef,
   archetypeSkills,
+  type Archetype,
   type Character,
   type GearSlot,
   type Library,
@@ -26,6 +27,8 @@ interface CharacterEditorProps {
   library: Library;
   character: Character;
   onChange: (character: Character) => void;
+  /** Opens the character's class or enemy type in its own editor. */
+  onOpenArchetype?: (archetype: Archetype) => void;
 }
 
 /** One character: its type and gear, and the stats they add up to. */
@@ -33,6 +36,7 @@ export function CharacterEditor({
   library,
   character,
   onChange,
+  onOpenArchetype,
 }: CharacterEditorProps) {
   const archetype = archetypeOf(library, character);
   const stats = characterStats(library, character);
@@ -54,6 +58,16 @@ export function CharacterEditor({
           onChange={(archetypeId) => onChange({ ...character, archetypeId })}
         />
       </div>
+      {archetype && onOpenArchetype && (
+        <button
+          type="button"
+          className="link-button"
+          onClick={() => onOpenArchetype(archetype)}
+        >
+          Edit the {archetype.kind === "class" ? "class" : "enemy type"}{" "}
+          {archetype.name} →
+        </button>
+      )}
 
       <fieldset className="group">
         <legend>Gear</legend>

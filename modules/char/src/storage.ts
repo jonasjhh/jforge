@@ -7,6 +7,7 @@ import {
   withMeleeClasses,
   type Library,
 } from "../shared";
+import { TABS, type Tab } from "./tabs";
 
 /**
  * The library saved on this device, with any melee class or hero it lacks,
@@ -31,5 +32,26 @@ export function saveLibrary(library: Library): boolean {
     return writeRoster(localStorage, compileRoster(library));
   } catch {
     return false;
+  }
+}
+
+const TAB_STORAGE_KEY = "jforge.char.tab";
+
+/** The tab open when the app was last used, or the roster. */
+export function loadTab(): Tab {
+  try {
+    const saved = localStorage.getItem(TAB_STORAGE_KEY);
+    return TABS.find((tab) => tab === saved) ?? "Roster";
+  } catch {
+    return "Roster";
+  }
+}
+
+/** Remembers the open tab; a browser that refuses just forgets it. */
+export function saveTab(tab: Tab): void {
+  try {
+    localStorage.setItem(TAB_STORAGE_KEY, tab);
+  } catch {
+    // Only a convenience.
   }
 }

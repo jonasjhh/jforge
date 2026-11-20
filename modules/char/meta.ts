@@ -3,7 +3,8 @@ import type { ModuleMeta } from "../../tooling/module-meta.ts";
 export const meta: ModuleMeta = {
   name: "char",
   title: "Char",
-  description: "Design classes, enemies, skills and gear for melee and jrpg.",
+  description:
+    "Design classes, enemies, skills and gear for melee, jrpg and autob.",
   themeColor: "#0f1416",
   devPort: 5183,
 };

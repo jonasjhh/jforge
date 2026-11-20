@@ -21,18 +21,36 @@ import { Collection } from "./Collection";
 import { GearEditor } from "./GearEditor";
 import { SkillEditor } from "./SkillEditor";
 import { Transfer } from "./Transfer";
+import { loadTab, saveTab } from "./storage";
+import { TABS, type Tab } from "./tabs";
 import { useLibrary } from "./useLibrary";
-
-const TABS = ["Roster", "Classes", "Enemies", "Skills", "Gear"] as const;
-type Tab = (typeof TABS)[number];
 
 const count = (n: number, one: string, many = `${one}s`) =>
   `${n} ${n === 1 ? one : many}`;
 
 export function App() {
   const { library, update, saved } = useLibrary();
-  const [tab, setTab] = useState<Tab>("Roster");
+  const [tab, setTabState] = useState<Tab>(loadTab);
+  // The item open in each tab; switching tabs keeps it.
+  const [selected, setSelected] = useState<Partial<Record<Tab, string>>>({});
   const roster = compileRoster(library);
+
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    saveTab(next);
+  };
+  const select = (inTab: Tab) => (id: string | null) =>
+    setSelected((open) => ({ ...open, [inTab]: id ?? undefined }));
+  /** Jumps to an item in another tab and opens it. */
+  const open = (inTab: Tab, id: string) => {
+    setTab(inTab);
+    select(inTab)(id);
+  };
+  const selection = (inTab: Tab) => ({
+    title: inTab,
+    selectedId: selected[inTab] ?? null,
+    onSelect: select(inTab),
+  });
 
   /** Adds a new item to a list and returns its id, for the list to select. */
   const add = <K extends CollectionName>(
@@ -53,6 +71,7 @@ export function App() {
   const archetypes = (kind: Archetype["kind"]) => (
     <Collection
       noun={kind === "class" ? "class" : "enemy type"}
+      {...selection(kind === "class" ? "Classes" : "Enemies")}
       items={library.archetypes.filter((a) => a.kind === kind)}
       note={(a) =>
         `${a.baseStats.maxHp} HP · ${count(a.skills.length, "skill")}`
@@ -65,6 +84,7 @@ export function App() {
           archetype={archetype}
           skills={library.skills}
           onChange={save("archetypes")}
+          onOpenSkill={(id) => open("Skills", id)}
         />
       )}
     </Collection>
@@ -97,6 +117,7 @@ export function App() {
       {tab === "Roster" && (
         <Collection
           noun="character"
+          {...selection("Roster")}
           items={library.characters}
           note={(c) => {
             const archetype = archetypeOf(library, c);
@@ -114,6 +135,12 @@ export function App() {
               library={library}
               character={character}
               onChange={save("characters")}
+              onOpenArchetype={(archetype) =>
+                open(
+                  archetype.kind === "class" ? "Classes" : "Enemies",
+                  archetype.id,
+                )
+              }
             />
           )}
         </Collection>
@@ -123,6 +150,7 @@ export function App() {
       {tab === "Skills" && (
         <Collection
           noun="skill"
+          {...selection("Skills")}
           items={library.skills}
           note={effectSummary}
           onNew={() => add("skills", blankSkill)}
@@ -140,6 +168,7 @@ export function App() {
       {tab === "Gear" && (
         <Collection
           noun="gear"
+          {...selection("Gear")}
           items={library.gear}
           note={(g) =>
             `${g.slot} · ${count(g.bonuses.length, "bonus", "bonuses")}`
@@ -152,14 +181,14 @@ export function App() {
       )}
 
       <section className="panel">
-        <h2>In melee and jrpg</h2>
+        <h2>In melee, jrpg and autob</h2>
         <p role="status">
           {saved ? (
             <>
               Published: <strong>{roster.party.length}</strong> party members
               and <strong>{roster.monsters.length}</strong> enemies. Characters
               of a class join the party; characters of an enemy type join the
-              monster pool.
+              monster pool. Autob's shop sells your classes.
             </>
           ) : (
             <span className="bad">
@@ -173,6 +202,9 @@ export function App() {
           </a>
           <a className="secondary" href="/jrpg/">
             Open JRPG
+          </a>
+          <a className="secondary" href="/autob/">
+            Open Autob
           </a>
         </div>
         <p className="muted small">In Melee, choose the Custom roster.</p>

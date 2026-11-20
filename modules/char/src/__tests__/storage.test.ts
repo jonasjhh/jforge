@@ -7,7 +7,7 @@ import {
   starterLibrary,
   upsert,
 } from "../../shared";
-import { loadLibrary, saveLibrary } from "../storage";
+import { loadLibrary, loadTab, saveLibrary, saveTab } from "../storage";
 
 const refusals: { mockRestore(): void }[] = [];
 /** Makes the browser refuse this storage call until the test ends. */
@@ -94,5 +94,43 @@ describe("saveLibrary", () => {
     const ok = saveLibrary(starterLibrary());
 
     expect(ok).toBe(false);
+  });
+});
+
+describe("loadTab", () => {
+  it("given a tab saved earlier, when the tab is loaded, then it is that tab", () => {
+    saveTab("Skills");
+
+    const tab = loadTab();
+
+    expect(tab).toBe("Skills");
+  });
+
+  it.each([
+    ["nothing saved", () => {}],
+    [
+      "an unknown tab saved",
+      () => localStorage.setItem("jforge.char.tab", "Maps"),
+    ],
+    ["a browser that refuses", () => refuse("getItem")],
+  ])(
+    "given %s, when the tab is loaded, then it is the roster",
+    (_, arrange) => {
+      arrange();
+
+      const tab = loadTab();
+
+      expect(tab).toBe("Roster");
+    },
+  );
+});
+
+describe("saveTab", () => {
+  it("given a browser that refuses, when a tab is saved, then nothing throws", () => {
+    refuse("setItem");
+
+    const save = () => saveTab("Gear");
+
+    expect(save).not.toThrow();
   });
 });

@@ -53,21 +53,21 @@ describe("ArchetypeEditor", () => {
     expect(type.current.weapon.name).toBe("Kick");
   });
 
-  it("given a class that knows Fireball, when Heal is ticked, then it knows both, in that order", () => {
+  it("given a class that knows Fireball, when Heal is added, then it knows both, in that order", () => {
     const type = edit();
-    fireEvent.click(within(group("Skills")).getByLabelText("Fireball"));
+    fireEvent.click(screen.getByRole("button", { name: "Add Fireball" }));
 
-    fireEvent.click(within(group("Skills")).getByLabelText("Heal"));
+    fireEvent.click(screen.getByRole("button", { name: "Add Heal" }));
 
     expect(type.current.skills).toEqual([content.fireball.id, content.heal.id]);
   });
 
-  it("given a class that knows Fireball and Heal, when Fireball is unticked, then it knows only Heal", () => {
+  it("given a class that knows Fireball and Heal, when Fireball is removed, then it knows only Heal", () => {
     const type = edit();
-    fireEvent.click(within(group("Skills")).getByLabelText("Fireball"));
-    fireEvent.click(within(group("Skills")).getByLabelText("Heal"));
+    fireEvent.click(screen.getByRole("button", { name: "Add Fireball" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add Heal" }));
 
-    fireEvent.click(within(group("Skills")).getByLabelText("Fireball"));
+    fireEvent.click(screen.getByRole("button", { name: "Remove Fireball" }));
 
     expect(type.current.skills).toEqual([content.heal.id]);
   });

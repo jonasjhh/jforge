@@ -96,6 +96,7 @@ describe("char App", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: `Delete ${first}` }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, delete" }));
 
     expect(saved().skills.map((s) => s.id)).toEqual(
       skills.slice(1).map((s) => s.id),
@@ -126,5 +127,67 @@ describe("char App", () => {
 
     const list = screen.getByRole("list", { name: "gear list" });
     expect(within(list).getByText("New gear")).toBeTruthy();
+  });
+
+  it("given the Skills tab picked earlier, when the app opens again, then Skills is open", () => {
+    render(<App />);
+    tab("Skills");
+    cleanup();
+
+    render(<App />);
+
+    const skills = screen.getByRole("tab", { name: "Skills" });
+    expect(skills.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("given an open character, when its class link is pressed, then the Classes tab opens with that class", () => {
+    render(<App />);
+    const character = saved().characters.find(
+      (c) =>
+        saved().archetypes.find((a) => a.id === c.archetypeId)?.kind ===
+        "class",
+    )!;
+    const archetype = saved().archetypes.find(
+      (a) => a.id === character.archetypeId,
+    )!;
+    fireEvent.click(
+      screen.getByRole("button", { name: new RegExp(`^${character.name} `) }),
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: `Edit the class ${archetype.name} →`,
+      }),
+    );
+
+    expect(
+      screen
+        .getByRole("tab", { name: "Classes" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe(
+      archetype.name,
+    );
+  });
+
+  it("given an open class, when one of its skills is pressed, then the Skills tab opens with that skill", () => {
+    render(<App />);
+    tab("Classes");
+    const archetype = saved().archetypes.find(
+      (a) => a.kind === "class" && a.skills.length > 0,
+    )!;
+    const skill = saved().skills.find((s) => s.id === archetype.skills[0])!;
+    fireEvent.click(
+      screen.getByRole("button", { name: new RegExp(`^${archetype.name} `) }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: `Open ${skill.name}` }));
+
+    expect(
+      screen.getByRole("tab", { name: "Skills" }).getAttribute("aria-selected"),
+    ).toBe("true");
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe(
+      skill.name,
+    );
   });
 });

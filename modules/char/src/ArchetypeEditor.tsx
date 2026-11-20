@@ -6,6 +6,7 @@ import {
 } from "../shared";
 import { SelectField, TextField } from "./fields";
 import { PORTRAIT_OPTIONS, ROW_OPTIONS } from "./labels";
+import { SkillPicker } from "./SkillPicker";
 import { StatsFields } from "./StatsFields";
 import { WeaponFields } from "./WeaponFields";
 
@@ -14,6 +15,8 @@ interface ArchetypeEditorProps {
   /** Every skill in the library, to choose what it learns. */
   skills: Skill[];
   onChange: (archetype: Archetype) => void;
+  /** Opens a skill it knows in the skill editor. */
+  onOpenSkill?: (id: string) => void;
 }
 
 /** A class or enemy type: its stats, growth, weapon, traits and skills. */
@@ -21,6 +24,7 @@ export function ArchetypeEditor({
   archetype,
   skills,
   onChange,
+  onOpenSkill,
 }: ArchetypeEditorProps) {
   const set = (change: Partial<Archetype>) =>
     onChange({ ...archetype, ...change });
@@ -55,30 +59,12 @@ export function ArchetypeEditor({
         weapon={archetype.weapon}
         onChange={(weapon) => set({ weapon })}
       />
-      <fieldset className="group">
-        <legend>Skills</legend>
-        {skills.length === 0 && (
-          <p className="muted">No skills designed yet.</p>
-        )}
-        {skills.map((skill) => (
-          <div className="check-row" key={skill.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={archetype.skills.includes(skill.id)}
-                onChange={(e) =>
-                  set({
-                    skills: e.target.checked
-                      ? [...archetype.skills, skill.id]
-                      : archetype.skills.filter((id) => id !== skill.id),
-                  })
-                }
-              />
-              {skill.name}
-            </label>
-          </div>
-        ))}
-      </fieldset>
+      <SkillPicker
+        known={archetype.skills}
+        skills={skills}
+        onChange={(known) => set({ skills: known })}
+        onOpen={onOpenSkill}
+      />
       <fieldset className="group">
         <legend>Gear it can use</legend>
         <label className="chip">

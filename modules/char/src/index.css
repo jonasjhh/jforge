@@ -226,8 +226,26 @@ textarea {
   gap: 0.5rem;
 }
 
+/*
+ * Fields that size to what they hold and wrap: number fields share a row,
+ * a select takes a row of its own only when its longest option needs it,
+ * so option text is not cut off.
+ */
 .grid-fields.wide {
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.grid-fields.wide > .field {
+  flex: 1 1 auto;
+}
+
+.grid-fields.wide > .field:has(input) {
+  flex: 1 1 7rem;
+}
+
+.grid-fields.wide select {
+  width: 100%;
 }
 
 .bonus-row {
@@ -303,4 +321,175 @@ textarea {
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
+}
+
+input[type="search"] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.browse > .search {
+  margin-bottom: 0.6rem;
+}
+
+.item:hover,
+.offer:hover {
+  border-color: var(--text-muted);
+}
+
+.item.selected:hover {
+  border-color: var(--accent);
+}
+
+.back-button,
+.link-button {
+  justify-self: start;
+  padding: 0.2rem 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.back-button {
+  font-weight: 700;
+}
+
+.confirm {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bad);
+  border-radius: 12px;
+}
+
+.confirm p {
+  margin: 0 0 0.6rem;
+}
+
+.confirm .danger {
+  margin-top: 0;
+}
+
+.known {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.known-skill {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.2rem 0.15rem 0.7rem;
+  border-radius: 999px;
+  background: var(--raised);
+}
+
+.known-skill .link-button {
+  color: var(--text);
+}
+
+.remove {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.remove:hover {
+  color: var(--bad);
+}
+
+.offers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.offer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.offer-name {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* With nothing open, the hint only shows beside the list on a wide screen. */
+.no-selection {
+  display: none;
+}
+
+/* A phone shows the list or the open editor, not both. */
+@media (max-width: 899px) {
+  .collection.has-selection .browse {
+    display: none;
+  }
+
+  .collection .editor {
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 900px) {
+  .page {
+    max-width: 1120px;
+  }
+
+  .collection {
+    display: grid;
+    grid-template-columns: minmax(16rem, 24rem) 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .browse {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  .collection .editor,
+  .no-selection {
+    margin-top: 0;
+  }
+
+  .no-selection {
+    display: block;
+  }
+
+  .back-button {
+    display: none;
+  }
 }

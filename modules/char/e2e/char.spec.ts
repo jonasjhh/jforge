@@ -52,7 +52,10 @@ test("designs a new skill and teaches it to a class", async ({ page }) => {
 
   await page.getByRole("tab", { name: "Classes" }).click();
   await page.getByRole("button", { name: /Sage/ }).click();
-  await page.getByRole("checkbox", { name: "Ice Lance" }).check();
+  await page
+    .getByRole("searchbox", { name: "Find a skill to add" })
+    .fill("ice");
+  await page.getByRole("button", { name: "Add Ice Lance" }).click();
 
   await page.getByRole("tab", { name: "Roster" }).click();
   await page.getByRole("button", { name: /Mira/ }).click();

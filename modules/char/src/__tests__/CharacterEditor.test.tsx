@@ -1,6 +1,12 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import {
   blankArchetype,
   blankCharacter,
@@ -157,5 +163,41 @@ describe("CharacterEditor", () => {
     const stats = screen.queryByRole("table", { name: "Stats" });
 
     expect(stats).toBeNull();
+  });
+
+  it("given a way to open types, when the class link is pressed, then the knight's class is opened", () => {
+    const onOpenArchetype = vi.fn();
+    render(
+      <CharacterEditor
+        library={library()}
+        character={blankCharacter("unit-9", knight)}
+        onChange={vi.fn()}
+        onOpenArchetype={onOpenArchetype}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Edit the class Knight →" }),
+    );
+
+    expect(onOpenArchetype).toHaveBeenCalledWith(knight);
+  });
+
+  it("given a goblin and a way to open types, when it shows, then the link names its enemy type", () => {
+    render(
+      <CharacterEditor
+        library={library()}
+        character={{
+          ...blankCharacter("unit-9", knight),
+          archetypeId: "type-goblin",
+        }}
+        onChange={vi.fn()}
+        onOpenArchetype={vi.fn()}
+      />,
+    );
+
+    const link = screen.getByRole("button", { name: /^Edit the enemy type / });
+
+    expect(link).toBeTruthy();
   });
 });
