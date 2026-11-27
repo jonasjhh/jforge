@@ -86,6 +86,11 @@ export interface Archetype {
   proficiencies?: GearCategory[];
   /** Takes up a cell and never acts, like a boulder (for summons). */
   obstacle?: boolean;
+  /**
+   * Classes only: the classes it can be reached from, any one of them.
+   * Without it, or empty, it is a base class. See classGraph.ts.
+   */
+  comesFrom?: string[];
 }
 
 /** One character or enemy: an archetype wearing gear. */

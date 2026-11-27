@@ -827,6 +827,28 @@ and skills at level 1. How they grow, when skills are learned and what
 experience is for belong to the game that uses them (jrpg: see **Levels
 and growth** under The run).
 
+**Class graph** (`shared/classGraph.ts`): classes can be linked into a
+graph of related classes, where a base class leads to specialisations
+(a Fighter to a Paladin or a Battle Mage, a Mage to a Battle Mage or an
+Archmage). A class lists the classes it **comes from** (`comesFrom`);
+any one of them is enough to reach it, and a class with none is a
+**base class**. The links carry no levels, costs or conditions, so char
+still knows no progression: a game that uses the graph decides when and
+how a character may take a link (jrpg2: see section 6 of
+[progression.md](progression.md)). Links go forward only and can be any
+depth: the class editor offers only sources that make no loop
+(`possibleSources`), and `withSource` refuses one that would. Enemy types
+take no part. Deleting a class removes the links to it. The class editor
+shows what a class comes from (editable) and what it becomes. Melee's
+classes start with no links. A game can use the classes alone, as jrpg
+and autob do, or the classes and the graph.
+
+**Stand-ins for a source's skills** (a design rule, not checked): a
+character that takes a link starts fresh with the new class's skills, so
+a class that can be reached should have skills that stand in, roughly,
+for its source's key ones (a Paladin a guard and a strike like a
+Fighter's).
+
 **Gear restrictions** (`canUse`, `canWear` in `shared/gear.ts`): a type
 can list the categories it is **proficient** with. Its characters can use
 gear of those categories and gear with no category; a type without a list

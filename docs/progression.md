@@ -6,7 +6,7 @@ the code it describes; when a number there changes, change it here too.
 
 In short: stats decide battles; levels (jrpg's) raise stats and unlock
 skills; gear adds on top. Char designs everything at level 1 and knows no
-levels. In jrpg, enemies keep pace with whatever the party
+levels; it can link classes into a graph, which jrpg2 is to walk. In jrpg, enemies keep pace with whatever the party
 gains, so progression changes how the party fights more than how easily
 it wins.
 
@@ -173,3 +173,24 @@ party size` (`XP_PER_THREAT`, `xpFor`).
   `xpToNext`.
 - **To make a class or skill scale differently:** change its row in
   `STAT_GROWTH` or `SKILL_GROWTH`.
+
+## 6. Class paths (planned for jrpg2)
+
+jrpg2 is to be a separate game, built on char and melee only, with
+progression along char's class graph (see "Class graph" in
+[design.md](design.md)). char holds the graph; these rules belong to
+jrpg2 and are decided so far as follows. jrpg ignores the graph.
+
+- **Start** as a base class.
+- **Forward only:** a character takes links out of the class it holds,
+  never back.
+- **Taking two links at once** (a Fighter becoming both Paladin and
+  Berserker) makes a **multiclass** character. What a multiclass
+  character can use from its classes is not decided.
+- **Skills start fresh:** after a change, the character has the new
+  class's skills only. The class design rule of stand-ins for a source's
+  key skills keeps that from feeling like a loss.
+- **Stats add up along the path:** each level's growth comes from the
+  class held at that level, so a long-time Fighter turned Mage stays
+  tougher than a Mage from the start.
+- **When a character may change class** is not decided.

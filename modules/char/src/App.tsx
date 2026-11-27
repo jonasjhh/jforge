@@ -10,6 +10,7 @@ import {
   effectSummary,
   nextId,
   remove,
+  sourcesOf,
   upsert,
   type Archetype,
   type Collection as CollectionName,
@@ -73,18 +74,20 @@ export function App() {
       noun={kind === "class" ? "class" : "enemy type"}
       {...selection(kind === "class" ? "Classes" : "Enemies")}
       items={library.archetypes.filter((a) => a.kind === kind)}
-      note={(a) =>
-        `${a.baseStats.maxHp} HP · ${count(a.skills.length, "skill")}`
-      }
+      note={(a) => {
+        const from = sourcesOf(library, a).map((s) => s.name);
+        return `${a.baseStats.maxHp} HP · ${count(a.skills.length, "skill")}${from.length > 0 ? ` · from ${from.join(", ")}` : ""}`;
+      }}
       onNew={() => add("archetypes", (id) => blankArchetype(id, kind))}
       onDelete={drop("archetypes")}
     >
       {(archetype) => (
         <ArchetypeEditor
           archetype={archetype}
-          skills={library.skills}
+          library={library}
           onChange={save("archetypes")}
           onOpenSkill={(id) => open("Skills", id)}
+          onOpenClass={(id) => open("Classes", id)}
         />
       )}
     </Collection>

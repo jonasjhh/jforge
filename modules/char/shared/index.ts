@@ -85,3 +85,11 @@ export {
   starterKit,
   withMeleeClasses,
 } from "./melee";
+export {
+  isBaseClass,
+  nextClasses,
+  possibleSources,
+  sourcesOf,
+  withSource,
+  withoutSource,
+} from "./classGraph";

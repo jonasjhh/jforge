@@ -85,6 +85,29 @@ describe("upsert", () => {
 describe("remove", () => {
   const library = designedLibrary();
 
+  it("given a class others come from, when it is removed, then their links to it go and the rest stay", () => {
+    const [a, b, c] = ["path-a", "path-b", "path-c"].map((id) =>
+      blankArchetype(id, "class"),
+    );
+    const linked = {
+      ...emptyLibrary(),
+      archetypes: [
+        a!,
+        b!,
+        { ...c!, comesFrom: ["path-a", "path-b"] },
+        { ...blankArchetype("path-d", "class"), comesFrom: ["path-a"] },
+      ],
+    };
+
+    const after = remove(linked, "archetypes", "path-a");
+
+    expect(after.archetypes.map((t) => t.comesFrom)).toEqual([
+      undefined,
+      ["path-b"],
+      undefined,
+    ]);
+  });
+
   it("given a skill classes know, when it is removed, then it is gone and no class knows it", () => {
     const after = remove(library, "skills", "heal");
 
@@ -158,6 +181,27 @@ describe("parseLibrary", () => {
   const broken = (
     change: (lib: ReturnType<typeof starterLibrary>) => unknown,
   ) => JSON.stringify(change(starterLibrary()));
+
+  it.each([
+    ["no list", undefined, true],
+    ["a list of ids", ["melee-fighter"], true],
+    ["a list with a number", [3], false],
+    ["a string", "melee-fighter", false],
+  ])(
+    "given a class whose comesFrom is %s, when it is parsed, then it is accepted only if valid",
+    (_, comesFrom, valid) => {
+      const text = broken((lib) => ({
+        ...lib,
+        archetypes: lib.archetypes.map((a, i) =>
+          i === 0 ? { ...a, comesFrom } : a,
+        ),
+      }));
+
+      const library = parseLibrary(text);
+
+      expect(library !== null).toBe(valid);
+    },
+  );
 
   it("given an exported library, when it is parsed, then it reads back unchanged", () => {
     const text = JSON.stringify(starter);

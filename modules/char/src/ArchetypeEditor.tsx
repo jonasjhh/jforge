@@ -1,9 +1,11 @@
-import { TRAITS, type Skill } from "@jforge/melee/shared";
+import { TRAITS } from "@jforge/melee/shared";
 import {
   ALL_GEAR_CATEGORIES,
   GEAR_CATEGORY_NAMES,
   type Archetype,
+  type Library,
 } from "../shared";
+import { ClassPaths } from "./ClassPaths";
 import { SelectField, TextField } from "./fields";
 import { PORTRAIT_OPTIONS, ROW_OPTIONS } from "./labels";
 import { SkillPicker } from "./SkillPicker";
@@ -12,19 +14,22 @@ import { WeaponFields } from "./WeaponFields";
 
 interface ArchetypeEditorProps {
   archetype: Archetype;
-  /** Every skill in the library, to choose what it learns. */
-  skills: Skill[];
+  /** The library, for its skills and other classes. */
+  library: Library;
   onChange: (archetype: Archetype) => void;
   /** Opens a skill it knows in the skill editor. */
   onOpenSkill?: (id: string) => void;
+  /** Opens another class in its editor. */
+  onOpenClass?: (id: string) => void;
 }
 
 /** A class or enemy type: its stats, growth, weapon, traits and skills. */
 export function ArchetypeEditor({
   archetype,
-  skills,
+  library,
   onChange,
   onOpenSkill,
+  onOpenClass,
 }: ArchetypeEditorProps) {
   const set = (change: Partial<Archetype>) =>
     onChange({ ...archetype, ...change });
@@ -61,10 +66,18 @@ export function ArchetypeEditor({
       />
       <SkillPicker
         known={archetype.skills}
-        skills={skills}
+        skills={library.skills}
         onChange={(known) => set({ skills: known })}
         onOpen={onOpenSkill}
       />
+      {archetype.kind === "class" && (
+        <ClassPaths
+          archetype={archetype}
+          library={library}
+          onChange={onChange}
+          onOpen={onOpenClass}
+        />
+      )}
       <fieldset className="group">
         <legend>Gear it can use</legend>
         <label className="chip">

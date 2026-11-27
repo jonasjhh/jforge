@@ -6,6 +6,7 @@ import {
   type Skill,
   type Stats,
 } from "@jforge/melee/shared";
+import { withoutSource } from "./classGraph";
 import { compileRoster } from "./compile";
 import {
   ALL_GEAR_CATEGORIES,
@@ -97,6 +98,9 @@ export function remove(
     }));
   } else if (collection === "archetypes") {
     next.characters = next.characters.filter((c) => c.archetypeId !== id);
+    next.archetypes = next.archetypes.map((a) =>
+      a.comesFrom?.includes(id) ? withoutSource(a, id) : a,
+    );
   }
   return next;
 }
@@ -205,7 +209,10 @@ function isArchetype(v: unknown): boolean {
         v.proficiencies.every((c) =>
           ALL_GEAR_CATEGORIES.includes(c as never),
         ))) &&
-    (v.obstacle === undefined || typeof v.obstacle === "boolean")
+    (v.obstacle === undefined || typeof v.obstacle === "boolean") &&
+    (v.comesFrom === undefined ||
+      (Array.isArray(v.comesFrom) &&
+        v.comesFrom.every((id) => typeof id === "string")))
   );
 }
 

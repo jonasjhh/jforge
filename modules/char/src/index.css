@@ -493,3 +493,11 @@ input[type="search"] {
     display: none;
   }
 }
+
+.group > p {
+  margin: 0;
+}
+
+.known-skill.path {
+  padding-right: 0.7rem;
+}

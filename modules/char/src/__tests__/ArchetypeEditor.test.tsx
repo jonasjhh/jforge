@@ -2,16 +2,20 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { content } from "@jforge/melee/shared";
-import { ALL_GEAR_CATEGORIES, blankArchetype } from "../../shared";
+import {
+  ALL_GEAR_CATEGORIES,
+  blankArchetype,
+  emptyLibrary,
+} from "../../shared";
 import { ArchetypeEditor } from "../ArchetypeEditor";
 import { renderControlled } from "./controlled";
 
 afterEach(cleanup);
 
-const skills = [content.fireball, content.heal];
+const library = { ...emptyLibrary(), skills: [content.fireball, content.heal] };
 const edit = (kind: "class" | "enemy" = "class") =>
   renderControlled(blankArchetype("type-1", kind), (value, onChange) => (
-    <ArchetypeEditor archetype={value} skills={skills} onChange={onChange} />
+    <ArchetypeEditor archetype={value} library={library} onChange={onChange} />
   ));
 const group = (name: string) => screen.getByRole("group", { name });
 
@@ -74,7 +78,11 @@ describe("ArchetypeEditor", () => {
 
   it("given no skills designed, when a class is edited, then it says there are none to learn", () => {
     renderControlled(blankArchetype("type-1", "class"), (value, onChange) => (
-      <ArchetypeEditor archetype={value} skills={[]} onChange={onChange} />
+      <ArchetypeEditor
+        archetype={value}
+        library={emptyLibrary()}
+        onChange={onChange}
+      />
     ));
 
     const note = screen.getByText("No skills designed yet.");
@@ -149,5 +157,21 @@ describe("ArchetypeEditor", () => {
     fireEvent.click(within(traits()).getByLabelText("beast"));
 
     expect(type.current.traits).toEqual([]);
+  });
+
+  it("given a class, when it is edited, then its class paths show", () => {
+    edit();
+
+    const paths = group("Class paths");
+
+    expect(paths.textContent).toContain("Nothing: it is a base class.");
+  });
+
+  it("given an enemy type, when it is edited, then it has no class paths", () => {
+    edit("enemy");
+
+    const paths = screen.queryByRole("group", { name: "Class paths" });
+
+    expect(paths).toBeNull();
   });
 });
