@@ -40,6 +40,14 @@ Saved data (char's library, the roster, jrpg's and autob's runs) may be invalida
 any time for now: raise `SAVE_VERSION` in `modules/melee/shared/save.ts`
 when a change makes old saves stale, instead of writing a migration.
 
+## Goal
+
+The goal is the most entertaining game possible, not following these
+rules. When a better game needs a rule bent or broken, propose it: say
+which rule, what it costs (balance, saved data, other modules,
+complexity) and the alternatives, and change the rule's doc in the same
+commit once agreed. Never break a rule silently.
+
 ## Workflow
 
 The rules are this file, `docs/design.md` and `docs/progression.md`.
