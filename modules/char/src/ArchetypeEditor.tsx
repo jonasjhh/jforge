@@ -74,7 +74,6 @@ export function ArchetypeEditor({
         <ClassPaths
           archetype={archetype}
           library={library}
-          onChange={onChange}
           onOpen={onOpenClass}
         />
       )}

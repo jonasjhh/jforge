@@ -7,6 +7,7 @@ import {
   withMeleeClasses,
   type Library,
 } from "../shared";
+import { isPlaces, type Places } from "./board";
 import { TABS, type Tab } from "./tabs";
 
 /**
@@ -51,6 +52,29 @@ export function loadTab(): Tab {
 export function saveTab(tab: Tab): void {
   try {
     localStorage.setItem(TAB_STORAGE_KEY, tab);
+  } catch {
+    // Only a convenience.
+  }
+}
+
+const BOARD_STORAGE_KEY = "jforge.char.board";
+
+/** The places of classes on the Paths board on this device, or none. */
+export function loadPlaces(): Places {
+  try {
+    const saved: unknown = JSON.parse(
+      localStorage.getItem(BOARD_STORAGE_KEY) ?? "{}",
+    );
+    return isPlaces(saved) ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Remembers the board's layout; a browser that refuses just forgets it. */
+export function savePlaces(places: Places): void {
+  try {
+    localStorage.setItem(BOARD_STORAGE_KEY, JSON.stringify(places));
   } catch {
     // Only a convenience.
   }

@@ -501,3 +501,92 @@ input[type="search"] {
 .known-skill.path {
   padding-right: 0.7rem;
 }
+
+/* The Paths tab: a tray of classes, the board, and what is picked on it. */
+.paths .tray {
+  margin-top: 0;
+}
+
+.tray-class {
+  padding: 0.45rem 0.8rem;
+  border: 1px dashed var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+  cursor: grab;
+}
+
+.board {
+  position: relative;
+  height: 60vh;
+  min-height: 22rem;
+  margin-top: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.board .react-flow {
+  --xy-background-color: var(--surface);
+}
+
+.board-empty {
+  position: absolute;
+  inset: 40% 1rem auto;
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+.class-card {
+  display: grid;
+  min-width: 8rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--raised);
+  color: var(--text);
+  text-align: center;
+}
+
+.react-flow__node.selected .class-card {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.class-card-name {
+  font-weight: 700;
+}
+
+.class-card-note {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Big enough to grab with a finger. */
+.class-card .react-flow__handle {
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+
+.board-pick h2 {
+  margin-bottom: 0.75rem;
+}
+
+.board .react-flow__edge-path {
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+
+.board .react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.board-pick .button-row .danger {
+  margin-top: 0;
+}

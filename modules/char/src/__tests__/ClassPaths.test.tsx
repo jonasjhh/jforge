@@ -8,7 +8,6 @@ import {
   type Library,
 } from "../../shared";
 import { ClassPaths } from "../ClassPaths";
-import { renderControlled } from "./controlled";
 
 afterEach(cleanup);
 
@@ -27,47 +26,17 @@ const library = (): Library => ({
 });
 const get = (id: string) => library().archetypes.find((a) => a.id === id)!;
 const edit = (id: string) =>
-  renderControlled(get(id), (value, onChange) => (
-    <ClassPaths archetype={value} library={library()} onChange={onChange} />
-  ));
+  render(<ClassPaths archetype={get(id)} library={library()} />);
 
 describe("ClassPaths", () => {
-  it("given battle mage from fighter, when it shows, then fighter is its source and mage can be added", () => {
+  it("given battle mage from fighter, when it shows, then fighter is its source and nothing can be edited", () => {
     edit("battle-mage");
 
     const from = screen.getByRole("list", { name: "Comes from" });
 
-    expect(from.textContent).toContain("Fighter");
-    expect(
-      Array.from(
-        (
-          screen.getByLabelText(
-            "Add a class it comes from",
-          ) as HTMLSelectElement
-        ).options,
-        (o) => o.textContent,
-      ),
-    ).toEqual(["Pick a class", "Mage"]);
-  });
-
-  it("given battle mage from fighter, when mage is added, then it comes from both", () => {
-    const type = edit("battle-mage");
-
-    fireEvent.change(screen.getByLabelText("Add a class it comes from"), {
-      target: { value: "mage" },
-    });
-
-    expect(type.current.comesFrom).toEqual(["fighter", "mage"]);
-  });
-
-  it("given battle mage from fighter, when fighter is removed, then it is a base class", () => {
-    const type = edit("battle-mage");
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "No longer from Fighter" }),
-    );
-
-    expect("comesFrom" in type.current).toBe(false);
+    expect(from.textContent).toBe("Fighter");
+    expect(screen.queryByRole("combobox")).toBeNull();
+    expect(screen.queryByRole("button", { name: /No longer from/ })).toBeNull();
   });
 
   it("given fighter, when it shows, then it is a base class that becomes battle mage", () => {
@@ -93,7 +62,6 @@ describe("ClassPaths", () => {
       <ClassPaths
         archetype={get("fighter")}
         library={library()}
-        onChange={vi.fn()}
         onOpen={onOpen}
       />,
     );

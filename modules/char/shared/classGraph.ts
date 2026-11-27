@@ -87,3 +87,34 @@ export function withoutSource(
   else delete next.comesFrom;
   return next;
 }
+
+/** Why `targetId` can't come from `sourceId`, or null if it can. */
+export function linkProblem(
+  library: Library,
+  sourceId: string,
+  targetId: string,
+): string | null {
+  const all = classes(library);
+  const source = all.find((a) => a.id === sourceId);
+  const target = all.find((a) => a.id === targetId);
+  if (!source || !target) return "Only classes can be linked.";
+  if (sourceId === targetId) return "A class can't lead to itself.";
+  const name = (a: Archetype) => a.name || "(unnamed)";
+  if (target.comesFrom?.includes(sourceId))
+    return `${name(source)} already leads to ${name(target)}.`;
+  if (reaches(library, targetId, sourceId))
+    return `${name(target)} already leads to ${name(source)}, so this would make a loop.`;
+  return null;
+}
+
+/** The library with every link to and from the class `id` removed. */
+export function withoutLinks(library: Library, id: string): Library {
+  const unlinked = (a: Archetype): Archetype => {
+    if (a.id !== id)
+      return a.comesFrom?.includes(id) ? withoutSource(a, id) : a;
+    const next = { ...a };
+    delete next.comesFrom;
+    return next;
+  };
+  return { ...library, archetypes: library.archetypes.map(unlinked) };
+}

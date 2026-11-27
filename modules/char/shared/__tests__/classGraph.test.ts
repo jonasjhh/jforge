@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   isBaseClass,
+  linkProblem,
   nextClasses,
   possibleSources,
   sourcesOf,
   withSource,
+  withoutLinks,
   withoutSource,
 } from "../classGraph";
 import { blankArchetype, emptyLibrary } from "../library";
@@ -136,5 +138,43 @@ describe("withoutSource", () => {
     const after = withoutSource(get(lib, "spellblade"), "battle-mage");
 
     expect("comesFrom" in after).toBe(false);
+  });
+});
+
+describe("linkProblem", () => {
+  it("given mage and spellblade, when mage is to lead to spellblade, then nothing stands in the way", () => {
+    const lib = graph();
+
+    const problem = linkProblem(lib, "mage", "spellblade");
+
+    expect(problem).toBeNull();
+  });
+
+  it.each([
+    ["fighter", "fighter", "A class can't lead to itself."],
+    ["fighter", "goblin", "Only classes can be linked."],
+    ["fighter", "battle-mage", "already leads to"],
+    ["spellblade", "fighter", "so this would make a loop"],
+  ])(
+    "given %s to %s, when the link is checked, then it says why not",
+    (source, target, expected) => {
+      const lib = graph();
+
+      const problem = linkProblem(lib, source, target);
+
+      expect(problem).toContain(expected);
+    },
+  );
+});
+
+describe("withoutLinks", () => {
+  it("given battle mage in the middle of a path, when its links are removed, then it comes from nothing and leads to nothing", () => {
+    const lib = graph();
+
+    const next = withoutLinks(lib, "battle-mage");
+
+    expect("comesFrom" in get(next, "battle-mage")).toBe(false);
+    expect("comesFrom" in get(next, "spellblade")).toBe(false);
+    expect(get(next, "fighter")).toBe(get(lib, "fighter"));
   });
 });

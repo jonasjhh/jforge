@@ -87,9 +87,11 @@ export {
 } from "./melee";
 export {
   isBaseClass,
+  linkProblem,
   nextClasses,
   possibleSources,
   sourcesOf,
   withSource,
+  withoutLinks,
   withoutSource,
 } from "./classGraph";

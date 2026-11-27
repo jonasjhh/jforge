@@ -7,7 +7,14 @@ import {
   starterLibrary,
   upsert,
 } from "../../shared";
-import { loadLibrary, loadTab, saveLibrary, saveTab } from "../storage";
+import {
+  loadLibrary,
+  loadPlaces,
+  loadTab,
+  saveLibrary,
+  savePlaces,
+  saveTab,
+} from "../storage";
 
 const refusals: { mockRestore(): void }[] = [];
 /** Makes the browser refuse this storage call until the test ends. */
@@ -130,6 +137,45 @@ describe("saveTab", () => {
     refuse("setItem");
 
     const save = () => saveTab("Gear");
+
+    expect(save).not.toThrow();
+  });
+});
+
+describe("loadPlaces", () => {
+  it("given places saved earlier, when they are loaded, then they come back", () => {
+    savePlaces({ fighter: { x: 10, y: 20 } });
+
+    const places = loadPlaces();
+
+    expect(places).toEqual({ fighter: { x: 10, y: 20 } });
+  });
+
+  it.each([
+    ["nothing saved", () => {}],
+    [
+      "something that is not places",
+      () => localStorage.setItem("jforge.char.board", '{"fighter":{"x":"a"}}'),
+    ],
+    ["broken JSON", () => localStorage.setItem("jforge.char.board", "{")],
+    ["a browser that refuses", () => refuse("getItem")],
+  ])(
+    "given %s, when the places are loaded, then there are none",
+    (_, arrange) => {
+      arrange();
+
+      const places = loadPlaces();
+
+      expect(places).toEqual({});
+    },
+  );
+});
+
+describe("savePlaces", () => {
+  it("given a browser that refuses, when places are saved, then nothing throws", () => {
+    refuse("setItem");
+
+    const save = () => savePlaces({});
 
     expect(save).not.toThrow();
   });

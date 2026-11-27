@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@jforge/melee": "workspace:*",
+    "@xyflow/react": "12.12.1",
     "hono": "^4.13.19",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

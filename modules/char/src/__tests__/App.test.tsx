@@ -50,6 +50,17 @@ describe("char App", () => {
     },
   );
 
+  it("given the app open, when the Paths tab is picked, then the board and its tray show", () => {
+    render(<App />);
+
+    tab("Paths");
+
+    expect(screen.getByRole("region", { name: "Tray" })).toBeTruthy();
+    expect(
+      screen.getAllByRole("button", { name: /^Place / }).length,
+    ).toBeGreaterThan(0);
+  });
+
   it("given the gear section, when new gear is made, then it is saved", () => {
     render(<App />);
     tab("Gear");

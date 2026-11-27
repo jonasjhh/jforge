@@ -18,6 +18,7 @@ import {
 } from "../shared";
 import { ArchetypeEditor } from "./ArchetypeEditor";
 import { CharacterEditor } from "./CharacterEditor";
+import { ClassBoard } from "./ClassBoard";
 import { Collection } from "./Collection";
 import { GearEditor } from "./GearEditor";
 import { SkillEditor } from "./SkillEditor";
@@ -149,6 +150,13 @@ export function App() {
         </Collection>
       )}
       {tab === "Classes" && archetypes("class")}
+      {tab === "Paths" && (
+        <ClassBoard
+          library={library}
+          onUpdate={update}
+          onOpenClass={(id) => open("Classes", id)}
+        />
+      )}
       {tab === "Enemies" && archetypes("enemy")}
       {tab === "Skills" && (
         <Collection

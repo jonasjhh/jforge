@@ -61,3 +61,40 @@ test("designs a new skill and teaches it to a class", async ({ page }) => {
   await page.getByRole("button", { name: /Mira/ }).click();
   await expect(page.getByText(/Skills:/)).toContainText("Ice Lance");
 });
+
+test("places two classes on the Paths board and links them", async ({
+  page,
+}) => {
+  await page.goto("/char/");
+  await page.getByRole("tab", { name: "Paths" }).click();
+  const tray = page.getByRole("list", { name: "Classes not on the board" });
+  const [first, second] = (
+    await tray.getByRole("button").allTextContents()
+  ).slice(0, 2);
+  await page.getByRole("button", { name: `Place ${first}` }).click();
+  await page.getByRole("button", { name: `Place ${second}` }).click();
+  const card = (name: string) =>
+    page.locator(".react-flow__node", { hasText: name });
+  const from = await card(first)
+    .locator(".react-flow__handle.source")
+    .boundingBox();
+  const to = await card(second)
+    .locator(".react-flow__handle.target")
+    .boundingBox();
+
+  // React Flow needs the moves in between to follow a drag.
+  await page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to!.x + to!.width / 2, to!.y + to!.height / 2, {
+    steps: 10,
+  });
+  await page.mouse.up();
+
+  await expect(page.getByRole("status").first()).toContainText(
+    `${second} now comes from ${first}`,
+  );
+  await page.getByRole("tab", { name: "Classes" }).click();
+  await expect(
+    page.getByRole("button", { name: new RegExp(second) }),
+  ).toContainText(`from ${first}`);
+});

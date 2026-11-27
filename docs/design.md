@@ -836,11 +836,21 @@ any one of them is enough to reach it, and a class with none is a
 still knows no progression: a game that uses the graph decides when and
 how a character may take a link (jrpg2: see section 6 of
 [progression.md](progression.md)). Links go forward only and can be any
-depth: the class editor offers only sources that make no loop
-(`possibleSources`), and `withSource` refuses one that would. Enemy types
-take no part. Deleting a class removes the links to it. The class editor
-shows what a class comes from (editable) and what it becomes. Melee's
-classes start with no links. A game can use the classes alone, as jrpg
+depth: `withSource` refuses a link that would loop, and `linkProblem`
+says why. Enemy types take no part. Deleting a class removes the links to
+it. Melee's classes start with no links.
+
+The graph is edited on char's **Paths** tab, a board (React Flow):
+classes not in the graph wait in a tray and are dragged (or tapped) onto
+the board; dragging from one class's right dot to another's left dot
+links them, and a refused link says why. Picking a class offers to edit
+it or take it off the board, which removes its links (`withoutLinks`);
+picking a link offers to remove it. Where classes sit on the board is
+kept **on this device only** (`jforge.char.board`), apart from the
+library, and is not exported; a linked class with no place (an imported
+library) is laid out in the column of its depth. The class editor shows
+what a class comes from and what it becomes, read-only, with links to
+open them. A game can use the classes alone, as jrpg
 and autob do, or the classes and the graph.
 
 **Stand-ins for a source's skills** (a design rule, not checked): a
