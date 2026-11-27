@@ -25,6 +25,37 @@ const set = (label: string, value: string, within_ = document.body) =>
   });
 
 describe("ArchetypeEditor", () => {
+  it("given a blank class, when it shows, then no game uses it and it says so", () => {
+    edit();
+
+    const games = group("Used in");
+
+    expect(
+      within(games)
+        .getAllByRole("checkbox")
+        .every((box) => !(box as HTMLInputElement).checked),
+    ).toBe(true);
+    expect(within(games).getByText(/No game uses it yet/)).toBeTruthy();
+  });
+
+  it("given a blank class, when Autob then Melee are ticked, then it is used in both in the games' order", () => {
+    const type = edit();
+
+    fireEvent.click(within(group("Used in")).getByLabelText("Autob"));
+    fireEvent.click(within(group("Used in")).getByLabelText("Melee"));
+
+    expect(type.current.games).toEqual(["melee", "autob"]);
+  });
+
+  it("given a class used in melee, when Melee is unticked, then no game uses it", () => {
+    const type = edit();
+    fireEvent.click(within(group("Used in")).getByLabelText("Melee"));
+
+    fireEvent.click(within(group("Used in")).getByLabelText("Melee"));
+
+    expect(type.current.games).toEqual([]);
+  });
+
   it.each([
     ["Name", "Knight", { name: "Knight" }],
     ["Icon", "archer", { portrait: "archer" }],

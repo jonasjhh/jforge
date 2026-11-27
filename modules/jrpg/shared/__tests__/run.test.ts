@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ALDRIC, MIRA, pair } from "./pair";
-import { starterLibrary } from "@jforge/char/shared";
+import { forGame, starterLibrary } from "@jforge/char/shared";
 import {
   MAX_PARTY_SIZE,
   content,
@@ -186,16 +186,18 @@ describe("startRun", () => {
     expect(missing).toEqual([]);
   });
 
-  it("given nothing designed, when the run's library is taken, then it is the starter library", () => {
+  it("given nothing designed, when the run's library is taken, then it is the starter library's designs for jrpg", () => {
     const used = runLibrary(null);
 
-    expect(used).toEqual(starterLibrary());
+    expect(used).toEqual(forGame(starterLibrary(), "jrpg"));
   });
 
-  it("given a designed library, when the run's library is taken, then it is that library", () => {
+  it("given a library with classes jrpg isn't ticked for, when the run's library is taken, then they are left out", () => {
     const used = runLibrary(library);
 
-    expect(used).toBe(library);
+    const names = used.archetypes.map((a) => a.name);
+    expect(names).not.toContain("Scout");
+    expect(names).toContain("Rogue");
   });
 });
 
@@ -231,11 +233,11 @@ describe("startRun and the world", () => {
   });
 
   it.each(["gear", "archetypes", "characters", "skills"] as const)(
-    "given a new run, when its %s are listed, then everything designed is kept",
+    "given a new run, when its %s are listed, then everything designed for jrpg is kept",
     (key) => {
       const ids = new Set(run.library[key].map((x) => x.id));
 
-      const lost = library[key].filter((x) => !ids.has(x.id));
+      const lost = forGame(library, "jrpg")[key].filter((x) => !ids.has(x.id));
 
       expect(lost).toEqual([]);
     },

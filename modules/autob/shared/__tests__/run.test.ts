@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { starterLibrary } from "@jforge/char/shared";
+import { forGame, starterLibrary } from "@jforge/char/shared";
 import { SAVE_VERSION } from "@jforge/melee/shared";
 import {
   BASE_INCOME,
@@ -54,10 +54,18 @@ const bench = (...units: OwnedUnit[]) =>
   Array.from({ length: BENCH_SIZE }, (_, i) => units[i] ?? null);
 
 describe("runLibrary", () => {
-  it("given no library, when the run's library is asked, then it is the starter library", () => {
+  it("given no library, when the run's library is asked, then it is the starter library's designs for autob", () => {
     const result = runLibrary(null);
 
-    expect(result.archetypes.length).toBe(library.archetypes.length);
+    expect(result).toEqual(forGame(starterLibrary(), "autob"));
+  });
+
+  it("given the starter library, when the run's library is asked, then the base classes no game uses yet are left out", () => {
+    const result = runLibrary(starterLibrary());
+
+    const names = result.archetypes.map((a) => a.name);
+    expect(names).not.toContain("Squire");
+    expect(names).toContain("Fighter");
   });
 });
 

@@ -3,6 +3,7 @@ import {
   blankCharacter,
   canWear,
   equip,
+  forGame,
   parseLibrary,
   starterKit,
   starterLibrary,
@@ -157,9 +158,12 @@ const isClass = (library: Library, character: Character) =>
 const averageLevel = (party: Member[]) =>
   Math.round(party.reduce((sum, c) => sum + c.level, 0) / party.length);
 
-/** The designs a run starts from: `library`, or the starter library. */
+/**
+ * The designs a run starts from: those of `library`, or of the starter
+ * library, that jrpg is ticked for.
+ */
 export function runLibrary(library: Library | null): Library {
-  return library ?? starterLibrary();
+  return forGame(library ?? starterLibrary(), "jrpg");
 }
 
 /** Everyone who could set out: every class character of the run's world. */

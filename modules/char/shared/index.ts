@@ -85,6 +85,7 @@ export {
   starterKit,
   withMeleeClasses,
 } from "./melee";
+export { forGame } from "./games";
 export {
   isBaseClass,
   linkProblem,

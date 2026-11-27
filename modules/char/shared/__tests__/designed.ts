@@ -31,6 +31,7 @@ export const DESIGNED_CLASSES: Archetype[] = [
     skills: [cleave.id],
     traits: [],
     preferredRow: 0,
+    games: ["melee", "jrpg", "autob"],
     proficiencies: ["blade", "polearm", "heavy", "light"],
   },
   {
@@ -58,6 +59,7 @@ export const DESIGNED_CLASSES: Archetype[] = [
     skills: [firebolt.id, heal.id, fireball.id],
     traits: [],
     preferredRow: 2,
+    games: ["melee", "jrpg", "autob"],
     proficiencies: ["staff", "focus", "robe"],
   },
 ];

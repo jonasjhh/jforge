@@ -1,11 +1,12 @@
 import { content, type CombatantDef, type Skill } from "@jforge/melee/shared";
 import { canUse } from "./gear";
-import type {
-  Archetype,
-  Character,
-  Gear,
-  GearCategory,
-  Library,
+import {
+  GAMES,
+  type Archetype,
+  type Character,
+  type Gear,
+  type GearCategory,
+  type Library,
 } from "./types";
 
 // Melee's own classes as char classes, so every one of them can be
@@ -116,6 +117,7 @@ export function classFromMelee(def: CombatantDef): Archetype {
     skills: (def.skills ?? []).map((skill) => skill.id),
     traits: [...(def.traits ?? [])],
     preferredRow: def.preferredRow ?? 0,
+    games: [...GAMES],
   };
 }
 

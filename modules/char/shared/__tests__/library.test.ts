@@ -183,6 +183,27 @@ describe("parseLibrary", () => {
   ) => JSON.stringify(change(starterLibrary()));
 
   it.each([
+    ["no list", undefined, false],
+    ["an empty list", [], true],
+    ["a list of games", ["melee", "autob"], true],
+    ["an unknown game", ["chess"], false],
+  ])(
+    "given a class whose games are %s, when it is parsed, then it is accepted only if valid",
+    (_, games, valid) => {
+      const text = broken((lib) => ({
+        ...lib,
+        archetypes: lib.archetypes.map((a, i) =>
+          i === 0 ? { ...a, games } : a,
+        ),
+      }));
+
+      const library = parseLibrary(text);
+
+      expect(library !== null).toBe(valid);
+    },
+  );
+
+  it.each([
     ["no list", undefined, true],
     ["a list of ids", ["melee-fighter"], true],
     ["a list with a number", [3], false],

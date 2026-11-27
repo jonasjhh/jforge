@@ -41,6 +41,19 @@ export const ALL_GEAR_CATEGORIES: GearCategory[] = [
   ...GEAR_CATEGORIES.armor,
 ];
 
+/**
+ * The games that read char's designs. A class or enemy type reaches a game
+ * only if it lists that game (see games.ts).
+ */
+export const GAMES = ["melee", "jrpg", "autob"] as const;
+export type Game = (typeof GAMES)[number];
+/** How each game is called. */
+export const GAME_NAMES: Record<Game, string> = {
+  melee: "Melee",
+  jrpg: "JRPG",
+  autob: "Autob",
+};
+
 /** One change a piece of gear makes to a stat: +5 attack, or x1.1 speed. */
 export interface StatBonus {
   stat: StatName;
@@ -91,6 +104,8 @@ export interface Archetype {
    * Without it, or empty, it is a base class. See classGraph.ts.
    */
   comesFrom?: string[];
+  /** The games that may use it; none until it is ticked into one. */
+  games: Game[];
 }
 
 /** One character or enemy: an archetype wearing gear. */

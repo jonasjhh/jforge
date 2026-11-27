@@ -1,8 +1,9 @@
 import { SAVE_VERSION, content } from "@jforge/melee/shared";
 import { withMeleeClasses } from "./melee";
-import type { Library } from "./types";
+import { GAMES, type Archetype, type Library } from "./types";
 
-const { bow, cleave, fireball, firebolt, heal, staff, sword } = content;
+const { bow, cleave, daggers, fireball, firebolt, heal, staff, sword } =
+  content;
 
 /**
  * What a new device starts with: a few skills, gear and types lifted from
@@ -95,7 +96,9 @@ function starterDesigns(): Library {
         skills: [],
         traits: [],
         preferredRow: 0,
+        games: [...GAMES],
       },
+      ...baseClasses(),
     ],
     characters: [
       {
@@ -106,4 +109,76 @@ function starterDesigns(): Library {
       },
     ],
   };
+}
+
+/**
+ * The base classes of the class graph (see docs/progression.md, section 6):
+ * strength, agility and magic, where every path starts. They have no skills
+ * yet and no game uses them yet; their stats are close to melee's Fighter,
+ * Rogue, and Mage and Healer.
+ */
+function baseClasses(): Archetype[] {
+  const base = (
+    id: string,
+    name: string,
+    portrait: string,
+    rest: Pick<
+      Archetype,
+      "baseStats" | "weapon" | "preferredRow" | "proficiencies"
+    >,
+  ): Archetype => ({
+    id,
+    name,
+    kind: "class",
+    portrait,
+    skills: [],
+    traits: [],
+    games: [],
+    ...rest,
+    weapon: { ...structuredClone(rest.weapon), id: `${id}-weapon` },
+  });
+  return [
+    base("class-squire", "Squire", "fighter", {
+      baseStats: {
+        maxHp: 120,
+        maxMp: 10,
+        attack: 22,
+        magic: 4,
+        defense: 18,
+        spirit: 8,
+        speed: 10,
+      },
+      weapon: sword,
+      preferredRow: 0,
+      proficiencies: ["blade", "polearm", "heavy", "light"],
+    }),
+    base("class-scout", "Scout", "rogue", {
+      baseStats: {
+        maxHp: 80,
+        maxMp: 20,
+        attack: 19,
+        magic: 4,
+        defense: 9,
+        spirit: 9,
+        speed: 15,
+      },
+      weapon: daggers,
+      preferredRow: 1,
+      proficiencies: ["dagger", "bow", "light"],
+    }),
+    base("class-apprentice", "Apprentice", "mage", {
+      baseStats: {
+        maxHp: 75,
+        maxMp: 55,
+        attack: 7,
+        magic: 20,
+        defense: 7,
+        spirit: 19,
+        speed: 10,
+      },
+      weapon: staff,
+      preferredRow: 2,
+      proficiencies: ["staff", "focus", "robe"],
+    }),
+  ];
 }

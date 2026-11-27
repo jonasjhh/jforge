@@ -7,6 +7,7 @@ import {
   blankGear,
   blankSkill,
   compileRoster,
+  forGame,
   effectSummary,
   nextId,
   remove,
@@ -35,7 +36,7 @@ export function App() {
   const [tab, setTabState] = useState<Tab>(loadTab);
   // The item open in each tab; switching tabs keeps it.
   const [selected, setSelected] = useState<Partial<Record<Tab, string>>>({});
-  const roster = compileRoster(library);
+  const roster = compileRoster(forGame(library, "melee"));
 
   const setTab = (next: Tab) => {
     setTabState(next);
@@ -77,7 +78,7 @@ export function App() {
       items={library.archetypes.filter((a) => a.kind === kind)}
       note={(a) => {
         const from = sourcesOf(library, a).map((s) => s.name);
-        return `${a.baseStats.maxHp} HP · ${count(a.skills.length, "skill")}${from.length > 0 ? ` · from ${from.join(", ")}` : ""}`;
+        return `${a.baseStats.maxHp} HP · ${count(a.skills.length, "skill")}${from.length > 0 ? ` · from ${from.join(", ")}` : ""}${a.games.length === 0 ? " · in no game" : ""}`;
       }}
       onNew={() => add("archetypes", (id) => blankArchetype(id, kind))}
       onDelete={drop("archetypes")}

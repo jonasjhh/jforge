@@ -1,6 +1,8 @@
 import { TRAITS } from "@jforge/melee/shared";
 import {
   ALL_GEAR_CATEGORIES,
+  GAMES,
+  GAME_NAMES,
   GEAR_CATEGORY_NAMES,
   type Archetype,
   type Library,
@@ -54,6 +56,34 @@ export function ArchetypeEditor({
           onChange={(row) => set({ preferredRow: Number(row) })}
         />
       </div>
+      <fieldset className="group">
+        <legend>Used in</legend>
+        <div className="chips">
+          {GAMES.map((game) => (
+            <label key={game} className="chip">
+              <input
+                type="checkbox"
+                checked={archetype.games.includes(game)}
+                onChange={(e) =>
+                  set({
+                    games: e.target.checked
+                      ? GAMES.filter(
+                          (g) => g === game || archetype.games.includes(g),
+                        )
+                      : archetype.games.filter((g) => g !== game),
+                  })
+                }
+              />
+              {GAME_NAMES[game]}
+            </label>
+          ))}
+        </div>
+        {archetype.games.length === 0 && (
+          <p className="muted small">
+            No game uses it yet: it stays in char until you tick one.
+          </p>
+        )}
+      </fieldset>
       <StatsFields
         legend="Stats at level 1"
         stats={archetype.baseStats}

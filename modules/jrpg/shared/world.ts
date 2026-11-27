@@ -55,6 +55,7 @@ function archetype(
     skills,
     traits,
     preferredRow,
+    games: ["jrpg"],
   };
 }
 

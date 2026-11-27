@@ -2,6 +2,7 @@ import { writeRoster } from "@jforge/melee/shared";
 import {
   LIBRARY_STORAGE_KEY,
   compileRoster,
+  forGame,
   parseLibrary,
   starterLibrary,
   withMeleeClasses,
@@ -24,13 +25,13 @@ export function loadLibrary(): Library {
 }
 
 /**
- * Saves the library and publishes its characters to melee and jrpg, which
- * share this origin's storage. False if the browser refused either.
+ * Saves the library and publishes to melee the characters of the designs
+ * it uses; melee shares this origin's storage. False if the browser refused either.
  */
 export function saveLibrary(library: Library): boolean {
   try {
     localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(library));
-    return writeRoster(localStorage, compileRoster(library));
+    return writeRoster(localStorage, compileRoster(forGame(library, "melee")));
   } catch {
     return false;
   }

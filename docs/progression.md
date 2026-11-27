@@ -181,7 +181,8 @@ progression along char's class graph (see "Class graph" in
 [design.md](design.md)). char holds the graph; these rules belong to
 jrpg2 and are decided so far as follows. jrpg ignores the graph.
 
-- **Start** as a base class.
+- **Start** as a base class: Squire (strength), Scout (agility) or
+  Apprentice (magic), from char's starter library.
 - **Forward only:** a character takes links out of the class it holds,
   never back.
 - **Taking two links at once** (a Fighter becoming both Paladin and

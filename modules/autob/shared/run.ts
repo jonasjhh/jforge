@@ -1,4 +1,4 @@
-import { starterLibrary, type Library } from "@jforge/char/shared";
+import { forGame, starterLibrary, type Library } from "@jforge/char/shared";
 import {
   SAVE_VERSION,
   createRandom,
@@ -75,9 +75,12 @@ export interface Run {
   last: { round: number; won: boolean } | null;
 }
 
-/** The designs a run starts from: `library`, or the starter library. */
+/**
+ * The designs a run starts from: those of `library`, or of the starter
+ * library, that autob is ticked for.
+ */
 export function runLibrary(library: Library | null): Library {
-  return library ?? starterLibrary();
+  return forGame(library ?? starterLibrary(), "autob");
 }
 
 const shopRandom = (seed: number, rolls: number) =>

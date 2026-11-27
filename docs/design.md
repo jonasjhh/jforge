@@ -822,6 +822,16 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **Characters**: a type wearing gear. Characters of a class form the
   party; characters of an enemy type the monster pool.
 
+**Used in** (`shared/games.ts`): every class and enemy type lists the
+games that may use it (melee, jrpg, autob), and reaches a game only if
+it is listed; a new design is in none until it is ticked. Each game
+reads char's library through `forGame`: melee gets the characters of the
+designs ticked for it, and jrpg and autob drop the rest when a run
+starts (so autob's shop sells only classes ticked for autob). Melee's
+classes and creatures and the starter designs are in all three. A
+summon of an enemy type a game leaves out falls back to the creature
+saved in the skill, as for a deleted type.
+
 **Char knows no levels or progression**: it designs classes, enemy types
 and skills at level 1. How they grow, when skills are learned and what
 experience is for belong to the game that uses them (jrpg: see **Levels
@@ -838,7 +848,14 @@ how a character may take a link (jrpg2: see section 6 of
 [progression.md](progression.md)). Links go forward only and can be any
 depth: `withSource` refuses a link that would loop, and `linkProblem`
 says why. Enemy types take no part. Deleting a class removes the links to
-it. Melee's classes start with no links.
+it. Melee's classes start with no links. The starter library has the
+graph's **base classes**, one per main stat line: **Squire** (strength:
+attack, defense and HP, front row, blades, polearms, heavy and light
+armor), **Scout** (agility: speed and attack, middle row, daggers, bows
+and light armor) and **Apprentice** (magic: magic, spirit and MP, back
+row, staves, foci and robes; it is to fork into offensive and defensive
+magic). Their stats are close to melee's Fighter, Rogue, and Mage and
+Healer. They have no skills or links yet and are in no game yet.
 
 The graph is edited on char's **Paths** tab, a board (React Flow):
 classes not in the graph wait in a tray and are dragged (or tapped) onto
@@ -1064,7 +1081,8 @@ The rules are pure functions in `shared/` (`run.ts` the run, `fight.ts`
 the engine), like melee's.
 
 **Units and stars** (`units.ts`). The shop sells every class of the run's
-library (char's on this device, or the starter library), copied at the
+library that is ticked for autob (char's on this device, or the starter
+library), copied at the
 start so later edits can't break a run. A bought copy is a 1★ unit;
 three of a class at the same star merge at once into one a star higher,
 up to 3★, keeping the place of the first (board before bench). Stars

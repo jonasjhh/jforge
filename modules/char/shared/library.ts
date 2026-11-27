@@ -10,6 +10,7 @@ import { withoutSource } from "./classGraph";
 import { compileRoster } from "./compile";
 import {
   ALL_GEAR_CATEGORIES,
+  GAMES,
   GEAR_CATEGORIES,
   GEAR_SLOTS,
   type Archetype,
@@ -152,6 +153,7 @@ export function blankArchetype(id: string, kind: Archetype["kind"]): Archetype {
     skills: [],
     traits: [],
     preferredRow: 0,
+    games: [],
   };
 }
 
@@ -210,6 +212,8 @@ function isArchetype(v: unknown): boolean {
           ALL_GEAR_CATEGORIES.includes(c as never),
         ))) &&
     (v.obstacle === undefined || typeof v.obstacle === "boolean") &&
+    Array.isArray(v.games) &&
+    v.games.every((g) => GAMES.includes(g as never)) &&
     (v.comesFrom === undefined ||
       (Array.isArray(v.comesFrom) &&
         v.comesFrom.every((id) => typeof id === "string")))
