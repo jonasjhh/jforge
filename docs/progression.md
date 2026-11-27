@@ -182,7 +182,10 @@ progression along char's class graph (see "Class graph" in
 jrpg2 and are decided so far as follows. jrpg ignores the graph.
 
 - **Start** as a base class: Squire (strength), Scout (agility) or
-  Apprentice (magic), from char's starter library.
+  Apprentice (magic), from char's starter library. Each leads to the
+  second level of broad roles (Guardian, Warrior, Spearman; Thief,
+  Archer, Duelist, Beastmaster; Mage, Cleric, Enchanter, Summoner);
+  specialisation starts at the third level.
 - **Forward only:** a character takes links out of the class it holds,
   never back.
 - **Taking two links at once** (a Fighter becoming both Paladin and

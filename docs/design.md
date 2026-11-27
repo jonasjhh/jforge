@@ -855,7 +855,16 @@ armor), **Scout** (agility: speed and attack, middle row, daggers, bows
 and light armor) and **Apprentice** (magic: magic, spirit and MP, back
 row, staves, foci and robes; it is to fork into offensive and defensive
 magic). Their stats are close to melee's Fighter, Rogue, and Mage and
-Healer. They have no skills or links yet and are in no game yet.
+Healer. Each base leads to a **second level** of broad roles, linked in
+the starter library: Squire to **Guardian** (tank), **Warrior**
+(two-handed fighter) and **Spearman**; Scout to **Thief**, **Archer**,
+**Duelist** (agile front-line fighter) and **Beastmaster** (fights with a
+pet); Apprentice to **Mage** (offensive magic), **Cleric** (healing),
+**Enchanter** (buffs, debuffs and control) and **Summoner**. Specialisation
+starts at the third level, not designed yet. The bases and the second
+level have no skills yet and are in no game yet; the second level's
+Archer and Mage are apart from melee's classes of the same name, which
+are not placed in the graph yet.
 
 The graph is edited on char's **Paths** tab, a board (React Flow):
 classes not in the graph wait in a tray and are dragged (or tapped) onto
