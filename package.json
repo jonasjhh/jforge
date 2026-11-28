@@ -25,7 +25,7 @@
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
     "worker:dev": "wrangler dev",
     "worker:deploy": "pnpm build && wrangler deploy",
-    "portraits": "node modules/melee/scripts/portraits.mjs && prettier --write modules/melee/src/battle/portraitIcons.ts"
+    "portraits": "node libs/look/scripts/portraits.mjs && prettier --write libs/look/portraitIcons.ts"
   },
   "dependencies": {
     "@jforge/autob": "workspace:*",

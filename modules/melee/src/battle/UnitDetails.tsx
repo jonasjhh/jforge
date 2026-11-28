@@ -7,7 +7,7 @@ import {
   type Status,
   type Unit,
 } from "../../shared";
-import { Portrait } from "./Portrait";
+import { Portrait } from "@jforge/look";
 import { TIME_SCALE } from "./useBattle";
 
 interface UnitDetailsProps {

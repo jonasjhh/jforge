@@ -14,13 +14,11 @@
   "dependencies": {
     "@jforge/char": "workspace:*",
     "@jforge/content": "workspace:*",
+    "@jforge/look": "workspace:*",
     "@jforge/melee": "workspace:*",
     "@jforge/rules": "workspace:*",
     "hono": "^4.13.19",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
-  },
-  "devDependencies": {
-    "@fontsource-variable/oxanium": "^5.3.0"
   }
 }

@@ -12,19 +12,20 @@ credentials, deploys and secrets are set up once, not per module.
 
 ## Modules
 
-| Module  | Path      | Depends on                  | What it is                                  |
-| ------- | --------- | --------------------------- | ------------------------------------------- |
-| `melee` | `/melee/` | `rules`                     | Battle engine: time-based turns, 5x3 grid   |
-| `jrpg`  | `/jrpg/`  | `melee`, `rules`, `content` | Runs through levels of encounters           |
-| `char`  | `/char/`  | `rules`, `content`          | Codex: all content, read-only, and per game |
-| `autob` | `/autob/` | `melee`, `rules`, `content` | Autobattler: shop, bench, hex board         |
+| Module  | Path      | Depends on                          | What it is                                  |
+| ------- | --------- | ----------------------------------- | ------------------------------------------- |
+| `melee` | `/melee/` | `rules`, `look`                     | Battle engine: time-based turns, 5x3 grid   |
+| `jrpg`  | `/jrpg/`  | `melee`, `rules`, `content`, `look` | Runs through levels of encounters           |
+| `char`  | `/char/`  | `rules`, `content`                  | Codex: all content, read-only, and per game |
+| `autob` | `/autob/` | `melee`, `rules`, `content`, `look` | Autobattler: shop, bench, hex board         |
 
-And two libraries, which are packages but no apps:
+And three libraries, which are packages but no apps:
 
 | Library   | Package           | Depends on       | What it is                                               |
 | --------- | ----------------- | ---------------- | -------------------------------------------------------- |
 | `rules`   | `@jforge/rules`   | —                | Logic on content: `core/` is what every game shares      |
 | `content` | `@jforge/content` | `melee`, `rules` | The content as code: `catalogue/`, and a folder per game |
+| `look`    | `@jforge/look`    | —                | What every game looks like: portraits, colours, font     |
 
 ## Layout
 
@@ -47,6 +48,8 @@ libs/
                       A game's own rules stay in the game (jrpg's growth and
                       gear tiers in modules/jrpg/shared); only those another
                       package needs (char to show them) go in rules/<game>/.
+  look/               portraits (Portrait, the icons and their generator in
+                      scripts/), and base.css: colours, the font, buttons
   content/catalogue/  every class, enemy type, skill, gear and character
                       (melee.ts melee's, world.ts the world's enemies and gear)
   content/<game>/     what that game uses of the catalogue (jrpg/, autob/)
@@ -77,7 +80,8 @@ the `exports` field of its `package.json`. The concerns are kept apart:
 - **Games read their content from `@jforge/content/<game>`** and its
   rules from `@jforge/rules`. `jrpg` shows melee's battle screen
   (`@jforge/melee/battle`); `autob` has its own board and fight engine and
-  uses only melee's unit data and look.
+  uses only melee's unit data. Every game takes its portraits and base
+  styles from `@jforge/look` (`@jforge/look/base.css`).
 - **melee depends only on `rules`**, for the design format. For now
   `content` uses melee's data (`@jforge/melee/shared`); the battle UI stays
   in melee.
@@ -110,14 +114,14 @@ pnpm dev:landing      # http://localhost:5180/
 
 ## Credits
 
-melee's unit icons are from [game-icons.net](https://game-icons.net) by
+The unit icons (`libs/look`) are from [game-icons.net](https://game-icons.net) by
 Lorc and Delapouite, under
 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). Only the icons
 in use are bundled: `pnpm portraits` regenerates
-`modules/melee/src/battle/portraitIcons.ts` from the list in
-`modules/melee/scripts/portraits.mjs`.
+`libs/look/portraitIcons.ts` from the list in
+`libs/look/scripts/portraits.mjs`.
 
-melee's display font is [Oxanium](https://fonts.google.com/specimen/Oxanium)
+The display font (`libs/look/base.css`) is [Oxanium](https://fonts.google.com/specimen/Oxanium)
 by Severin Meyer, under the
 [SIL Open Font License](https://openfontlicense.org), bundled from
 `@fontsource-variable/oxanium` so it works offline.

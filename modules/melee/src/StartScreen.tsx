@@ -5,7 +5,7 @@ import {
   type Difficulty,
 } from "../shared";
 import { meta } from "../meta";
-import { PORTRAIT_AUTHORS } from "./battle/portraitIcons";
+import { PORTRAIT_AUTHORS } from "@jforge/look";
 import { useApiHealth } from "./useApiHealth";
 
 interface StartScreenProps {

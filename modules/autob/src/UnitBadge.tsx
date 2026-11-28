@@ -1,4 +1,4 @@
-import { Portrait } from "@jforge/melee/battle";
+import { Portrait } from "@jforge/look";
 import type { CombatantDef } from "@jforge/melee/shared";
 
 /** A unit as a hex or a bench slot shows it: portrait and name. */

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Portrait } from "@jforge/melee/battle";
+import { Portrait } from "@jforge/look";
 import {
   GRID_COLUMNS,
   GRID_ROWS,

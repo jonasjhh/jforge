@@ -50,7 +50,8 @@ export default tseslint.config(
   // The boundaries between packages (README.md, Layout): rules is logic,
   // the design format included, and imports nothing of jforge's; content
   // is data for the games, not for char or any one app; and no package
-  // but the root Worker imports char.
+  // but the root Worker imports char. look (portraits, colours, font) is
+  // the same for every game and imports nothing of jforge's.
   {
     files: ["libs/rules/**/*.{ts,tsx}"],
     rules: {
@@ -78,6 +79,22 @@ export default tseslint.config(
               group: ["@jforge/melee", "@jforge/melee/*"],
               message:
                 "rules imports no game: the design format is rules' own.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["libs/look/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@jforge/*"],
+              message: "look imports nothing of jforge's.",
             },
           ],
         },

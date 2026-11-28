@@ -282,6 +282,19 @@ importers:
         specifier: workspace:*
         version: link:../rules
 
+  libs/look:
+    dependencies:
+      '@fontsource-variable/oxanium':
+        specifier: ^5.3.0
+        version: 5.3.0
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+    devDependencies:
+      '@iconify-json/game-icons':
+        specifier: 1.2.4
+        version: 1.2.4
+
   libs/rules: {}
 
   modules/autob:
@@ -292,6 +305,9 @@ importers:
       '@jforge/content':
         specifier: workspace:*
         version: link:../../libs/content
+      '@jforge/look':
+        specifier: workspace:*
+        version: link:../../libs/look
       '@jforge/melee':
         specifier: workspace:*
         version: link:../melee
@@ -307,10 +323,6 @@ importers:
       react-dom:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
-    devDependencies:
-      '@fontsource-variable/oxanium':
-        specifier: ^5.3.0
-        version: 5.3.0
 
   modules/char:
     dependencies:
@@ -341,6 +353,9 @@ importers:
       '@jforge/content':
         specifier: workspace:*
         version: link:../../libs/content
+      '@jforge/look':
+        specifier: workspace:*
+        version: link:../../libs/look
       '@jforge/melee':
         specifier: workspace:*
         version: link:../melee
@@ -356,13 +371,12 @@ importers:
       react-dom:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
-    devDependencies:
-      '@fontsource-variable/oxanium':
-        specifier: ^5.3.0
-        version: 5.3.0
 
   modules/melee:
     dependencies:
+      '@jforge/look':
+        specifier: workspace:*
+        version: link:../../libs/look
       '@jforge/rules':
         specifier: workspace:*
         version: link:../../libs/rules
@@ -375,13 +389,6 @@ importers:
       react-dom:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
-    devDependencies:
-      '@fontsource-variable/oxanium':
-        specifier: ^5.3.0
-        version: 5.3.0
-      '@iconify-json/game-icons':
-        specifier: 1.2.4
-        version: 1.2.4
 
 packages:
 

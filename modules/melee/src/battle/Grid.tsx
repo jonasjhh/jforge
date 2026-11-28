@@ -13,7 +13,7 @@ import {
   type Unit,
 } from "../../shared";
 import { previewClasses, previewLabel, previewText } from "./labels";
-import { Portrait } from "./Portrait";
+import { Portrait } from "@jforge/look";
 import type { Hit } from "./hits";
 import { useLongPress } from "./useLongPress";
 

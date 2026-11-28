@@ -24,6 +24,7 @@ rules  <-  melee  <-  content  <-  char
 | --------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `melee`   | Battle engine: units on the grid, targeting and threat. Starter content. Runs any fight.                                      |
 | `rules`   | A library: the design format (stats, damage types, traits, statuses, skills, creatures), what content is and the logic on it. |
+| `look`    | A library: portraits, colours, the font and base styles, the same in every game.                                              |
 | `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                   |
 | `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                              |
 | `jrpg`    | The game: runs through levels of encounters. Uses melee for battles and its content for the party, enemies and gear.          |

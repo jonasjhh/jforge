@@ -1,0 +1,225 @@
+/* jforge's look: colours, the display face, the page, buttons and
+ * portraits. Every game imports it (@jforge/look/base.css). */
+@import "@fontsource-variable/oxanium/wght.css";
+
+:root {
+  /* Base: cool ink neutrals, so warm colours stand out and carry meaning. */
+  --bg: #111118;
+  --bg-deep: #0a0a10;
+  --surface: #1b1b25;
+  --line: #313145;
+  --line-soft: #23232f;
+  --raised: #2c2c3c;
+  --text: #f1eff6;
+  --text-muted: #a8a6b9;
+  --text-faint: #8a8899;
+
+  /* One job per colour. */
+  /* Action: what to tap (buttons, targets, the selected choice). */
+  --action: #ff7a59;
+  --action-rgb: 255, 122, 89;
+  --on-action: #1a0f0b;
+  /* Danger and the enemy: red. */
+  --danger: #e5484d;
+  --danger-soft: #ff9b94;
+  --enemy-surface-top: #3a1f26;
+  --enemy-surface-bottom: #2a161c;
+  --enemy-line: #5a2c36;
+  /* Your side: cool blue. */
+  --ally: #c4d6ff;
+  --ally-surface-top: #262a3c;
+  --ally-surface-bottom: #1d2030;
+  /* Cover: a unit that can't be singled out. */
+  --cover: #c9d9ec;
+  /* Your unit, your turn, and weaknesses: gold. */
+  --turn: #ffd166;
+  /* Area of effect, magic, healing, resisted damage. */
+  --area: #ff9f3d;
+  --magic: #b98cff;
+  --good: #5fd38d;
+  --resist: #c9c9d6;
+
+  --font-display: "Oxanium Variable", system-ui, sans-serif;
+}
+
+/*
+ * The display face gives the game its voice: titles, names and numbers.
+ * Sentences stay in the system font, which reads better at small sizes.
+ */
+h1,
+h2,
+.primary {
+  font-family: var(--font-display);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2rem;
+  box-sizing: border-box;
+}
+
+h1 {
+  font-size: 2.4rem;
+  margin: 1.5rem 0 0.25rem;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.back {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.panel {
+  margin-top: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  line-height: 1.6;
+}
+
+.good {
+  color: var(--good);
+}
+
+.bad {
+  color: var(--danger-soft);
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.primary {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  background: var(--action);
+  color: var(--on-action);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 3px 0 #b8492f;
+}
+
+.primary:active {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.secondary {
+  flex: 1;
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  font-size: 1.05rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+}
+
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.button-row .primary {
+  flex: 1;
+  width: auto;
+}
+
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 0.75rem;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.segmented button {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* The chosen option is raised, not filled with the action colour: it is
+   a setting, not something to do. */
+.segmented button.selected {
+  background: var(--raised);
+  color: var(--text);
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.mode-tabs {
+  margin-bottom: 0.6rem;
+}
+
+/* Every button gives way a little when pressed. */
+button:not(:disabled):active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* A unit's icon (Portrait), in the colour of its side. */
+.portrait {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ally);
+}

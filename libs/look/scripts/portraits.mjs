@@ -1,4 +1,4 @@
-// Writes src/battle/portraitIcons.ts: the unit icons the game uses, taken
+// Writes portraitIcons.ts: the unit icons the game uses, taken
 // from the game-icons.net set (CC BY 3.0), so the app ships only these and
 // not the whole set. Run with `pnpm portraits` after changing the list.
 import { readFileSync, writeFileSync } from "node:fs";
@@ -52,4 +52,4 @@ export const PORTRAITS: Record<string, string> = {
 ${entries.join("\n")}
 };
 `;
-writeFileSync(new URL("../src/battle/portraitIcons.ts", import.meta.url), out);
+writeFileSync(new URL("../portraitIcons.ts", import.meta.url), out);
