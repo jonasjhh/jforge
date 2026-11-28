@@ -1,5 +1,6 @@
 import { meleeClassId } from "@jforge/content/catalogue";
-import { content as c, type CombatantDef } from "@jforge/melee/shared";
+import { type CombatantDef } from "@jforge/battle";
+import { content as c } from "@jforge/melee/shared";
 
 // jrpg owns how a class grows: the order each class learns its skills in.
 // char only says which skills a class has. A class learns the first two at

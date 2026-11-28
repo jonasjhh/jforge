@@ -1,5 +1,5 @@
-import { POISON } from "./poison";
-import type { CombatantDef, Skill, Weapon } from "./types";
+import { POISON, type CombatantDef } from "@jforge/battle";
+import type { Skill, Weapon } from "@jforge/rules/core";
 
 // Starter content so melee can set up a fight on its own. The four player
 // types become class templates in char later. Everyone uses a basic attack

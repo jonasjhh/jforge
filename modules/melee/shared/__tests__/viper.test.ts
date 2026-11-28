@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { advance, createBattle } from "../battle";
+import { advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { viper } from "../content";
-import type { BattleEvent, CombatantDef } from "../types";
+import type { BattleEvent, CombatantDef } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Tick = Extract<BattleEvent, { type: "statusTick" }>;

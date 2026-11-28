@@ -6,7 +6,7 @@ import {
   type StatName,
   type Stats,
 } from "@jforge/rules/core";
-import { estimateThreat, type CombatantDef } from "@jforge/melee/shared";
+import { estimateThreat, type CombatantDef } from "@jforge/battle";
 
 // The units of autob are char's classes. Each copy bought is a unit; three
 // of a class at the same star merge into one a star higher.

@@ -1,7 +1,7 @@
 // A balance test: auto-played runs of whole battles. Mutation testing
 // leaves out *.balance.test.ts files (see vitest.stryker.config.ts).
 import { describe, expect, it } from "vitest";
-import { simulate } from "@jforge/melee/shared";
+import { simulate } from "@jforge/battle";
 import {
   battleFor,
   choices,

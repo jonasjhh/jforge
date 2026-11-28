@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { MAX_PARTY_SIZE } from "@jforge/melee/shared";
+import { MAX_PARTY_SIZE } from "@jforge/battle";
 import { heroes, type Encounter, type Reward, type Run } from "../../shared";
 import { RunScreen } from "../RunScreen";
 import { renderControlled } from "./controlled";

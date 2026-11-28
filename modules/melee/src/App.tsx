@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { randomEncounter, type BattleSetup, type Difficulty } from "../shared";
-import { BattleScreen } from "./battle/BattleScreen";
+import { meleeEncounter } from "../shared/arena";
+import { type BattleSetup, type Difficulty } from "@jforge/battle";
+import { BattleScreen } from "@jforge/battle/screen";
 import { StartScreen } from "./StartScreen";
 
 const newSeed = () => Math.floor(Math.random() * 1_000_000);
@@ -40,7 +41,7 @@ export function App() {
         const next = newSeed();
         setEncounterSeed(next);
         setBattle({
-          setup: randomEncounter(next, difficulty),
+          setup: meleeEncounter(next, difficulty),
           seed: newSeed(),
         });
       }}

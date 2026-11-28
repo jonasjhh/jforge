@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
-import { skillValue } from "../aiSkills";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
 import { geomancer, petrifySkill, quicken } from "../content";
-import { previewDamage } from "../preview";
-import { validateSkill } from "../skills";
-import { applyStatus } from "../status";
-import { GAUGE_FULL, turnOrder } from "../timeline";
-import type { BattleState, Cell, CombatantDef, StatusDef } from "../types";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import { validateSkill } from "@jforge/battle/engine/skills.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
+import { GAUGE_FULL, turnOrder } from "@jforge/battle/engine/timeline.ts";
+import type {
+  BattleState,
+  Cell,
+  CombatantDef,
+  StatusDef,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const STONE = (petrifySkill.effect as { status: StatusDef }).status;

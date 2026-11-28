@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileRoster, isCreature, parseLibrary } from "@jforge/rules/core";
 import { jrpgLibrary } from "@jforge/content/jrpg";
-import { createBattle } from "@jforge/melee/shared";
+import { createBattle } from "@jforge/battle";
 import { GEAR_TIERS, atTier, withGearTiers } from "../world";
 
 const starter = jrpgLibrary();

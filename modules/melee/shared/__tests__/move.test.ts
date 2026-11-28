@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball, sword } from "../content";
-import { MOVE_GAUGE_LEFT } from "../move";
-import { reachableTargets } from "../reach";
-import { skillVictims } from "../skills";
-import type { BattleState, Placement } from "../types";
+import { MOVE_GAUGE_LEFT } from "@jforge/battle/engine/move.ts";
+import { reachableTargets } from "@jforge/battle/engine/reach.ts";
+import { skillVictims } from "@jforge/battle/engine/skills.ts";
+import type { BattleState, Placement } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const dummy = def("dummy", { maxHp: 1_000_000, attack: 0, speed: 0 });

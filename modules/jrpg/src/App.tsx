@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BattleScreen } from "@jforge/melee/battle";
+import { BattleScreen } from "@jforge/battle/screen";
 import {
   battleFor,
   battleSeed,

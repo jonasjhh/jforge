@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle, validateCommand } from "../battle";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
 import {
   arcaneWave,
   charge,
@@ -18,15 +23,15 @@ import {
   shieldBash,
   shieldWall,
 } from "../content";
-import { resistance } from "../damage";
+import { resistance } from "@jforge/battle/engine/damage.ts";
 
 const EXPOSE_FACTOR = 1.3;
-import { skillValue } from "../aiSkills";
-import { previewDamage } from "../preview";
-import { skillArea } from "../skills";
-import { effectiveStat } from "../stats";
-import { cleanse, spellPower } from "../status";
-import { offenseOf } from "../threat";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import { skillArea } from "@jforge/battle/engine/skills.ts";
+import { effectiveStat } from "@jforge/battle/engine/stats.ts";
+import { cleanse, spellPower } from "@jforge/battle/engine/status.ts";
+import { offenseOf } from "@jforge/battle/engine/threat.ts";
 import type {
   BattleEvent,
   BattleState,
@@ -34,7 +39,7 @@ import type {
   CombatantDef,
   DamageType,
   Unit,
-} from "../types";
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const fast = (d: CombatantDef) => ({ ...d, stats: { ...d.stats, speed: 50 } });

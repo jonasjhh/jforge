@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
-import { skillValue } from "../aiSkills";
-import { BLEED, worsenOnAction } from "../bleed";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { BLEED, worsenOnAction } from "@jforge/battle/engine/bleed.ts";
 import { fighter, rend } from "../content";
-import { previewDamage } from "../preview";
-import { applyStatus, cleanse, runDueTicks } from "../status";
-import type { BattleEvent, BattleState, Cell, Trait, Unit } from "../types";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import {
+  applyStatus,
+  cleanse,
+  runDueTicks,
+} from "@jforge/battle/engine/status.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Trait,
+  Unit,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Tick = Extract<BattleEvent, { type: "statusTick" }>;

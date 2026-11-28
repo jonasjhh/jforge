@@ -1,9 +1,6 @@
 import type { Library } from "@jforge/rules/core";
-import {
-  content,
-  type CombatantDef,
-  type Position,
-} from "@jforge/melee/shared";
+import { type CombatantDef, type Position } from "@jforge/battle";
+import { content } from "@jforge/melee/shared";
 import { BOARD_COLUMNS, BOARD_ROWS } from "./hex";
 import { randomFrom } from "./random";
 import { STAR_STATS, monsterDef } from "./units";

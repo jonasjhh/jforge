@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { boulder, hook, imp, lancer, slime, viper, wolf } from "../content";
 import { TRAIT_RESISTANCES, resistancesFor } from "@jforge/rules/core";
-import type { BattleEvent, CombatantDef } from "../types";
-import { DAMAGE_TYPES } from "../types";
+import type { BattleEvent, CombatantDef } from "@jforge/battle/engine/types.ts";
+import { DAMAGE_TYPES } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 describe("resistancesFor", () => {

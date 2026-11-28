@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { content, createBattle } from "@jforge/melee/shared";
+import { createBattle } from "@jforge/battle";
+import { content } from "@jforge/melee/shared";
 import { openingBattleFor, previewOpeningBattle } from "../index";
 
 const { archer, fighter, healer, mage } = content;

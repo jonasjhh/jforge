@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { heal, healer, smite } from "../content";
-import { skillCells } from "../skills";
-import type { BattleEvent, BattleState, Cell, Skill } from "../types";
+import { skillCells } from "@jforge/battle/engine/skills.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Skill,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 // The healer acts first; everyone else is too slow to matter.

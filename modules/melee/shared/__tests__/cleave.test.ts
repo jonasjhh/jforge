@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { cleave, fighter } from "../content";
-import { skillVictims } from "../skills";
-import type { BattleEvent, BattleState, Cell, Placement } from "../types";
+import { skillVictims } from "@jforge/battle/engine/skills.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

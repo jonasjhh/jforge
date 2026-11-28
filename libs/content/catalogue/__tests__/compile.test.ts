@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PARTY_SIZE, createBattle } from "@jforge/melee/shared";
+import { MAX_PARTY_SIZE, createBattle } from "@jforge/battle";
 import {
   archetypeOf,
   archetypeSkills,

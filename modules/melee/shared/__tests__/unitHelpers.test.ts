@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { createBattle } from "../battle";
+import { createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball, mage } from "../content";
-import { wouldKnockOut } from "../damage";
-import { canAfford } from "../skills";
-import type { BattleState, Status, Unit } from "../types";
-import { dropReady, findSkill, restoreHp } from "../units";
+import { wouldKnockOut } from "@jforge/battle/engine/damage.ts";
+import { canAfford } from "@jforge/battle/engine/skills.ts";
+import type { BattleState, Status, Unit } from "@jforge/battle/engine/types.ts";
+import {
+  dropReady,
+  findSkill,
+  restoreHp,
+} from "@jforge/battle/engine/units.ts";
 import { def, place } from "./helpers";
 
 function battle(): BattleState {

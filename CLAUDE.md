@@ -15,8 +15,9 @@ A monorepo of modules under `modules/<name>/`, each its own PWA at
 `wrangler.toml`), and libraries under `libs/<name>/` that are packages but
 no apps: `libs/rules` (logic on content: `core/`, plus a folder for a
 game's rules only when another package needs them; otherwise they stay in
-the game) and `libs/content` (the content as code: `catalogue/`
-plus a folder per game). See `README.md` for the layout, the dependency
+the game), `libs/content` (the content as code: `catalogue/`
+plus a folder per game), `libs/battle` (the battle engine and screen,
+fed units by each game) and `libs/look` (portraits and base styles). See `README.md` for the layout, the dependency
 rules and the steps for adding a module. Modules and libraries import
 each other only through workspace packages (`@jforge/<name>/...`), never
 relative paths into another package.

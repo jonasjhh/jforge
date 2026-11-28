@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { chooseCommand } from "../ai";
-import { act, advance, createBattle } from "../battle";
+import { chooseCommand } from "@jforge/battle/engine/ai.ts";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball, firebolt, rogue, shadowstep, vanish } from "../content";
-import { MOVE_GAUGE_LEFT } from "../move";
-import { applyStatus } from "../status";
-import type { BattleEvent, BattleState, Cell, StatusDef } from "../types";
+import { MOVE_GAUGE_LEFT } from "@jforge/battle/engine/move.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  StatusDef,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

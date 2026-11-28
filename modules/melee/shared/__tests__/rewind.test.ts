@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle, validateCommand } from "../battle";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
 import { chronomancer, rewind } from "../content";
-import { skillValue } from "../aiSkills";
-import type { BattleState, Cell } from "../types";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import type { BattleState, Cell } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const CHRONO = "player-2-2";

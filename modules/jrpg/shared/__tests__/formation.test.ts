@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ALDRIC, MIRA, pair } from "./pair";
 import { jrpgLibrary } from "@jforge/content/jrpg";
-import { createBattle } from "@jforge/melee/shared";
+import { createBattle } from "@jforge/battle";
 import { formationOf, moveMember } from "../formation";
 import {
   battleFor,

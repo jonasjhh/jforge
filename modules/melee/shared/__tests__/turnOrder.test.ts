@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { meteor } from "../content";
-import { turnOrder } from "../timeline";
-import type { BattleState, Placement } from "../types";
+import { turnOrder } from "@jforge/battle/engine/timeline.ts";
+import type { BattleState, Placement } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 // No attack and huge HP: nothing but turn order matters.

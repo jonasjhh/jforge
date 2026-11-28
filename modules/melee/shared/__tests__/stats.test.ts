@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createBattle } from "../battle";
-import { effectiveStat } from "../stats";
+import { createBattle } from "@jforge/battle/engine/battle.ts";
+import { effectiveStat } from "@jforge/battle/engine/stats.ts";
 import { def, place } from "./helpers";
 
 describe("effectiveStat", () => {

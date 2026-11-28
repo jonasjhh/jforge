@@ -1,9 +1,9 @@
 import {
   DIFFICULTIES,
-  randomEncounter,
   type BattleSetup,
   type Difficulty,
-} from "../shared";
+} from "@jforge/battle";
+import { meleeEncounter } from "../shared/arena";
 import { meta } from "../meta";
 import { PORTRAIT_AUTHORS } from "@jforge/look";
 import { useApiHealth } from "./useApiHealth";
@@ -42,7 +42,7 @@ export function StartScreen({
   onStart,
 }: StartScreenProps) {
   const health = useApiHealth<{ status: string }>("/api/melee/health");
-  const encounter = randomEncounter(encounterSeed, difficulty);
+  const encounter = meleeEncounter(encounterSeed, difficulty);
 
   return (
     <main className="page">

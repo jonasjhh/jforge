@@ -12,5 +12,8 @@
   "dependencies": {
     "@jforge/melee": "workspace:*",
     "@jforge/rules": "workspace:*"
+  },
+  "devDependencies": {
+    "@jforge/battle": "workspace:*"
   }
 }

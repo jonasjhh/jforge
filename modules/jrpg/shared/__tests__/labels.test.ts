@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { jrpgLibrary } from "@jforge/content/jrpg";
-import { content, type BattleSetup } from "@jforge/melee/shared";
+import { type BattleSetup } from "@jforge/battle";
+import { content } from "@jforge/melee/shared";
 import { encounterLabel, enemySummary, gearSummary } from "../labels";
 import type { Encounter } from "../run";
 

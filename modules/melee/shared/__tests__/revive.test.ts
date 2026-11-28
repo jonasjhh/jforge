@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { revive } from "../content";
-import { REVIVE_VALUE, bestSkill, skillCost, skillValue } from "../aiSkills";
-import { validateSkill } from "../skills";
-import type { BattleEvent, BattleState, Cell, Skill } from "../types";
+import {
+  REVIVE_VALUE,
+  bestSkill,
+  skillCost,
+  skillValue,
+} from "@jforge/battle/engine/aiSkills.ts";
+import { validateSkill } from "@jforge/battle/engine/skills.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Skill,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 /** The fast healer waits for a command; its friend at player 1 is down. */

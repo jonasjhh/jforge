@@ -4,7 +4,7 @@ import {
   GRID_ROWS,
   isOnGrid,
   type Position,
-} from "@jforge/melee/shared";
+} from "@jforge/battle";
 import type { Run } from "./run";
 
 // Where the party stands when a battle starts. Members the player hasn't

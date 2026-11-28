@@ -1,7 +1,8 @@
-import { content, type CombatantDef } from "@jforge/melee/shared";
+import { content } from "@jforge/melee/shared";
 import {
   canUse,
   type Archetype,
+  type Creature,
   type Character,
   type Gear,
   type GearCategory,
@@ -20,7 +21,7 @@ export const meleeWeaponId = (id: string) => `weapon-${id}`;
 export const meleeCreatureId = (id: string) => `summon-${id}`;
 
 /** Melee's summoned creatures, which the catalogue keeps as summons. */
-export const MELEE_CREATURES: CombatantDef[] = [content.imp, content.boulder];
+export const MELEE_CREATURES: Creature[] = [content.imp, content.boulder];
 
 /** A hero of each melee class, by melee type id. */
 export const MELEE_HEROES: Record<string, string> = {
@@ -104,7 +105,7 @@ export const BASIC_ARMOUR: Gear[] = [
 ];
 
 /** A melee type as a class, with melee's stats. */
-export function classFromMelee(def: CombatantDef): Archetype {
+export function classFromMelee(def: Creature): Archetype {
   return {
     id: meleeClassId(def.id),
     name: def.name,
@@ -122,7 +123,7 @@ export function classFromMelee(def: CombatantDef): Archetype {
 }
 
 /** A melee class's own weapon as plain gear, adding to its best stat. */
-export function basicWeapon(def: CombatantDef): Gear {
+export function basicWeapon(def: Creature): Gear {
   const stat = WEAPON_STATS.reduce((top, at) =>
     def.stats[at] > def.stats[top] ? at : top,
   );
@@ -175,7 +176,7 @@ export function starterKit(library: Library, character: Character): Character {
 }
 
 /** A melee creature as a summon, with melee's stats. */
-export function creatureFromMelee(def: CombatantDef): Archetype {
+export function creatureFromMelee(def: Creature): Archetype {
   return {
     ...classFromMelee(def),
     id: meleeCreatureId(def.id),

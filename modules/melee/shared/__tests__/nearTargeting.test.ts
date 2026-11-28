@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { chooseCommand, targetScore } from "../ai";
-import { createBattle } from "../battle";
-import { farness } from "../grid";
-import type { BattleState, Placement, TargetingProfile, Unit } from "../types";
+import { chooseCommand, targetScore } from "@jforge/battle/engine/ai.ts";
+import { createBattle } from "@jforge/battle/engine/battle.ts";
+import { farness } from "@jforge/battle/engine/grid.ts";
+import type {
+  BattleState,
+  Placement,
+  TargetingProfile,
+  Unit,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const calm: TargetingProfile = {

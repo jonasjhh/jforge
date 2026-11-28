@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { chooseCommand } from "../ai";
-import { act, advance, createBattle } from "../battle";
+import { chooseCommand } from "@jforge/battle/engine/ai.ts";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball, slime, sword, wolf } from "../content";
-import type { BattleEvent, CombatantDef, Resistances } from "../types";
+import type {
+  BattleEvent,
+  CombatantDef,
+  Resistances,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 /** One sword hit (attack 40, no defense) on a target with `resistances`. */

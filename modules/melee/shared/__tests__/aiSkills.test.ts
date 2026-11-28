@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chooseCommand, targetScore } from "../ai";
+import { chooseCommand, targetScore } from "@jforge/battle/engine/ai.ts";
 import {
   CAST_DISCOUNT,
   SUMMON_VALUE,
@@ -8,8 +8,8 @@ import {
   hitValue,
   skillCost,
   skillValue,
-} from "../aiSkills";
-import { createBattle } from "../battle";
+} from "@jforge/battle/engine/aiSkills.ts";
+import { createBattle } from "@jforge/battle/engine/battle.ts";
 import {
   cure,
   fireball,
@@ -30,7 +30,7 @@ import type {
   Skill,
   TargetingProfile,
   Unit,
-} from "../types";
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const calm: TargetingProfile = {

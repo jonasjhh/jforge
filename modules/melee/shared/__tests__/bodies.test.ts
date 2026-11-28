@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball, shadowstep } from "../content";
-import type { BattleEvent, BattleState, Cell } from "../types";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 // Decided: a knocked-out unit stays in its cell as a body (for a later

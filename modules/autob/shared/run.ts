@@ -1,10 +1,7 @@
 import { type Library } from "@jforge/rules/core";
 import { autobLibrary } from "@jforge/content/autob";
-import {
-  SAVE_VERSION,
-  createRandom,
-  type Position,
-} from "@jforge/melee/shared";
+import { createRandom, type Position } from "@jforge/battle";
+import { SAVE_VERSION } from "@jforge/melee/shared";
 import {
   REROLL_COST,
   START_LEVEL,

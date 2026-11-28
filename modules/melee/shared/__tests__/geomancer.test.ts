@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import {
   geomancer,
   raiseBoulder,
@@ -8,17 +8,17 @@ import {
   upheaval,
   vanish,
 } from "../content";
-import { unitAt } from "../grid";
-import { reachableTargets } from "../reach";
-import { skillVictims } from "../skills";
-import { applyStatus } from "../status";
+import { unitAt } from "@jforge/battle/engine/grid.ts";
+import { reachableTargets } from "@jforge/battle/engine/reach.ts";
+import { skillVictims } from "@jforge/battle/engine/skills.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
 import type {
   BattleEvent,
   BattleState,
   Cell,
   Placement,
   StatusDef,
-} from "../types";
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

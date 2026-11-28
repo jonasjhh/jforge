@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { chooseCommand } from "../ai";
-import { MOVE_THRESHOLD, bestMove, positionValue, valueAt } from "../aiMove";
-import { createBattle } from "../battle";
+import { chooseCommand } from "@jforge/battle/engine/ai.ts";
+import {
+  MOVE_THRESHOLD,
+  bestMove,
+  positionValue,
+  valueAt,
+} from "@jforge/battle/engine/aiMove.ts";
+import { createBattle } from "@jforge/battle/engine/battle.ts";
 import { bow, shadowstep, sword } from "../content";
-import type { BattleState, Placement, Unit } from "../types";
+import type {
+  BattleState,
+  Placement,
+  Unit,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const unit = (state: BattleState, id: string) =>

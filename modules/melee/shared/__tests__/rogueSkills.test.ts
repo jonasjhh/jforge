@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle, validateCommand } from "../battle";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
 import {
   coupDeGrace,
   fireball,
@@ -10,13 +15,13 @@ import {
   smokeBomb,
   vanish,
 } from "../content";
-import { skillValue } from "../aiSkills";
-import { reachableTargets } from "../reach";
-import { skillVictims } from "../skills";
-import { offenseOf } from "../threat";
-import { POISON } from "../poison";
-import { previewDamage } from "../preview";
-import type { BattleState, Cell, Skill } from "../types";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { reachableTargets } from "@jforge/battle/engine/reach.ts";
+import { skillVictims } from "@jforge/battle/engine/skills.ts";
+import { offenseOf } from "@jforge/battle/engine/threat.ts";
+import { POISON } from "@jforge/battle/engine/poison.ts";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import type { BattleState, Cell, Skill } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 /** A plain strike skill, to see the coating work through strikes too. */

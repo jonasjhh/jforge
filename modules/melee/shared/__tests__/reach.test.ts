@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { bow, spear, staff, sword } from "../content";
-import { reachableTargets } from "../reach";
-import { simulate } from "../simulate";
-import type { BattleState, Placement, Weapon } from "../types";
+import { reachableTargets } from "@jforge/battle/engine/reach.ts";
+import { simulate } from "@jforge/battle/engine/simulate.ts";
+import type {
+  BattleState,
+  Placement,
+  Weapon,
+} from "@jforge/battle/engine/types.ts";
 import { def, place, sampleBattle } from "./helpers";
 
 const foe = (col: number, row: number) =>

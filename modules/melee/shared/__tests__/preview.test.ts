@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import {
   aegis,
   cleave,
@@ -9,9 +9,14 @@ import {
   shatter,
   vanish,
 } from "../content";
-import { previewDamage } from "../preview";
-import { applyStatus } from "../status";
-import type { BattleEvent, BattleState, StatusDef, Unit } from "../types";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  StatusDef,
+  Unit,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const statusOf = (skill: { effect: unknown }) =>

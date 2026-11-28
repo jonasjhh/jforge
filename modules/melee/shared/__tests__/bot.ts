@@ -1,14 +1,19 @@
-import { act, advance, createBattle, validateCommand } from "../battle";
-import { GRID_COLUMNS, GRID_ROWS } from "../grid";
-import { reachableTargets } from "../reach";
-import { skillCells } from "../skills";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
+import { GRID_COLUMNS, GRID_ROWS } from "@jforge/battle/engine/grid.ts";
+import { reachableTargets } from "@jforge/battle/engine/reach.ts";
+import { skillCells } from "@jforge/battle/engine/skills.ts";
 import type {
   BattleSetup,
   BattleState,
   Command,
   StepResult,
   Unit,
-} from "../types";
+} from "@jforge/battle/engine/types.ts";
 
 /**
  * A command for a waiting party member that exercises the whole engine:

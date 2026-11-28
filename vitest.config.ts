@@ -8,7 +8,7 @@ export default defineConfig({
       // `pnpm coverage` reports every module's source, tested or not.
       include: [
         "modules/*/{shared,src,worker}/**/*.{ts,tsx}",
-        "libs/**/*.ts",
+        "libs/**/*.{ts,tsx}",
         "worker/**",
       ],
       exclude: [

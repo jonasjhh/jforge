@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import {
   armourPierce,
   hook,
@@ -9,11 +9,16 @@ import {
   weakeningStrike,
 } from "../content";
 const WEAKEN_FACTOR = 0.75;
-import { WEAKEN_STATUS } from "../weaken";
-import { skillValue } from "../aiSkills";
-import { GAUGE_FULL } from "../timeline";
-import { previewDamage } from "../preview";
-import type { BattleEvent, BattleState, Cell, Placement } from "../types";
+import { WEAKEN_STATUS } from "@jforge/battle/engine/weaken.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { GAUGE_FULL } from "@jforge/battle/engine/timeline.ts";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

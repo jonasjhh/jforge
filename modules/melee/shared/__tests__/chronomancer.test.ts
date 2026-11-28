@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { chronomancer, cure, haste, quicken, slow } from "../content";
-import { effectiveStat } from "../stats";
-import type { BattleState, Cell } from "../types";
+import { effectiveStat } from "@jforge/battle/engine/stats.ts";
+import type { BattleState, Cell } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 // The Chronomancer (speed 50) acts first at time 20. The ally and the

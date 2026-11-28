@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ALDRIC, MIRA, pair } from "./pair";
 import { jrpgLibrary } from "@jforge/content/jrpg";
-import {
-  MAX_PARTY_SIZE,
-  content,
-  createBattle,
-  isBackLiner,
-} from "@jforge/melee/shared";
+import { MAX_PARTY_SIZE, createBattle, isBackLiner } from "@jforge/battle";
+import { content } from "@jforge/melee/shared";
 import {
   BUDGET_SHARE,
   DEPTH_GROWTH,

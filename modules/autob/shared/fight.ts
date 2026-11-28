@@ -1,4 +1,4 @@
-import { DEFENSE_K, type CombatantDef, type Side } from "@jforge/melee/shared";
+import { DEFENSE_K, type CombatantDef, type Side } from "@jforge/battle";
 import {
   resistancesFor,
   type DamageType,

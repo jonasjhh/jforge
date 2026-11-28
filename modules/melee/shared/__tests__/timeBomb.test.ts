@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import {
   chronomancer,
   haste,
@@ -8,10 +8,15 @@ import {
   slow,
   timeBomb,
 } from "../content";
-import { knockOutIfDown } from "../damage";
-import { skillValue } from "../aiSkills";
-import { offenseOf } from "../threat";
-import type { BattleEvent, BattleState, Cell, Placement } from "../types";
+import { knockOutIfDown } from "@jforge/battle/engine/damage.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { offenseOf } from "@jforge/battle/engine/threat.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

@@ -12,20 +12,21 @@ credentials, deploys and secrets are set up once, not per module.
 
 ## Modules
 
-| Module  | Path      | Depends on                          | What it is                                  |
-| ------- | --------- | ----------------------------------- | ------------------------------------------- |
-| `melee` | `/melee/` | `rules`, `look`                     | Battle engine: time-based turns, 5x3 grid   |
-| `jrpg`  | `/jrpg/`  | `melee`, `rules`, `content`, `look` | Runs through levels of encounters           |
-| `char`  | `/char/`  | `rules`, `content`                  | Codex: all content, read-only, and per game |
-| `autob` | `/autob/` | `melee`, `rules`, `content`, `look` | Autobattler: shop, bench, hex board         |
+| Module  | Path      | Depends on                           | What it is                                  |
+| ------- | --------- | ------------------------------------ | ------------------------------------------- |
+| `melee` | `/melee/` | `battle`, `rules`, `look`            | The arena: tries the battle on test units   |
+| `jrpg`  | `/jrpg/`  | `battle`, `rules`, `content`, `look` | Runs through levels of encounters           |
+| `char`  | `/char/`  | `rules`, `content`                   | Codex: all content, read-only, and per game |
+| `autob` | `/autob/` | `battle`, `rules`, `content`, `look` | Autobattler: shop, bench, hex board         |
 
-And three libraries, which are packages but no apps:
+And four libraries, which are packages but no apps:
 
 | Library   | Package           | Depends on       | What it is                                               |
 | --------- | ----------------- | ---------------- | -------------------------------------------------------- |
 | `rules`   | `@jforge/rules`   | —                | Logic on content: `core/` is what every game shares      |
 | `content` | `@jforge/content` | `melee`, `rules` | The content as code: `catalogue/`, and a folder per game |
 | `look`    | `@jforge/look`    | —                | What every game looks like: portraits, colours, font     |
+| `battle`  | `@jforge/battle`  | `rules`, `look`  | The battle engine and its screen; units come from a game |
 
 ## Layout
 
@@ -48,6 +49,10 @@ libs/
                       A game's own rules stay in the game (jrpg's growth and
                       gear tiers in modules/jrpg/shared); only those another
                       package needs (char to show them) go in rules/<game>/.
+  battle/engine/      the battle engine: grid, turns, targeting, threat,
+                      skills, statuses, encounters (`@jforge/battle`)
+  battle/screen/      the battle screen and battle.css
+                      (`@jforge/battle/screen`, `@jforge/battle/screen.css`)
   look/               portraits (Portrait, the icons and their generator in
                       scripts/), and base.css: colours, the font, buttons
   content/catalogue/  every class, enemy type, skill, gear and character
@@ -60,8 +65,8 @@ wrangler.toml         the one Worker's config
 ```
 
 Modules and libraries depend on each other through pnpm workspace
-packages: `jrpg` lists `"@jforge/melee": "workspace:*"` and imports
-`@jforge/melee/shared`. A package exposes what others may import through
+packages: `jrpg` lists `"@jforge/battle": "workspace:*"` and imports
+`@jforge/battle`. A package exposes what others may import through
 the `exports` field of its `package.json`. The concerns are kept apart:
 
 - **Content is code.** Classes, enemy types, skills, gear and characters
@@ -78,13 +83,15 @@ the `exports` field of its `package.json`. The concerns are kept apart:
 - **char only shows.** It reads `@jforge/content` and `@jforge/rules` and
   saves nothing but which tab and game were open. No app imports char.
 - **Games read their content from `@jforge/content/<game>`** and its
-  rules from `@jforge/rules`. `jrpg` shows melee's battle screen
-  (`@jforge/melee/battle`); `autob` has its own board and fight engine and
-  uses only melee's unit data. Every game takes its portraits and base
+  rules from `@jforge/rules`. `jrpg` fights with `@jforge/battle` and
+  shows its screen (`@jforge/battle/screen`); `autob` has its own board
+  and fight engine. Every game takes its portraits and base
   styles from `@jforge/look` (`@jforge/look/base.css`).
-- **melee depends only on `rules`**, for the design format. For now
-  `content` uses melee's data (`@jforge/melee/shared`); the battle UI stays
-  in melee.
+- **battle imports only `rules` and `look`**: each game brings its own
+  units. Only melee's tests reach into its files
+  (`@jforge/battle/engine/*`), to try the engine on melee's test units.
+- **melee is the arena**: it runs the battle on its own test units. For
+  now `content` still reads melee's data (`@jforge/melee/shared`).
 
 ESLint enforces these imports (`no-restricted-imports` in
 `eslint.config.js`).

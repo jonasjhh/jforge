@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { aimedShot, archer, vanish } from "../content";
-import { previewDamage } from "../preview";
-import { skillCells } from "../skills";
-import { applyStatus } from "../status";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import { skillCells } from "@jforge/battle/engine/skills.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
 import type {
   BattleEvent,
   BattleState,
   Cell,
   Placement,
   StatusDef,
-} from "../types";
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const stealth = (vanish.effect as { type: "status"; status: StatusDef }).status;

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { chooseCommand } from "../ai";
-import { act, advance, createBattle, validateCommand } from "../battle";
-import { skillValue } from "../aiSkills";
+import { chooseCommand } from "@jforge/battle/engine/ai.ts";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
 import {
   cleave,
   fighter,
@@ -15,9 +20,14 @@ import {
   vanish,
   warCry,
 } from "../content";
-import { effectiveStat } from "../stats";
-import { applyStatus } from "../status";
-import type { BattleState, CombatantDef, StatusDef, Unit } from "../types";
+import { effectiveStat } from "@jforge/battle/engine/stats.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
+import type {
+  BattleState,
+  CombatantDef,
+  StatusDef,
+  Unit,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const statusOf = (skill: typeof provoke) =>

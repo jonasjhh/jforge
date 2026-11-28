@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createBattle } from "../battle";
+import { meleeEncounter } from "../arena";
+import { createBattle } from "@jforge/battle/engine/battle.ts";
 import { playerTypes, slime, wolf } from "../content";
 import {
   DIFFICULTIES,
@@ -8,27 +9,27 @@ import {
   isBackLiner,
   randomEncounter,
   type Difficulty,
-} from "../encounters";
+} from "@jforge/battle/engine/encounters.ts";
 import { anywhere } from "./helpers";
 
 const threatOf = (seed: number, difficulty: Difficulty) =>
-  randomEncounter(seed, difficulty)
+  meleeEncounter(seed, difficulty)
     .placements.filter((p) => p.side === "enemy")
     .reduce((sum, p) => sum + (p.def.threat ?? 1), 0);
 
 describe("randomEncounter", () => {
   it("given the same seed and difficulty, when two encounters are made, then they are the same", () => {
-    const first = randomEncounter(42, "normal");
+    const first = meleeEncounter(42, "normal");
 
-    const second = randomEncounter(42, "normal");
+    const second = meleeEncounter(42, "normal");
 
     expect(second).toEqual(first);
   });
 
   it("given another seed, when an encounter is made, then it differs", () => {
-    const first = randomEncounter(42, "normal");
+    const first = meleeEncounter(42, "normal");
 
-    const other = randomEncounter(43, "normal");
+    const other = meleeEncounter(43, "normal");
 
     expect(other).not.toEqual(first);
   });
@@ -56,7 +57,7 @@ describe("randomEncounter", () => {
     for (let seed = 0; seed < 100; seed++) {
       for (const difficulty of DIFFICULTIES) {
         try {
-          createBattle(randomEncounter(seed, difficulty), seed);
+          createBattle(meleeEncounter(seed, difficulty), seed);
         } catch {
           wrong.push(`${difficulty} ${seed}`);
         }
@@ -72,7 +73,7 @@ describe("randomEncounter", () => {
     const wrong: number[] = [];
 
     for (let seed = 0; seed < 50; seed++) {
-      const party = randomEncounter(seed, "normal").placements.filter(
+      const party = meleeEncounter(seed, "normal").placements.filter(
         (p) => p.side === "player",
       );
       const ids = party.map((p) => p.def.id);

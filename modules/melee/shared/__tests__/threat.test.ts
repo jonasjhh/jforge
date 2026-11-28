@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { fangs, fireball, heal, monsters, revive, sword } from "../content";
-import { MIN_THREAT, durabilityOf, estimateThreat, offenseOf } from "../threat";
-import type { CombatantDef } from "../types";
+import {
+  MIN_THREAT,
+  durabilityOf,
+  estimateThreat,
+  offenseOf,
+} from "@jforge/battle/engine/threat.ts";
+import type { CombatantDef } from "@jforge/battle/engine/types.ts";
 import { def } from "./helpers";
 
 const goblin = def("goblin", { maxHp: 45, attack: 11, speed: 12 }, fangs);

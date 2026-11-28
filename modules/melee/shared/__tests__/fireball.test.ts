@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball } from "../content";
-import { DEFENSE_K } from "../damage";
-import { areaCells } from "../grid";
-import type { BattleEvent, Cell, Placement } from "../types";
+import { DEFENSE_K } from "@jforge/battle/engine/damage.ts";
+import { areaCells } from "@jforge/battle/engine/grid.ts";
+import type {
+  BattleEvent,
+  Cell,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const at = (side: Cell["side"], col: number, row = 0): Cell => ({

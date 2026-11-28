@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { advance, createBattle } from "../battle";
+import { advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { blessing, coupDeGrace, expose, rogue, vanish } from "../content";
-import { resistance, dealtFactor } from "../damage";
-import { finisherFactor } from "../finisher";
-import { previewDamage } from "../preview";
-import { effectiveStat } from "../stats";
-import { applyStatus } from "../status";
+import { resistance, dealtFactor } from "@jforge/battle/engine/damage.ts";
+import { finisherFactor } from "@jforge/battle/engine/finisher.ts";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import { effectiveStat } from "@jforge/battle/engine/stats.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
 import { STRENGTH_DEFAULTS, strengthsOf } from "@jforge/rules/core";
-import type { BattleState, SkillEffect, StatusDef } from "../types";
+import type {
+  BattleState,
+  SkillEffect,
+  StatusDef,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const statusOf = (skill: { effect: unknown }) =>

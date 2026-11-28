@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle, validateCommand } from "../battle";
-import { CHILL_SLOW } from "../chill";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
+import { CHILL_SLOW } from "@jforge/battle/engine/chill.ts";
 import {
   fireball,
   frostLance,
@@ -9,10 +14,15 @@ import {
   manaTap,
   meteor,
 } from "../content";
-import { effectiveStat } from "../stats";
-import { skillValue } from "../aiSkills";
-import { offenseOf } from "../threat";
-import type { BattleEvent, BattleState, Cell, Placement } from "../types";
+import { effectiveStat } from "@jforge/battle/engine/stats.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { offenseOf } from "@jforge/battle/engine/threat.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

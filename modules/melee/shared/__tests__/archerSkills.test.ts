@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import {
   aimedShot,
   archer,
@@ -8,13 +8,18 @@ import {
   quickShot,
   volley,
 } from "../content";
-import { IGNITE_BURN } from "../ignite";
-import { MOVE_GAUGE_LEFT } from "../move";
-import { skillValue } from "../aiSkills";
-import { PIN_SLOW } from "../pin";
-import { previewDamage } from "../preview";
-import { effectiveStat } from "../stats";
-import type { BattleEvent, BattleState, Cell, Placement } from "../types";
+import { IGNITE_BURN } from "@jforge/battle/engine/ignite.ts";
+import { MOVE_GAUGE_LEFT } from "@jforge/battle/engine/move.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { PIN_SLOW } from "@jforge/battle/engine/pin.ts";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import { effectiveStat } from "@jforge/battle/engine/stats.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

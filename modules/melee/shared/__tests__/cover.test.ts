@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { createBattle } from "../battle";
+import { createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball, firebolt, slow } from "../content";
-import { exposedEnemies } from "../reach";
-import { validateSkill } from "../skills";
-import type { BattleState, Cell, Skill, Unit } from "../types";
+import { exposedEnemies } from "@jforge/battle/engine/reach.ts";
+import { validateSkill } from "@jforge/battle/engine/skills.ts";
+import type {
+  BattleState,
+  Cell,
+  Skill,
+  Unit,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 /**

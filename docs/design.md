@@ -13,31 +13,34 @@ them, is in [progression.md](progression.md).
 ## Modules
 
 ```
-rules  <-  melee  <-  content  <-  char
-  ^          ^          ^
-  +----------+----------+------  jrpg, autob
+rules  <-  battle  <-  melee  <-  content  <-  char
+  ^          ^                       ^
+  +----------+-----------------------+------  jrpg, autob
 
-(rules is also read directly by content, char, jrpg and autob)
+(rules is also read directly by content, char, jrpg and autob;
+ look by battle and every game)
 ```
 
 | Package   | Role                                                                                                                          |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `melee`   | Battle engine: units on the grid, targeting and threat. Starter content. Runs any fight.                                      |
+| `battle`  | A library: the battle engine (units on the grid, targeting and threat) and its screen. Runs any fight it is given.            |
+| `melee`   | The arena: tries the battle engine on its own test units.                                                                     |
 | `rules`   | A library: the design format (stats, damage types, traits, statuses, skills, creatures), what content is and the logic on it. |
 | `look`    | A library: portraits, colours, the font and base styles, the same in every game.                                              |
 | `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                   |
 | `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                              |
-| `jrpg`    | The game: runs through levels of encounters. Uses melee for battles and its content for the party, enemies and gear.          |
+| `jrpg`    | The game: runs through levels of encounters. Uses battle for fights and its content for the party, enemies and gear.          |
 | `autob`   | An autobattler: shop, bench and a hex board. Uses its content's classes as units and melee's unit data, with its own engine.  |
 
 **rules imports nothing of jforge's.** It owns the design format, and
-compiles content into creatures. **melee depends only on rules**: it
+compiles content into creatures. **battle depends only on rules and
+look**: it
 accepts plain data (a party and an encounter of creatures) and adds what
 its battle needs, how a unit picks targets and how dangerous it counts.
 Those are each game's, never the design's. **No package imports char**.
 ESLint enforces it.
 
-## Battle engine (`modules/melee/shared`)
+## Battle engine (`libs/battle`)
 
 Pure TypeScript, no React, usable in the browser and the Worker.
 
@@ -977,7 +980,7 @@ at the roadside and picks one of the stops its road leads to (with one
 way on, it walks straight there). The map shows every stop, so a route
 can be planned.
 
-- **Battle**: melee's battle screen (`@jforge/melee/battle`). The first
+- **Battle**: the battle screen (`@jforge/battle/screen`). The first
   third of the rows are Easy, the rest Normal. Past the middle some battle
   rows have an **elite** on one lane (Hard, enemies 2 levels up; at least
   one row does), and the last stop is the **final battle** (Hard, 3 levels

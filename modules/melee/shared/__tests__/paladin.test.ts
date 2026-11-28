@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import {
   aegis,
   blessing,
@@ -10,10 +10,15 @@ import {
   paladin,
   venomFangs,
 } from "../content";
-import { skillValue } from "../aiSkills";
-import { previewDamage } from "../preview";
-import { applyStatus } from "../status";
-import type { BattleEvent, BattleState, Cell, StatusDef } from "../types";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import { applyStatus } from "@jforge/battle/engine/status.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  StatusDef,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Damage = Extract<BattleEvent, { type: "damage" }>;

@@ -86,6 +86,54 @@ export default tseslint.config(
     },
   },
   {
+    files: ["libs/battle/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@jforge/content",
+                "@jforge/content/*",
+                "@jforge/melee",
+                "@jforge/melee/*",
+                "@jforge/char",
+                "@jforge/char/*",
+                "@jforge/jrpg",
+                "@jforge/jrpg/*",
+                "@jforge/autob",
+                "@jforge/autob/*",
+              ],
+              message:
+                "battle imports only rules and look: each game brings its own units.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Only melee's tests, which try the engine with its test units, reach
+  // into battle's files; everything else uses its public entries.
+  {
+    files: ["**/*.{ts,tsx}"],
+    ignores: ["modules/melee/**/__tests__/**", "libs/battle/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@jforge/battle/engine/*", "@jforge/battle/screen/*"],
+              message:
+                "import @jforge/battle or @jforge/battle/screen, not their files.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["libs/look/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [

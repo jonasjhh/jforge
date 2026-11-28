@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { meteor } from "../content";
-import { areaCells } from "../grid";
-import type { BattleEvent, BattleState, Cell, Placement } from "../types";
+import { areaCells } from "@jforge/battle/engine/grid.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 const at = (side: Cell["side"], col: number, row = 0): Cell => ({

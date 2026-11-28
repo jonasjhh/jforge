@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle, validateCommand } from "../battle";
-import { expectedPhysicalDamage } from "../damage";
-import { previewDamage } from "../preview";
-import { DEFEND_FACTOR, WAIT_GAUGE_LEFT } from "../stance";
-import type { BattleState } from "../types";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
+import { expectedPhysicalDamage } from "@jforge/battle/engine/damage.ts";
+import { previewDamage } from "@jforge/battle/engine/preview.ts";
+import {
+  DEFEND_FACTOR,
+  WAIT_GAUGE_LEFT,
+} from "@jforge/battle/engine/stance.ts";
+import type { BattleState } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 // The hero is fast and acts first; the brute hits hard but slowly.

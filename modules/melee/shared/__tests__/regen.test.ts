@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { regen } from "../content";
-import type { BattleEvent, BattleState, Modifier } from "../types";
+import type {
+  BattleEvent,
+  BattleState,
+  Modifier,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 // Healer (magic 15: 6 HP per tick) acts first at time 20; the patient is

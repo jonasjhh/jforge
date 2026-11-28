@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { advance, act, createBattle } from "../battle";
-import type { BattleEvent, BattleSetup, Placement } from "../types";
+import { advance, act, createBattle } from "@jforge/battle/engine/battle.ts";
+import type {
+  BattleEvent,
+  BattleSetup,
+  Placement,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 // Enemies with huge HP and no attack, so only turn order matters.

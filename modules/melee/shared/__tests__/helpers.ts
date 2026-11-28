@@ -6,7 +6,7 @@ import type {
   Side,
   Stats,
   Weapon,
-} from "../types";
+} from "@jforge/battle/engine/types.ts";
 
 /** A fixed battle of real content: four party types against a small pack. */
 export const sampleBattle: BattleSetup = {

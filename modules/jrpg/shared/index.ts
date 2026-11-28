@@ -3,13 +3,13 @@
 // module depends on another.
 import {
   GRID_COLUMNS,
-  content,
   simulate,
   type BattleSetup,
   type BattleSummary,
   type CombatantDef,
   type Placement,
-} from "@jforge/melee/shared";
+} from "@jforge/battle";
+import { content } from "@jforge/melee/shared";
 
 const { fighter, healer, slime } = content;
 

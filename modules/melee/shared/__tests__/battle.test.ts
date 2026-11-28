@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle } from "../battle";
-import { DEFENSE_K } from "../damage";
-import { simulate } from "../simulate";
-import type { BattleSetup } from "../types";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
+import { DEFENSE_K } from "@jforge/battle/engine/damage.ts";
+import { simulate } from "@jforge/battle/engine/simulate.ts";
+import type { BattleSetup } from "@jforge/battle/engine/types.ts";
 import { def, place, sampleBattle } from "./helpers";
 
 describe("createBattle", () => {

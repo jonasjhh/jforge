@@ -1,5 +1,5 @@
 import { GEAR_CATEGORY_NAMES, type Gear } from "@jforge/rules/core";
-import type { BattleSetup } from "@jforge/melee/shared";
+import type { BattleSetup } from "@jforge/battle";
 import type { Encounter } from "./run";
 
 // Wording for the run screens, kept out of the components so it is tested.

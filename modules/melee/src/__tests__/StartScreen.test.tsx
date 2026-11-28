@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { randomEncounter } from "../../shared";
+import { meleeEncounter } from "../../shared/arena";
 import { StartScreen } from "../StartScreen";
 
 const health = vi.fn<() => Promise<Response>>();
@@ -30,7 +30,7 @@ const show = (changes: Partial<Props> = {}) => {
 };
 const names = (side: "player" | "enemy") => {
   const counts = new Map<string, number>();
-  for (const p of randomEncounter(42, "normal").placements) {
+  for (const p of meleeEncounter(42, "normal").placements) {
     if (p.side === side)
       counts.set(p.def.name, (counts.get(p.def.name) ?? 0) + 1);
   }
@@ -66,7 +66,7 @@ describe("melee StartScreen", () => {
 
   it.each<[string, "radio" | "button", string, keyof Props, unknown[]]>([
     ["Hard", "radio", "Hard", "onDifficulty", ["hard"]],
-    ["Start", "button", "Start", "onStart", [randomEncounter(42, "normal")]],
+    ["Start", "button", "Start", "onStart", [meleeEncounter(42, "normal")]],
   ])(
     "given the start screen, when %s is pressed, then it is reported",
     (_, role, name, handler, args) => {

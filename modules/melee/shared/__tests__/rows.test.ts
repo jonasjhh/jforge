@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { chooseCommand } from "../ai";
-import { act, advance, createBattle } from "../battle";
+import { chooseCommand } from "@jforge/battle/engine/ai.ts";
+import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { bow, fireball, sword } from "../content";
-import type { BattleEvent, Weapon } from "../types";
+import type { BattleEvent, Weapon } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 /** Damage of one hit: attack 100, no defense, same seed and roll every time. */

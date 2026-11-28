@@ -8,11 +8,8 @@ import {
   type Stats,
 } from "@jforge/rules/core";
 import { meleeClassId, meleeCreatureId } from "@jforge/content/catalogue";
-import {
-  content as c,
-  estimateThreat,
-  type CombatantDef,
-} from "@jforge/melee/shared";
+import { estimateThreat, type CombatantDef } from "@jforge/battle";
+import { content as c } from "@jforge/melee/shared";
 import { clampLevel, statsAtLevel } from "./progression";
 
 // jrpg owns how everything grows with levels; char designs only level 1.

@@ -6,7 +6,7 @@ import {
   type BattleSetup,
   type Placement,
   type Position,
-} from "@jforge/melee/shared";
+} from "@jforge/battle";
 import { formationOf, moveMember, type Run } from "../shared";
 
 const ROWS = Array.from({ length: GRID_ROWS }, (_, row) => row);

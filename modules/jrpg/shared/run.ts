@@ -13,8 +13,6 @@ import { basicGear, starterKit } from "@jforge/content/catalogue";
 import { TRAVELLER_NAMES, jrpgLibrary } from "@jforge/content/jrpg";
 import {
   MAX_PARTY_SIZE,
-  SAVE_VERSION,
-  content,
   createRandom,
   estimateThreat,
   isBackLiner,
@@ -24,7 +22,8 @@ import {
   type Difficulty,
   type Placement,
   type Position,
-} from "@jforge/melee/shared";
+} from "@jforge/battle";
+import { SAVE_VERSION, content } from "@jforge/melee/shared";
 import { levelledDef } from "./growth";
 import { withLearnedSkills } from "./learning";
 import { formationOf } from "./formation";

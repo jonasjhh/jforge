@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { act, advance, createBattle, validateCommand } from "../battle";
-import { skillValue } from "../aiSkills";
-import { offenseOf } from "../threat";
+import {
+  act,
+  advance,
+  createBattle,
+  validateCommand,
+} from "@jforge/battle/engine/battle.ts";
+import { skillValue } from "@jforge/battle/engine/aiSkills.ts";
+import { offenseOf } from "@jforge/battle/engine/threat.ts";
 import {
   bloodBolt,
   curse,
@@ -11,8 +16,13 @@ import {
   summonImp,
   warlock,
 } from "../content";
-import { unitAt } from "../grid";
-import type { BattleEvent, BattleState, Cell, CombatantDef } from "../types";
+import { unitAt } from "@jforge/battle/engine/grid.ts";
+import type {
+  BattleEvent,
+  BattleState,
+  Cell,
+  CombatantDef,
+} from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
 type Ev<T extends BattleEvent["type"]> = Extract<BattleEvent, { type: T }>;

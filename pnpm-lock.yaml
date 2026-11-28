@@ -273,6 +273,18 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
 
+  libs/battle:
+    dependencies:
+      '@jforge/look':
+        specifier: workspace:*
+        version: link:../look
+      '@jforge/rules':
+        specifier: workspace:*
+        version: link:../rules
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+
   libs/content:
     dependencies:
       '@jforge/melee':
@@ -281,6 +293,10 @@ importers:
       '@jforge/rules':
         specifier: workspace:*
         version: link:../rules
+    devDependencies:
+      '@jforge/battle':
+        specifier: workspace:*
+        version: link:../battle
 
   libs/look:
     dependencies:
@@ -299,6 +315,9 @@ importers:
 
   modules/autob:
     dependencies:
+      '@jforge/battle':
+        specifier: workspace:*
+        version: link:../../libs/battle
       '@jforge/char':
         specifier: workspace:*
         version: link:../char
@@ -347,6 +366,9 @@ importers:
 
   modules/jrpg:
     dependencies:
+      '@jforge/battle':
+        specifier: workspace:*
+        version: link:../../libs/battle
       '@jforge/char':
         specifier: workspace:*
         version: link:../char
@@ -374,6 +396,9 @@ importers:
 
   modules/melee:
     dependencies:
+      '@jforge/battle':
+        specifier: workspace:*
+        version: link:../../libs/battle
       '@jforge/look':
         specifier: workspace:*
         version: link:../../libs/look
