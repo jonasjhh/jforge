@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { emptyLibrary, type Character } from "@jforge/rules/core";
+import { type Character } from "@jforge/rules/core";
 import {
   MELEE_CREATURES,
+  WORLD_ENEMY_IDS,
   meleeClassId,
   meleeCreatureId,
   meleeHeroId,
@@ -18,11 +19,11 @@ import {
   skillAtLevel,
   statGrowth,
 } from "../growth";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import { statsAtLevel } from "../progression";
 import { memberDef } from "../run";
-import { withWorld } from "../world";
 
-const world = withWorld(emptyLibrary());
+const world = jrpgLibrary();
 const character = (archetypeId: string): Character =>
   world.characters.find((c) => c.archetypeId === archetypeId)!;
 const summonOf = (skill: Skill) => {
@@ -35,7 +36,7 @@ describe("STAT_GROWTH", () => {
     const ids = [
       ...content.playerTypes.map((d) => meleeClassId(d.id)),
       ...MELEE_CREATURES.map((d) => meleeCreatureId(d.id)),
-      ...world.archetypes.filter((a) => a.kind === "enemy").map((a) => a.id),
+      ...WORLD_ENEMY_IDS,
     ];
 
     const missing = ids.filter((id) => STAT_GROWTH[id] === undefined);

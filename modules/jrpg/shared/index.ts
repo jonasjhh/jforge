@@ -50,7 +50,7 @@ export function previewOpeningBattle(
 
 export * from "./run";
 export * from "./labels";
-export { GEAR_TIERS, atTier, withWorld } from "./world";
+export { GEAR_TIERS, atTier, withGearTiers } from "./world";
 export { formationOf, moveMember } from "./formation";
 export * from "./learning";
 export * from "./growth";

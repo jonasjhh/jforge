@@ -21,10 +21,10 @@ credentials, deploys and secrets are set up once, not per module.
 
 And two libraries, which are packages but no apps:
 
-| Library   | Package           | Depends on       | What it is                                                        |
-| --------- | ----------------- | ---------------- | ----------------------------------------------------------------- |
-| `rules`   | `@jforge/rules`   | `melee`          | Logic on content, game by game: `core/` is what every game shares |
-| `content` | `@jforge/content` | `melee`, `rules` | The content as code: `catalogue/`, and a folder per game          |
+| Library   | Package           | Depends on       | What it is                                               |
+| --------- | ----------------- | ---------------- | -------------------------------------------------------- |
+| `rules`   | `@jforge/rules`   | `melee`          | Logic on content: `core/` is what every game shares      |
+| `content` | `@jforge/content` | `melee`, `rules` | The content as code: `catalogue/`, and a folder per game |
 
 ## Layout
 
@@ -41,8 +41,11 @@ modules/<name>/
 libs/
   rules/core/         what content is (types) and the rules on it every game
                       shares: gear, compiling to melee, the class graph, checks.
-                      A game's own rules on content go in rules/<game>/.
+                      A game's own rules stay in the game (jrpg's growth and
+                      gear tiers in modules/jrpg/shared); only those another
+                      package needs (char to show them) go in rules/<game>/.
   content/catalogue/  every class, enemy type, skill, gear and character
+                      (melee.ts melee's, world.ts the world's enemies and gear)
   content/<game>/     what that game uses of the catalogue (jrpg/, autob/)
 worker/index.ts       the one Worker: mounts every module's API, serves dist/
 tooling/              shared Vite/PWA config, dev ports, icon generator,

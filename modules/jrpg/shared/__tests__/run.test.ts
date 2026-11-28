@@ -52,6 +52,7 @@ import {
   type Stop,
 } from "../run";
 import { formationOf } from "../formation";
+import { GEAR_TIERS } from "../world";
 
 const library = jrpgLibrary();
 const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
@@ -218,10 +219,10 @@ describe("startRun and the world", () => {
     expect(classes).toBeGreaterThan(5);
   });
 
-  it("given a new run, when its gear is counted, then the world's tiers are added", () => {
+  it("given a new run, when its gear is counted, then each piece is there at every tier", () => {
     const gear = run.library.gear.length;
 
-    expect(gear).toBeGreaterThan(library.gear.length * 4);
+    expect(gear).toBe(library.gear.length * GEAR_TIERS.length);
   });
 
   it("given a new run, when it is saved and parsed, then it reads back unchanged", () => {

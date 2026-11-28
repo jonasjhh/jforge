@@ -13,6 +13,7 @@ import {
   toCombatantDef,
   archetypeSkills,
 } from "@jforge/rules/core";
+import { WORLD_ENEMIES } from "..";
 import { designedLibrary } from "./designed";
 import type { Character } from "@jforge/rules/core";
 
@@ -163,9 +164,12 @@ describe("compileRoster", () => {
     expect(roster.party.map((d) => d.name)).toEqual([
       "Bram",
       "Ilse",
-      ...library.characters.slice(3).map((c) => c.name),
+      ...library.characters.slice(3, -WORLD_ENEMIES.length).map((c) => c.name),
     ]);
-    expect(roster.monsters.map((d) => d.name)).toEqual(["Goblin"]);
+    expect(roster.monsters.map((d) => d.name)).toEqual([
+      "Goblin",
+      ...WORLD_ENEMIES.map((a) => a.name),
+    ]);
   });
 
   it("given a character whose type is gone, when the roster is compiled, then it is left out", () => {

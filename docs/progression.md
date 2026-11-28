@@ -179,7 +179,7 @@ party size` (`XP_PER_THREAT`, `xpFor`).
 jrpg2 is to be a separate game, built on the content and melee only,
 with progression along the class graph (see "Class graph" in
 [design.md](design.md)). The content holds the graph; these rules belong
-to jrpg2 (in `libs/rules/jrpg2/` when written) and are decided so far as
+to jrpg2 and are decided so far as
 follows. jrpg ignores the graph.
 
 - **Start** as a base class: Squire (strength), Scout (agility) or

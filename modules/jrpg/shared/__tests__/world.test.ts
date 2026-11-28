@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { compileRoster, parseLibrary } from "@jforge/rules/core";
 import { jrpgLibrary } from "@jforge/content/jrpg";
 import { createBattle, isCombatantDef } from "@jforge/melee/shared";
-import { GEAR_TIERS, atTier, withWorld } from "../world";
+import { GEAR_TIERS, atTier, withGearTiers } from "../world";
 
 const starter = jrpgLibrary();
-const world = withWorld(starter);
+const world = withGearTiers(starter);
 
-describe("withWorld", () => {
-  it("given the world library, when it is saved and parsed, then char reads it back unchanged", () => {
+describe("withGearTiers", () => {
+  it("given jrpg's content at every tier, when it is saved and parsed, then it reads back unchanged", () => {
     const text = JSON.stringify(world);
 
     const back = parseLibrary(text);
@@ -17,7 +17,7 @@ describe("withWorld", () => {
   });
 
   it.each(["skills", "gear", "archetypes", "characters"] as const)(
-    "given the world library, when its %s are listed, then each id is unique",
+    "given jrpg's content at every tier, when its %s are listed, then each id is unique",
     (key) => {
       const ids = world[key].map((x) => x.id);
 
@@ -25,7 +25,7 @@ describe("withWorld", () => {
     },
   );
 
-  it("given the world library, when its roster is compiled, then every character becomes a combatant", () => {
+  it("given jrpg's content at every tier, when its roster is compiled, then every character becomes a combatant", () => {
     const roster = compileRoster(world);
 
     const all = [...roster.party, ...roster.monsters];
@@ -33,7 +33,7 @@ describe("withWorld", () => {
     expect(all.every(isCombatantDef)).toBe(true);
   });
 
-  it("given the world's compiled roster, when a battle is set up from it, then melee accepts it", () => {
+  it("given jrpg's compiled roster, when a battle is set up from it, then melee accepts it", () => {
     const roster = compileRoster(world);
     const all = [...roster.party, ...roster.monsters];
     const placements = all.slice(0, 5).map((def, col) => ({
@@ -52,7 +52,7 @@ describe("withWorld", () => {
     expect(start).not.toThrow();
   });
 
-  it("given the world library, when each type's skills are looked up, then the library has them all", () => {
+  it("given jrpg's content at every tier, when each type's skills are looked up, then the library has them all", () => {
     const skills = new Set(world.skills.map((s) => s.id));
 
     const unknown = world.archetypes.flatMap((type) =>
@@ -62,15 +62,15 @@ describe("withWorld", () => {
     expect(unknown).toEqual([]);
   });
 
-  it("given a designed library, when the world is added, then the designed characters and gear come first", () => {
-    const characters = world.characters.slice(0, starter.characters.length);
+  it("given jrpg's content, when the tiers are added, then the plain pieces come first and nothing else changes", () => {
     const gear = world.gear.slice(0, starter.gear.length);
 
-    expect(characters).toEqual(starter.characters);
     expect(gear).toEqual(starter.gear);
+    expect(world.characters).toEqual(starter.characters);
+    expect(world.archetypes).toEqual(starter.archetypes);
   });
 
-  it("given the world library, when its gear is counted, then each piece is there at every tier", () => {
+  it("given jrpg's content at every tier, when its gear is counted, then each piece is there at every tier", () => {
     const base = world.gear.length / GEAR_TIERS.length;
 
     expect(Number.isInteger(base)).toBe(true);

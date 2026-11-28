@@ -13,8 +13,9 @@
 A monorepo of modules under `modules/<name>/`, each its own PWA at
 `/<name>/`, all served by one Cloudflare Worker (`worker/index.ts`,
 `wrangler.toml`), and libraries under `libs/<name>/` that are packages but
-no apps: `libs/rules` (logic on content, `core/` plus a folder per game
-that needs its own) and `libs/content` (the content as code: `catalogue/`
+no apps: `libs/rules` (logic on content: `core/`, plus a folder for a
+game's rules only when another package needs them; otherwise they stay in
+the game) and `libs/content` (the content as code: `catalogue/`
 plus a folder per game). See `README.md` for the layout, the dependency
 rules and the steps for adding a module. Modules and libraries import
 each other only through workspace packages (`@jforge/<name>/...`), never

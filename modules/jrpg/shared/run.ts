@@ -10,7 +10,7 @@ import {
   type Library,
 } from "@jforge/rules/core";
 import { basicGear, starterKit } from "@jforge/content/catalogue";
-import { jrpgLibrary } from "@jforge/content/jrpg";
+import { TRAVELLER_NAMES, jrpgLibrary } from "@jforge/content/jrpg";
 import {
   MAX_PARTY_SIZE,
   SAVE_VERSION,
@@ -29,7 +29,7 @@ import { levelledDef } from "./growth";
 import { withLearnedSkills } from "./learning";
 import { formationOf } from "./formation";
 import { clampLevel, gainXp } from "./progression";
-import { GEAR_TIERS, TRAVELLER_NAMES, tierId, withWorld } from "./world";
+import { GEAR_TIERS, tierId, withGearTiers } from "./world";
 
 // A run: the party travels through levels, each a map of encounters
 // generated from a seed, row by row along roads that split and merge. Everything here is pure; the screens
@@ -166,7 +166,7 @@ export function runLibrary(library: Library | null): Library {
 
 /** Everyone who could set out: every class character of the run's world. */
 export function heroes(source: Library | null): Character[] {
-  const world = withWorld(runLibrary(source));
+  const world = withGearTiers(runLibrary(source));
   return world.characters.filter((c) => isClass(world, c));
 }
 
@@ -198,7 +198,7 @@ export function startRun(
     .slice(0, START_PARTY_SIZE);
   const drawn = picked.length > 0 ? picked : drawParty(source, seed);
   const party = drawn.map((c) => ({ ...c, level: START_LEVEL, xp: 0 }));
-  const library = withWorld(runLibrary(source));
+  const library = withGearTiers(runLibrary(source));
   return {
     version: SAVE_VERSION,
     seed,

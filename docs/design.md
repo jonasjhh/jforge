@@ -21,7 +21,7 @@ melee  <-  rules  <-  content  <-  char
 | Package   | Role                                                                                                                         |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `melee`   | Battle engine and rules: what combatants, stats, damage types, statuses and skills are. Starter content. Runs any fight.     |
-| `rules`   | A library: what content is (types) and the logic on it, `core/` for every game, a folder per game that needs its own.        |
+| `rules`   | A library: what content is (types) and the logic on it, `core/` for every game; a game's own rules stay in the game.         |
 | `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                  |
 | `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                             |
 | `jrpg`    | The game: runs through levels of encounters. Uses melee for battles and its content for the party, enemies and gear.         |
@@ -841,8 +841,10 @@ it). It saves only the tab and the game picked, on this device.
 **The content knows no levels or progression**: classes, enemy types and
 skills are at level 1. How they grow, when skills are learned and what
 experience is for belong to the game that uses them (jrpg: see **Levels
-and growth** under The run), and a game's own rules on content go in
-`libs/rules/<game>/`.
+and growth** under The run). A game's own rules on content stay in the
+game (jrpg's growth, learning and gear tiers are in `modules/jrpg/shared`);
+they move to `libs/rules/<game>/` only when another package needs them,
+such as char showing them.
 
 **Class graph** (`libs/rules/core/classGraph.ts`): classes can be linked into a
 graph of related classes, where a base class leads to specialisations
@@ -999,14 +1001,16 @@ random (gear, forks, another ally or training), between the first and
 last battle and never two in a row. Between encounters gear can be
 swapped with the bag. A cleared level leads to the next, deeper one.
 
-**The world** (`shared/world.ts`): the run plays with jrpg's content
-(`@jforge/content/jrpg`) plus the world's own, copied when the run starts
-so later changes don't break it (the world's own still lives here; it is
-to move to `libs/content/jrpg`): 9 enemy types
+**The world**: the run plays with jrpg's content (`@jforge/content/jrpg`),
+copied when the run starts so later changes don't break it. Besides
+melee's classes and heroes, jrpg picks the world's content from the
+catalogue (`libs/content/catalogue/world.ts`, ids `world-…`): 9 enemy types
 (Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
 Imp, Raider) and 20 pieces of gear, each weapon and armor with a
 category (two foci, Seer's Orb and Black Tome, so every class has finds); the catalogue provides the heroes and their
-basic gear, which finds and drops leave out. All gear exists at four **tiers** (plain,
+basic gear, which finds and drops leave out. The names of travellers
+(`TRAVELLER_NAMES`) are in `@jforge/content/jrpg`. All gear exists at four **tiers**
+(`shared/world.ts`: plain,
 Fine, Superior, Masterwork: each adds half again to what the piece adds);
 finds are a tier better per depth, with some luck.
 
