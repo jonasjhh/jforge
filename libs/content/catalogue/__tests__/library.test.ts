@@ -3,6 +3,7 @@ import {
   blankArchetype,
   blankCharacter,
   compileRoster,
+  LIBRARY_VERSION,
   emptyLibrary,
   flatStats,
   parseLibrary,
@@ -93,7 +94,10 @@ describe("parseLibrary", () => {
   it.each<[string, string | null]>([
     ["nothing", null],
     ["broken JSON", "{"],
-    ["another version", broken((lib) => ({ ...lib, version: 2 }))],
+    [
+      "another version",
+      broken((lib) => ({ ...lib, version: LIBRARY_VERSION + 1 })),
+    ],
     ["a missing list", broken((lib) => ({ ...lib, gear: undefined }))],
     [
       "a skill with no effect",

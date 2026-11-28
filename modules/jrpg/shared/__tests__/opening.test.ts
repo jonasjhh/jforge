@@ -52,3 +52,13 @@ describe("openingBattleFor", () => {
     expect(placed?.position.row).toBe(mage.preferredRow);
   });
 });
+
+describe("jrpg's Viper", () => {
+  it("given jrpg's content, when its Viper is fielded, then it is immune to poison", () => {
+    const viper = jrpgUnit("enemy-viper");
+
+    const poison = viper.resistances?.poison;
+
+    expect(poison).toBe(0);
+  });
+});

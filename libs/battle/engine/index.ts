@@ -30,7 +30,7 @@ export { guardianOf, hitVictim } from "./guard";
 export { applyStatus } from "./status";
 export { GAUGE_FULL, fillRate, turnOrder } from "./timeline";
 export {
-  DEFENSE_K,
+  DEFENCE_K,
   magicalHit,
   physicalHit,
   resistance,

@@ -9,9 +9,9 @@ export function effectiveStat(unit: Unit, stat: StatName): number {
     if (m.op === "add") add += m.value;
     else mul *= m.value;
   }
-  // Statuses' defense strengths (Stone Skin).
-  if (stat === "defense") {
-    for (const s of unit.statuses) mul *= s.defense ?? 1;
+  // Statuses' defence strengths (Stone Skin).
+  if (stat === "defence") {
+    for (const s of unit.statuses) mul *= s.defence ?? 1;
   }
   return Math.max(0, (unit.base[stat] + add) * mul);
 }

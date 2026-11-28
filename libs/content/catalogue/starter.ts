@@ -383,12 +383,12 @@ export const manaTap: Skill = {
   effect: { type: "restoreMp", amount: 15 },
 };
 
-/** Lancer: a thrust between the plates: half the target's defense counts. */
+/** Lancer: a thrust between the plates: half the target's defence counts. */
 export const armourPierce: Skill = {
   id: "armour-pierce",
   name: "Armour Pierce",
   description:
-    "A thrust (x1.0) between the plates: only half the target's defense counts.",
+    "A thrust (x1.0) between the plates: only half the target's defence counts.",
   mpCost: 5,
   target: "enemy",
   area: "single",
@@ -767,7 +767,7 @@ export const imp: Creature = {
     maxMp: 12,
     attack: 12,
     magic: 12,
-    defense: 6,
+    defence: 6,
     spirit: 8,
     speed: 14,
   },
@@ -955,7 +955,7 @@ export const boulder: Creature = {
     maxMp: 0,
     attack: 0,
     magic: 0,
-    defense: 60,
+    defence: 60,
     spirit: 60,
     speed: 0,
   },
@@ -988,12 +988,12 @@ export const shatter: Skill = {
   effect: { type: "shatter", power: 1.2, element: "impact" },
 };
 
-/** Geomancer: an ally's defense x1.5, and nothing can push it, for a while. */
+/** Geomancer: an ally's defence x1.5, and nothing can push it, for a while. */
 export const stoneSkin: Skill = {
   id: "stoneSkin",
   name: "Stone Skin",
   description:
-    "An ally's skin turns to stone: defense x1.5 and it can't be pushed or pulled, for a while.",
+    "An ally's skin turns to stone: defence x1.5 and it can't be pushed or pulled, for a while.",
   mpCost: 6,
   target: "ally",
   area: "single",
@@ -1050,13 +1050,13 @@ export const upheaval: Skill = {
 
 /**
  * Knight: for a while, the Knight and every ally in its row take less
- * physical damage (defense x1.5).
+ * physical damage (defence x1.5).
  */
 export const shieldWall: Skill = {
   id: "shield-wall",
   name: "Shield Wall",
   description:
-    "You and every ally in your row raise your guard: defense x1.5 for a while.",
+    "You and every ally in your row raise your guard: defence x1.5 for a while.",
   mpCost: 6,
   target: "self",
   area: "row",
@@ -1064,7 +1064,7 @@ export const shieldWall: Skill = {
     type: "modify",
     modifier: {
       name: "Shield Wall",
-      stat: "defense",
+      stat: "defence",
       op: "mul",
       value: 1.5,
       duration: 150,
@@ -1136,13 +1136,13 @@ export const charge: Skill = {
  * Knight: pulls an adjacent ally out of the line. In the ally's column the
  * Knight takes the middle row and the ally the back row behind it; both
  * cells must be free. Being dragged back halves the ally's gauge; the
- * Knight braces (defense x1.3) until about its next turn.
+ * Knight braces (defence x1.3) until about its next turn.
  */
 export const rescue: Skill = {
   id: "rescue",
   name: "Rescue",
   description:
-    "Pull an ally next to you back out of the line: in its column you take the middle row and it the back row behind you. It loses half its turn gauge; you brace (defense x1.3) until about your next turn.",
+    "Pull an ally next to you back out of the line: in its column you take the middle row and it the back row behind you. It loses half its turn gauge; you brace (defence x1.3) until about your next turn.",
   mpCost: 7,
   target: "ally",
   area: "single",
@@ -1268,11 +1268,11 @@ export const arcaneWave: Skill = {
   },
 };
 
-/** Fighter: braces for a while; its own defense doubles. */
+/** Fighter: braces for a while; its own defence doubles. */
 export const ironStance: Skill = {
   id: "iron-stance",
   name: "Iron Stance",
-  description: "Brace yourself: your defense x2 for a while.",
+  description: "Brace yourself: your defence x2 for a while.",
   mpCost: 4,
   target: "self",
   area: "single",
@@ -1280,7 +1280,7 @@ export const ironStance: Skill = {
     type: "modify",
     modifier: {
       name: "Iron Stance",
-      stat: "defense",
+      stat: "defence",
       op: "mul",
       value: 2,
       duration: 150,
@@ -1395,7 +1395,7 @@ export const fighter: Creature = {
     maxMp: 10,
     attack: 22,
     magic: 4,
-    defense: 18,
+    defence: 18,
     spirit: 8,
     speed: 10,
   },
@@ -1412,7 +1412,7 @@ export const archer: Creature = {
     maxMp: 20,
     attack: 18,
     magic: 6,
-    defense: 10,
+    defence: 10,
     spirit: 10,
     speed: 12,
   },
@@ -1429,7 +1429,7 @@ export const mage: Creature = {
     maxMp: 60,
     attack: 6,
     magic: 24,
-    defense: 6,
+    defence: 6,
     spirit: 18,
     speed: 9,
   },
@@ -1446,7 +1446,7 @@ export const healer: Creature = {
     maxMp: 50,
     attack: 8,
     magic: 16,
-    defense: 8,
+    defence: 8,
     spirit: 20,
     speed: 11,
   },
@@ -1467,7 +1467,7 @@ export const lancer: Creature = {
     maxMp: 16,
     attack: 20,
     magic: 4,
-    defense: 14,
+    defence: 14,
     spirit: 8,
     speed: 11,
   },
@@ -1488,7 +1488,7 @@ export const chronomancer: Creature = {
     maxMp: 50,
     attack: 8,
     magic: 18,
-    defense: 8,
+    defence: 8,
     spirit: 18,
     speed: 12,
   },
@@ -1509,7 +1509,7 @@ export const warlock: Creature = {
     maxMp: 36,
     attack: 8,
     magic: 20,
-    defense: 9,
+    defence: 9,
     spirit: 14,
     speed: 10,
   },
@@ -1530,7 +1530,7 @@ export const rogue: Creature = {
     maxMp: 20,
     attack: 19,
     magic: 4,
-    defense: 9,
+    defence: 9,
     spirit: 9,
     speed: 15,
   },
@@ -1552,7 +1552,7 @@ export const paladin: Creature = {
     maxMp: 24,
     attack: 18,
     magic: 14,
-    defense: 20,
+    defence: 20,
     spirit: 16,
     speed: 9,
   },
@@ -1573,7 +1573,7 @@ export const geomancer: Creature = {
     maxMp: 34,
     attack: 10,
     magic: 17,
-    defense: 12,
+    defence: 12,
     spirit: 14,
     speed: 10,
   },
@@ -1594,7 +1594,7 @@ export const knight: Creature = {
     maxMp: 18,
     attack: 18,
     magic: 6,
-    defense: 22,
+    defence: 22,
     spirit: 12,
     speed: 8,
   },
@@ -1615,7 +1615,7 @@ export const sage: Creature = {
     maxMp: 45,
     attack: 6,
     magic: 18,
-    defense: 7,
+    defence: 7,
     spirit: 20,
     speed: 11,
   },

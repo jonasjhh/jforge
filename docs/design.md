@@ -110,9 +110,9 @@ weapon attack (reach, rows, damage type) at a power, with an optional
 instead: x1.5 damage, reported before the blow.
 
 **Armour Pierce** (Lancer): a spear strike at x1.0 where only half the
-target's defense counts (`armourPierce: 0.5` on a strike), 5 MP. Modifiers
-to defense (Shield Wall, Braced) are halved with it; spirit is untouched.
-With DEFENSE_K 50 it adds about a sixth against defense 20 and a quarter
+target's defence counts (`armourPierce: 0.5` on a strike), 5 MP. Modifiers
+to defence (Shield Wall, Braced) are halved with it; spirit is untouched.
+With DEFENCE_K 50 it adds about a sixth against defence 20 and a quarter
 against 40, so it pays against armoured foes and the Knight.
 
 **Staggering Thrust** (Lancer): a spear strike at x0.8 that knocks a
@@ -176,7 +176,7 @@ unit is ready, a modifier expires) instead of ticking frame by frame.
 ### Stats and modifiers
 
 For now a fixed set of combat stats: `maxHp`, `maxMp`, `attack`, `magic`,
-`defense`, `spirit`, `speed`. Character attributes and equipment come later
+`defence`, `spirit`, `speed`. Character attributes and equipment come later
 and plug in as modifiers.
 
 A modifier is `{ stat, op: add | mul, value, source, expiresAt? }`.
@@ -185,9 +185,9 @@ Statuses, buffs and (later) equipment are all modifiers.
 
 ### Damage
 
-`raw x K / (K + defense) x element x row x random(0.9..1.1)`, at least 1.
-Dividing by defense means damage never hits zero and scales smoothly with
-player-designed skills. Physical uses attack vs defense, magical uses magic
+`raw x K / (K + defence) x element x row x random(0.9..1.1)`, at least 1.
+Dividing by defence means damage never hits zero and scales smoothly with
+player-designed skills. Physical uses attack vs defence, magical uses magic
 vs spirit.
 
 While aiming, each unit the action would hit shows its **expected damage**
@@ -200,7 +200,7 @@ and status skills show no preview.
 Two separate axes:
 
 - **Delivery** decides which stats apply: **physical** (attack vs
-  defense; weapons, weapon skills) or **magical** (magic vs spirit;
+  defence; weapons, weapon skills) or **magical** (magic vs spirit;
   spells).
 - **Type** decides which resistances apply. Types describe what the
   damage _is_, not who causes it: a Geomancer's hurled rock is magical
@@ -257,18 +257,18 @@ and bolas deal no damage (control effects).
 | Type      | Effect                                         |
 | --------- | ---------------------------------------------- |
 | Slash     | Bleed: worsening damage over time (Rend)       |
-| Pierce    | Puncture: ignores part of defense              |
-| Chop      | Sunder: defense down                           |
+| Pierce    | Puncture: ignores part of defence              |
+| Chop      | Sunder: defence down                           |
 | Crush     | Stagger: knocks the target's gauge back        |
 | Impact    | Knockback: pushes the target a row             |
 | Fire      | Burn: damage over time                         |
 | Cold      | Chill: speed down                              |
 | Lightning | Interrupt: cancels a delayed cast              |
-| Acid      | Corrode: defense down                          |
+| Acid      | Corrode: defence down                          |
 | Poison    | Poison: damage over time (exists, Viper venom) |
 
 **Resistances** are multipliers per type (2 weak, 1 normal, 0.5
-resistant, 0 immune), applied after defense; the AI's expected damage
+resistant, 0 immune), applied after defence; the AI's expected damage
 includes them and hits show WEAK / RESIST tags. They come from **creature
 traits**: each trait brings defaults, several traits multiply, and a
 creature's own `resistances` override them (`traits.ts`). Any archetype
@@ -301,11 +301,11 @@ cell) and its `area` which cells it hits around the aimed one.
 **Strengths are data.** A status's factors live on the status in the
 skill, not in the engine: `dealt` (damage the unit deals, weapons, skills
 and the damage over time and bombs it applies), `taken` (damage it takes,
-folded into `resistance`), `defense` (multiplies the defense stat) and
+folded into `resistance`), `defence` (multiplies the defence stat) and
 `ambush` (a stealth status's first hit). A status that leaves one out
 gets its kind's default (`STRENGTH_DEFAULTS` in strengths.ts: Expose taken
 1.3, Weaken dealt 0.75, Blessing dealt 1.2 and taken 0.8, Petrify taken
-0.5, Stone Skin defense 1.5, stealth ambush 2). Statuses multiply. A
+0.5, Stone Skin defence 1.5, stealth ambush 2). Statuses multiply. A
 strike's `weaken` is the dealt factor it applies, and its `finishBelow`
 the finisher threshold. So char can make a lesser Blessing or a deeper
 Expose without new code.
@@ -324,7 +324,7 @@ Expose without new code.
   can't reach the Fighter is free; area skills are free; stealth wins
   over taunt (a hidden taunter binds no one). The AI casts it only with
   allies to cover, and less the more the Fighter is hurt.
-- **Iron Stance** (Fighter): the Fighter's own defense x2 for 150 game
+- **Iron Stance** (Fighter): the Fighter's own defence x2 for 150 game
   time, 4 MP. With Provoke it soaks the weapon hits it draws; it stacks
   with Shield Wall.
 - **Second Wind** (Fighter): heals the Fighter by a quarter of its max HP,
@@ -346,7 +346,7 @@ Expose without new code.
   Arrow's burn.
 - **Shield Wall** (Knight): a `self` skill with the **row** area (the
   aimed cell's whole row, on its own side only): the Knight and every
-  ally in its row get defense x1.5 for 150 game time, 6 MP. It hardens
+  ally in its row get defence x1.5 for 150 game time, 6 MP. It hardens
   the front line against weapons; spells go through spirit and are not
   affected.
 - **Guard** (Knight): a **guard** status on an ally **next to** the
@@ -354,10 +354,10 @@ Expose without new code.
   time, 5 MP. While it lasts and the Knight stands, an enemy's
   single-target hit on that ally (a weapon attack, or a strike or damage
   spell with the `single` area) lands on the Knight instead, against the
-  Knight's own defense, row and resistances, and the log says so. Area
+  Knight's own defence, row and resistances, and the log says so. Area
   skills, statuses and debuffs still reach the ally. The guard holds for
   its time even if the two move apart. The AI casts it the more the ally
-  is frailer than the Knight (HP and defense), and less the more the
+  is frailer than the Knight (HP and defence), and less the more the
   Knight is hurt; an AI attacker scores a guarded target as the Knight.
 - **Shield Bash** (Knight): a lance strike at x0.8 that pushes the enemy
   one row back (5 MP); blocked, it crashes for x1.5 impact instead (the
@@ -374,7 +374,7 @@ Expose without new code.
   the ally the back row behind it; both cells must be free of anyone
   else (a knocked-out body blocks too), and it can't be aimed when the
   two already stand there. Being dragged back halves the ally's gauge.
-  It also braces the Knight (defense x1.3 for 125 game time, about one
+  It also braces the Knight (defence x1.3 for 125 game time, about one
   Knight turn; `RESCUE_BRACE`, part of the rescue effect itself), which
   is how it meets "utility pays its way". It pairs with Charge: pull a
   hurt ally back, charge back into the front. The AI values it only for
@@ -469,7 +469,7 @@ Expose without new code.
   instead of stacking, and a knockout clears them. Ticks don't pause the
   battle; the unit shows a badge.
 - **Raise Boulder / Shatter / Upheaval** (Geomancer): boulders are
-  **obstacle** units (40 HP, very high defense and spirit, never act)
+  **obstacle** units (40 HP, very high defence and spirit, never act)
   raised in any empty cell on either side, two per Geomancer (a third
   replaces the oldest). They block movement, pushes and teleports, give
   cover to units behind them, can be attacked, vanish when destroyed and
@@ -480,7 +480,7 @@ Expose without new code.
   deals crush damage and Shatter impact (boulders are stone: weak to
   impact).
 - **Stone Skin** (Geomancer): 6 MP, one ally, a helpful `stoneSkin`
-  status for 150 game time: defense x1.5 (its `defense` strength), and pushes and pulls don't move
+  status for 150 game time: defence x1.5 (its `defence` strength), and pushes and pulls don't move
   it (Upheaval, pushing and pulling strikes). A pushing strike then lands
   as a normal hit, not a crash (`stoneSkin.ts`).
 - **Petrify** (Geomancer): 8 MP, one enemy, a harmful `petrify` status
@@ -642,7 +642,7 @@ char can edit it later):
 - **finish**: the expected hit (the damage formula without the random
   spread) would knock the target out;
 - **wounded**: how much HP the target has lost;
-- **soft**: how little the target's defense blocks;
+- **soft**: how little the target's defence blocks;
 - **noise**: seeded randomness, so enemies aren't fully predictable but
   battles still replay exactly.
 
@@ -718,7 +718,7 @@ stats all round is twice the threat. Offense is the best of its weapon
 (plus a share of on-hit poison) and its affordable damaging skills (times
 the foes an area usually catches, less for delayed or expensive ones),
 raised by 40% per support skill (up to +160%), times speed. Durability is
-max HP raised by defense and spirit and by its resistances, x1.4 if it can
+max HP raised by defence and spirit and by its resistances, x1.4 if it can
 revive. It was fitted to how many copies of a range of monsters the party
 beats about half the time on Hard; mixed pools of designed monsters land
 in Hard's band, a pool of one big monster less exactly (a copy more or
@@ -776,9 +776,9 @@ skill may break one for a reason worth stating.
 
 ### Class roster plan (12 archetypes)
 
-Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack, Rend leaves a bleed that worsens as its target acts), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
+Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defence, Second Wind heals it, War Cry raises its row's attack, Rend leaves a bleed that worsens as its target acts), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP, Frost Lance chills), **Healer** (support), **Lancer** (spear: reaches behind the
-front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armour Pierce halves defense, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
+front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armour Pierce halves defence, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an enemy and its neighbours, Rewind gives an ally back the HP it lost since its last turn), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field, Curse wears an enemy down, Sacrifice gives up the Imp
@@ -877,7 +877,7 @@ link to itself or to no class) and the content's tests require it empty
 in every view. Enemy types take no part. Melee's classes have no links.
 The catalogue has the
 graph's **base classes**, one per main stat line: **Squire** (strength:
-attack, defense and HP, front row, blades, polearms, heavy and light
+attack, defence and HP, front row, blades, polearms, heavy and light
 armour), **Scout** (agility: speed and attack, middle row, daggers, bows
 and light armour) and **Apprentice** (magic: magic, spirit and MP, back
 row, staves, foci and robes; it is to fork into offensive and defensive
@@ -1099,7 +1099,7 @@ of a solo trial against the house. It reuses only units: its content's classes
 (stats, weapon, skills) and creatures. Its board and fights are its own;
 **it imports nothing of melee or battle**, and neither is changed for
 it: its own position, threat estimate (a copy of battle's, `threat.ts`),
-defense constant and random. The rules are pure functions in `shared/`
+defence constant and random. The rules are pure functions in `shared/`
 (`run.ts` the run, `fight.ts` the engine).
 
 **Units and stars** (`units.ts`). The shop sells every class of the run's
@@ -1160,7 +1160,7 @@ unit acts in order:
   reach 1 hex, ranged weapons 4. Speed 0 (an obstacle's) never acts.
 - In range, it attacks its target (the nearest enemy; ties to the
   weakest) every 10 / speed seconds, at least 0.3 s: attack × 50 / (50 +
-  defense) × the target's resistance to the weapon's damage type,
+  defence) × the target's resistance to the weapon's damage type,
   ±10%, at least 1 unless immune.
 - **Mana**: +10 per attack, +5 per hit taken. When a unit has the mana
   for its next skill (30 + 5 × the skill's MP cost) and a target for it,

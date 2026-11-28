@@ -1,7 +1,7 @@
 import { areaCells, unitAt } from "./grid";
 import {
   knockOutIfDown,
-  reportDefenses,
+  reportDefences,
   resistance,
   sufferDamage,
 } from "./damage";
@@ -49,7 +49,7 @@ export function explode(
       multiplier,
       ...(suffered.absorbed ? { absorbed: suffered.absorbed } : {}),
     });
-    reportDefenses(victim, suffered, events);
+    reportDefences(victim, suffered, events);
     knockOutIfDown(state, victim, events);
   }
 }

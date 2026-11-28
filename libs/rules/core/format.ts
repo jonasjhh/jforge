@@ -7,7 +7,7 @@ export const STAT_NAMES = [
   "maxMp",
   "attack",
   "magic",
-  "defense",
+  "defence",
   "spirit",
   "speed",
 ] as const;
@@ -17,7 +17,7 @@ export type Stats = Record<StatName, number>;
 
 /**
  * What a hit is made of; resistances key on this. Independent of delivery
- * (physical uses attack vs defense, magical uses magic vs spirit): a
+ * (physical uses attack vs defence, magical uses magic vs spirit): a
  * Geomancer's thrown rock is magical delivery with an impact type.
  * One type per hit. See docs/design.md, "Damage types".
  */
@@ -147,13 +147,13 @@ export interface StatusDef {
    */
   worsens?: number;
   /**
-   * Strengths (see strengths.ts): damage dealt, damage taken, defense or
+   * Strengths (see strengths.ts): damage dealt, damage taken, defence or
    * ambush, times. Read only for the kinds STRENGTH_DEFAULTS lists, and
    * its default when left out.
    */
   dealt?: number;
   taken?: number;
-  defense?: number;
+  defence?: number;
   ambush?: number;
 }
 
@@ -208,7 +208,7 @@ export type SkillEffect =
       pin?: boolean;
       ignite?: boolean;
       bleed?: boolean;
-      /** Share of the target's defense ignored (Armour Pierce: 0.5). */
+      /** Share of the target's defence ignored (Armour Pierce: 0.5). */
       armourPierce?: number;
       /**
        * Power multiplier on a target below `finishBelow` of its max HP

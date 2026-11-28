@@ -76,7 +76,7 @@ export interface Status {
   /** Its strengths, fixed when it was applied (see strengths.ts). */
   dealt?: number;
   taken?: number;
-  defense?: number;
+  defence?: number;
   ambush?: number;
 }
 
@@ -106,7 +106,7 @@ export interface TargetingProfile {
   finish: number;
   /** Bonus scaled by how much HP the target has lost. */
   wounded: number;
-  /** Bonus scaled by how little the target's defense blocks. */
+  /** Bonus scaled by how little the target's defence blocks. */
   soft: number;
   /** Random spread (seeded), so the AI is not fully predictable. */
   noise: number;

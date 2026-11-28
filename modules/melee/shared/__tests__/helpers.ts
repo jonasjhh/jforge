@@ -45,7 +45,7 @@ export function def(
       maxMp: 0,
       attack: 10,
       magic: 0,
-      defense: 0,
+      defence: 0,
       spirit: 0,
       speed: 10,
       ...stats,

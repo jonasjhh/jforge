@@ -137,7 +137,7 @@ describe("UnitDetails", () => {
     ["weaken", "Weakened: deals ×1 damage."],
     ["coat", "Coated blade:"],
     ["smoke", "In smoke:"],
-    ["stoneSkin", "Stone Skin: defense ×1"],
+    ["stoneSkin", "Stone Skin: defence ×1"],
     ["petrify", "Petrified: can't act, takes ×1 damage."],
     ["bless", "Blessed: deals ×1 damage and takes ×1."],
     ["bomb", "Explodes when time runs out or it falls: 4 poison damage"],

@@ -96,12 +96,12 @@ describe("atTier", () => {
       name: "Fine Chain Mail",
     });
     expect(fine.bonuses).toEqual([
-      { stat: "defense", op: "add", value: 12 },
+      { stat: "defence", op: "add", value: 12 },
       { stat: "speed", op: "mul", value: 0.9 },
     ]);
   });
 
-  it("given chain mail, when it is taken at tier 3, then its defense bonus is 20", () => {
+  it("given chain mail, when it is taken at tier 3, then its defence bonus is 20", () => {
     const best = atTier(mail, 3);
 
     expect(best.bonuses[0]!.value).toBe(20);

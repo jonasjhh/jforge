@@ -12,7 +12,7 @@ const sword: Weapon = {
   kind: "melee",
 };
 
-/** A plain fighter: 100 HP, 10 attack and magic, no defense, speed 10. */
+/** A plain fighter: 100 HP, 10 attack and magic, no defence, speed 10. */
 export function unit(overrides: Partial<UnitDef> = {}): UnitDef {
   return {
     id: "u",
@@ -22,7 +22,7 @@ export function unit(overrides: Partial<UnitDef> = {}): UnitDef {
       maxMp: 0,
       attack: 10,
       magic: 10,
-      defense: 0,
+      defence: 0,
       spirit: 0,
       speed: 10,
     },

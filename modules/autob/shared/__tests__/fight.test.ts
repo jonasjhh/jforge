@@ -240,7 +240,7 @@ describe("step", () => {
     const soft = after(duel(), 10);
 
     const hard = after(
-      duel(unit(), unit({ id: "e", stats: { ...unit().stats, defense: 50 } })),
+      duel(unit(), unit({ id: "e", stats: { ...unit().stats, defence: 50 } })),
       10,
     );
 

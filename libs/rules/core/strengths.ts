@@ -1,7 +1,7 @@
 import type { StatusDef } from "./format";
 
 // The multipliers some statuses carry: how much more or less a unit deals
-// or takes, its defense, or its ambush. Each status skill can set its own
+// or takes, its defence, or its ambush. Each status skill can set its own
 // (a designer's "Lesser Blessing"); these are the defaults when it doesn't.
 
 /** The strengths a status can carry. */
@@ -10,8 +10,8 @@ export interface Strengths {
   dealt?: number;
   /** Damage the unit takes of every type, times (Expose 1.3, Petrify 0.5). */
   taken?: number;
-  /** The unit's defense, times (Stone Skin 1.5). */
-  defense?: number;
+  /** The unit's defence, times (Stone Skin 1.5). */
+  defence?: number;
   /** Its first damaging action out of stealth, times (Vanish 2). */
   ambush?: number;
 }
@@ -24,7 +24,7 @@ export const STRENGTH_DEFAULTS: Partial<
   weaken: { dealt: 0.75 },
   bless: { dealt: 1.2, taken: 0.8 },
   petrify: { taken: 0.5 },
-  stoneSkin: { defense: 1.5 },
+  stoneSkin: { defence: 1.5 },
   stealth: { ambush: 2 },
 };
 

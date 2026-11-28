@@ -7,13 +7,13 @@ import { stanceFactor } from "./stance";
 import { effectiveStat } from "./stats";
 import type { BattleEvent, BattleState, DamageType, Unit } from "./types";
 
-/** Higher K means defense matters less. */
-export const DEFENSE_K = 50;
+/** Higher K means defence matters less. */
+export const DEFENCE_K = 50;
 const VARIANCE = 0.1;
 
-/** Share of raw damage that gets through `defense`: K / (K + defense). */
-export function defenseFactor(defense: number): number {
-  return DEFENSE_K / (DEFENSE_K + defense);
+/** Share of raw damage that gets through `defence`: K / (K + defence). */
+export function defenceFactor(defence: number): number {
+  return DEFENCE_K / (DEFENCE_K + defence);
 }
 
 /** A hit about to land: its amount and what the target's resistance did. */
@@ -43,13 +43,13 @@ export function resistance(target: Unit, type: DamageType): number {
 }
 
 /**
- * raw x K / (K + defense) x resistance x stance x random(0.9..1.1). At
+ * raw x K / (K + defence) x resistance x stance x random(0.9..1.1). At
  * least 1, unless the target is immune (multiplier 0).
  */
 function mitigate(
   state: BattleState,
   raw: number,
-  defense: number,
+  defence: number,
   target: Unit,
   damageType: DamageType,
 ): Hit {
@@ -62,7 +62,7 @@ function mitigate(
           1,
           Math.round(
             raw *
-              defenseFactor(defense) *
+              defenceFactor(defence) *
               multiplier *
               stanceFactor(target) *
               variance,
@@ -91,8 +91,8 @@ export function rowFactor(attacker: Unit, target: Unit): number {
 
 /**
  * A hit without the random spread: weapon hits (physical, scaled by rows)
- * use attack against defense, spells (magical) magic against spirit.
- * `defenseShare` is how much of the defense counts (Armour Pierce: 0.5).
+ * use attack against defence, spells (magical) magic against spirit.
+ * `defenceShare` is how much of the defence counts (Armour Pierce: 0.5).
  */
 export function expectedDamage(
   attacker: Unit,
@@ -100,7 +100,7 @@ export function expectedDamage(
   delivery: "physical" | "magical",
   power: number,
   damageType: DamageType,
-  defenseShare = 1,
+  defenceShare = 1,
 ): number {
   const multiplier = resistance(target, damageType);
   if (multiplier === 0) return 0;
@@ -108,9 +108,9 @@ export function expectedDamage(
     delivery === "physical"
       ? effectiveStat(attacker, "attack") *
         rowFactor(attacker, target) *
-        defenseFactor(effectiveStat(target, "defense") * defenseShare)
+        defenceFactor(effectiveStat(target, "defence") * defenceShare)
       : effectiveStat(attacker, "magic") *
-        defenseFactor(effectiveStat(target, "spirit"));
+        defenceFactor(effectiveStat(target, "spirit"));
   return Math.max(
     1,
     Math.round(
@@ -132,7 +132,7 @@ export function expectedPhysicalDamage(attacker: Unit, target: Unit): number {
 
 /**
  * Weapon attack: attack (scaled by rows for melee, and by `power` for
- * weapon skills) against defense, typed by the weapon.
+ * weapon skills) against defence, typed by the weapon.
  */
 export function physicalHit(
   state: BattleState,
@@ -141,8 +141,8 @@ export function physicalHit(
   power = 1,
   /** Overrides the weapon's type, e.g. impact for a collision. */
   damageType: DamageType = attacker.weapon.damageType,
-  /** How much of the target's defense counts (Armour Pierce: 0.5). */
-  defenseShare = 1,
+  /** How much of the target's defence counts (Armour Pierce: 0.5). */
+  defenceShare = 1,
 ): Hit {
   return mitigate(
     state,
@@ -150,7 +150,7 @@ export function physicalHit(
       rowFactor(attacker, target) *
       power *
       dealtFactor(attacker),
-    effectiveStat(target, "defense") * defenseShare,
+    effectiveStat(target, "defence") * defenceShare,
     target,
     damageType,
   );
@@ -190,7 +190,7 @@ export function applyDamage(
     multiplier: hit.multiplier,
     ...(suffered.absorbed ? { absorbed: suffered.absorbed } : {}),
   });
-  reportDefenses(target, suffered, events);
+  reportDefences(target, suffered, events);
   knockOutIfDown(state, target, events);
   return suffered;
 }
@@ -237,7 +237,7 @@ export function sufferDamage(target: Unit, amount: number): Suffered {
 }
 
 /** Log events for a shield breaking or a ward holding. */
-export function reportDefenses(
+export function reportDefences(
   target: Unit,
   suffered: Suffered,
   events: BattleEvent[],

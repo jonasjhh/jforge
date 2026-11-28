@@ -78,7 +78,7 @@ describe("status strengths", () => {
     expect(resistance(me(s), "slash")).toBeCloseTo(0.9);
   });
 
-  it("given a Stone Skin of defense 2, when the foe's defense is taken, then it doubles", () => {
+  it("given a Stone Skin of defence 2, when the foe's defence is taken, then it doubles", () => {
     const s = battle();
     const skin: StatusDef = {
       id: "skin",
@@ -89,12 +89,12 @@ describe("status strengths", () => {
       power: 0,
       interval: 100,
       ticks: 1,
-      defense: 2,
+      defence: 2,
     };
 
     applyStatus(s, me(s), foe(s), skin, []);
 
-    expect(effectiveStat(foe(s), "defense")).toBe(2 * foe(s).base.defense);
+    expect(effectiveStat(foe(s), "defence")).toBe(2 * foe(s).base.defence);
   });
 
   it("given a Vanish of ambush 1.5, when an attack is previewed, then it deals x1.5", () => {

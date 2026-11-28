@@ -45,7 +45,7 @@ arrange/act/assert; see Testing in `README.md`.
 
 ## Spelling
 
-British English everywhere, code included: `armour`, `colour`,
+British English everywhere, code included: `armour`, `colour`, `defence`,
 `behaviour` (CSS properties such as `color` excepted).
 
 ## Saved data

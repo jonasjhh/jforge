@@ -5,7 +5,7 @@ import { bow, fireball, sword } from "../content";
 import type { BattleEvent, Weapon } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
-/** Damage of one hit: attack 100, no defense, same seed and roll every time. */
+/** Damage of one hit: attack 100, no defence, same seed and roll every time. */
 function hit(weapon: Weapon, attackerRow: number, targetRow: number): number {
   const hero = def(
     "hero",

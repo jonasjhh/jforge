@@ -52,7 +52,7 @@ function geoTurn(): BattleState {
         placements: [
           place(fast, "player", 0),
           place(
-            def("ally", { maxHp: 200, speed: 1, defense: 10 }),
+            def("ally", { maxHp: 200, speed: 1, defence: 10 }),
             "player",
             1,
           ),
@@ -79,7 +79,7 @@ function skinnedFoe(): BattleState {
 }
 
 describe("Stone Skin", () => {
-  it("given an ally, when the Geomancer casts Stone Skin on them, then their defense is x1.5 for 150 game time, for 6 MP", () => {
+  it("given an ally, when the Geomancer casts Stone Skin on them, then their defence is x1.5 for 150 game time, for 6 MP", () => {
     const state = geoTurn();
 
     const { state: after } = cast(state, stoneSkin.id, {
@@ -92,7 +92,7 @@ describe("Stone Skin", () => {
     expect(ally.statuses).toContainEqual(
       expect.objectContaining({ id: "stoneSkin", interval: 150 }),
     );
-    expect(effectiveStat(ally, "defense")).toBe(15);
+    expect(effectiveStat(ally, "defence")).toBe(15);
     expect(unit(after, GEO).mp).toBe(geomancer.stats.maxMp - 6);
   });
 

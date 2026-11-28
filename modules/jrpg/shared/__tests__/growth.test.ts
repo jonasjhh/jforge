@@ -68,7 +68,7 @@ describe("statGrowth", () => {
       maxMp: 50,
       attack: 20,
       magic: 10,
-      defense: 10,
+      defence: 10,
       spirit: 10,
       speed: 10,
     };

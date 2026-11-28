@@ -15,7 +15,7 @@ const cursed = {
 describe("gearSummary", () => {
   it.each([
     ["the iron sword", gear("weapon-sword"), "+6 attack"],
-    ["chain mail", gear("armour-mail"), "+8 defense, ×0.9 speed"],
+    ["chain mail", gear("armour-mail"), "+8 defence, ×0.9 speed"],
     ["cursed gear", cursed, "−5 HP"],
     ["gear with no bonuses", { ...cursed, bonuses: [] }, "no bonuses"],
   ])("given %s, when it is summed up, then it reads %s", (_, item, text) => {

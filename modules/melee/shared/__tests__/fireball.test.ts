@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
 import { fireball } from "../content";
-import { DEFENSE_K } from "@jforge/battle/engine/damage.ts";
+import { DEFENCE_K } from "@jforge/battle/engine/damage.ts";
 import { areaCells } from "@jforge/battle/engine/grid.ts";
 import type {
   BattleEvent,
@@ -110,11 +110,11 @@ describe("Fireball", () => {
     expect(state.units[0]!.mp).toBe(30 - fireball.mpCost);
   });
 
-  it("given magic 50 against spirit K and high defense, when Fireball lands, then it deals 30 within the 10% spread", () => {
+  it("given magic 50 against spirit K and high defence, when Fireball lands, then it deals 30 within the 10% spread", () => {
     const foe = def("foe", {
       maxHp: 1000,
-      spirit: DEFENSE_K,
-      defense: 999,
+      spirit: DEFENCE_K,
+      defence: 999,
       speed: 1,
     });
 
@@ -122,7 +122,7 @@ describe("Fireball", () => {
       magic: 50,
     });
 
-    // 1.2 x 50 x 50/100 = 30, +-10%. High defense doesn't matter.
+    // 1.2 x 50 x 50/100 = 30, +-10%. High defence doesn't matter.
     const hit = events.find((e) => e.type === "damage");
     const amount = hit?.type === "damage" && hit.amount;
     expect(amount).toBeGreaterThanOrEqual(27);

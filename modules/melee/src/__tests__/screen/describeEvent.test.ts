@@ -164,7 +164,7 @@ describe("describeEvent", () => {
       { type: "hpPaid", unitId: MAGE, amount: 15, hp: 40 },
       "Mage pays 15 HP",
     ],
-    // Statuses, modifiers and defenses
+    // Statuses, modifiers and defences
     [
       "a status gained",
       { type: "statusApplied", ...status, ticks: 3 },

@@ -21,7 +21,7 @@ type StatRow = [
   maxMp: number,
   attack: number,
   magic: number,
-  defense: number,
+  defence: number,
   spirit: number,
   speed: number,
 ];
@@ -30,10 +30,10 @@ const stats = ([
   maxMp,
   attack,
   magic,
-  defense,
+  defence,
   spirit,
   speed,
-]: StatRow): Stats => ({ maxHp, maxMp, attack, magic, defense, spirit, speed });
+]: StatRow): Stats => ({ maxHp, maxMp, attack, magic, defence, spirit, speed });
 
 function archetype(
   kind: Archetype["kind"],
@@ -235,20 +235,20 @@ export const WORLD_GEAR: Gear[] = [
     add("spirit", 5),
   ]),
   worn("heavy", "plate", "Plate Armour", [
-    add("defense", 12),
+    add("defence", 12),
     mul("speed", 0.85),
   ]),
   worn("heavy", "scale", "Scale Mail", [
-    add("defense", 7),
+    add("defence", 7),
     add("maxHp", 15),
     mul("speed", 0.95),
   ]),
   worn("light", "coat", "Ranger's Coat", [
-    add("defense", 3),
+    add("defence", 3),
     mul("speed", 1.05),
   ]),
   worn("light", "jerkin", "Leather Jerkin", [
-    add("defense", 4),
+    add("defence", 4),
     add("maxHp", 10),
   ]),
   worn("robe", "cloak", "Warded Cloak", [add("spirit", 9)]),
@@ -256,8 +256,8 @@ export const WORLD_GEAR: Gear[] = [
   accessory("amulet", "Amulet of Vigor", [add("maxHp", 25)]),
   accessory("band", "Power Band", [add("attack", 4)]),
   accessory("charm", "Sage's Charm", [add("magic", 4), add("maxMp", 10)]),
-  accessory("buckler", "Iron Buckler", [add("defense", 5)]),
-  accessory("boots", "Fleet Boots", [mul("speed", 1.2), add("defense", -2)]),
+  accessory("buckler", "Iron Buckler", [add("defence", 5)]),
+  accessory("boots", "Fleet Boots", [mul("speed", 1.2), add("defence", -2)]),
 ];
 
 export const WORLD_SKILLS = [

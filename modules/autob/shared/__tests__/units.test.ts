@@ -75,7 +75,7 @@ describe("starStats", () => {
       maxMp: 10,
       attack: 10,
       magic: 5,
-      defense: 4,
+      defence: 4,
       spirit: 3,
       speed: 10,
     };
@@ -96,7 +96,7 @@ describe("starStats", () => {
       maxMp: 10,
       attack: 10,
       magic: 5,
-      defense: 4,
+      defence: 4,
       spirit: 3,
       speed: 10,
     };

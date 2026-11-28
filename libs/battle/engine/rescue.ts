@@ -9,10 +9,10 @@ import { dropReady } from "./units";
 // back row behind it. Being dragged back costs the ally half its gauge;
 // the rescuer braces for the blows it now takes in the ally's place.
 
-/** The rescuer's brace: defense x1.3 until about its next turn. */
+/** The rescuer's brace: defence x1.3 until about its next turn. */
 export const RESCUE_BRACE = {
   name: "Braced",
-  stat: "defense",
+  stat: "defence",
   op: "mul",
   value: 1.3,
   duration: 125,

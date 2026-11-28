@@ -1,5 +1,5 @@
 import { POISON } from "./poison";
-import { DEFENSE_K } from "./damage";
+import { DEFENCE_K } from "./damage";
 import { IGNITE_BURN } from "./ignite";
 import { BLEED } from "./bleed";
 import { resistancesFor } from "@jforge/rules/core";
@@ -122,13 +122,13 @@ export function offenseOf(def: CombatantDef): number {
 }
 
 /**
- * How much damage it takes to bring down: max HP, raised by defense and
- * spirit (the damage formula's K / (K + defense), averaged) and by its
+ * How much damage it takes to bring down: max HP, raised by defence and
+ * spirit (the damage formula's K / (K + defence), averaged) and by its
  * resistances averaged over every damage type.
  */
 export function durabilityOf(def: CombatantDef): number {
   const { stats } = def;
-  const guard = 1 + (stats.defense + stats.spirit) / 2 / DEFENSE_K;
+  const guard = 1 + (stats.defence + stats.spirit) / 2 / DEFENCE_K;
   const resistances = resistancesFor(def);
   const taken =
     DAMAGE_TYPES.reduce((sum, type) => sum + (resistances[type] ?? 1), 0) /

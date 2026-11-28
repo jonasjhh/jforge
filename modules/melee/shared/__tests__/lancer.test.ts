@@ -163,10 +163,10 @@ describe("Hook", () => {
 });
 
 describe("Armour Pierce", () => {
-  const armoured = (defense: number) =>
-    place(def("armoured", { maxHp: 10_000, speed: 1, defense }), "enemy", 2, 0);
+  const armoured = (defence: number) =>
+    place(def("armoured", { maxHp: 10_000, speed: 1, defence }), "enemy", 2, 0);
 
-  it("given a target of defense 40, when Armour Pierce is previewed, then it hits as a plain attack on defense 20", () => {
+  it("given a target of defence 40, when Armour Pierce is previewed, then it hits as a plain attack on defence 20", () => {
     const state = lancerTurn([armoured(40)]);
     const [self, target] = state.units;
     const halved = lancerTurn([armoured(20)]);

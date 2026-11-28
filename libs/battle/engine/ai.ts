@@ -1,4 +1,4 @@
-import { defenseFactor, expectedPhysicalDamage, wouldKnockOut } from "./damage";
+import { defenceFactor, expectedPhysicalDamage, wouldKnockOut } from "./damage";
 import { bestMove } from "./aiMove";
 import { hitVictim } from "./guard";
 import { bestSkill } from "./aiSkills";
@@ -33,7 +33,7 @@ export function targetScore(
     ? 1
     : 0;
   const wounded = 1 - target.hp / target.base.maxHp;
-  const soft = defenseFactor(effectiveStat(target, "defense"));
+  const soft = defenceFactor(effectiveStat(target, "defence"));
   return (
     -(p.near ?? 0) * farness(unit, target) +
     p.finish * canFinish +

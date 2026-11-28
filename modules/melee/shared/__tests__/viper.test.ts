@@ -72,8 +72,8 @@ describe("Viper venom", () => {
   });
 
   it("given a victim the bite leaves nearly dead, when poison ticks, then it knocks them out and is cleared", () => {
-    // 7 HP and high defense: the bite leaves a few HP and poison finishes it.
-    const tough = def("archer", { maxHp: 500, defense: 40 });
+    // 7 HP and high defence: the bite leaves a few HP and poison finishes it.
+    const tough = def("archer", { maxHp: 500, defence: 40 });
 
     const { events, victim } = bitten(tough, 400, 7);
 

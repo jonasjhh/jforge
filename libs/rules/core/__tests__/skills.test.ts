@@ -18,7 +18,7 @@ describe("effectSummary", () => {
       type: "modify",
       modifier: {
         name: "x",
-        stat: "defense",
+        stat: "defence",
         op: "add",
         value,
         duration: 50,
@@ -36,8 +36,8 @@ describe("effectSummary", () => {
     ],
     ["a heal", withEffect({ type: "heal", power: 2 }), "heals ×2 magic"],
     ["a buff", withEffect(EFFECT.modify), "attack ×1.5 for 100"],
-    ["a gain of 5", add(5), "defense +5 for 50"],
-    ["a loss of 5", add(-5), "defense -5 for 50"],
+    ["a gain of 5", add(5), "defence +5 for 50"],
+    ["a loss of 5", add(-5), "defence -5 for 50"],
     ["a pull", strike({ push: -1 }), "weapon strike ×1, pulls 1"],
     [
       "a finisher under half HP",
@@ -96,7 +96,7 @@ describe("effectSummary", () => {
 
     expect(summary).toBe(
       "charging weapon strike ×1, pushes 2, pins, sets burning, bleeds, " +
-        "weakens to ×0.5, staggers 25%, ignores 40% defense, " +
+        "weakens to ×0.5, staggers 25%, ignores 40% defence, " +
         "×2 below 30% HP, heals the most-hurt ally 30% of the damage",
     );
   });

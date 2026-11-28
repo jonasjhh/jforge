@@ -16,5 +16,5 @@ export interface UnitDef extends Creature {
   threat?: number;
 }
 
-/** Higher K means defense matters less. */
-export const DEFENSE_K = 50;
+/** Higher K means defence matters less. */
+export const DEFENCE_K = 50;

@@ -48,7 +48,7 @@ function fighterTurn(foe: Partial<CombatantDef> = {}): BattleState {
       {
         placements: [
           place(fast, "player", 1, 0),
-          place(def("ally", { speed: 1, defense: 0 }), "player", 3, 0),
+          place(def("ally", { speed: 1, defence: 0 }), "player", 3, 0),
           place(
             {
               ...def("foe", { speed: 1, maxMp: 99, magic: 10 }),
@@ -234,15 +234,15 @@ describe("the Fighter's skills", () => {
 });
 
 describe("Iron Stance", () => {
-  it("given the Fighter beside an ally, when it takes Iron Stance, then only its own defense doubles, for the MP cost", () => {
+  it("given the Fighter beside an ally, when it takes Iron Stance, then only its own defence doubles, for the MP cost", () => {
     const state = fighterTurn();
 
     const after = cast(ironStance.id, state);
 
-    expect(effectiveStat(unit(after, FIGHTER), "defense")).toBe(
-      fighter.stats.defense * 2,
+    expect(effectiveStat(unit(after, FIGHTER), "defence")).toBe(
+      fighter.stats.defence * 2,
     );
-    expect(effectiveStat(unit(after, ALLY), "defense")).toBe(0);
+    expect(effectiveStat(unit(after, ALLY), "defence")).toBe(0);
     expect(unit(after, FIGHTER).mp).toBe(
       fighter.stats.maxMp - ironStance.mpCost,
     );

@@ -1,4 +1,4 @@
-import { DEFENSE_K, type UnitDef, type Side } from "./types";
+import { DEFENCE_K, type UnitDef, type Side } from "./types";
 import {
   resistancesFor,
   type DamageType,
@@ -238,7 +238,7 @@ function heal(w: Work, target: Fighter, amount: number) {
     w.events.push({ kind: "heal", target: target.id, amount: healed });
 }
 
-/** A physical hit at `power`: attack x K / (K + defense). */
+/** A physical hit at `power`: attack x K / (K + defence). */
 function physical(
   w: Work,
   source: Fighter,
@@ -246,9 +246,9 @@ function physical(
   power: number,
   pierce = 0,
 ): number {
-  const defense = statOf(target, "defense") * (1 - pierce);
+  const defence = statOf(target, "defence") * (1 - pierce);
   const raw =
-    statOf(source, "attack") * power * (DEFENSE_K / (DEFENSE_K + defense));
+    statOf(source, "attack") * power * (DEFENCE_K / (DEFENCE_K + defence));
   return damage(w, target, raw, source.def.weapon.damageType);
 }
 
@@ -262,7 +262,7 @@ function magical(
 ): number {
   const spirit = statOf(target, "spirit");
   const raw =
-    statOf(source, "magic") * power * (DEFENSE_K / (DEFENSE_K + spirit));
+    statOf(source, "magic") * power * (DEFENCE_K / (DEFENCE_K + spirit));
   return damage(w, target, raw, type);
 }
 

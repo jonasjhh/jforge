@@ -40,10 +40,10 @@ const setHp = (id: string, hp: number) => (s: BattleState) => {
 
 describe("enemy targeting", () => {
   it("given a tough unit it can finish and a soft one, when the AI picks, then it finishes the tough one", () => {
-    // 20 attack vs 40 defense: about 11 damage, enough to finish 8 HP.
+    // 20 attack vs 40 defence: about 11 damage, enough to finish 8 HP.
     const party = [
-      place(def("tough", { maxHp: 100, defense: 40 }), "player", 1),
-      place(def("soft", { maxHp: 100, defense: 0 }), "player", 3),
+      place(def("tough", { maxHp: 100, defence: 40 }), "player", 1),
+      place(def("soft", { maxHp: 100, defence: 0 }), "player", 3),
     ];
 
     const target = pick(party, { setup: setHp("player-1-0", 8) });
@@ -64,8 +64,8 @@ describe("enemy targeting", () => {
 
   it("given an armoured and a robed unit, equally healthy, when the AI picks, then it picks the robed one", () => {
     const party = [
-      place(def("armoured", { defense: 30 }), "player", 1),
-      place(def("robed", { defense: 2 }), "player", 3),
+      place(def("armoured", { defence: 30 }), "player", 1),
+      place(def("robed", { defence: 2 }), "player", 3),
     ];
 
     const target = pick(party);
@@ -75,7 +75,7 @@ describe("enemy targeting", () => {
 
   it("given a nearly dead mage behind a guard, when the AI picks, then it picks the guard it can reach", () => {
     const party = [
-      place(def("guard", { maxHp: 100, defense: 30 }), "player", 2, 0),
+      place(def("guard", { maxHp: 100, defence: 30 }), "player", 2, 0),
       place(def("mage", { maxHp: 100 }), "player", 2, 1),
     ];
 

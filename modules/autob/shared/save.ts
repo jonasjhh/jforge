@@ -4,4 +4,4 @@
  * runs stale (a class gains a skill, a format changes): saves are dropped,
  * never migrated. Each game has its own.
  */
-export const SAVE_VERSION = 46;
+export const SAVE_VERSION = 47;

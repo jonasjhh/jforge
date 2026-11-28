@@ -23,7 +23,7 @@ type StatRow = [
   maxMp: number,
   attack: number,
   magic: number,
-  defense: number,
+  defence: number,
   spirit: number,
   speed: number,
 ];
@@ -32,10 +32,10 @@ const row = ([
   maxMp,
   attack,
   magic,
-  defense,
+  defence,
   spirit,
   speed,
-]: StatRow): Stats => ({ maxHp, maxMp, attack, magic, defense, spirit, speed });
+]: StatRow): Stats => ({ maxHp, maxMp, attack, magic, defence, spirit, speed });
 
 /**
  * Stat growth per level, by class or enemy type id. Melee's classes and

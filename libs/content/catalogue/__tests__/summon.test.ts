@@ -28,7 +28,7 @@ const unpicked = (): Summon => ({
       maxMp: 0,
       attack: 0,
       magic: 0,
-      defense: 0,
+      defence: 0,
       spirit: 0,
       speed: 0,
     },

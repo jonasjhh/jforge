@@ -19,7 +19,7 @@ function effectText(skill: Skill): string {
     case "damage":
       return `${effect.element} damage ×${effect.power}${effect.split ? ` each, ×${effect.split} shared` : ""}${effect.vsEmpowered ? ` (×${effect.vsEmpowered} if empowered)` : ""}${effect.drain ? `, drains ${pct(effect.drain)}` : ""}${effect.burnMp ? `, burns ${effect.burnMp} MP` : ""}${effect.chill ? ", chills" : ""}${shape}`;
     case "strike":
-      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.push ? (effect.push > 0 ? `, pushes ${effect.push}` : `, pulls ${-effect.push}`) : ""}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.bleed ? ", bleeds" : ""}${effect.weaken ? `, weakens to ×${effect.weaken}` : ""}${effect.stagger ? `, staggers ${pct(effect.stagger)}` : ""}${effect.armourPierce ? `, ignores ${pct(effect.armourPierce)} defense` : ""}${effect.finisher ? `, ×${effect.finisher} below ${pct(effect.finishBelow ?? FINISH_BELOW)} HP` : ""}${effect.mend ? `, heals the most-hurt ally ${pct(effect.mend)} of the damage` : ""}${shape}`;
+      return `${effect.advance ? "charging " : ""}weapon strike ×${effect.power}${effect.push ? (effect.push > 0 ? `, pushes ${effect.push}` : `, pulls ${-effect.push}`) : ""}${effect.pin ? ", pins" : ""}${effect.ignite ? ", sets burning" : ""}${effect.bleed ? ", bleeds" : ""}${effect.weaken ? `, weakens to ×${effect.weaken}` : ""}${effect.stagger ? `, staggers ${pct(effect.stagger)}` : ""}${effect.armourPierce ? `, ignores ${pct(effect.armourPierce)} defence` : ""}${effect.finisher ? `, ×${effect.finisher} below ${pct(effect.finishBelow ?? FINISH_BELOW)} HP` : ""}${effect.mend ? `, heals the most-hurt ally ${pct(effect.mend)} of the damage` : ""}${shape}`;
     case "heal":
       return `heals ×${effect.power} ${effect.of === "maxHp" ? "max HP" : "magic"}${shape}`;
     case "modify": {
@@ -90,7 +90,7 @@ function statusSummary(st: StatusDef): string {
     case "bless":
       return `blesses: deals ×${s.dealt}, takes ×${s.taken} ${lasts}`;
     case "stoneSkin":
-      return `stone skin: defense ×${s.defense}, unpushable ${lasts}`;
+      return `stone skin: defence ×${s.defence}, unpushable ${lasts}`;
     case "expose":
       return `exposes: takes ×${s.taken} ${lasts}`;
     case "weaken":

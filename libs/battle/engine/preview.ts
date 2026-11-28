@@ -50,7 +50,7 @@ export function previewDamage(
   } else return null;
 
   const [delivery, power, damageType] = hit;
-  const defenseShare =
+  const defenceShare =
     effect?.type === "strike" ? 1 - (effect.armourPierce ?? 0) : 1;
   // A charge strikes from the front row it runs to.
   const from =
@@ -61,7 +61,7 @@ export function previewDamage(
     delivery,
     power,
     damageType,
-    defenseShare,
+    defenceShare,
   );
   return {
     amount,

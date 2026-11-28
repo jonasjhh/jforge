@@ -43,9 +43,9 @@ describe("characterStats", () => {
     // Squire: 16 attack; Iron Sword +6.
     expect(stats.base.attack).toBe(16);
     expect(stats.total.attack).toBe(22);
-    // Chain Mail: +8 defense, speed x0.9.
-    expect(stats.base.defense).toBe(12);
-    expect(stats.total.defense).toBe(20);
+    // Chain Mail: +8 defence, speed x0.9.
+    expect(stats.base.defence).toBe(12);
+    expect(stats.total.defence).toBe(20);
     expect(stats.total.speed).toBe(Math.round(stats.base.speed * 0.9));
   });
 

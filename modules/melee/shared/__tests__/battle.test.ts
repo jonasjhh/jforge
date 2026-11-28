@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "@jforge/battle/engine/battle.ts";
-import { DEFENSE_K } from "@jforge/battle/engine/damage.ts";
+import { DEFENCE_K } from "@jforge/battle/engine/damage.ts";
 import { simulate } from "@jforge/battle/engine/simulate.ts";
 import type { BattleSetup } from "@jforge/battle/engine/types.ts";
 import { def, place, sampleBattle } from "./helpers";
@@ -111,12 +111,12 @@ describe("player commands", () => {
 });
 
 describe("damage", () => {
-  it("given an attack of 100 against defense K, when it hits, then it deals 50 within the 10% spread", () => {
+  it("given an attack of 100 against defence K, when it hits, then it deals 50 within the 10% spread", () => {
     const setup: BattleSetup = {
       placements: [
         place(def("hero", { attack: 100, speed: 20 }), "player", 0),
         place(
-          def("wall", { maxHp: 10_000, defense: DEFENSE_K, speed: 1 }),
+          def("wall", { maxHp: 10_000, defence: DEFENCE_K, speed: 1 }),
           "enemy",
           0,
         ),

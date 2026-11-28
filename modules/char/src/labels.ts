@@ -5,7 +5,7 @@ export const STAT_LABELS: Record<StatName, string> = {
   maxMp: "MP",
   attack: "Attack",
   magic: "Magic",
-  defense: "Defense",
+  defence: "Defence",
   spirit: "Spirit",
   speed: "Speed",
 };

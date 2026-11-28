@@ -9,7 +9,7 @@ const STAT_WORDS = {
   maxMp: "MP",
   attack: "attack",
   magic: "magic",
-  defense: "defense",
+  defence: "defence",
   spirit: "spirit",
   speed: "speed",
 } as const;

@@ -4,7 +4,7 @@ import {
   type Skill,
   type SkillArea,
 } from "@jforge/rules/core";
-import { DEFENSE_K, type UnitDef } from "./types";
+import { DEFENCE_K, type UnitDef } from "./types";
 
 /** Poison's, Ignite's burn's and Bleed's power, and how often they tick. */
 const POISON_POWER = 0.4;
@@ -127,13 +127,13 @@ export function offenseOf(def: UnitDef): number {
 }
 
 /**
- * How much damage it takes to bring down: max HP, raised by defense and
- * spirit (the damage formula's K / (K + defense), averaged) and by its
+ * How much damage it takes to bring down: max HP, raised by defence and
+ * spirit (the damage formula's K / (K + defence), averaged) and by its
  * resistances averaged over every damage type.
  */
 export function durabilityOf(def: UnitDef): number {
   const { stats } = def;
-  const guard = 1 + (stats.defense + stats.spirit) / 2 / DEFENSE_K;
+  const guard = 1 + (stats.defence + stats.spirit) / 2 / DEFENCE_K;
   const resistances = resistancesFor(def);
   const taken =
     DAMAGE_TYPES.reduce((sum, type) => sum + (resistances[type] ?? 1), 0) /

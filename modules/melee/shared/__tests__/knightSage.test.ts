@@ -53,8 +53,8 @@ function turnOf(hero: CombatantDef): BattleState {
       {
         placements: [
           place(fast(hero), "player", 2, 0),
-          place(def("beside", { speed: 1, defense: 10 }), "player", 0, 0),
-          place(def("behind", { speed: 1, defense: 10 }), "player", 2, 1),
+          place(def("beside", { speed: 1, defence: 10 }), "player", 0, 0),
+          place(def("behind", { speed: 1, defence: 10 }), "player", 2, 1),
           place(
             {
               ...def("foe", { speed: 1 }),
@@ -107,7 +107,7 @@ describe("Knight and Sage", () => {
 describe("Shield Wall", () => {
   const self = { side: "player", col: 2, row: 0 } as const;
   const walled = act(turnOf(knight), skillOn(shieldWall.id, self)).state;
-  const defense = (id: string) => effectiveStat(unit(walled, id), "defense");
+  const defence = (id: string) => effectiveStat(unit(walled, id), "defence");
 
   it("given the Knight, when its area is worked out, then it is the Knight's whole row, on its own side", () => {
     const state = turnOf(knight);
@@ -121,13 +121,13 @@ describe("Shield Wall", () => {
 
   it.each([
     ["the ally beside it", "player-0-0", 15],
-    ["the Knight", "player-2-0", Math.round(knight.stats.defense * 1.5)],
+    ["the Knight", "player-2-0", Math.round(knight.stats.defence * 1.5)],
     ["the ally behind it", "player-2-1", 10],
     ["the foe", "enemy-2-0", 0],
   ])(
-    "given the wall is up, when the defense of %s is read, then it is %i",
+    "given the wall is up, when the defence of %s is read, then it is %i",
     (_, id, expected) => {
-      const value = defense(id);
+      const value = defence(id);
 
       expect(value).toBe(expected);
     },
@@ -284,7 +284,7 @@ describe("Guard", () => {
     const tough = turnOf(knight);
     const ally = unit(tough, BEHIND);
     ally.base.maxHp = 500;
-    ally.base.defense = 50;
+    ally.base.defence = 50;
 
     const value = guardValue(tough);
 
@@ -423,18 +423,18 @@ describe("Rescue", () => {
     expect(self.mp).toBe(knight.stats.maxMp - rescue.mpCost);
   });
 
-  it("given an ally at gauge 600, when it is rescued, then its gauge halves and the Knight is braced x1.3 defense", () => {
+  it("given an ally at gauge 600, when it is rescued, then its gauge halves and the Knight is braced x1.3 defence", () => {
     const before = rescueTurn();
-    const defense = effectiveStat(unit(before, KNIGHT), "defense");
+    const defence = effectiveStat(unit(before, KNIGHT), "defence");
 
     const { state } = act(before, command);
 
     const self = knightIn(state);
     expect(unit(state, ALLY).gauge).toBe(300);
     expect(self.modifiers).toContainEqual(
-      expect.objectContaining({ source: "Braced", stat: "defense" }),
+      expect.objectContaining({ source: "Braced", stat: "defence" }),
     );
-    expect(effectiveStat(self, "defense")).toBeCloseTo(defense * 1.3, 0);
+    expect(effectiveStat(self, "defence")).toBeCloseTo(defence * 1.3, 0);
   });
 
   it("given an ally with a gauge below 0 (a bow's late start), when it is rescued, then its gauge is not raised", () => {

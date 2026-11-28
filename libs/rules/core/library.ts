@@ -41,7 +41,7 @@ export function blankArchetype(id: string, kind: Archetype["kind"]): Archetype {
       maxMp: 20,
       attack: 15,
       magic: 10,
-      defense: 10,
+      defence: 10,
       spirit: 10,
       speed: 10,
     },

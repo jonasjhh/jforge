@@ -3,7 +3,7 @@ import { strengthsOf } from "@jforge/rules/core";
 import { strengthOn } from "./strengths";
 import {
   knockOutIfDown,
-  reportDefenses,
+  reportDefences,
   resistance,
   sufferDamage,
 } from "./damage";
@@ -171,7 +171,7 @@ function tick(
         multiplier,
         ...(suffered.absorbed ? { absorbed: suffered.absorbed } : {}),
       });
-      reportDefenses(unit, suffered, events);
+      reportDefences(unit, suffered, events);
       knockOutIfDown(state, unit, events);
       break;
     }

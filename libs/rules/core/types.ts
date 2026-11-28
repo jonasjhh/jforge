@@ -112,7 +112,7 @@ export interface Character {
  * The library format's version. Raise it when a change makes saved
  * libraries stale; each game's saves carry their own version too.
  */
-export const LIBRARY_VERSION = 1;
+export const LIBRARY_VERSION = 2;
 
 /** A set of content: the catalogue, or what one game uses of it. */
 export interface Library {

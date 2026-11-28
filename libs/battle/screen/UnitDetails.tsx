@@ -21,7 +21,7 @@ interface UnitDetailsProps {
 
 const STATS: [StatName, string][] = [
   ["attack", "Attack"],
-  ["defense", "Defense"],
+  ["defence", "Defence"],
   ["magic", "Magic"],
   ["spirit", "Spirit"],
   ["speed", "Speed"],
@@ -60,7 +60,7 @@ function statusText(status: Status, speed: number): string {
     case "smoke":
       return "In smoke: enemies can't single it out (areas still hit it).";
     case "stoneSkin":
-      return `Stone Skin: defense ×${status.defense ?? 1}, can't be pushed or pulled.`;
+      return `Stone Skin: defence ×${status.defence ?? 1}, can't be pushed or pulled.`;
     case "petrify":
       return `Petrified: can't act, takes ×${status.taken ?? 1} damage.`;
     case "bless":

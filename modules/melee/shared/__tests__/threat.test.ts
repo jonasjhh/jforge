@@ -16,7 +16,7 @@ const scaled = (d: CombatantDef, k: number): CombatantDef => ({
     ...d.stats,
     maxHp: d.stats.maxHp * k,
     attack: d.stats.attack * k,
-    defense: d.stats.defense * k,
+    defence: d.stats.defence * k,
   },
 });
 
@@ -44,7 +44,7 @@ describe("estimateThreat", () => {
     ["HP", { maxHp: 90 }],
     ["attack", { attack: 22 }],
     ["speed", { speed: 24 }],
-    ["defense", { defense: 30 }],
+    ["defence", { defence: 30 }],
   ])(
     "given a goblin with more %s, when its threat is estimated, then it grows",
     (_, stats) => {
@@ -103,7 +103,7 @@ describe("durabilityOf", () => {
   const priest = def("p", { maxMp: 40, magic: 10 });
 
   it.each<[string, CombatantDef, CombatantDef]>([
-    ["defense", def("a"), def("a", { defense: 20 })],
+    ["defence", def("a"), def("a", { defence: 20 })],
     ["spirit", def("a"), def("a", { spirit: 20 })],
     ["resistances", def("a"), { ...def("a"), traits: ["stone"] }],
     ["a revive it can afford", priest, { ...priest, skills: [revive] }],

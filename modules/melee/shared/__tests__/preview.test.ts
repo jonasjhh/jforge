@@ -28,7 +28,7 @@ function duel(foeStats = {}, resistances = {}): BattleState {
   const foe = {
     ...def("foe", {
       maxHp: 10_000,
-      defense: 10,
+      defence: 10,
       spirit: 5,
       speed: 1,
       ...foeStats,

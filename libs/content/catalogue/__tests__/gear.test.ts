@@ -43,18 +43,18 @@ describe("applyBonuses", () => {
     const result = applyBonuses(stats, bonuses);
 
     expect(result.speed).toBe(33);
-    expect(result.defense).toBe(10);
+    expect(result.defence).toBe(10);
   });
 
   it("given bonuses that would drive stats under zero, when they are applied, then stats stop at 0 and HP at 1", () => {
     const bonuses: StatBonus[] = [
-      { stat: "defense", op: "add", value: -99 },
+      { stat: "defence", op: "add", value: -99 },
       { stat: "maxHp", op: "mul", value: 0 },
     ];
 
     const result = applyBonuses(stats, bonuses);
 
-    expect(result.defense).toBe(0);
+    expect(result.defence).toBe(0);
     expect(result.maxHp).toBe(1);
   });
 });

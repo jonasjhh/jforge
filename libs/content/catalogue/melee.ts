@@ -88,7 +88,7 @@ export const BASIC_ARMOUR: Gear[] = [
     slot: "armour",
     category: "light",
     bonuses: [
-      { stat: "defense", op: "add", value: 3 },
+      { stat: "defence", op: "add", value: 3 },
       { stat: "maxHp", op: "add", value: 8 },
     ],
   },

@@ -9,7 +9,7 @@ import type {
 } from "@jforge/battle/engine/types.ts";
 import { def, place } from "./helpers";
 
-/** One sword hit (attack 40, no defense) on a target with `resistances`. */
+/** One sword hit (attack 40, no defence) on a target with `resistances`. */
 function swordHit(resistances: Resistances) {
   const hero = def("hero", { attack: 40, speed: 20 }, sword);
   const target: CombatantDef = {

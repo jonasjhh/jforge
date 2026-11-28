@@ -17,18 +17,18 @@ it wins.
 | Max HP  | HP at the start of every battle.                                                                                            |
 | Max MP  | MP at the start of every battle. Nothing restores MP during a fight, so it is the number of skills a unit casts per battle. |
 | Attack  | Weapon hits and weapon skills.                                                                                              |
-| Defense | Lets `50 / (50 + defense)` of physical damage through.                                                                      |
+| Defence | Lets `50 / (50 + defence)` of physical damage through.                                                                      |
 | Magic   | Spells, and also heals and revives.                                                                                         |
 | Spirit  | Lets `50 / (50 + spirit)` of spell damage through.                                                                          |
 | Speed   | Fills the turn gauge; a unit acts at 1000.                                                                                  |
 
 - **Weapon hit** (`damage.ts`): attack × row factor × skill power ×
-  defense factor × resistance × stance × random 0.9–1.1, at least 1
+  defence factor × resistance × stance × random 0.9–1.1, at least 1
   unless the target is immune.
 - **Spell** (`damage.ts`): power × magic × spirit factor × resistance ×
   stance × random 0.9–1.1.
-- **Defense and spirit give diminishing returns** (`DEFENSE_K = 50`).
-  Defense 16 lets 76% through; defense 27 lets 65% through.
+- **Defence and spirit give diminishing returns** (`DEFENCE_K = 50`).
+  Defence 16 lets 76% through; defence 27 lets 65% through.
 - **Speed** (`timeline.ts`): twice the speed means twice the turns, which
   makes speed the strongest stat per point.
 - **Rows** (`ROW_DEALT`, `ROW_TAKEN`): melee weapons deal and take ×1,
@@ -66,10 +66,10 @@ Char's classes and enemy types have their level-1 stats.
 
   | Class                                  | Level 1            | Level 3            | Level 10            |
   | -------------------------------------- | ------------------ | ------------------ | ------------------- |
-  | Fighter: HP / attack / defense / speed | 120 / 22 / 18 / 10 | 139 / 26 / 21 / 10 | 206 / 38 / 31 / 12  |
+  | Fighter: HP / attack / defence / speed | 120 / 22 / 18 / 10 | 139 / 26 / 21 / 10 | 206 / 38 / 31 / 12  |
   | Mage: HP / MP / magic / spirit         | 70 / 60 / 24 / 18  | 81 / 70 / 28 / 21  | 120 / 103 / 41 / 31 |
 
-  Growth is linear, but defense and spirit give diminishing returns, so
+  Growth is linear, but defence and spirit give diminishing returns, so
   offence gains more from levels than toughness does. Speed barely moves,
   so turn order stays mostly the same at every level.
 
@@ -95,7 +95,7 @@ A unit's threat estimates how dangerous it is:
 `0.023 × √(offence × durability)`, at least 1.
 
 - **Offence:** stats, weapon reach and area skills.
-- **Durability:** HP, defense and spirit, with bonuses for support and
+- **Durability:** HP, defence and spirit, with bonuses for support and
   revives.
 - **Growth:** threat grows with level and gear. Melee's Fighter in basic
   gear is about 5.5 at level 1 and about 8.1 at level 3.

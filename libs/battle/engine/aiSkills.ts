@@ -1,7 +1,7 @@
 import {
-  DEFENSE_K,
+  DEFENCE_K,
   ROW_TAKEN,
-  defenseFactor,
+  defenceFactor,
   expectedPhysicalDamage,
   resistance,
   wouldKnockOut,
@@ -79,7 +79,7 @@ export function hitValue(
   if (amount <= 0) return 0;
   const plain = Math.max(1, expectedPhysicalDamage(unit, target));
   const wounded = 1 - target.hp / target.base.maxHp;
-  const soft = defenseFactor(effectiveStat(target, "defense"));
+  const soft = defenceFactor(effectiveStat(target, "defence"));
   const finish = wouldKnockOut(target, amount) ? p.finish : 0;
   const far = (p.near ?? 0) * farness(unit, target);
   const worth = Math.max(0, p.wounded * wounded + p.soft * soft - far);
@@ -338,7 +338,7 @@ function chillValue(
 /** How much frailer `ally` is than `protector`: 0 (as tough) to 1. */
 function frailer(ally: Unit, protector: Unit): number {
   const toughness = (u: Unit) =>
-    effectiveStat(u, "maxHp") * (1 + effectiveStat(u, "defense") / DEFENSE_K);
+    effectiveStat(u, "maxHp") * (1 + effectiveStat(u, "defence") / DEFENCE_K);
   return Math.max(0, 1 - toughness(ally) / toughness(protector));
 }
 
