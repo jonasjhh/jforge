@@ -1,6 +1,5 @@
 import type { Library } from "@jforge/rules/core";
-import { type CombatantDef, type Position } from "@jforge/battle";
-import { content } from "@jforge/melee/shared";
+import type { UnitDef, Position } from "./types";
 import { BOARD_COLUMNS, BOARD_ROWS } from "./hex";
 import { randomFrom } from "./random";
 import { STAR_STATS, monsterDef } from "./units";
@@ -33,15 +32,15 @@ export function roundBudget(round: number): number {
 
 /**
  * The monsters a run meets: the library's enemy types that aren't
- * obstacles, and melee's own monsters. Each costs its threat at stage 1;
+ * obstacles. Each costs its threat at stage 1;
  * later stages make them stronger, not dearer.
  */
-export function monsterPool(library: Library, stage: number): CombatantDef[] {
+export function monsterPool(library: Library, stage: number): UnitDef[] {
   const designed = library.archetypes
     .filter((a) => a.kind === "enemy" && !a.obstacle)
     .flatMap((a) => monsterDef(library, a.id) ?? []);
   const growth = 1 + MONSTER_GROWTH * (stage - 1);
-  return [...designed, ...content.monsters].map((def) => {
+  return designed.map((def) => {
     const stats = { ...def.stats };
     for (const stat of STAR_STATS)
       stats[stat] = Math.round(stats[stat] * growth);
@@ -51,12 +50,12 @@ export function monsterPool(library: Library, stage: number): CombatantDef[] {
 
 /** A monster of a pack, where it stands on the enemy's side. */
 export interface PackMonster {
-  def: CombatantDef;
+  def: UnitDef;
   position: Position;
 }
 
 /** The row a monster stands in: its own, or by weapon (ranged behind). */
-const rowFor = (def: CombatantDef) =>
+const rowFor = (def: UnitDef) =>
   Math.min(
     def.preferredRow ?? (def.weapon.kind === "ranged" ? 2 : 0),
     BOARD_ROWS - 1,

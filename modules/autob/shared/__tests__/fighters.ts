@@ -1,4 +1,4 @@
-import type { CombatantDef } from "@jforge/battle";
+import type { UnitDef } from "../types";
 import type { Skill, Weapon } from "@jforge/rules/core";
 import type { Hex } from "../hex";
 import type { FightEntry } from "../fight";
@@ -13,7 +13,7 @@ const sword: Weapon = {
 };
 
 /** A plain fighter: 100 HP, 10 attack and magic, no defense, speed 10. */
-export function unit(overrides: Partial<CombatantDef> = {}): CombatantDef {
+export function unit(overrides: Partial<UnitDef> = {}): UnitDef {
   return {
     id: "u",
     name: "Unit",
@@ -57,7 +57,7 @@ export function skill(
 }
 
 export const at = (
-  def: CombatantDef,
+  def: UnitDef,
   side: "player" | "enemy",
   hex: Hex,
 ): FightEntry => ({

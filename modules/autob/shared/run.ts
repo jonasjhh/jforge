@@ -1,7 +1,8 @@
 import { type Library } from "@jforge/rules/core";
 import { autobLibrary } from "@jforge/content/autob";
-import { createRandom, type Position } from "@jforge/battle";
-import { SAVE_VERSION } from "@jforge/melee/shared";
+import type { Position } from "./types";
+import { randomFrom } from "./random";
+import { SAVE_VERSION } from "./save";
 import {
   REROLL_COST,
   START_LEVEL,
@@ -82,7 +83,7 @@ export function runLibrary(library: Library | null): Library {
 }
 
 const shopRandom = (seed: number, rolls: number) =>
-  createRandom((seed + rolls * 1_000_003) >>> 0);
+  randomFrom((seed + rolls * 1_000_003) >>> 0);
 
 function rolled(run: Run): Run {
   const rolls = run.rolls + 1;

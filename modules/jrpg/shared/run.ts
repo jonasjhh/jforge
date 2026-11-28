@@ -23,7 +23,8 @@ import {
   type Placement,
   type Position,
 } from "@jforge/battle";
-import { SAVE_VERSION, content } from "@jforge/melee/shared";
+import { content } from "@jforge/melee/shared";
+import { SAVE_VERSION } from "./save";
 import { levelledDef } from "./growth";
 import { withLearnedSkills } from "./learning";
 import { formationOf } from "./formation";

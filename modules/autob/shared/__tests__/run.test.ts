@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { autobLibrary } from "@jforge/content/autob";
-import { SAVE_VERSION } from "@jforge/melee/shared";
+import { SAVE_VERSION } from "../save";
 import {
   BASE_INCOME,
   REROLL_COST,

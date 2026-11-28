@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@jforge/battle": "workspace:*",
-    "@jforge/char": "workspace:*",
     "@jforge/content": "workspace:*",
     "@jforge/look": "workspace:*",
     "@jforge/melee": "workspace:*",

@@ -15,22 +15,23 @@ them, is in [progression.md](progression.md).
 ```
 rules  <-  battle  <-  melee  <-  content  <-  char
   ^          ^                       ^
-  +----------+-----------------------+------  jrpg, autob
+  +----------+-----------------------+------  jrpg
+  +----------------------------------+------  autob
 
 (rules is also read directly by content, char, jrpg and autob;
  look by battle and every game)
 ```
 
-| Package   | Role                                                                                                                          |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `battle`  | A library: the battle engine (units on the grid, targeting and threat) and its screen. Runs any fight it is given.            |
-| `melee`   | The arena: tries the battle engine on its own test units.                                                                     |
-| `rules`   | A library: the design format (stats, damage types, traits, statuses, skills, creatures), what content is and the logic on it. |
-| `look`    | A library: portraits, colours, the font and base styles, the same in every game.                                              |
-| `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                   |
-| `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                              |
-| `jrpg`    | The game: runs through levels of encounters. Uses battle for fights and its content for the party, enemies and gear.          |
-| `autob`   | An autobattler: shop, bench and a hex board. Uses its content's classes as units and melee's unit data, with its own engine.  |
+| Package   | Role                                                                                                                               |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `battle`  | A library: the battle engine (units on the grid, targeting and threat) and its screen. Runs any fight it is given.                 |
+| `melee`   | The arena: tries the battle engine on its own test units.                                                                          |
+| `rules`   | A library: the design format (stats, damage types, traits, statuses, skills, creatures), what content is and the logic on it.      |
+| `look`    | A library: portraits, colours, the font and base styles, the same in every game.                                                   |
+| `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                        |
+| `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                                   |
+| `jrpg`    | The game: runs through levels of encounters. Uses battle for fights and its content for the party, enemies and gear.               |
+| `autob`   | An autobattler: shop, bench and a hex board. Uses its content's classes as units and its enemies as monsters, with its own engine. |
 
 **rules imports nothing of jforge's.** It owns the design format, and
 compiles content into creatures. **battle depends only on rules and
@@ -749,8 +750,8 @@ Still open:
   deals damage and tanks). They are added one skill at a time, each
   reviewed first.
 - **Saved data.** For now, every save may be invalidated: a run in
-  progress (jrpg's and autob's) carries `SAVE_VERSION`
-  (`melee/shared/save.ts`), and a save of any other version is ignored as
+  progress (jrpg's and autob's) carries its game's own `SAVE_VERSION`
+  (`modules/<game>/shared/save.ts`), and a save of any other version is ignored as
   if there were none. The library a run was dealt also carries
   `LIBRARY_VERSION` (`libs/rules/core/types.ts`), raised when the library
   format changes. Raise it whenever a change makes old saves stale,
@@ -1091,9 +1092,10 @@ Autob is a single-player autobattler: a run of `ROUNDS` (30) rounds
 against monster packs, after TFT's shop, gold and board and in the manner
 of a solo trial against the house. It reuses only units: its content's classes
 (stats, weapon, skills) and creatures. Its board and fights are its own;
-**melee's battle rules don't apply and melee is not changed for it**.
-The rules are pure functions in `shared/` (`run.ts` the run, `fight.ts`
-the engine), like melee's.
+**it imports nothing of melee or battle**, and neither is changed for
+it: its own position, threat estimate (a copy of battle's, `threat.ts`),
+defense constant and random. The rules are pure functions in `shared/`
+(`run.ts` the run, `fight.ts` the engine).
 
 **Units and stars** (`units.ts`). The shop sells every class of the run's
 library: the classes autob picks (`@jforge/content/autob`), copied at
@@ -1101,7 +1103,7 @@ the start so later changes can't break a run. A bought copy is a 1★ unit;
 three of a class at the same star merge at once into one a star higher,
 up to 3★, keeping the place of the first (board before bench). Stars
 multiply max HP, attack and magic by 1 / 1.8 / 3.24. Each class has a
-**cost tier** 1–3: the classes ranked by melee's threat estimate at 1★
+**cost tier** 1–3: the classes ranked by autob's threat estimate at 1★
 and cut into thirds, ties by id; the tier is its price in gold. Selling
 pays back what its copies cost.
 
@@ -1125,7 +1127,9 @@ may stand on the board**.
 pack is drawn from the run's seed: monsters at random among those the
 round's **budget** still affords (3 + 1 per round after the first, ×1.3
 on a stage's last round), each costing its threat, at most 10. The
-monsters are the library's non-obstacle enemy types (never its summons) plus melee's monsters;
+monsters are the library's non-obstacle enemy types (never its summons):
+the Goblin and the world's Wolf, Slime and Viper, each costing its
+estimated threat;
 each stage after the first adds 45% to their max HP, attack and magic.
 Each stands in its own row (or by weapon: ranged behind) in a random free
 hex, or the nearest row with room. The planning screen shows the pack

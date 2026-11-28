@@ -17,7 +17,7 @@ credentials, deploys and secrets are set up once, not per module.
 | `melee` | `/melee/` | `battle`, `rules`, `look`            | The arena: tries the battle on test units   |
 | `jrpg`  | `/jrpg/`  | `battle`, `rules`, `content`, `look` | Runs through levels of encounters           |
 | `char`  | `/char/`  | `rules`, `content`                   | Codex: all content, read-only, and per game |
-| `autob` | `/autob/` | `battle`, `rules`, `content`, `look` | Autobattler: shop, bench, hex board         |
+| `autob` | `/autob/` | `rules`, `content`, `look`           | Autobattler: shop, bench, hex board         |
 
 And four libraries, which are packages but no apps:
 
@@ -85,7 +85,7 @@ the `exports` field of its `package.json`. The concerns are kept apart:
 - **Games read their content from `@jforge/content/<game>`** and its
   rules from `@jforge/rules`. `jrpg` fights with `@jforge/battle` and
   shows its screen (`@jforge/battle/screen`); `autob` has its own board
-  and fight engine. Every game takes its portraits and base
+  and fight engine, and imports nothing of melee or battle. Every game takes its portraits and base
   styles from `@jforge/look` (`@jforge/look/base.css`).
 - **battle imports only `rules` and `look`**: each game brings its own
   units. Only melee's tests reach into its files

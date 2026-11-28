@@ -6,7 +6,8 @@ import {
   type StatName,
   type Stats,
 } from "@jforge/rules/core";
-import { estimateThreat, type CombatantDef } from "@jforge/battle";
+import { estimateThreat } from "./threat";
+import type { UnitDef } from "./types";
 
 // The units of autob are char's classes. Each copy bought is a unit; three
 // of a class at the same star merge into one a star higher.
@@ -86,11 +87,8 @@ export function unitName(name: string, stars: number): string {
   return stars > 1 ? `${name} ${"★".repeat(stars)}` : name;
 }
 
-/** The melee combatant a unit fights as; null if its class is gone. */
-export function unitDef(
-  library: Library,
-  unit: OwnedUnit,
-): CombatantDef | null {
+/** The creature a unit fights as; null if its class is gone. */
+export function unitDef(library: Library, unit: OwnedUnit): UnitDef | null {
   const archetype = library.archetypes.find((a) => a.id === unit.classId);
   if (!archetype) return null;
   const def = toCreature(
@@ -105,7 +103,7 @@ export function unitDef(
 export function monsterDef(
   library: Library,
   archetypeId: string,
-): CombatantDef | null {
+): UnitDef | null {
   const def = creatureOf(library, archetypeId);
   return def && { ...def, threat: estimateThreat(def) };
 }

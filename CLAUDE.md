@@ -51,8 +51,9 @@ British English everywhere, code included: `armour`, `colour`,
 ## Saved data
 
 Saved data (jrpg's and autob's runs) may be invalidated at
-any time for now: raise `SAVE_VERSION` in `modules/melee/shared/save.ts`
-when a change makes old saves stale, instead of writing a migration.
+any time for now. Each game has its own `SAVE_VERSION`
+(`modules/<game>/shared/save.ts`): raise the game's when a change makes
+its old saves stale, instead of writing a migration.
 
 ## Goal
 

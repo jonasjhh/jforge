@@ -6,8 +6,16 @@ import { MELEE_SET } from "../picks";
 // rebalanced for autob alone by replacing it here with a changed copy
 // (`{ ...it, baseStats: { ... } }`), leaving the catalogue as it is.
 
-/** The archetypes autob uses: what its shop can sell. */
-export const AUTOB_ARCHETYPES: string[] = MELEE_SET;
+/**
+ * The archetypes autob uses: its shop sells the classes, its rounds field
+ * the enemies.
+ */
+export const AUTOB_ARCHETYPES: string[] = [
+  ...MELEE_SET,
+  "enemy-wolf",
+  "enemy-slime",
+  "enemy-viper",
+];
 
 /** autob's content: its archetypes and their characters. */
 export function autobLibrary(): Library {

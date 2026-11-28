@@ -1,4 +1,4 @@
-import type { Position, Side } from "@jforge/battle";
+import type { Position, Side } from "./types";
 
 // Autob's board, after TFT: each side has BOARD_ROWS rows of
 // BOARD_COLUMNS hexes, and the two sides form one arena, the enemy's on

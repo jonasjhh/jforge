@@ -1,4 +1,4 @@
-import { DEFENSE_K, type CombatantDef, type Side } from "@jforge/battle";
+import { DEFENSE_K, type UnitDef, type Side } from "./types";
 import {
   resistancesFor,
   type DamageType,
@@ -13,8 +13,8 @@ import { nextRandom } from "./random";
 // Autob's own fight: real time in ticks, on the hex arena (see hex.ts).
 // Every unit walks to the nearest enemy, attacks it whenever its attack
 // is ready, and fills its mana by attacking and being hit; with full mana
-// it casts its next skill instead. It reuses melee's units (stats,
-// weapons, skills) but none of melee's battle: only a subset of skill
+// it casts its next skill instead. It fields the catalogue's designs (stats,
+// weapons, skills) but none of the battle engine: only a subset of skill
 // effects works here, the rest are skipped. Plain data, like melee's
 // battle, so it can be stepped by the UI or run to the end at once.
 
@@ -74,7 +74,7 @@ export interface Fighter {
   id: string;
   name: string;
   side: Side;
-  def: CombatantDef;
+  def: UnitDef;
   hex: Hex;
   hp: number;
   mana: number;
@@ -109,7 +109,7 @@ export interface Fight {
 
 /** A unit and where it starts, in arena hexes. */
 export interface FightEntry {
-  def: CombatantDef;
+  def: UnitDef;
   side: Side;
   hex: Hex;
 }
@@ -154,11 +154,11 @@ export function attackTicks(speed: number): number {
   return Math.max(MIN_ATTACK_TICKS, Math.round((ATTACK_TICKS * 10) / speed));
 }
 
-export const rangeOf = (def: CombatantDef) =>
+export const rangeOf = (def: UnitDef) =>
   def.weapon.kind === "ranged" ? RANGED_RANGE : 1;
 
 /** The skills a unit can cast here, in its own order. */
-export function castable(def: CombatantDef): Skill[] {
+export function castable(def: UnitDef): Skill[] {
   return (def.skills ?? []).filter(
     (s) =>
       SUPPORTED.includes(s.effect.type) &&

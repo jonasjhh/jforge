@@ -315,21 +315,12 @@ importers:
 
   modules/autob:
     dependencies:
-      '@jforge/battle':
-        specifier: workspace:*
-        version: link:../../libs/battle
-      '@jforge/char':
-        specifier: workspace:*
-        version: link:../char
       '@jforge/content':
         specifier: workspace:*
         version: link:../../libs/content
       '@jforge/look':
         specifier: workspace:*
         version: link:../../libs/look
-      '@jforge/melee':
-        specifier: workspace:*
-        version: link:../melee
       '@jforge/rules':
         specifier: workspace:*
         version: link:../../libs/rules
@@ -369,9 +360,6 @@ importers:
       '@jforge/battle':
         specifier: workspace:*
         version: link:../../libs/battle
-      '@jforge/char':
-        specifier: workspace:*
-        version: link:../char
       '@jforge/content':
         specifier: workspace:*
         version: link:../../libs/content
