@@ -1,5 +1,6 @@
 import { petrify } from "./petrify";
-import { strengthOn, strengthsOf } from "./strengths";
+import { strengthsOf } from "@jforge/rules/core";
+import { strengthOn } from "./strengths";
 import {
   knockOutIfDown,
   reportDefenses,

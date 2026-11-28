@@ -3,7 +3,6 @@ import {
   characterStats,
   characterWeapon,
   equippedGear,
-  toCombatantDef,
   type Archetype,
   type Character,
   type Library,
@@ -36,7 +35,6 @@ export function CharacterView({
       </>
     );
   }
-  const threat = toCombatantDef(library, character)?.threat ?? 0;
   return (
     <>
       <h2>{character.name}</h2>
@@ -50,7 +48,6 @@ export function CharacterView({
         >
           {archetype.name}
         </button>
-        {` · threat ${Math.round(threat)}`}
       </p>
       <StatsTable stats={stats.base} total={stats.total} />
       <WeaponLine weapon={characterWeapon(library, archetype, character)} />

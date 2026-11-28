@@ -1,21 +1,17 @@
 import { describe, expect, it } from "vitest";
-import {
-  MAX_PARTY_SIZE,
-  createBattle,
-  estimateThreat,
-  isCombatantDef,
-} from "@jforge/melee/shared";
+import { MAX_PARTY_SIZE, createBattle } from "@jforge/melee/shared";
 import {
   archetypeOf,
+  archetypeSkills,
   characterStats,
   characterWeapon,
   compileRoster,
-  toCombatantDef,
-  archetypeSkills,
+  isCreature,
+  toCreature,
+  type Character,
 } from "@jforge/rules/core";
 import { WORLD_ENEMIES } from "..";
 import { designedLibrary } from "./designed";
-import type { Character } from "@jforge/rules/core";
 
 const library = designedLibrary();
 const [aldric, mira, goblin] = library.characters as [
@@ -110,11 +106,11 @@ describe("characterWeapon", () => {
   });
 });
 
-describe("toCombatantDef", () => {
-  it("given a party character, when it is compiled, then it is a combatant melee accepts, with no threat", () => {
-    const def = toCombatantDef(library, mira)!;
+describe("toCreature", () => {
+  it("given a party character, when it is compiled, then it is a creature a battle accepts", () => {
+    const def = toCreature(library, mira)!;
 
-    expect(isCombatantDef(def)).toBe(true);
+    expect(isCreature(def)).toBe(true);
     expect(def).toMatchObject({
       id: "char-unit-2",
       name: "Ilse",
@@ -127,31 +123,29 @@ describe("toCombatantDef", () => {
       "Heal",
       "Fireball",
     ]);
-    expect(def.threat).toBeUndefined();
   });
 
-  it("given an enemy character, when it is compiled, then its threat is estimated from what it fights with", () => {
-    const def = toCombatantDef(library, goblin)!;
+  it("given an enemy character, when it is compiled, then it carries no threat, which each game estimates", () => {
+    const def = toCreature(library, goblin)!;
 
-    const { threat, ...rest } = def;
-    expect(threat).toBe(estimateThreat(rest));
+    expect(def).not.toHaveProperty("threat");
+    expect(def).not.toHaveProperty("targeting");
   });
 
-  it("given an enemy with doubled stats, when it is compiled, then it is a bigger threat than the plain one", () => {
+  it("given an enemy with doubled stats, when it is compiled, then it fights with the doubled stats", () => {
     const type = archetypeOf(library, goblin)!;
     const doubled = Object.fromEntries(
       Object.entries(type.baseStats).map(([stat, v]) => [stat, v * 2]),
     ) as typeof type.baseStats;
-    const low = toCombatantDef(library, goblin)!;
 
-    const high = toCombatantDef(library, goblin, doubled)!;
+    const high = toCreature(library, goblin, doubled)!;
 
-    expect(high.stats.attack).toBe(type.baseStats.attack * 2);
-    expect(high.threat!).toBeGreaterThan(low.threat!);
+    expect(high.stats).toEqual(characterStats(library, goblin, doubled)!.total);
+    expect(high.stats.attack).toBeGreaterThan(type.baseStats.attack);
   });
 
-  it("given a character whose type is gone, when it is compiled, then there is no combatant", () => {
-    const def = toCombatantDef(library, orphan);
+  it("given a character whose type is gone, when it is compiled, then there is no creature", () => {
+    const def = toCreature(library, orphan);
 
     expect(def).toBeNull();
   });

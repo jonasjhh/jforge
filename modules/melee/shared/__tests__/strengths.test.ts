@@ -6,7 +6,7 @@ import { finisherFactor } from "../finisher";
 import { previewDamage } from "../preview";
 import { effectiveStat } from "../stats";
 import { applyStatus } from "../status";
-import { STRENGTH_DEFAULTS, strengthsOf } from "../strengths";
+import { STRENGTH_DEFAULTS, strengthsOf } from "@jforge/rules/core";
 import type { BattleState, SkillEffect, StatusDef } from "../types";
 import { def, place } from "./helpers";
 

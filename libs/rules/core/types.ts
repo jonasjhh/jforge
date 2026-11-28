@@ -1,17 +1,10 @@
-import type {
-  SAVE_VERSION,
-  Skill,
-  StatName,
-  Stats,
-  Trait,
-  Weapon,
-} from "@jforge/melee/shared";
+import type { Skill, StatName, Stats, Trait, Weapon } from "./format";
 
 // The shapes of jforge's content: classes, enemy types, summons, skills, gear and
 // characters, written as code in @jforge/content and read by the games and
 // char's codex. Plain data, so a run can save the library it was dealt.
-// Skills and weapons are melee's own types: what is written here is
-// exactly what a battle uses.
+// Skills and weapons are in the design format (format.ts), which every
+// game's battle reads.
 
 export const GEAR_SLOTS = ["weapon", "armour", "accessory"] as const;
 export type GearSlot = (typeof GEAR_SLOTS)[number];
@@ -106,9 +99,15 @@ export interface Character {
   gear: Partial<Record<GearSlot, string>>;
 }
 
+/**
+ * The library format's version. Raise it when a change makes saved
+ * libraries stale; each game's saves carry their own version too.
+ */
+export const LIBRARY_VERSION = 1;
+
 /** A set of content: the catalogue, or what one game uses of it. */
 export interface Library {
-  version: typeof SAVE_VERSION;
+  version: typeof LIBRARY_VERSION;
   skills: Skill[];
   gear: Gear[];
   archetypes: Archetype[];

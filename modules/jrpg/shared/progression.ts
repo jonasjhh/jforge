@@ -1,4 +1,4 @@
-import { STAT_NAMES, type Stats } from "@jforge/melee/shared";
+import { STAT_NAMES, type Stats } from "@jforge/rules/core";
 
 // Levels and experience in a run. What a level adds is in growth.ts.
 

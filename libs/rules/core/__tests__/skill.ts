@@ -1,4 +1,4 @@
-import type { Skill, SkillEffect } from "@jforge/melee/shared";
+import type { Skill, SkillEffect } from "../format";
 
 /** A plain skill to change in tests: fire damage at one enemy for 5 MP. */
 export const skill = (id: string, more: Partial<Skill> = {}): Skill => ({

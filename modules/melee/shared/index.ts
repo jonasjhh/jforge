@@ -23,11 +23,8 @@ export {
 export { MOVE_GAUGE_LEFT, validateMove } from "./move";
 export { DEFEND_FACTOR, WAIT_GAUGE_LEFT } from "./stance";
 export { ambushPower, isHidden, isStealthed } from "./stealth";
-export { STRENGTH_DEFAULTS, strengthsOf, type Strengths } from "./strengths";
-export { FINISH_BELOW } from "./finisher";
 export { isTaunting } from "./taunt";
 export { guardianOf, hitVictim } from "./guard";
-export { TRAIT_RESISTANCES, resistancesFor } from "./traits";
 export { applyStatus } from "./status";
 export { GAUGE_FULL, fillRate, turnOrder } from "./timeline";
 export {
@@ -62,6 +59,5 @@ export {
   type Difficulty,
   type EncounterPools,
 } from "./encounters";
-export { isCombatantDef, type Roster } from "./roster";
 export { SAVE_VERSION } from "./save";
 export * as content from "./content";

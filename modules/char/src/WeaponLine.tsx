@@ -1,4 +1,4 @@
-import type { Weapon } from "@jforge/melee/shared";
+import type { Weapon } from "@jforge/rules/core";
 
 const reach = (n: number | "any") => (n === "any" ? "any" : String(n));
 

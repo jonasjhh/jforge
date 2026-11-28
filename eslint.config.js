@@ -47,9 +47,10 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
     rules: { "react-hooks/rules-of-hooks": "off" },
   },
-  // The boundaries between packages (README.md, Layout): rules is logic
-  // and never reads content; content is data for the games, not for char
-  // or any one app; and no package but the root Worker imports char.
+  // The boundaries between packages (README.md, Layout): rules is logic,
+  // the design format included, and imports nothing of jforge's; content
+  // is data for the games, not for char or any one app; and no package
+  // but the root Worker imports char.
   {
     files: ["libs/rules/**/*.{ts,tsx}"],
     rules: {
@@ -72,6 +73,11 @@ export default tseslint.config(
                 "@jforge/autob/*",
               ],
               message: "rules imports no app.",
+            },
+            {
+              group: ["@jforge/melee", "@jforge/melee/*"],
+              message:
+                "rules imports no game: the design format is rules' own.",
             },
           ],
         },

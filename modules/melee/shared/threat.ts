@@ -2,7 +2,7 @@ import { POISON } from "./poison";
 import { DEFENSE_K } from "./damage";
 import { IGNITE_BURN } from "./ignite";
 import { BLEED } from "./bleed";
-import { resistancesFor } from "./traits";
+import { resistancesFor } from "@jforge/rules/core";
 import type { CombatantDef, Skill, SkillArea } from "./types";
 import { DAMAGE_TYPES } from "./types";
 

@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { fighter, monsters, playerTypes } from "../content";
-import { isCombatantDef } from "../roster";
+import { isCreature } from "@jforge/rules/core";
+import { content } from "@jforge/melee/shared";
 
-describe("isCombatantDef", () => {
-  it("given the built-in types, when they are checked, then each is a combatant", () => {
+const { fighter, monsters, playerTypes } = content;
+
+describe("isCreature", () => {
+  it("given the built-in types, when they are checked, then each is a creature", () => {
     const types = [...playerTypes, ...monsters];
 
-    const rejected = types.filter((t) => !isCombatantDef(t));
+    const rejected = types.filter((t) => !isCreature(t));
 
     expect(rejected).toEqual([]);
   });
@@ -41,7 +43,7 @@ describe("isCombatantDef", () => {
   ])(
     "given a value with %s, when it is checked, then it is rejected",
     (_, value) => {
-      const result = isCombatantDef(value);
+      const result = isCreature(value);
 
       expect(result).toBe(false);
     },

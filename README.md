@@ -14,7 +14,7 @@ credentials, deploys and secrets are set up once, not per module.
 
 | Module  | Path      | Depends on                  | What it is                                  |
 | ------- | --------- | --------------------------- | ------------------------------------------- |
-| `melee` | `/melee/` | —                           | Battle engine: time-based turns, 5x3 grid   |
+| `melee` | `/melee/` | `rules`                     | Battle engine: time-based turns, 5x3 grid   |
 | `jrpg`  | `/jrpg/`  | `melee`, `rules`, `content` | Runs through levels of encounters           |
 | `char`  | `/char/`  | `rules`, `content`          | Codex: all content, read-only, and per game |
 | `autob` | `/autob/` | `melee`, `rules`, `content` | Autobattler: shop, bench, hex board         |
@@ -23,7 +23,7 @@ And two libraries, which are packages but no apps:
 
 | Library   | Package           | Depends on       | What it is                                               |
 | --------- | ----------------- | ---------------- | -------------------------------------------------------- |
-| `rules`   | `@jforge/rules`   | `melee`          | Logic on content: `core/` is what every game shares      |
+| `rules`   | `@jforge/rules`   | —                | Logic on content: `core/` is what every game shares      |
 | `content` | `@jforge/content` | `melee`, `rules` | The content as code: `catalogue/`, and a folder per game |
 
 ## Layout
@@ -39,8 +39,11 @@ modules/<name>/
   e2e/                Playwright smoke tests (see Testing)
   public/             icons
 libs/
-  rules/core/         what content is (types) and the rules on it every game
-                      shares: gear, compiling to melee, the class graph, checks.
+  rules/core/         the design format (format.ts: stats, damage types,
+                      traits, weapons, statuses, skills, the creature), what
+                      content is (types) and the rules on it every game
+                      shares: gear, compiling to creatures, the class graph,
+                      checks.
                       A game's own rules stay in the game (jrpg's growth and
                       gear tiers in modules/jrpg/shared); only those another
                       package needs (char to show them) go in rules/<game>/.
@@ -62,18 +65,22 @@ the `exports` field of its `package.json`. The concerns are kept apart:
   are written in `libs/content`, not in an app. The catalogue holds all of
   it; `content/jrpg` and `content/autob` pick (and, to rebalance for one
   game, replace) what that game uses. Content imports only `rules` (for
-  types and helpers) and `melee` (for its data).
-- **Rules are logic, not data.** `libs/rules` never imports content: its
-  tests build their own fixtures, and tests that need the real catalogue
-  live in `libs/content`.
+  the format and helpers) and `melee` (for its data).
+- **Rules are logic, not data, and import nothing of jforge's.**
+  `libs/rules` owns the design format every game reads; it never imports
+  content or a game: its tests build their own fixtures, and tests that
+  need the real catalogue live in `libs/content`. A creature carries no
+  targeting or threat: each game adds its own (melee's battle adds both).
+  A saved library carries `LIBRARY_VERSION`.
 - **char only shows.** It reads `@jforge/content` and `@jforge/rules` and
   saves nothing but which tab and game were open. No app imports char.
 - **Games read their content from `@jforge/content/<game>`** and its
   rules from `@jforge/rules`. `jrpg` shows melee's battle screen
   (`@jforge/melee/battle`); `autob` has its own board and fight engine and
   uses only melee's unit data and look.
-- **melee depends on nothing.** For now `rules` and `content` use melee's
-  types and data (`@jforge/melee/shared`); the battle UI stays in melee.
+- **melee depends only on `rules`**, for the design format. For now
+  `content` uses melee's data (`@jforge/melee/shared`); the battle UI stays
+  in melee.
 
 ESLint enforces these imports (`no-restricted-imports` in
 `eslint.config.js`).

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { content, type Skill, type SkillEffect } from "@jforge/melee/shared";
+import { content } from "@jforge/melee/shared";
 import {
   blankCharacter,
   compileRoster,
@@ -8,6 +8,8 @@ import {
   skillProblems,
   type Archetype,
   type Library,
+  type Skill,
+  type SkillEffect,
 } from "@jforge/rules/core";
 import { meleeCreatureId } from "../melee";
 import { catalogue as starterLibrary } from "..";

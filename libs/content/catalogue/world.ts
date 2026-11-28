@@ -4,8 +4,10 @@ import type {
   Gear,
   GearCategory,
   Library,
+  Stats,
+  Weapon,
 } from "@jforge/rules/core";
-import { content, type Stats, type Weapon } from "@jforge/melee/shared";
+import { content } from "@jforge/melee/shared";
 
 // The world's content: enemy types to meet and gear to find, built from
 // melee's weapons and skills, and the melee skills those enemies use. jrpg

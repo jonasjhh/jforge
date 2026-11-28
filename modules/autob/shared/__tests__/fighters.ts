@@ -1,4 +1,5 @@
-import type { CombatantDef, Skill, Weapon } from "@jforge/melee/shared";
+import type { CombatantDef } from "@jforge/melee/shared";
+import type { Skill, Weapon } from "@jforge/rules/core";
 import type { Hex } from "../hex";
 import type { FightEntry } from "../fight";
 

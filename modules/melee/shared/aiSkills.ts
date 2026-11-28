@@ -13,7 +13,7 @@ import { isCoated } from "./coat";
 import { mostHurtAlly } from "./judgment";
 import { isRooted } from "./stoneSkin";
 import { isPetrified } from "./petrify";
-import { strengthsOf } from "./strengths";
+import { strengthsOf } from "@jforge/rules/core";
 import { POISON } from "./poison";
 import { IGNITE_BURN } from "./ignite";
 import { BLEED } from "./bleed";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
 import { boulder, hook, imp, lancer, slime, viper, wolf } from "../content";
-import { TRAIT_RESISTANCES, resistancesFor } from "../traits";
+import { TRAIT_RESISTANCES, resistancesFor } from "@jforge/rules/core";
 import type { BattleEvent, CombatantDef } from "../types";
 import { DAMAGE_TYPES } from "../types";
 import { def, place } from "./helpers";

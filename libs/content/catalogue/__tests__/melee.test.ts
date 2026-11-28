@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { content, createBattle, isCombatantDef } from "@jforge/melee/shared";
-import { toCombatantDef } from "@jforge/rules/core";
-import { canUse } from "@jforge/rules/core";
-import { blankCharacter, emptyLibrary, parseLibrary } from "@jforge/rules/core";
+import { content, createBattle } from "@jforge/melee/shared";
+import {
+  blankCharacter,
+  canUse,
+  emptyLibrary,
+  isCreature,
+  parseLibrary,
+  toCreature,
+} from "@jforge/rules/core";
 import {
   BASIC_ARMOUR,
   MELEE_CREATURES,
@@ -129,7 +134,7 @@ describe("withMeleeClasses", () => {
     (_, type) => {
       const library = starterLibrary();
 
-      const def = toCombatantDef(library, blankCharacter("x", type))!;
+      const def = toCreature(library, blankCharacter("x", type))!;
       const start = () =>
         createBattle(
           {
@@ -141,7 +146,7 @@ describe("withMeleeClasses", () => {
           1,
         );
 
-      expect(isCombatantDef(def)).toBe(true);
+      expect(isCreature(def)).toBe(true);
       expect(def.skills).toHaveLength(type.skills.length);
       expect(start).not.toThrow();
     },

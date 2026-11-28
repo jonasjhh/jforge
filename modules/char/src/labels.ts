@@ -1,4 +1,4 @@
-import type { StatName } from "@jforge/melee/shared";
+import type { StatName } from "@jforge/rules/core";
 
 export const STAT_LABELS: Record<StatName, string> = {
   maxHp: "HP",

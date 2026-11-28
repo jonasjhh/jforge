@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { compileRoster, parseLibrary } from "@jforge/rules/core";
+import { compileRoster, isCreature, parseLibrary } from "@jforge/rules/core";
 import { jrpgLibrary } from "@jforge/content/jrpg";
-import { createBattle, isCombatantDef } from "@jforge/melee/shared";
+import { createBattle } from "@jforge/melee/shared";
 import { GEAR_TIERS, atTier, withGearTiers } from "../world";
 
 const starter = jrpgLibrary();
@@ -30,7 +30,7 @@ describe("withGearTiers", () => {
 
     const all = [...roster.party, ...roster.monsters];
     expect(all).toHaveLength(world.characters.length);
-    expect(all.every(isCombatantDef)).toBe(true);
+    expect(all.every(isCreature)).toBe(true);
   });
 
   it("given jrpg's compiled roster, when a battle is set up from it, then melee accepts it", () => {

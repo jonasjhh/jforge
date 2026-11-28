@@ -282,11 +282,7 @@ importers:
         specifier: workspace:*
         version: link:../rules
 
-  libs/rules:
-    dependencies:
-      '@jforge/melee':
-        specifier: workspace:*
-        version: link:../../modules/melee
+  libs/rules: {}
 
   modules/autob:
     dependencies:
@@ -367,6 +363,9 @@ importers:
 
   modules/melee:
     dependencies:
+      '@jforge/rules':
+        specifier: workspace:*
+        version: link:../../libs/rules
       hono:
         specifier: ^4.13.19
         version: 4.13.19

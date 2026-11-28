@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { content, type Skill } from "@jforge/melee/shared";
+import type { Skill } from "../format";
 import { effectSummary, skillProblems } from "../skills";
 import { EFFECT, skill } from "./skill";
 
@@ -29,7 +29,6 @@ describe("effectSummary", () => {
     withEffect({ type: "strike", power: 1, ...more });
 
   it.each<[string, Skill, string]>([
-    ["melee's fireball", content.fireball, "fire damage ×1.2, plus"],
     [
       "a strike",
       withEffect({ type: "strike", power: 1.5 }),
@@ -37,7 +36,6 @@ describe("effectSummary", () => {
     ],
     ["a heal", withEffect({ type: "heal", power: 2 }), "heals ×2 magic"],
     ["a buff", withEffect(EFFECT.modify), "attack ×1.5 for 100"],
-    ["melee's cure", content.cure, "removes harmful statuses and debuffs"],
     ["a gain of 5", add(5), "defense +5 for 50"],
     ["a loss of 5", add(-5), "defense -5 for 50"],
     ["a pull", strike({ push: -1 }), "weapon strike ×1, pulls 1"],
@@ -129,19 +127,6 @@ describe("effectSummary", () => {
 });
 
 describe("skillProblems", () => {
-  it.each(
-    [content.fireball, content.heal, content.cleave].map(
-      (s) => [s.name, s] as const,
-    ),
-  )(
-    "given melee's %s, when it is checked, then nothing is wrong",
-    (_, skill) => {
-      const problems = skillProblems(skill);
-
-      expect(problems).toEqual([]);
-    },
-  );
-
   it.each<[string, Skill]>([
     ["Give the skill a name.", withEffect(EFFECT.damage, { name: " " })],
     ["MP cost can't be negative.", withEffect(EFFECT.damage, { mpCost: -1 })],

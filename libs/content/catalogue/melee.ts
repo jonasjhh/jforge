@@ -1,4 +1,4 @@
-import { content, type CombatantDef, type Skill } from "@jforge/melee/shared";
+import { content, type CombatantDef } from "@jforge/melee/shared";
 import {
   canUse,
   type Archetype,
@@ -6,6 +6,7 @@ import {
   type Gear,
   type GearCategory,
   type Library,
+  type Skill,
 } from "@jforge/rules/core";
 
 // Melee's own classes and creatures in the catalogue, so every one of them

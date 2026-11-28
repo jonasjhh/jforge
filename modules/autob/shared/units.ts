@@ -1,15 +1,12 @@
 import {
   creatureOf,
-  toCombatantDef,
+  toCreature,
   type Archetype,
   type Library,
-} from "@jforge/rules/core";
-import {
-  estimateThreat,
-  type CombatantDef,
   type StatName,
   type Stats,
-} from "@jforge/melee/shared";
+} from "@jforge/rules/core";
+import { estimateThreat, type CombatantDef } from "@jforge/melee/shared";
 
 // The units of autob are char's classes. Each copy bought is a unit; three
 // of a class at the same star merge into one a star higher.
@@ -48,7 +45,7 @@ const plain = (archetype: Archetype) => ({
 
 /** A class's threat at 1★, which sets its cost tier. */
 export function classThreat(library: Library, archetype: Archetype): number {
-  const def = toCombatantDef(library, plain(archetype));
+  const def = toCreature(library, plain(archetype));
   return def ? estimateThreat(def) : 0;
 }
 
@@ -96,7 +93,7 @@ export function unitDef(
 ): CombatantDef | null {
   const archetype = library.archetypes.find((a) => a.id === unit.classId);
   if (!archetype) return null;
-  const def = toCombatantDef(
+  const def = toCreature(
     library,
     { ...plain(archetype), id: unit.uid },
     starStats(archetype.baseStats, unit.stars),

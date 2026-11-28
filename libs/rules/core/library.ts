@@ -1,12 +1,8 @@
-import {
-  SAVE_VERSION,
-  STAT_NAMES,
-  TRAITS,
-  isCombatantDef,
-  type Stats,
-} from "@jforge/melee/shared";
 import { compileRoster } from "./compile";
+import { isCreature } from "./creature";
+import { STAT_NAMES, TRAITS, type Stats } from "./format";
 import {
+  LIBRARY_VERSION,
   ALL_GEAR_CATEGORIES,
   GEAR_CATEGORIES,
   GEAR_SLOTS,
@@ -18,7 +14,7 @@ import {
 
 export function emptyLibrary(): Library {
   return {
-    version: SAVE_VERSION,
+    version: LIBRARY_VERSION,
     skills: [],
     gear: [],
     archetypes: [],
@@ -136,7 +132,7 @@ function isCharacter(v: unknown): boolean {
 
 /**
  * Reads a saved library (the one a run was dealt). Null unless it is well
- * formed and every character in it compiles into a combatant melee accepts.
+ * formed and every character in it compiles into a creature a battle accepts.
  */
 export function parseLibrary(text: string | null): Library | null {
   if (!text) return null;
@@ -146,7 +142,7 @@ export function parseLibrary(text: string | null): Library | null {
   } catch {
     return null;
   }
-  if (!isRecord(data) || data.version !== SAVE_VERSION) return null;
+  if (!isRecord(data) || data.version !== LIBRARY_VERSION) return null;
   const { skills, gear, archetypes, characters } = data;
   if (
     !Array.isArray(skills) ||
@@ -161,14 +157,14 @@ export function parseLibrary(text: string | null): Library | null {
     return null;
   }
   const library = {
-    version: SAVE_VERSION,
+    version: LIBRARY_VERSION,
     skills,
     gear,
     archetypes,
     characters,
   } as Library;
   const roster = compileRoster(library);
-  return [...roster.party, ...roster.monsters].every(isCombatantDef)
+  return [...roster.party, ...roster.monsters].every(isCreature)
     ? library
     : null;
 }

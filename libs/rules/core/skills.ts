@@ -1,9 +1,5 @@
-import {
-  FINISH_BELOW,
-  strengthsOf,
-  type Skill,
-  type StatusDef,
-} from "@jforge/melee/shared";
+import { FINISH_BELOW, type Skill, type StatusDef } from "./format";
+import { strengthsOf } from "./strengths";
 import type { Library } from "./types";
 
 // Skills in words, and what makes one unusable: for the codex to describe

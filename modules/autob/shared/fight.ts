@@ -1,14 +1,12 @@
+import { DEFENSE_K, type CombatantDef, type Side } from "@jforge/melee/shared";
 import {
-  DEFENSE_K,
   resistancesFor,
-  type CombatantDef,
   type DamageType,
   type Resistances,
-  type Side,
   type Skill,
   type SkillEffect,
   type StatName,
-} from "@jforge/melee/shared";
+} from "@jforge/rules/core";
 import { distance, neighbours, sameHex, type Hex } from "./hex";
 import { nextRandom } from "./random";
 

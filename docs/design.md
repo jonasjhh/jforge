@@ -13,23 +13,28 @@ them, is in [progression.md](progression.md).
 ## Modules
 
 ```
-melee  <-  rules  <-  content  <-  char
+rules  <-  melee  <-  content  <-  char
   ^          ^          ^
   +----------+----------+------  jrpg, autob
+
+(rules is also read directly by content, char, jrpg and autob)
 ```
 
-| Package   | Role                                                                                                                         |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `melee`   | Battle engine and rules: what combatants, stats, damage types, statuses and skills are. Starter content. Runs any fight.     |
-| `rules`   | A library: what content is (types) and the logic on it, `core/` for every game; a game's own rules stay in the game.         |
-| `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                  |
-| `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                             |
-| `jrpg`    | The game: runs through levels of encounters. Uses melee for battles and its content for the party, enemies and gear.         |
-| `autob`   | An autobattler: shop, bench and a hex board. Uses its content's classes as units and melee's unit data, with its own engine. |
+| Package   | Role                                                                                                                          |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `melee`   | Battle engine: units on the grid, targeting and threat. Starter content. Runs any fight.                                      |
+| `rules`   | A library: the design format (stats, damage types, traits, statuses, skills, creatures), what content is and the logic on it. |
+| `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                   |
+| `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                              |
+| `jrpg`    | The game: runs through levels of encounters. Uses melee for battles and its content for the party, enemies and gear.          |
+| `autob`   | An autobattler: shop, bench and a hex board. Uses its content's classes as units and melee's unit data, with its own engine.  |
 
-**melee depends on nothing.** It accepts plain data (a party and an
-encounter); `rules` compiles content into that format. **rules never
-imports content**, and **no package imports char**. ESLint enforces it.
+**rules imports nothing of jforge's.** It owns the design format, and
+compiles content into creatures. **melee depends only on rules**: it
+accepts plain data (a party and an encounter of creatures) and adds what
+its battle needs, how a unit picks targets and how dangerous it counts.
+Those are each game's, never the design's. **No package imports char**.
+ESLint enforces it.
 
 ## Battle engine (`modules/melee/shared`)
 
@@ -698,7 +703,8 @@ their skills and move, to about 100% / 90% / 55% party wins; a test keeps
 each difficulty in its band. New monsters join the pool
 automatically once they have a `threat`.
 
-Designed enemies (from char) get an **estimated threat**
+Designed enemies get an **estimated threat** when a game fields them
+(jrpg, at their level; a compiled creature carries none)
 (`estimateThreat`): `0.023 x sqrt(offense x durability)`, so twice the
 stats all round is twice the threat. Offense is the best of its weapon
 (plus a share of on-hit poison) and its affordable damaging skills (times
@@ -741,7 +747,9 @@ Still open:
 - **Saved data.** For now, every save may be invalidated: a run in
   progress (jrpg's and autob's) carries `SAVE_VERSION`
   (`melee/shared/save.ts`), and a save of any other version is ignored as
-  if there were none. Raise it whenever a change makes old saves stale,
+  if there were none. The library a run was dealt also carries
+  `LIBRARY_VERSION` (`libs/rules/core/types.ts`), raised when the library
+  format changes. Raise it whenever a change makes old saves stale,
   such as a class gaining a skill; saves are never migrated.
 
 ### Skill design guidelines

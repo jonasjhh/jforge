@@ -1,5 +1,9 @@
-import { SAVE_VERSION, content } from "@jforge/melee/shared";
-import type { Archetype, Library } from "@jforge/rules/core";
+import { content } from "@jforge/melee/shared";
+import {
+  LIBRARY_VERSION,
+  type Archetype,
+  type Library,
+} from "@jforge/rules/core";
 
 const {
   bow,
@@ -23,7 +27,7 @@ const {
  */
 export function designs(): Library {
   return {
-    version: SAVE_VERSION,
+    version: LIBRARY_VERSION,
     skills: [cleave, firebolt, fireball, heal].map((s) => structuredClone(s)),
     gear: [
       {

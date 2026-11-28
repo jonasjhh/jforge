@@ -5,8 +5,5 @@
   "type": "module",
   "exports": {
     "./core": "./core/index.ts"
-  },
-  "dependencies": {
-    "@jforge/melee": "workspace:*"
   }
 }

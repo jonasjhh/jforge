@@ -1,5 +1,5 @@
 import { DEFAULT_TARGETING } from "./ai";
-import { resistancesFor } from "./traits";
+import { resistancesFor } from "@jforge/rules/core";
 import type {
   BattleState,
   CombatantDef,

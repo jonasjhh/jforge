@@ -1,16 +1,9 @@
-import {
-  estimateThreat,
-  type CombatantDef,
-  type Roster,
-  type Skill,
-  type Stats,
-  type Weapon,
-} from "@jforge/melee/shared";
+import type { Creature, Skill, Stats, Weapon } from "./format";
 import { applyBonuses, equippedGear } from "./gear";
 import type { Archetype, Character, Library } from "./types";
 
-// Turns content into what melee fights with. Gear is worked into plain
-// stats here, so melee needs to know nothing about it. The content knows
+// Turns content into creatures, what every game builds its units from.
+// Gear is worked into plain stats here, so no game needs to know about it. The content knows
 // no levels: a game that has them passes the stats a character has before
 // gear.
 
@@ -64,7 +57,7 @@ export function creatureOf(
   library: Library,
   archetypeId: string,
   depth = SUMMON_DEPTH,
-): CombatantDef | null {
+): Creature | null {
   const archetype = library.archetypes.find((a) => a.id === archetypeId);
   if (!archetype) return null;
   return {
@@ -109,18 +102,19 @@ export function characterWeapon(
 }
 
 /**
- * The melee combatant for a character, from `base` stats before gear (its
- * archetype's own unless given); null if its archetype is gone.
+ * The creature a character is, from `base` stats before gear (its
+ * archetype's own unless given); null if its archetype is gone. How it
+ * picks targets and how dangerous it counts are each game's to add.
  */
-export function toCombatantDef(
+export function toCreature(
   library: Library,
   character: Character,
   base?: Stats,
-): CombatantDef | null {
+): Creature | null {
   const archetype = archetypeOf(library, character);
   const stats = characterStats(library, character, base);
   if (!archetype || !stats) return null;
-  const def: CombatantDef = {
+  return {
     id: `char-${character.id}`,
     name: character.name,
     stats: stats.total,
@@ -130,15 +124,16 @@ export function toCombatantDef(
     preferredRow: archetype.preferredRow,
     portrait: archetype.portrait,
   };
-  // Enemies take a share of the encounter budget that grows with their
-  // stats, so stronger stats or better gear mean fewer of them.
-  return archetype.kind === "enemy"
-    ? { ...def, threat: estimateThreat(def) }
-    : def;
+}
+
+/** A library's characters as creatures: the party and the monster pool. */
+export interface Roster {
+  party: Creature[];
+  monsters: Creature[];
 }
 
 /**
- * A library as one melee roster: characters of a class form the party,
+ * A library as one roster: characters of a class form the party,
  * characters of an enemy type the monster pool. Summons are neither: a
  * skill puts them in.
  */
@@ -146,7 +141,7 @@ export function compileRoster(library: Library): Roster {
   const roster: Roster = { party: [], monsters: [] };
   for (const character of library.characters) {
     const archetype = archetypeOf(library, character);
-    const def = toCombatantDef(library, character);
+    const def = toCreature(library, character);
     if (!archetype || !def || archetype.kind === "summon") continue;
     (archetype.kind === "class" ? roster.party : roster.monsters).push(def);
   }

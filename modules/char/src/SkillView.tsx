@@ -1,9 +1,9 @@
-import type { Skill } from "@jforge/melee/shared";
 import {
   effectSummary,
   skillProblems,
   type Archetype,
   type Library,
+  type Skill,
 } from "@jforge/rules/core";
 import { Links } from "./Links";
 

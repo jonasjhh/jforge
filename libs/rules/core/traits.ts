@@ -1,4 +1,4 @@
-import type { CombatantDef, Resistances, Trait } from "./types";
+import type { Creature, Resistances, Trait } from "./format";
 
 /**
  * Default resistances per trait: 2 weak, 0.5 resistant, 0 immune. A
@@ -29,7 +29,9 @@ export const TRAIT_RESISTANCES: Record<Trait, Resistances> = {
 };
 
 /** A creature's resistances: its traits' defaults, then its overrides. */
-export function resistancesFor(def: CombatantDef): Resistances {
+export function resistancesFor(
+  def: Pick<Creature, "traits" | "resistances">,
+): Resistances {
   const result: Resistances = {};
   for (const trait of def.traits ?? []) {
     for (const [type, value] of Object.entries(TRAIT_RESISTANCES[trait])) {

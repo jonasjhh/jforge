@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Character } from "@jforge/rules/core";
+import type { Character, Skill, Stats } from "@jforge/rules/core";
 import {
   MELEE_CREATURES,
   WORLD_ENEMY_IDS,
@@ -7,7 +7,7 @@ import {
   meleeCreatureId,
   meleeHeroId,
 } from "@jforge/content/catalogue";
-import { content, type Skill, type Stats } from "@jforge/melee/shared";
+import { content } from "@jforge/melee/shared";
 import {
   DEFAULT_GROWTH,
   DEFAULT_SPEED_GROWTH,

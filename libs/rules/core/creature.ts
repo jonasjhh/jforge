@@ -1,13 +1,7 @@
-import type { EncounterPools } from "./encounters";
-import { DAMAGE_TYPES, STAT_NAMES, type CombatantDef } from "./types";
+import { DAMAGE_TYPES, STAT_NAMES, type Creature } from "./format";
 
-// Combatants made outside melee (compiled from @jforge/content by
-// @jforge/rules) arrive as a roster: plain CombatantDefs for the party and
-// for the monster pool. Melee owns the format; the libs depend on melee and
-// never the other way round.
-
-/** A roster: the same shape encounters are built from. */
-export type Roster = EncounterPools;
+// Checks a creature made elsewhere (compiled, or read from a save) before
+// a battle takes it.
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -39,8 +33,8 @@ function isSkill(v: unknown): boolean {
   );
 }
 
-/** Whether `v` has everything a battle needs from a combatant. */
-export function isCombatantDef(v: unknown): v is CombatantDef {
+/** Whether `v` has everything a battle needs from a creature. */
+export function isCreature(v: unknown): v is Creature {
   if (!isRecord(v) || typeof v.id !== "string" || typeof v.name !== "string") {
     return false;
   }

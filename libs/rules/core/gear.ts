@@ -1,4 +1,4 @@
-import { STAT_NAMES, type Stats } from "@jforge/melee/shared";
+import { STAT_NAMES, type Stats } from "./format";
 import {
   GEAR_SLOTS,
   type Archetype,

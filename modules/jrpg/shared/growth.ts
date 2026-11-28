@@ -1,17 +1,17 @@
 import {
   archetypeOf,
-  toCombatantDef,
+  STAT_NAMES,
+  toCreature,
   type Character,
   type Library,
+  type Skill,
+  type Stats,
 } from "@jforge/rules/core";
 import { meleeClassId, meleeCreatureId } from "@jforge/content/catalogue";
 import {
-  STAT_NAMES,
   content as c,
   estimateThreat,
   type CombatantDef,
-  type Skill,
-  type Stats,
 } from "@jforge/melee/shared";
 import { clampLevel, statsAtLevel } from "./progression";
 
@@ -271,7 +271,7 @@ export function levelledDef(
     statGrowth(archetype.id, archetype.baseStats),
     level,
   );
-  const def = toCombatantDef(library, character, base);
+  const def = toCreature(library, character, base);
   if (!def) return null;
   const grown: CombatantDef = {
     ...def,
@@ -279,7 +279,9 @@ export function levelledDef(
       ? { skills: def.skills.map((s) => skillAtLevel(s, level)) }
       : {}),
   };
-  return grown.threat === undefined
-    ? grown
-    : { ...grown, threat: estimateThreat(grown) };
+  // Enemies take a share of the encounter budget that grows with their
+  // stats, so stronger stats or better gear mean fewer of them.
+  return archetype.kind === "enemy"
+    ? { ...grown, threat: estimateThreat(grown) }
+    : grown;
 }
