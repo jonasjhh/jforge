@@ -57,8 +57,8 @@ export function archetypeSkills(
 }
 
 /**
- * The creature an enemy type is, as a summon puts it in: its own stats and
- * weapon, no gear. Null if the type is gone.
+ * The creature a summon is, as a skill puts it in: its own stats and
+ * weapon, no gear. Null if the summon is gone.
  */
 export function creatureOf(
   library: Library,
@@ -81,7 +81,7 @@ export function creatureOf(
 }
 
 /**
- * `skill` with its summon's creature made again from the enemy type it
+ * `skill` with its summon's creature made again from the summon it
  * names, so changes to the type reach the skill. Otherwise, or
  * when the type is gone, it is the skill as saved.
  */
@@ -139,14 +139,15 @@ export function toCombatantDef(
 
 /**
  * A library as one melee roster: characters of a class form the party,
- * characters of an enemy type the monster pool.
+ * characters of an enemy type the monster pool. Summons are neither: a
+ * skill puts them in.
  */
 export function compileRoster(library: Library): Roster {
   const roster: Roster = { party: [], monsters: [] };
   for (const character of library.characters) {
     const archetype = archetypeOf(library, character);
     const def = toCombatantDef(library, character);
-    if (!archetype || !def) continue;
+    if (!archetype || !def || archetype.kind === "summon") continue;
     (archetype.kind === "class" ? roster.party : roster.monsters).push(def);
   }
   return roster;

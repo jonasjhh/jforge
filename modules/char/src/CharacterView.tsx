@@ -41,7 +41,7 @@ export function CharacterView({
     <>
       <h2>{character.name}</h2>
       <p className="muted">
-        A{archetype.kind === "class" ? " " : "n enemy "}
+        A{archetype.kind === "enemy" ? "n enemy " : " "}
         <button
           type="button"
           className="link-button"

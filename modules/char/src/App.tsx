@@ -13,7 +13,7 @@ import { Collection } from "./Collection";
 import { GearView } from "./GearView";
 import { PathsView } from "./PathsView";
 import { SkillView } from "./SkillView";
-import { count } from "./labels";
+import { KINDS, count } from "./labels";
 import { loadTab, loadView, saveTab, saveView } from "./storage";
 import { TABS, type Tab } from "./tabs";
 
@@ -44,8 +44,7 @@ export function App() {
     setTab(inTab);
     select(inTab)(id);
   };
-  const openArchetype = (a: Archetype) =>
-    open(a.kind === "class" ? "Classes" : "Enemies", a.id);
+  const openArchetype = (a: Archetype) => open(KINDS[a.kind].tab, a.id);
   const selection = (inTab: Tab) => ({
     title: inTab,
     selectedId: selected[inTab] ?? null,
@@ -54,8 +53,8 @@ export function App() {
 
   const archetypes = (kind: Archetype["kind"]) => (
     <Collection
-      noun={kind === "class" ? "class" : "enemy type"}
-      {...selection(kind === "class" ? "Classes" : "Enemies")}
+      noun={KINDS[kind].noun}
+      {...selection(KINDS[kind].tab)}
       items={library.archetypes.filter((a) => a.kind === kind)}
       note={(a) => {
         const from = sourcesOf(library, a).map((s) => s.name);
@@ -120,6 +119,7 @@ export function App() {
         />
       )}
       {tab === "Enemies" && archetypes("enemy")}
+      {tab === "Summons" && archetypes("summon")}
       {tab === "Characters" && (
         <Collection
           noun="character"

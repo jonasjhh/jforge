@@ -815,28 +815,29 @@ four lists, all plain data (types in `libs/rules/core/types.ts`):
   `mul`). A weapon also says how it attacks (melee's `Weapon`). Weapons
   and armor can have a **category**: blade, polearm, dagger, bow, staff or
   focus; heavy armor, light armor or robe. Accessories have none.
-- **Types**: a class or an enemy type. Stats at level 1, an unarmed
+- **Types**: a class, an enemy type or a summon. Stats at level 1, an unarmed
   attack, traits, an icon, and the skills it has. An enemy's threat is
   not written in: it is estimated from the compiled character (stats,
   weapon, skills), so stronger stats or better gear mean fewer of it per
   encounter. The codex shows it.
 - **Characters**: a type wearing gear. Characters of a class form a
-  party; characters of an enemy type a monster pool.
+  party; characters of an enemy type a monster pool. A summon has none: a
+  skill puts it in.
 
 **Per-game content** (`libs/content/<game>/`): the catalogue holds every
 design; a game's folder picks the archetypes it uses (`select`) and may
 replace one with a changed copy to rebalance it for that game alone,
 leaving the catalogue as it is. jrpg and autob read their own
 (`@jforge/content/jrpg`, `@jforge/content/autob`) when a run starts, so
-autob's shop sells only the classes autob picks. A summon of an enemy
-type a game leaves out falls back to the creature saved in the skill.
+autob's shop sells only the classes autob picks. A summon a game leaves
+out falls back to the creature saved in the skill.
 Melee keeps its own content and needs none of this.
 
 **The codex** shows, on tabs, the classes, the class graph (**Paths**),
-enemy types, characters, skills and gear, either all of it
+enemy types, summons, characters, skills and gear, either all of it
 (**Everything**) or what one game uses. Each item links to those it
-names (a class to its skills, a skill to who knows it, gear to who wears
-it). It saves only the tab and the game picked, on this device.
+names (a class to its skills, a skill to who knows it and what it puts
+in, a summon to the skills that put it in, gear to who wears it). It saves only the tab and the game picked, on this device.
 
 **The content knows no levels or progression**: classes, enemy types and
 skills are at level 1. How they grow, when skills are learned and what
@@ -898,17 +899,22 @@ codex marks it "(can't use)".
 **Skill checks** (`libs/rules/core/skills.ts`): `effectSummary` says
 what a skill does in words, as the codex shows it, and `skillProblems`
 checks every kind (power above 0, a duration, a gauge share, a summon's
-type); the content's tests require it empty for every skill.
+type, which must be a summon); the content's tests require it empty for
+every skill.
 
-**Summons are enemy types**: a summon picks an enemy type, saved on the
-effect as its `source`. The creature is compiled from the
-type then, and again whenever the roster is compiled, so changes to the
-type reach it; if a game leaves the type out, the creature saved on the
-skill is used. A creature's own summons are compiled
-one step deep (`SUMMON_DEPTH` 2), so a type that summons itself still
-compiles. Melee's Imp and boulder are enemy types too (`melee-creature-imp`,
-`melee-creature-boulder`, with melee's stats; an archetype can be
-an `obstacle`), and Summon Imp and Raise Boulder point at them.
+**Summons are their own kind**: a creature a skill puts in is a
+**summon** (`kind: "summon"`), not an enemy type, even when one shares
+an enemy's name (the Warlock's Imp and the world's Imp are two designs).
+A summon has no characters, so it is in neither the party nor a monster
+pool: jrpg and autob never meet one as an enemy. A summon skill names
+its summon, saved on the effect as its `source`. The creature is
+compiled from it then, and again whenever the roster is compiled, so
+changes to the summon reach it; if a game leaves the summon out, the
+creature saved on the skill is used. A creature's own summons are
+compiled one step deep (`SUMMON_DEPTH` 2), so one that summons itself
+still compiles. Melee's Imp and boulder are summons (`melee-creature-imp`,
+`melee-creature-boulder`, with melee's stats; an archetype can be an
+`obstacle`), and Summon Imp and Raise Boulder point at them.
 
 **Melee's classes** (`libs/content/catalogue/melee.ts`): every melee
 class is also a class of the catalogue (`melee-fighter`, ...), so each
@@ -1101,7 +1107,7 @@ may stand on the board**.
 pack is drawn from the run's seed: monsters at random among those the
 round's **budget** still affords (3 + 1 per round after the first, ×1.3
 on a stage's last round), each costing its threat, at most 10. The
-monsters are the library's non-obstacle enemies plus melee's monsters;
+monsters are the library's non-obstacle enemy types (never its summons) plus melee's monsters;
 each stage after the first adds 45% to their max HP, attack and magic.
 Each stands in its own row (or by weapon: ranged behind) in a random free
 hex, or the nearest row with room. The planning screen shows the pack

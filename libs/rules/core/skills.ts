@@ -112,7 +112,7 @@ function signed(value: number): string {
 
 /**
  * What stops a skill from being usable, in words; empty when it is fine.
- * With the library, a summon's enemy type is checked too.
+ * With the library, what a summon puts in is checked too.
  */
 export function skillProblems(skill: Skill, library?: Library): string[] {
   const problems: string[] = [];
@@ -148,12 +148,13 @@ export function skillProblems(skill: Skill, library?: Library): string[] {
     problems.push("Restore at least 1 MP.");
   }
   if (effect.type === "summon") {
-    if (!effect.source) problems.push("Pick an enemy type to summon.");
-    else if (
-      library &&
-      !library.archetypes.some((a) => a.id === effect.source!.archetypeId)
-    ) {
-      problems.push("The enemy type it summons is gone.");
+    const type = library?.archetypes.find(
+      (a) => a.id === effect.source?.archetypeId,
+    );
+    if (!effect.source) problems.push("Pick a summon for it to put in.");
+    else if (library && !type) problems.push("The summon it puts in is gone.");
+    else if (type && type.kind !== "summon") {
+      problems.push(`${type.name} is not a summon.`);
     }
   }
   return problems;

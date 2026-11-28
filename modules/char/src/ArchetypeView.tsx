@@ -8,7 +8,7 @@ import {
 } from "@jforge/rules/core";
 import { ClassPaths } from "./ClassPaths";
 import { Links } from "./Links";
-import { ROW_NAMES } from "./labels";
+import { KINDS, ROW_NAMES } from "./labels";
 import { StatsTable } from "./StatsTable";
 import { WeaponLine } from "./WeaponLine";
 
@@ -20,7 +20,10 @@ interface ArchetypeViewProps {
   onOpenCharacter: (character: Character) => void;
 }
 
-/** A class or enemy type: its stats, weapon, traits, skills and paths. */
+/**
+ * A class, enemy type or summon: its stats, weapon, traits, skills, and
+ * its paths (a class) or what summons it (a summon).
+ */
 export function ArchetypeView({
   archetype,
   library,
@@ -29,6 +32,12 @@ export function ArchetypeView({
   onOpenCharacter,
 }: ArchetypeViewProps) {
   const isClass = archetype.kind === "class";
+  const isSummon = archetype.kind === "summon";
+  const summonedBy = library.skills.filter(
+    (s) =>
+      s.effect.type === "summon" &&
+      s.effect.source?.archetypeId === archetype.id,
+  );
   const characters = library.characters.filter(
     (c) => c.archetypeId === archetype.id,
   );
@@ -38,7 +47,7 @@ export function ArchetypeView({
     <>
       <h2>{archetype.name}</h2>
       <p className="muted">
-        {isClass ? "Class" : "Enemy type"} · prefers the{" "}
+        {KINDS[archetype.kind].label} · prefers the{" "}
         {ROW_NAMES[archetype.preferredRow]?.toLowerCase() ?? "front"} row
         {archetype.obstacle ? " · an obstacle: never acts" : ""}
         {traits ? ` · ${traits}` : ""}
@@ -73,15 +82,28 @@ export function ArchetypeView({
           onOpen={onOpenClass}
         />
       )}
-      <fieldset className="group">
-        <legend>Characters</legend>
-        <Links
-          label="Characters"
-          items={characters}
-          none="None."
-          onOpen={onOpenCharacter}
-        />
-      </fieldset>
+      {isSummon ? (
+        <fieldset className="group">
+          <legend>Summoned by</legend>
+          <Links
+            label="Summoned by"
+            items={summonedBy}
+            none="No skill here."
+            note={effectSummary}
+            onOpen={(s) => onOpenSkill(s.id)}
+          />
+        </fieldset>
+      ) : (
+        <fieldset className="group">
+          <legend>Characters</legend>
+          <Links
+            label="Characters"
+            items={characters}
+            none="None."
+            onOpen={onOpenCharacter}
+          />
+        </fieldset>
+      )}
     </>
   );
 }

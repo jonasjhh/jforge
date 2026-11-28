@@ -20,6 +20,11 @@ export function SkillView({ skill, library, onOpenArchetype }: SkillViewProps) {
     skill.hpCost ? `${skill.hpCost} HP` : "",
   ].filter(Boolean);
   const problems = skillProblems(skill, library);
+  const { effect } = skill;
+  const summon =
+    effect.type === "summon"
+      ? library.archetypes.find((a) => a.id === effect.source?.archetypeId)
+      : undefined;
   return (
     <>
       <h2>{skill.name}</h2>
@@ -31,6 +36,17 @@ export function SkillView({ skill, library, onOpenArchetype }: SkillViewProps) {
       <p>
         <strong>Does:</strong> {effectSummary(skill)}
       </p>
+      {summon && (
+        <fieldset className="group">
+          <legend>Puts in</legend>
+          <Links
+            label="Puts in"
+            items={[summon]}
+            none="Nothing."
+            onOpen={onOpenArchetype}
+          />
+        </fieldset>
+      )}
       {problems.length > 0 && (
         <ul className="bad" aria-label="Problems">
           {problems.map((p) => (

@@ -42,6 +42,7 @@ describe("char App", () => {
 
   it.each([
     ["Enemies", "enemy type"],
+    ["Summons", "summon"],
     ["Characters", "character"],
     ["Skills", "skill"],
     ["Gear", "gear"],

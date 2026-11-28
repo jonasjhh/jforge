@@ -3,7 +3,7 @@ import { designs } from "./designs";
 import { withMeleeClasses } from "./melee";
 import { withWorldContent } from "./world";
 
-// @jforge/content/catalogue: every class, enemy type, skill, piece of gear
+// @jforge/content/catalogue: every class, enemy type, summon, skill, piece of gear
 // and character there is. A game takes what it uses of it (see select.ts
 // and each game's folder); char's codex shows all of it.
 

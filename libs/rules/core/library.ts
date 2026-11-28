@@ -35,7 +35,9 @@ export function flatStats(value: number): Stats {
 export function blankArchetype(id: string, kind: Archetype["kind"]): Archetype {
   return {
     id,
-    name: kind === "class" ? "New class" : "New enemy",
+    name: { class: "New class", enemy: "New enemy", summon: "New summon" }[
+      kind
+    ],
     kind,
     portrait: kind === "class" ? "fighter" : "slime",
     baseStats: {
@@ -102,7 +104,7 @@ function isGear(v: unknown): boolean {
 function isArchetype(v: unknown): boolean {
   return (
     named(v) &&
-    (v.kind === "class" || v.kind === "enemy") &&
+    (v.kind === "class" || v.kind === "enemy" || v.kind === "summon") &&
     typeof v.portrait === "string" &&
     isStats(v.baseStats) &&
     isRecord(v.weapon) &&

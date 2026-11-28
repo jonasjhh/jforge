@@ -43,17 +43,17 @@ const skill = (id: string, effect: SkillEffect): Skill => ({
   effect,
 });
 
-describe("melee's creatures as enemy types", () => {
+describe("melee's creatures as summons", () => {
   const library = starterLibrary();
   const typeOf = (id: string) =>
     library.archetypes.find((a) => a.id === meleeCreatureId(id));
 
   it.each(["imp", "boulder"])(
-    "given the starter library, when melee's %s is looked up, then it is an enemy type",
+    "given the catalogue, when melee's %s is looked up, then it is a summon",
     (id) => {
       const type = typeOf(id);
 
-      expect(type?.kind).toBe("enemy");
+      expect(type?.kind).toBe("summon");
     },
   );
 
@@ -84,8 +84,17 @@ describe("melee's creatures as enemy types", () => {
 });
 
 describe("designed summons", () => {
-  const library = starterLibrary();
-  const goblin = library.archetypes.find((a) => a.id === "type-goblin")!;
+  const catalogue = starterLibrary();
+  /** A summon shaped like the goblin enemy type. */
+  const goblin: Archetype = {
+    ...catalogue.archetypes.find((a) => a.id === "type-goblin")!,
+    id: "summon-goblin",
+    kind: "summon",
+  };
+  const library: Library = {
+    ...catalogue,
+    archetypes: [...catalogue.archetypes, goblin],
+  };
   const summon = (): Skill => ({
     ...skill("call", {
       ...unpicked(),
@@ -134,7 +143,7 @@ describe("designed summons", () => {
 
     const problems = skillProblems(summon(), gone);
 
-    expect(problems).toEqual(["The enemy type it summons is gone."]);
+    expect(problems).toEqual(["The summon it puts in is gone."]);
   });
 
   it("given a summon with no type picked, when it is checked, then it asks for one", () => {
@@ -142,12 +151,36 @@ describe("designed summons", () => {
 
     const problems = skillProblems(none);
 
-    expect(problems).toEqual(["Pick an enemy type to summon."]);
+    expect(problems).toEqual(["Pick a summon for it to put in."]);
+  });
+
+  it("given a summon of an enemy type, when it is checked, then it says that is no summon", () => {
+    const enemy = library.archetypes.find((a) => a.id === "type-goblin")!;
+    const call = skill("call", {
+      ...unpicked(),
+      source: { archetypeId: enemy.id },
+    });
+
+    const problems = skillProblems(call, library);
+
+    expect(problems).toEqual(["Goblin is not a summon."]);
+  });
+
+  it("given a summon with a character, when the roster is compiled, then it is in neither the party nor the monsters", () => {
+    const lib: Library = {
+      ...library,
+      characters: [{ ...blankCharacter("c", goblin), name: "Pet" }],
+    };
+
+    const roster = compileRoster(lib);
+
+    expect(roster).toEqual({ party: [], monsters: [] });
   });
 
   it("given a type that summons itself, when the roster is compiled, then it compiles to a limited depth", () => {
     const echo: Archetype = {
       ...goblin,
+      kind: "enemy",
       id: "type-echo",
       name: "Echo",
       skills: ["call-echo"],

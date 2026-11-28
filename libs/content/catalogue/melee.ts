@@ -18,7 +18,7 @@ export const meleeHeroId = (id: string) => `melee-hero-${id}`;
 export const meleeWeaponId = (id: string) => `melee-gear-${id}`;
 export const meleeCreatureId = (id: string) => `melee-creature-${id}`;
 
-/** Melee's summoned creatures, which the catalogue keeps as enemy types. */
+/** Melee's summoned creatures, which the catalogue keeps as summons. */
 export const MELEE_CREATURES: CombatantDef[] = [content.imp, content.boulder];
 
 /** A hero of each melee class, by melee type id. */
@@ -173,18 +173,18 @@ export function starterKit(library: Library, character: Character): Character {
   return { ...character, gear };
 }
 
-/** A melee creature as an enemy type, with melee's stats. */
+/** A melee creature as a summon, with melee's stats. */
 export function creatureFromMelee(def: CombatantDef): Archetype {
   return {
     ...classFromMelee(def),
     id: meleeCreatureId(def.id),
-    kind: "enemy",
+    kind: "summon",
     ...(def.obstacle ? { obstacle: true } : {}),
   };
 }
 
 /**
- * `skill` with its summon pointing at the enemy type the catalogue keeps
+ * `skill` with its summon pointing at the summon the catalogue keeps
  * for its creature, if it is one of melee's, so it compiles from that type.
  */
 export function withCreatureSource(skill: Skill): Skill {

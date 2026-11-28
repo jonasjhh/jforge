@@ -7,7 +7,7 @@ import type {
   Weapon,
 } from "@jforge/melee/shared";
 
-// The shapes of jforge's content: classes, enemy types, skills, gear and
+// The shapes of jforge's content: classes, enemy types, summons, skills, gear and
 // characters, written as code in @jforge/content and read by the games and
 // char's codex. Plain data, so a run can save the library it was dealt.
 // Skills and weapons are melee's own types: what is written here is
@@ -63,13 +63,15 @@ export interface Gear {
 }
 
 /**
- * A class (for party members) or an enemy type: the template characters
- * are made from. How it grows with levels is up to the game that uses it.
+ * A class (for party members), an enemy type (for the other side) or a
+ * summon (a creature a skill puts in, on its caster's side unless the
+ * skill says otherwise): the template characters and creatures are made
+ * from. How it grows with levels is up to the game that uses it.
  */
 export interface Archetype {
   id: string;
   name: string;
-  kind: "class" | "enemy";
+  kind: "class" | "enemy" | "summon";
   /** The built-in melee type whose icon it wears. */
   portrait: string;
   /** Its stats at level 1. */

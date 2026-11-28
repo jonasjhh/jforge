@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import { catalogue } from "@jforge/content/catalogue";
 import { characterStats } from "@jforge/rules/core";
+import { ArchetypeView } from "../ArchetypeView";
 import { CharacterView } from "../CharacterView";
 import { GearView } from "../GearView";
 import { SkillView } from "../SkillView";
@@ -94,5 +95,58 @@ describe("GearView", () => {
 
     expect(screen.getByText("Gives:")).toBeTruthy();
     expect(screen.getByRole("group", { name: "Usable by" })).toBeTruthy();
+  });
+});
+
+describe("summons", () => {
+  const imp = library.archetypes.find(
+    (a) => a.kind === "summon" && a.name === "Imp",
+  )!;
+  const summonImp = library.skills.find(
+    (s) =>
+      s.effect.type === "summon" && s.effect.source?.archetypeId === imp.id,
+  )!;
+
+  it("given the Imp summon, when it shows, then it is a summon and the skill that puts it in can be opened", () => {
+    const onOpenSkill = vi.fn();
+
+    render(
+      <ArchetypeView
+        archetype={imp}
+        library={library}
+        onOpenSkill={onOpenSkill}
+        onOpenClass={vi.fn()}
+        onOpenCharacter={vi.fn()}
+      />,
+    );
+    fireEvent.click(
+      within(screen.getByRole("list", { name: "Summoned by" })).getByRole(
+        "button",
+        { name: `Open ${summonImp.name}` },
+      ),
+    );
+
+    expect(screen.getByText(/^Summon ·/)).toBeTruthy();
+    expect(onOpenSkill).toHaveBeenCalledWith(summonImp.id);
+  });
+
+  it("given a skill that summons, when what it puts in is pressed, then that summon is opened", () => {
+    const onOpenArchetype = vi.fn();
+    render(
+      <SkillView
+        skill={summonImp}
+        library={library}
+        onOpenArchetype={onOpenArchetype}
+      />,
+    );
+
+    fireEvent.click(
+      within(screen.getByRole("list", { name: "Puts in" })).getByRole(
+        "button",
+        { name: `Open ${imp.name}` },
+      ),
+    );
+
+    expect(onOpenArchetype).toHaveBeenCalledWith(imp);
   });
 });

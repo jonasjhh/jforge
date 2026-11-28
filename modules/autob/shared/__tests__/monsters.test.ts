@@ -56,6 +56,17 @@ describe("monsterPool", () => {
     expect(pool.some((m) => m.obstacle)).toBe(false);
   });
 
+  it("given autob's content, when the pool is made, then no summon is among the monsters", () => {
+    const summons = new Set(
+      library.archetypes.filter((a) => a.kind === "summon").map((a) => a.id),
+    );
+
+    const pool = monsterPool(library, 1);
+
+    expect(summons.size).toBeGreaterThan(0);
+    expect(pool.filter((m) => summons.has(m.id))).toEqual([]);
+  });
+
   it("given a later stage, when the pool is made, then the same monsters are stronger", () => {
     const first = monsterPool(library, 1);
 

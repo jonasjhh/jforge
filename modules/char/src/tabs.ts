@@ -3,6 +3,7 @@ export const TABS = [
   "Classes",
   "Paths",
   "Enemies",
+  "Summons",
   "Characters",
   "Skills",
   "Gear",
