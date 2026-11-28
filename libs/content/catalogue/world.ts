@@ -9,7 +9,8 @@ import { content, type Stats, type Weapon } from "@jforge/melee/shared";
 
 // The world's content: enemy types to meet and gear to find, built from
 // melee's weapons and skills, and the melee skills those enemies use. jrpg
-// picks the enemies (@jforge/content/jrpg). Ids start with "world-".
+// picks the enemies (@jforge/content/jrpg). Enemy ids start with
+// "enemy-", gear ids with its slot: "weapon-", "armour-" or "accessory-".
 
 const c = content;
 
@@ -44,12 +45,12 @@ function archetype(
   traits: Archetype["traits"] = [],
 ): Archetype {
   return {
-    id: `world-${id}`,
+    id: `${kind}-${id}`,
     name,
     kind,
     portrait,
     baseStats: stats(base),
-    weapon: { ...weapon, id: `world-${id}-weapon` },
+    weapon: { ...weapon, id: `${kind}-${id}-weapon` },
     skills,
     traits,
     preferredRow,
@@ -172,12 +173,12 @@ const held = (
   weapon: Weapon,
   bonuses: Gear["bonuses"],
 ): Gear => ({
-  id: `world-${id}`,
+  id: `weapon-${id}`,
   name,
   slot: "weapon",
   category,
   bonuses,
-  weapon: { ...weapon, id: `world-${id}`, name },
+  weapon: { ...weapon, id: `weapon-${id}`, name },
 });
 const worn = (
   category: GearCategory,
@@ -185,7 +186,7 @@ const worn = (
   name: string,
   bonuses: Gear["bonuses"],
 ): Gear => ({
-  id: `world-${id}`,
+  id: `armour-${id}`,
   name,
   slot: "armor",
   category,
@@ -196,7 +197,7 @@ const accessory = (
   name: string,
   bonuses: Gear["bonuses"],
 ): Gear => ({
-  id: `world-${id}`,
+  id: `accessory-${id}`,
   name,
   slot: "accessory",
   bonuses,

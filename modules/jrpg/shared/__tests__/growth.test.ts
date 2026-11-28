@@ -199,10 +199,10 @@ describe("summons", () => {
 });
 
 describe("levelledDef", () => {
-  const witch = character("world-witch");
+  const witch = character("enemy-witch");
 
   it("given a witch, when it is taken at level 1, then it has its type's own stats", () => {
-    const type = world.archetypes.find((a) => a.id === "world-witch")!;
+    const type = world.archetypes.find((a) => a.id === "enemy-witch")!;
 
     const def = levelledDef(world, witch, 1)!;
 

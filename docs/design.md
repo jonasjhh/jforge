@@ -912,9 +912,15 @@ compiled from it then, and again whenever the roster is compiled, so
 changes to the summon reach it; if a game leaves the summon out, the
 creature saved on the skill is used. A creature's own summons are
 compiled one step deep (`SUMMON_DEPTH` 2), so one that summons itself
-still compiles. Melee's Imp and boulder are summons (`melee-creature-imp`,
-`melee-creature-boulder`, with melee's stats; an archetype can be an
+still compiles. Melee's Imp and boulder are summons (`summon-imp`,
+`summon-boulder`, with melee's stats; an archetype can be an
 `obstacle`), and Summon Imp and Raise Boulder point at them.
+
+**Ids say what a thing is**: enemy types start with `enemy-`, summons
+with `summon-`, gear with its slot: `weapon-`, `armour-` (the slot is
+`armor` in code) or `accessory-`; tiers add `+1` to `+3`. Classes are
+`melee-…`/`class-…` and heroes `melee-hero-…`. A catalogue test checks
+the prefixes.
 
 **Melee's classes** (`libs/content/catalogue/melee.ts`): every melee
 class is also a class of the catalogue (`melee-fighter`, ...), so each
@@ -938,9 +944,9 @@ category:
 **Heroes and basic gear**: with the classes come a named hero of each
 (`melee-hero-fighter`, ...: Brann, Isolde, Vex, Tamsin, Orrin, Hale, Wren,
 Cade, Sable, Lucan, Aldric, Mira) and basic gear: each class's own weapon as a piece
-(`melee-gear-fighter`, "Fighter's Sword", +3 to the class's best of
+(`weapon-fighter`, "Fighter's Sword", +3 to the class's best of
 attack, magic and spirit) and two armors (Traveller's Jerkin, Traveller's
-Robe). Basic gear has no drawbacks. `starterKit` fills a character's
+Robe: `armour-travellers-jerkin`, `armour-travellers-robe`). Basic gear has no drawbacks. `starterKit` fills a character's
 empty slots with it: their melee class's weapon, and the robe if the
 class's magic beats its attack, the jerkin if not, or the other when the
 class can't wear that one (designed classes get armor only). Every hero
@@ -1010,7 +1016,7 @@ swapped with the bag. A cleared level leads to the next, deeper one.
 **The world**: the run plays with jrpg's content (`@jforge/content/jrpg`),
 copied when the run starts so later changes don't break it. Besides
 melee's classes and heroes, jrpg picks the world's content from the
-catalogue (`libs/content/catalogue/world.ts`, ids `world-…`): 9 enemy types
+catalogue (`libs/content/catalogue/world.ts`): 9 enemy types
 (Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
 Imp, Raider) and 20 pieces of gear, each weapon and armor with a
 category (two foci, Seer's Orb and Black Tome, so every class has finds); the catalogue provides the heroes and their

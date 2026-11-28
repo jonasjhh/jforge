@@ -7,14 +7,14 @@ import type { Encounter } from "../run";
 const gear = (id: string) => jrpgLibrary().gear.find((g) => g.id === id)!;
 
 const cursed = {
-  ...gear("gear-sword"),
+  ...gear("weapon-sword"),
   bonuses: [{ stat: "maxHp" as const, op: "add" as const, value: -5 }],
 };
 
 describe("gearSummary", () => {
   it.each([
-    ["the iron sword", gear("gear-sword"), "+6 attack"],
-    ["chain mail", gear("gear-mail"), "+8 defense, ×0.9 speed"],
+    ["the iron sword", gear("weapon-sword"), "+6 attack"],
+    ["chain mail", gear("armour-mail"), "+8 defense, ×0.9 speed"],
     ["cursed gear", cursed, "−5 HP"],
     ["gear with no bonuses", { ...cursed, bonuses: [] }, "no bonuses"],
   ])("given %s, when it is summed up, then it reads %s", (_, item, text) => {

@@ -68,13 +68,13 @@ export const DESIGNED_CHARACTERS: Character[] = [
     id: "unit-1",
     name: "Bram",
     archetypeId: "type-squire",
-    gear: { weapon: "gear-sword", armor: "gear-mail" },
+    gear: { weapon: "weapon-sword", armor: "armour-mail" },
   },
   {
     id: "unit-2",
     name: "Ilse",
     archetypeId: "type-scholar",
-    gear: { weapon: "gear-staff", armor: "gear-robe" },
+    gear: { weapon: "weapon-staff", armor: "armour-robe" },
   },
 ];
 

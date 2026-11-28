@@ -74,13 +74,13 @@ describe("withGearTiers", () => {
     const base = world.gear.length / GEAR_TIERS.length;
 
     expect(Number.isInteger(base)).toBe(true);
-    expect(world.gear.some((g) => g.id === "gear-sword+3")).toBe(true);
+    expect(world.gear.some((g) => g.id === "weapon-sword+3")).toBe(true);
   });
 });
 
 describe("atTier", () => {
-  const mail = starter.gear.find((g) => g.id === "gear-mail")!;
-  const sword = starter.gear.find((g) => g.id === "gear-sword")!;
+  const mail = starter.gear.find((g) => g.id === "armour-mail")!;
+  const sword = starter.gear.find((g) => g.id === "weapon-sword")!;
 
   it("given chain mail, when it is taken at tier 0, then it is unchanged", () => {
     const plain = atTier(mail, 0);
@@ -91,7 +91,10 @@ describe("atTier", () => {
   it("given chain mail, when it is taken at tier 1, then it is renamed and what it adds grows, not what it multiplies", () => {
     const fine = atTier(mail, 1);
 
-    expect(fine).toMatchObject({ id: "gear-mail+1", name: "Fine Chain Mail" });
+    expect(fine).toMatchObject({
+      id: "armour-mail+1",
+      name: "Fine Chain Mail",
+    });
     expect(fine.bonuses).toEqual([
       { stat: "defense", op: "add", value: 12 },
       { stat: "speed", op: "mul", value: 0.9 },
@@ -108,7 +111,7 @@ describe("atTier", () => {
     const superior = atTier(sword, 2);
 
     expect(superior.weapon).toMatchObject({
-      id: "gear-sword+2",
+      id: "weapon-sword+2",
       name: "Superior Iron Sword",
     });
   });

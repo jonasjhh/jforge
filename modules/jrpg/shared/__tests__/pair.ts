@@ -16,13 +16,13 @@ export function pair(library = jrpgLibrary()): Member[] {
       ...hero(ALDRIC),
       level: 3,
       xp: 0,
-      gear: { weapon: "gear-sword", armor: "gear-mail" },
+      gear: { weapon: "weapon-sword", armor: "armour-mail" },
     },
     {
       ...hero(MIRA),
       level: 3,
       xp: 0,
-      gear: { weapon: "gear-staff", armor: "gear-robe" },
+      gear: { weapon: "weapon-staff", armor: "armour-robe" },
     },
   ];
 }

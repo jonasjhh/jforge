@@ -22,7 +22,10 @@ const play = (run: Run) =>
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
 const encounterPanel = () => screen.getByRole("region", { name: "Encounter" });
 
-const find: Encounter = { kind: "gear", gearIds: ["gear-ring", "gear-bow"] };
+const find: Encounter = {
+  kind: "gear",
+  gearIds: ["accessory-ring", "weapon-bow"],
+};
 const fullParty = () =>
   heroes(library)
     .filter((c) => c.id !== "new")
@@ -139,7 +142,7 @@ describe("RunScreen", () => {
 
     fireEvent.click(button("Give to Mira"));
 
-    expect(played.current.party[1]!.gear.accessory).toBe("gear-ring");
+    expect(played.current.party[1]!.gear.accessory).toBe("accessory-ring");
   });
 
   it("given a bow found that no one can use, when it is chosen, then it can only be bagged", () => {
@@ -157,7 +160,7 @@ describe("RunScreen", () => {
 
     fireEvent.click(button("Keep in the bag"));
 
-    expect(played.current.bag).toEqual(["gear-bow"]);
+    expect(played.current.bag).toEqual(["weapon-bow"]);
   });
 
   it("given a find with nothing of use, when the party moves on, then the run moves on", () => {
@@ -212,7 +215,7 @@ describe("RunScreen", () => {
     const reward: Reward = {
       xp: 30,
       levelUps: [{ name: "Mira", level: 4 }],
-      loot: library.gear.find((g) => g.id === "gear-ring"),
+      loot: library.gear.find((g) => g.id === "accessory-ring"),
     };
 
     render(

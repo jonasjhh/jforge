@@ -194,7 +194,7 @@ describe("starterKit", () => {
 
     expect(kitted.gear).toEqual({
       weapon: meleeWeaponId("fighter"),
-      armor: "melee-gear-jerkin",
+      armor: "armour-travellers-jerkin",
     });
   });
 
@@ -203,7 +203,7 @@ describe("starterKit", () => {
 
     const kitted = starterKit(library, bare);
 
-    expect(kitted.gear.armor).toBe("melee-gear-robe");
+    expect(kitted.gear.armor).toBe("armour-travellers-robe");
   });
 
   it("given a fighter already wearing armor, when it gets its starter kit, then the armor is kept", () => {
@@ -231,7 +231,7 @@ describe("starterKit", () => {
 
     const kitted = starterKit(starter, blankCharacter("c", sage));
 
-    expect(kitted.gear).toEqual({ armor: "melee-gear-robe" });
+    expect(kitted.gear).toEqual({ armor: "armour-travellers-robe" });
   });
 });
 
@@ -292,6 +292,6 @@ describe("melee proficiencies", () => {
       (c) => c.id === meleeHeroId("archer"),
     )!;
 
-    expect(archer.gear.armor).toBe("melee-gear-jerkin");
+    expect(archer.gear.armor).toBe("armour-travellers-jerkin");
   });
 });

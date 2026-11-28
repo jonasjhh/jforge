@@ -31,7 +31,9 @@ describe("PartyPanel", () => {
   });
 
   it("given rings and a bow in the bag, when the panel shows, then the bag lists them and a knight is offered only what they can wear", () => {
-    show(at([battle], { bag: ["gear-ring", "gear-bow", "gear-ring"] }));
+    show(
+      at([battle], { bag: ["accessory-ring", "weapon-bow", "accessory-ring"] }),
+    );
 
     expect(options("Aldric: Accessory")).toEqual([
       "None",
@@ -44,13 +46,13 @@ describe("PartyPanel", () => {
   });
 
   it("given a ring in the bag, when a member puts it on, then they wear it and the bag is empty", () => {
-    const run = show(at([battle], { bag: ["gear-ring"] }));
+    const run = show(at([battle], { bag: ["accessory-ring"] }));
 
     fireEvent.change(slot("Mira: Accessory"), {
-      target: { value: "gear-ring" },
+      target: { value: "accessory-ring" },
     });
 
-    expect(run.current.party[1]!.gear.accessory).toBe("gear-ring");
+    expect(run.current.party[1]!.gear.accessory).toBe("accessory-ring");
     expect(run.current.bag).toEqual([]);
   });
 
@@ -60,7 +62,7 @@ describe("PartyPanel", () => {
     fireEvent.change(slot("Aldric: Armor"), { target: { value: "" } });
 
     expect(run.current.party[0]!.gear.armor).toBeUndefined();
-    expect(run.current.bag).toEqual(["gear-mail"]);
+    expect(run.current.bag).toEqual(["armour-mail"]);
   });
 
   it.each([

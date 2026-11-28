@@ -9,5 +9,5 @@ import { MELEE_CREATURES, meleeClassId, meleeCreatureId } from "./catalogue";
 export const MELEE_SET: string[] = [
   ...content.playerTypes.map((def) => meleeClassId(def.id)),
   ...MELEE_CREATURES.map((def) => meleeCreatureId(def.id)),
-  "type-goblin",
+  "enemy-goblin",
 ];

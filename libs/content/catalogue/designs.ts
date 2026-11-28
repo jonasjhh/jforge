@@ -27,31 +27,31 @@ export function designs(): Library {
     skills: [cleave, firebolt, fireball, heal].map((s) => structuredClone(s)),
     gear: [
       {
-        id: "gear-sword",
+        id: "weapon-sword",
         name: "Iron Sword",
         slot: "weapon",
         category: "blade",
         bonuses: [{ stat: "attack", op: "add", value: 6 }],
-        weapon: { ...sword, id: "gear-sword", name: "Iron Sword" },
+        weapon: { ...sword, id: "weapon-sword", name: "Iron Sword" },
       },
       {
-        id: "gear-bow",
+        id: "weapon-bow",
         name: "Short Bow",
         slot: "weapon",
         category: "bow",
         bonuses: [{ stat: "attack", op: "add", value: 4 }],
-        weapon: { ...bow, id: "gear-bow", name: "Short Bow" },
+        weapon: { ...bow, id: "weapon-bow", name: "Short Bow" },
       },
       {
-        id: "gear-staff",
+        id: "weapon-staff",
         name: "Oak Staff",
         slot: "weapon",
         category: "staff",
         bonuses: [{ stat: "magic", op: "add", value: 6 }],
-        weapon: { ...staff, id: "gear-staff", name: "Oak Staff" },
+        weapon: { ...staff, id: "weapon-staff", name: "Oak Staff" },
       },
       {
-        id: "gear-mail",
+        id: "armour-mail",
         name: "Chain Mail",
         slot: "armor",
         category: "heavy",
@@ -61,7 +61,7 @@ export function designs(): Library {
         ],
       },
       {
-        id: "gear-robe",
+        id: "armour-robe",
         name: "Silk Robe",
         slot: "armor",
         category: "robe",
@@ -71,7 +71,7 @@ export function designs(): Library {
         ],
       },
       {
-        id: "gear-ring",
+        id: "accessory-ring",
         name: "Swift Ring",
         slot: "accessory",
         bonuses: [{ stat: "speed", op: "mul", value: 1.15 }],
@@ -79,7 +79,7 @@ export function designs(): Library {
     ],
     archetypes: [
       {
-        id: "type-goblin",
+        id: "enemy-goblin",
         name: "Goblin",
         kind: "enemy",
         portrait: "wolf",
@@ -93,7 +93,7 @@ export function designs(): Library {
           speed: 12,
         },
         weapon: {
-          id: "type-goblin-weapon",
+          id: "enemy-goblin-weapon",
           name: "Rusty Knife",
           columns: 1,
           depth: 1,
@@ -111,7 +111,7 @@ export function designs(): Library {
       {
         id: "unit-3",
         name: "Goblin",
-        archetypeId: "type-goblin",
+        archetypeId: "enemy-goblin",
         gear: {},
       },
     ],

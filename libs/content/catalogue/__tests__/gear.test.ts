@@ -62,15 +62,15 @@ describe("applyBonuses", () => {
 describe("equipping", () => {
   const library = starterLibrary();
   const knight = library.archetypes[0]!;
-  const sword = library.gear.find((g) => g.id === "gear-sword")!;
-  const bow = library.gear.find((g) => g.id === "gear-bow")!;
-  const mail = library.gear.find((g) => g.id === "gear-mail")!;
+  const sword = library.gear.find((g) => g.id === "weapon-sword")!;
+  const bow = library.gear.find((g) => g.id === "weapon-bow")!;
+  const mail = library.gear.find((g) => g.id === "armour-mail")!;
   const bare = blankCharacter("c", knight);
 
   it("given a bare character, when a sword is equipped, then it goes in the weapon slot", () => {
     const armed = equip(bare, sword);
 
-    expect(armed.gear).toEqual({ weapon: "gear-sword" });
+    expect(armed.gear).toEqual({ weapon: "weapon-sword" });
   });
 
   it("given a character with a sword, when mail is equipped, then both are worn in their own slots", () => {
@@ -78,7 +78,10 @@ describe("equipping", () => {
 
     const dressed = equip(armed, mail);
 
-    expect(dressed.gear).toEqual({ weapon: "gear-sword", armor: "gear-mail" });
+    expect(dressed.gear).toEqual({
+      weapon: "weapon-sword",
+      armor: "armour-mail",
+    });
   });
 
   it("given a character with a sword, when a bow is equipped, then it replaces the sword", () => {
@@ -86,7 +89,7 @@ describe("equipping", () => {
 
     const archer = equip(armed, bow);
 
-    expect(archer.gear).toEqual({ weapon: "gear-bow" });
+    expect(archer.gear).toEqual({ weapon: "weapon-bow" });
   });
 
   it("given a character with a sword, when the weapon slot is emptied, then nothing is worn", () => {
@@ -118,7 +121,7 @@ describe("equipping", () => {
   });
 
   it("given gear ids that are gone or in the wrong slot, when worn gear is listed, then those slots count as empty", () => {
-    const odd = { ...bare, gear: { weapon: "gone", armor: "gear-sword" } };
+    const odd = { ...bare, gear: { weapon: "gone", armor: "weapon-sword" } };
 
     const gear = equippedGear(library, odd);
 
@@ -140,16 +143,16 @@ describe("gear restrictions", () => {
   const [aldric, mira] = library.characters;
   const gear = (id: string) => library.gear.find((g) => g.id === id)!;
   const plainBow = () => {
-    const plain = { ...gear("gear-bow") };
+    const plain = { ...gear("weapon-bow") };
     delete plain.category;
     return plain;
   };
 
   it.each([
-    ["a squire", "a sword", 0, "gear-sword", true],
-    ["a squire", "a bow", 0, "gear-bow", false],
-    ["a scholar", "mail", 1, "gear-mail", false],
-    ["a scholar", "a ring", 1, "gear-ring", true],
+    ["a squire", "a sword", 0, "weapon-sword", true],
+    ["a squire", "a bow", 0, "weapon-bow", false],
+    ["a scholar", "mail", 1, "armour-mail", false],
+    ["a scholar", "a ring", 1, "accessory-ring", true],
   ] as const)(
     "given %s and %s, when it is checked whether it can be worn, then the class's categories decide",
     (_, __, who, id, allowed) => {
@@ -174,23 +177,23 @@ describe("gear restrictions", () => {
     const open = { ...knight };
     delete open.proficiencies;
 
-    const usable = canUse(open, gear("gear-bow"));
+    const usable = canUse(open, gear("weapon-bow"));
 
     expect(usable).toBe(true);
   });
 
   it("given no class, when a bow is checked, then it can be used", () => {
-    const usable = canUse(undefined, gear("gear-bow"));
+    const usable = canUse(undefined, gear("weapon-bow"));
 
     expect(usable).toBe(true);
   });
 
   it("given a squire who equips a bow, when worn gear is listed, then the bow stays in the slot but isn't counted", () => {
-    const archer = equip(aldric!, gear("gear-bow"));
+    const archer = equip(aldric!, gear("weapon-bow"));
 
     const worn = equippedGear(library, archer);
 
-    expect(archer.gear.weapon).toBe("gear-bow");
-    expect(worn.map((g) => g.id)).toEqual(["gear-mail"]);
+    expect(archer.gear.weapon).toBe("weapon-bow");
+    expect(worn.map((g) => g.id)).toEqual(["armour-mail"]);
   });
 });

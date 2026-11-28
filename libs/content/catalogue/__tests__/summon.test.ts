@@ -87,7 +87,7 @@ describe("designed summons", () => {
   const catalogue = starterLibrary();
   /** A summon shaped like the goblin enemy type. */
   const goblin: Archetype = {
-    ...catalogue.archetypes.find((a) => a.id === "type-goblin")!,
+    ...catalogue.archetypes.find((a) => a.id === "enemy-goblin")!,
     id: "summon-goblin",
     kind: "summon",
   };
@@ -155,7 +155,7 @@ describe("designed summons", () => {
   });
 
   it("given a summon of an enemy type, when it is checked, then it says that is no summon", () => {
-    const enemy = library.archetypes.find((a) => a.id === "type-goblin")!;
+    const enemy = library.archetypes.find((a) => a.id === "enemy-goblin")!;
     const call = skill("call", {
       ...unpicked(),
       source: { archetypeId: enemy.id },

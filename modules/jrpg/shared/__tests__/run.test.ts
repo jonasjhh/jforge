@@ -83,7 +83,7 @@ const ally: Encounter = {
 };
 const ring: Encounter = {
   kind: "gear",
-  gearIds: ["gear-ring", "world-spear", "gear-bow"],
+  gearIds: ["accessory-ring", "weapon-spear", "weapon-bow"],
 };
 const training: Encounter = { kind: "training" };
 /** Every encounter on a map. */
@@ -787,12 +787,12 @@ describe("winBattle", () => {
   });
 
   it("given a battle that drops gear, when it is won, then the gear is in the bag", () => {
-    const run = at([{ ...battle, loot: "gear-ring" }]);
+    const run = at([{ ...battle, loot: "accessory-ring" }]);
 
     const { run: after, reward } = winBattle(run)!;
 
     expect(reward.loot?.name).toBe("Swift Ring");
-    expect(after.bag).toEqual(["gear-ring"]);
+    expect(after.bag).toEqual(["accessory-ring"]);
   });
 
   it("given a battle that drops nothing, when it is won, then there is no loot", () => {
@@ -844,9 +844,14 @@ describe("committing to a battle", () => {
   });
 
   it("given a committed battle, when gear is changed, then nothing changes", () => {
-    const committed = commitBattle(at([battle], { bag: ["gear-ring"] }));
+    const committed = commitBattle(at([battle], { bag: ["accessory-ring"] }));
 
-    const changed = changeGear(committed, ALDRIC, "accessory", "gear-ring");
+    const changed = changeGear(
+      committed,
+      ALDRIC,
+      "accessory",
+      "accessory-ring",
+    );
 
     expect(changed).toBe(committed);
   });
@@ -1023,30 +1028,30 @@ describe("resolveAlly", () => {
 
 describe("resolveGear", () => {
   it("given gear on offer, when a piece is taken for no one, then it goes in the bag and the run moves on", () => {
-    const run = resolveGear(at([ring]), "gear-ring", null);
+    const run = resolveGear(at([ring]), "accessory-ring", null);
 
-    expect(run.bag).toEqual(["gear-ring"]);
+    expect(run.bag).toEqual(["accessory-ring"]);
     expect(run.position).toBe(1);
   });
 
   it("given gear on offer, when a piece is taken for a member, then they wear it and their old gear goes in the bag", () => {
-    const run = resolveGear(at([ring]), "world-spear", ALDRIC);
+    const run = resolveGear(at([ring]), "weapon-spear", ALDRIC);
 
-    expect(run.party[0]!.gear.weapon).toBe("world-spear");
-    expect(run.bag).toEqual(["gear-sword"]);
+    expect(run.party[0]!.gear.weapon).toBe("weapon-spear");
+    expect(run.bag).toEqual(["weapon-sword"]);
   });
 
   it("given a knight, when a bow is taken for them, then it goes in the bag instead", () => {
     // A knight takes blades and polearms, not bows.
-    const run = resolveGear(at([ring]), "gear-bow", ALDRIC);
+    const run = resolveGear(at([ring]), "weapon-bow", ALDRIC);
 
-    expect(run.party[0]!.gear.weapon).toBe("gear-sword");
-    expect(run.bag).toEqual(["gear-bow"]);
+    expect(run.party[0]!.gear.weapon).toBe("weapon-sword");
+    expect(run.bag).toEqual(["weapon-bow"]);
   });
 
   it.each([
     ["no piece", null],
-    ["a piece not on offer", "gear-mail"],
+    ["a piece not on offer", "armour-mail"],
   ])(
     "given gear on offer, when %s is taken, then the run moves on with nothing",
     (_, id) => {
@@ -1060,7 +1065,7 @@ describe("resolveGear", () => {
   it("given a run at a battle, when gear is taken, then nothing changes", () => {
     const run = at([battle]);
 
-    const after = resolveGear(run, "gear-ring", null);
+    const after = resolveGear(run, "accessory-ring", null);
 
     expect(after).toBe(run);
   });
@@ -1092,40 +1097,40 @@ describe("resolveTraining", () => {
 
 describe("changeGear", () => {
   const run = at([battle], {
-    bag: ["gear-ring", "world-spear", "gear-bow", "world-plate"],
+    bag: ["accessory-ring", "weapon-spear", "weapon-bow", "armour-plate"],
   });
 
   it("given a spear in the bag, when a knight wields it, then their sword goes in the bag", () => {
-    const after = changeGear(run, ALDRIC, "weapon", "world-spear");
+    const after = changeGear(run, ALDRIC, "weapon", "weapon-spear");
 
-    expect(after.party[0]!.gear.weapon).toBe("world-spear");
+    expect(after.party[0]!.gear.weapon).toBe("weapon-spear");
     expect(after.bag.sort()).toEqual([
-      "gear-bow",
-      "gear-ring",
-      "gear-sword",
-      "world-plate",
+      "accessory-ring",
+      "armour-plate",
+      "weapon-bow",
+      "weapon-sword",
     ]);
   });
 
   it("given a ring in the bag, when a sage wears it, then it is worn, as accessories fit anyone", () => {
-    const after = changeGear(run, MIRA, "accessory", "gear-ring");
+    const after = changeGear(run, MIRA, "accessory", "accessory-ring");
 
-    expect(after.party[1]!.gear.accessory).toBe("gear-ring");
+    expect(after.party[1]!.gear.accessory).toBe("accessory-ring");
   });
 
   it("given worn armor, when the slot is emptied, then the armor goes in the bag", () => {
     const after = changeGear(run, ALDRIC, "armor", null);
 
     expect(after.party[0]!.gear.armor).toBeUndefined();
-    expect(after.bag).toContain("gear-mail");
+    expect(after.bag).toContain("armour-mail");
   });
 
   it.each([
-    ["a bow for a knight", ALDRIC, "weapon", "gear-bow"],
-    ["plate for a sage", MIRA, "armor", "world-plate"],
-    ["gear not in the bag", ALDRIC, "weapon", "gear-staff"],
-    ["gear for another slot", ALDRIC, "armor", "gear-ring"],
-    ["gear for a stranger", "nobody", "accessory", "gear-ring"],
+    ["a bow for a knight", ALDRIC, "weapon", "weapon-bow"],
+    ["plate for a sage", MIRA, "armor", "armour-plate"],
+    ["gear not in the bag", ALDRIC, "weapon", "weapon-staff"],
+    ["gear for another slot", ALDRIC, "armor", "accessory-ring"],
+    ["gear for a stranger", "nobody", "accessory", "accessory-ring"],
   ] as const)(
     "given %s, when it is put on, then nothing changes",
     (_, member, slot, id) => {
@@ -1136,22 +1141,26 @@ describe("changeGear", () => {
   );
 
   it("given two rings in the bag, when one is worn, then the other stays", () => {
-    const two = at([battle], { bag: ["gear-ring", "gear-ring"] });
+    const two = at([battle], { bag: ["accessory-ring", "accessory-ring"] });
 
-    const after = changeGear(two, ALDRIC, "accessory", "gear-ring");
+    const after = changeGear(two, ALDRIC, "accessory", "accessory-ring");
 
-    expect(after.bag).toEqual(["gear-ring"]);
+    expect(after.bag).toEqual(["accessory-ring"]);
   });
 });
 
 describe("nextLevel", () => {
   it("given a cleared level, when the run goes on, then it starts the next level deeper with the party and bag", () => {
-    const done = at([battle], { position: 1, bag: ["gear-ring"] });
+    const done = at([battle], { position: 1, bag: ["accessory-ring"] });
 
     const next = nextLevel(done);
 
     expect(levelCleared(done)).toBe(true);
-    expect(next).toMatchObject({ depth: 2, position: 0, bag: ["gear-ring"] });
+    expect(next).toMatchObject({
+      depth: 2,
+      position: 0,
+      bag: ["accessory-ring"],
+    });
     expect(next.party).toBe(done.party);
     expect(next.map.length).toBeGreaterThanOrEqual(MIN_LEVEL_LENGTH);
     expect(next.path).toEqual([0]);

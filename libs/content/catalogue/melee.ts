@@ -15,8 +15,8 @@ import {
 
 export const meleeClassId = (id: string) => `melee-${id}`;
 export const meleeHeroId = (id: string) => `melee-hero-${id}`;
-export const meleeWeaponId = (id: string) => `melee-gear-${id}`;
-export const meleeCreatureId = (id: string) => `melee-creature-${id}`;
+export const meleeWeaponId = (id: string) => `weapon-${id}`;
+export const meleeCreatureId = (id: string) => `summon-${id}`;
 
 /** Melee's summoned creatures, which the catalogue keeps as summons. */
 export const MELEE_CREATURES: CombatantDef[] = [content.imp, content.boulder];
@@ -81,7 +81,7 @@ const WEAPON_STATS = ["attack", "magic", "spirit"] as const;
 /** Basic armor: a jerkin, or a robe for casters. */
 export const BASIC_ARMOR: Gear[] = [
   {
-    id: "melee-gear-jerkin",
+    id: "armour-travellers-jerkin",
     name: "Traveller's Jerkin",
     slot: "armor",
     category: "light",
@@ -91,7 +91,7 @@ export const BASIC_ARMOR: Gear[] = [
     ],
   },
   {
-    id: "melee-gear-robe",
+    id: "armour-travellers-robe",
     name: "Traveller's Robe",
     slot: "armor",
     category: "robe",
@@ -155,8 +155,8 @@ export function starterKit(library: Library, character: Character): Character {
   if (!type || type.kind !== "class") return character;
   const caster = type.baseStats.magic > type.baseStats.attack;
   const armor = caster
-    ? ["melee-gear-robe", "melee-gear-jerkin"]
-    : ["melee-gear-jerkin", "melee-gear-robe"];
+    ? ["armour-travellers-robe", "armour-travellers-jerkin"]
+    : ["armour-travellers-jerkin", "armour-travellers-robe"];
   const wanted = [
     type.id.startsWith("melee-")
       ? meleeWeaponId(type.id.slice("melee-".length))
