@@ -87,7 +87,8 @@ the `exports` field of its `package.json`. The concerns are kept apart:
   saves nothing but which tab and game were open. No app imports char.
 - **Games read their content from `@jforge/content/<game>`** and its
   rules from `@jforge/rules`. `jrpg` fights with `@jforge/battle` and
-  shows its screen (`@jforge/battle/screen`); `autob` has its own board
+  shows its screen (`@jforge/battle/screen`), with its own units compiled
+  from its content (nothing of melee's); `autob` has its own board
   and fight engine, and imports nothing of melee or battle. Every game takes its portraits and base
   styles from `@jforge/look` (`@jforge/look/base.css`).
 - **battle imports only `rules` and `look`**: each game brings its own

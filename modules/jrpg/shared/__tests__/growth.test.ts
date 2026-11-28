@@ -7,7 +7,7 @@ import {
   meleeCreatureId,
   meleeHeroId,
 } from "@jforge/content/catalogue";
-import { content } from "@jforge/melee/shared";
+import * as content from "@jforge/content/starter";
 import {
   DEFAULT_GROWTH,
   DEFAULT_SPEED_GROWTH,

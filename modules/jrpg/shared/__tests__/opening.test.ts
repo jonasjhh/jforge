@@ -1,12 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { createBattle } from "@jforge/battle";
-import { content } from "@jforge/melee/shared";
-import { openingBattleFor, previewOpeningBattle } from "../index";
+import { jrpgUnit, openingBattleFor, previewOpeningBattle } from "../index";
 
-const { archer, fighter, healer, mage } = content;
+const [archer, fighter, healer, mage] = [
+  "melee-archer",
+  "melee-fighter",
+  "melee-healer",
+  "melee-mage",
+].map(jrpgUnit) as [
+  ReturnType<typeof jrpgUnit>,
+  ReturnType<typeof jrpgUnit>,
+  ReturnType<typeof jrpgUnit>,
+  ReturnType<typeof jrpgUnit>,
+];
 
 describe("previewOpeningBattle", () => {
-  it("given the opening battle, when it is previewed, then melee plays it to the end", () => {
+  it("given the opening battle, when it is previewed, then the battle plays it to the end", () => {
     const summary = previewOpeningBattle();
 
     expect(summary.actions).toBeGreaterThan(0);
@@ -24,7 +33,7 @@ describe("previewOpeningBattle", () => {
 
 describe("openingBattleFor", () => {
   it.each([1, 2, 3, 4, 5])(
-    "given %i party members, when the opening battle is set up, then each has a cell and melee accepts it",
+    "given %i party members, when the opening battle is set up, then each has a cell and the battle accepts it",
     (size) => {
       const party = [fighter, archer, mage, healer, fighter].slice(0, size);
 

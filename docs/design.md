@@ -19,7 +19,7 @@ content  <- rules
 battle   <- rules, look
 char     <- rules, content
 melee    <- battle, content, rules, look
-jrpg     <- battle, melee, content, rules, look
+jrpg     <- battle, content, rules, look
 autob    <- content, rules, look
 ```
 
@@ -271,7 +271,9 @@ and bolas deal no damage (control effects).
 resistant, 0 immune), applied after defense; the AI's expected damage
 includes them and hits show WEAK / RESIST tags. They come from **creature
 traits**: each trait brings defaults, several traits multiply, and a
-creature's own `resistances` override them (`traits.ts`).
+creature's own `resistances` override them (`traits.ts`). Any archetype
+(class, enemy or summon) may carry its own `resistances`, which its
+creatures get and char shows (the Viper is immune to poison).
 
 | Trait     | Defaults                                                      |
 | --------- | ------------------------------------------------------------- |

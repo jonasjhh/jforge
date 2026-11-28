@@ -332,9 +332,6 @@ importers:
       '@jforge/content':
         specifier: workspace:*
         version: link:../../libs/content
-      '@jforge/melee':
-        specifier: workspace:*
-        version: link:../melee
       '@jforge/rules':
         specifier: workspace:*
         version: link:../../libs/rules
@@ -359,9 +356,6 @@ importers:
       '@jforge/look':
         specifier: workspace:*
         version: link:../../libs/look
-      '@jforge/melee':
-        specifier: workspace:*
-        version: link:../melee
       '@jforge/rules':
         specifier: workspace:*
         version: link:../../libs/rules

@@ -23,7 +23,6 @@ import {
   type Placement,
   type Position,
 } from "@jforge/battle";
-import { content } from "@jforge/melee/shared";
 import { SAVE_VERSION } from "./save";
 import { levelledDef } from "./growth";
 import { withLearnedSkills } from "./learning";
@@ -478,15 +477,13 @@ export function enemyLevelBonus(run: Run): number {
 
 /**
  * Who the party can meet: the library's enemies, from START_LEVEL up as
- * the party and the run's depth grow, or melee's own monsters when none
- * were designed.
+ * the party and the run's depth grow.
  */
 export function monsterPool(run: Run, tougher = 0): CombatantDef[] {
   const level = START_LEVEL + enemyLevelBonus(run) + tougher;
-  const designed = run.library.characters
+  return run.library.characters
     .filter((c) => !isClass(run.library, c))
     .flatMap((c) => levelledDef(run.library, c, level) ?? []);
-  return designed.length > 0 ? designed : content.monsters;
 }
 
 /**

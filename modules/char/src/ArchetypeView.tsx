@@ -5,12 +5,22 @@ import {
   type Archetype,
   type Character,
   type Library,
+  type Resistances,
 } from "@jforge/rules/core";
 import { ClassPaths } from "./ClassPaths";
 import { Links } from "./Links";
 import { KINDS, ROW_NAMES } from "./labels";
 import { StatsTable } from "./StatsTable";
 import { WeaponLine } from "./WeaponLine";
+
+/** Its own resistances in words: "immune to poison", "takes 2× fire". */
+function resistanceText(resistances: Resistances | undefined): string {
+  return Object.entries(resistances ?? {})
+    .map(([type, taken]) =>
+      taken === 0 ? `immune to ${type}` : `takes ${taken}× ${type}`,
+    )
+    .join(", ");
+}
 
 interface ArchetypeViewProps {
   archetype: Archetype;
@@ -42,6 +52,7 @@ export function ArchetypeView({
     (c) => c.archetypeId === archetype.id,
   );
   const traits = archetype.traits.join(", ");
+  const resists = resistanceText(archetype.resistances);
   const uses = archetype.proficiencies?.map((p) => GEAR_CATEGORY_NAMES[p]);
   return (
     <>
@@ -51,6 +62,7 @@ export function ArchetypeView({
         {ROW_NAMES[archetype.preferredRow]?.toLowerCase() ?? "front"} row
         {archetype.obstacle ? " · an obstacle: never acts" : ""}
         {traits ? ` · ${traits}` : ""}
+        {resists ? ` · ${resists}` : ""}
       </p>
       <StatsTable stats={archetype.baseStats} />
       <WeaponLine weapon={archetype.weapon} />

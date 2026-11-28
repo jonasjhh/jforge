@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { meleeClassId } from "@jforge/content/catalogue";
-import { content } from "@jforge/melee/shared";
+import * as content from "@jforge/content/starter";
 import {
   FIRST_LEVEL_SKILLS,
   LEARNING_ORDER,

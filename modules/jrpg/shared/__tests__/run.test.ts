@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ALDRIC, MIRA, pair } from "./pair";
 import { jrpgLibrary } from "@jforge/content/jrpg";
 import { MAX_PARTY_SIZE, createBattle, isBackLiner } from "@jforge/battle";
-import { content } from "@jforge/melee/shared";
+import * as content from "@jforge/content/starter";
 import {
   BUDGET_SHARE,
   DEPTH_GROWTH,
@@ -737,7 +737,7 @@ describe("monsterPool", () => {
     expect(first!.threat!).toBeGreaterThan(monsterPool(run)[0]!.threat!);
   });
 
-  it("given a library with no enemies, when the enemies are pooled, then they are melee's monsters", () => {
+  it("given a library with no enemies, when the enemies are pooled, then there are none", () => {
     const classes = new Set(
       run.library.archetypes.filter((a) => a.kind === "class").map((a) => a.id),
     );
@@ -750,7 +750,7 @@ describe("monsterPool", () => {
 
     const pool = monsterPool({ ...run, library: noEnemies });
 
-    expect(pool).toBe(content.monsters);
+    expect(pool).toEqual([]);
   });
 });
 

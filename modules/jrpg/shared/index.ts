@@ -1,6 +1,6 @@
-// JRPG's rules. Battles come from melee, imported through the workspace
-// package "@jforge/melee" rather than a relative path, the same way any
-// module depends on another.
+// JRPG's rules. Battles come from the battle engine, imported through the
+// workspace package "@jforge/battle" rather than a relative path; the
+// units are jrpg's own, compiled from its content.
 import {
   GRID_COLUMNS,
   simulate,
@@ -9,12 +9,15 @@ import {
   type CombatantDef,
   type Placement,
 } from "@jforge/battle";
-import { content } from "@jforge/melee/shared";
+import { jrpgUnit } from "./units";
 
-const { fighter, healer, slime } = content;
+const slime = jrpgUnit("enemy-slime");
 
 /** Who sets out when no party has been designed in char. */
-const defaultParty: CombatantDef[] = [fighter, healer];
+const defaultParty: CombatantDef[] = [
+  jrpgUnit("melee-fighter"),
+  jrpgUnit("melee-healer"),
+];
 
 /** Lines the party up: spread over the columns, each in its preferred row. */
 function placeParty(party: CombatantDef[]): Placement[] {
@@ -40,7 +43,7 @@ export function openingBattleFor(party: CombatantDef[]): BattleSetup {
   };
 }
 
-/** Auto-plays the opening battle with melee's engine. */
+/** Auto-plays the opening battle with the battle engine. */
 export function previewOpeningBattle(
   seed = 1,
   party: CombatantDef[] = defaultParty,
@@ -48,6 +51,7 @@ export function previewOpeningBattle(
   return simulate(openingBattleFor(party), seed);
 }
 
+export { jrpgUnit } from "./units";
 export * from "./run";
 export * from "./labels";
 export { GEAR_TIERS, atTier, withGearTiers } from "./world";

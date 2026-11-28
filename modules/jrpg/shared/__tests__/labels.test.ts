@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { jrpgLibrary } from "@jforge/content/jrpg";
 import { type BattleSetup } from "@jforge/battle";
-import { content } from "@jforge/melee/shared";
+import { jrpgUnit } from "../units";
 import { encounterLabel, enemySummary, gearSummary } from "../labels";
 import type { Encounter } from "../run";
 
@@ -48,14 +48,18 @@ describe("encounterLabel", () => {
 
 describe("enemySummary", () => {
   it("given a fighter against two slimes and a wolf, when the enemies are summed up, then they are counted by name and the party left out", () => {
-    const { slime, wolf, fighter } = content;
+    const [slime, wolf, fighter] = [
+      "enemy-slime",
+      "enemy-wolf",
+      "melee-fighter",
+    ].map(jrpgUnit);
     const position = { col: 0, row: 0 };
     const setup: BattleSetup = {
       placements: [
-        { def: fighter, side: "player", position },
-        { def: slime, side: "enemy", position },
-        { def: wolf, side: "enemy", position },
-        { def: slime, side: "enemy", position },
+        { def: fighter!, side: "player", position },
+        { def: slime!, side: "enemy", position },
+        { def: wolf!, side: "enemy", position },
+        { def: slime!, side: "enemy", position },
       ],
     };
 

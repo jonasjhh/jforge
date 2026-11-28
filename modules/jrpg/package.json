@@ -15,7 +15,6 @@
     "@jforge/battle": "workspace:*",
     "@jforge/content": "workspace:*",
     "@jforge/look": "workspace:*",
-    "@jforge/melee": "workspace:*",
     "@jforge/rules": "workspace:*",
     "hono": "^4.13.19",
     "react": "^19.3.1",

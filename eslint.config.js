@@ -79,7 +79,14 @@ function boundaries() {
     ),
     block(
       ["modules/jrpg/**/*.{ts,tsx}"],
-      [NO_CHAR, NO_DEEP_BATTLE, ban(["autob"], "jrpg imports no other game.")],
+      [
+        NO_CHAR,
+        NO_DEEP_BATTLE,
+        ban(
+          ["melee", "autob"],
+          "jrpg imports no other game: it fields its own units.",
+        ),
+      ],
     ),
     block(
       ["modules/autob/**/*.{ts,tsx}"],

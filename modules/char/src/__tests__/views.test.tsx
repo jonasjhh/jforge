@@ -98,6 +98,40 @@ describe("GearView", () => {
   });
 });
 
+describe("ArchetypeView", () => {
+  it("given the Viper, when it shows, then it says it is immune to poison", () => {
+    const viper = library.archetypes.find((a) => a.id === "enemy-viper")!;
+
+    render(
+      <ArchetypeView
+        archetype={viper}
+        library={library}
+        onOpenSkill={vi.fn()}
+        onOpenClass={vi.fn()}
+        onOpenCharacter={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/immune to poison/)).toBeTruthy();
+  });
+
+  it("given the Wolf, when it shows, then it names no resistances of its own", () => {
+    const wolf = library.archetypes.find((a) => a.id === "enemy-wolf")!;
+
+    render(
+      <ArchetypeView
+        archetype={wolf}
+        library={library}
+        onOpenSkill={vi.fn()}
+        onOpenClass={vi.fn()}
+        onOpenCharacter={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/immune to|takes \d/)).toBeNull();
+  });
+});
+
 describe("summons", () => {
   const imp = library.archetypes.find(
     (a) => a.kind === "summon" && a.name === "Imp",
