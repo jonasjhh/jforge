@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PARTY_SIZE, createBattle } from "@jforge/battle";
 import {
   archetypeOf,
   archetypeSkills,
@@ -170,26 +169,5 @@ describe("compileRoster", () => {
     const roster = compileRoster({ ...library, characters: [orphan] });
 
     expect(roster).toEqual({ party: [], monsters: [] });
-  });
-
-  it("given the compiled roster, when a battle is started from it, then it starts", () => {
-    const { party, monsters } = compileRoster(library);
-
-    const start = () =>
-      createBattle(
-        {
-          placements: [
-            ...party.slice(0, MAX_PARTY_SIZE).map((def, col) => ({
-              def,
-              side: "player" as const,
-              position: { col, row: 0 },
-            })),
-            { def: monsters[0]!, side: "enemy", position: { col: 0, row: 0 } },
-          ],
-        },
-        1,
-      );
-
-    expect(start).not.toThrow();
   });
 });

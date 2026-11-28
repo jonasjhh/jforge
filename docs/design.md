@@ -13,13 +13,14 @@ them, is in [progression.md](progression.md).
 ## Modules
 
 ```
-rules  <-  battle  <-  melee  <-  content  <-  char
-  ^          ^                       ^
-  +----------+-----------------------+------  jrpg
-  +----------------------------------+------  autob
-
-(rules is also read directly by content, char, jrpg and autob;
- look by battle and every game)
+rules                      (nothing)
+look                       (nothing)
+content  <- rules
+battle   <- rules, look
+char     <- rules, content
+melee    <- battle, content, rules, look
+jrpg     <- battle, melee, content, rules, look
+autob    <- content, rules, look
 ```
 
 | Package   | Role                                                                                                                               |
@@ -935,10 +936,12 @@ with `summon-`, gear with its slot: `weapon-`, `armour-` or `accessory-`; tiers 
 the prefixes. Skills keep melee's ids for now, but Summon Imp is
 `skill-summon-imp`, apart from the summon it puts in.
 
-**Melee's classes** (`libs/content/catalogue/melee.ts`): every melee
-class is also a class of the catalogue (`melee-fighter`, ...), so each
-can be geared and used by jrpg and autob. Its level-1 stats are melee's
-own and it has all of melee's skills for it.
+**Melee's classes** (`libs/content/catalogue/melee.ts`): the twelve
+starter classes (`starter.ts`, with their weapons and skills) are classes
+of the catalogue (`melee-fighter`, ...), so each can be geared and used
+by jrpg and autob. The melee module fields its test units from them
+(`modules/melee/shared/content.ts`), tuning its Slime, Wolf and Viper
+(the world's designs) to its own stats, targeting and threat.
 Their proficiencies (`MELEE_PROFICIENCIES`) include their own weapon's
 category:
 

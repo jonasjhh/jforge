@@ -7,6 +7,8 @@ export * from "./types";
 export { TRAIT_RESISTANCES, resistancesFor } from "./traits";
 export { STRENGTH_DEFAULTS, strengthsOf, type Strengths } from "./strengths";
 export { isCreature } from "./creature";
+export { tune } from "./tune";
+export { POISON } from "./statuses";
 export {
   applyBonuses,
   canUse,

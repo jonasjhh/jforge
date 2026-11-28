@@ -1,13 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createBattle } from "@jforge/battle";
-import { content } from "@jforge/melee/shared";
+import * as content from "../starter";
 import {
   blankCharacter,
   canUse,
   emptyLibrary,
-  isCreature,
   parseLibrary,
-  toCreature,
 } from "@jforge/rules/core";
 import {
   BASIC_ARMOUR,
@@ -129,29 +126,6 @@ describe("withMeleeClasses", () => {
 
     expect(back).toEqual(starter);
   });
-
-  it.each(meleeClasses().map((type) => [type.name, type] as const))(
-    "given a character of melee's %s class, when it is compiled and fielded, then melee accepts it",
-    (_, type) => {
-      const library = starterLibrary();
-
-      const def = toCreature(library, blankCharacter("x", type))!;
-      const start = () =>
-        createBattle(
-          {
-            placements: [
-              { def, side: "player", position: { col: 0, row: 0 } },
-              { def, side: "enemy", position: { col: 0, row: 0 } },
-            ],
-          },
-          1,
-        );
-
-      expect(isCreature(def)).toBe(true);
-      expect(def.skills).toHaveLength(type.skills.length);
-      expect(start).not.toThrow();
-    },
-  );
 });
 
 describe("basic gear", () => {

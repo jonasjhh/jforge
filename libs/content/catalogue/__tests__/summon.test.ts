@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { content } from "@jforge/melee/shared";
+import * as content from "../starter";
 import {
   blankCharacter,
   compileRoster,

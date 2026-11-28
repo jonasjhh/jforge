@@ -7,13 +7,10 @@
     ".": "./index.ts",
     "./catalogue": "./catalogue/index.ts",
     "./jrpg": "./jrpg/index.ts",
-    "./autob": "./autob/index.ts"
+    "./autob": "./autob/index.ts",
+    "./starter": "./catalogue/starter.ts"
   },
   "dependencies": {
-    "@jforge/melee": "workspace:*",
     "@jforge/rules": "workspace:*"
-  },
-  "devDependencies": {
-    "@jforge/battle": "workspace:*"
   }
 }

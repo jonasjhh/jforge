@@ -1,4 +1,4 @@
-import { content } from "@jforge/melee/shared";
+import * as content from "../starter";
 import { catalogue as starterLibrary } from "..";
 import type { Archetype, Character, Library } from "@jforge/rules/core";
 

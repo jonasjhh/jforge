@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { isCreature } from "@jforge/rules/core";
-import { content } from "@jforge/melee/shared";
+import { creatureOf, isCreature } from "@jforge/rules/core";
+import { catalogue } from "..";
+import * as content from "../starter";
 
-const { fighter, monsters, playerTypes } = content;
+const { boulder, fighter, imp, playerTypes } = content;
 
 describe("isCreature", () => {
-  it("given the built-in types, when they are checked, then each is a creature", () => {
-    const types = [...playerTypes, ...monsters];
+  it("given the starter classes and creatures, when they are checked, then each is a creature", () => {
+    const types = [...playerTypes, imp, boulder];
 
     const rejected = types.filter((t) => !isCreature(t));
 
@@ -48,4 +49,14 @@ describe("isCreature", () => {
       expect(result).toBe(false);
     },
   );
+});
+
+describe("the world's Viper", () => {
+  it("given the catalogue, when the Viper is compiled, then it is immune to poison", () => {
+    const library = catalogue();
+
+    const viper = creatureOf(library, "enemy-viper")!;
+
+    expect(viper.resistances).toEqual({ poison: 0 });
+  });
 });

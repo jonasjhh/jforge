@@ -7,10 +7,10 @@ import type {
   Stats,
   Weapon,
 } from "@jforge/rules/core";
-import { content } from "@jforge/melee/shared";
+import * as content from "./starter";
 
 // The world's content: enemy types to meet and gear to find, built from
-// melee's weapons and skills, and the melee skills those enemies use. jrpg
+// the starter weapons and skills, and the starter skills those enemies use. jrpg
 // picks the enemies (@jforge/content/jrpg). Enemy ids start with
 // "enemy-", gear ids with its slot: "weapon-", "armour-" or "accessory-".
 
@@ -82,17 +82,21 @@ export const WORLD_ENEMIES: Archetype[] = [
     [],
     ["ooze"],
   ),
-  archetype(
-    "enemy",
-    "viper",
-    "Viper",
-    "viper",
-    [38, 0, 11, 0, 3, 4, 17],
-    c.venomFangs,
-    0,
-    [],
-    ["beast", "reptile"],
-  ),
+  {
+    ...archetype(
+      "enemy",
+      "viper",
+      "Viper",
+      "viper",
+      [38, 0, 11, 0, 3, 4, 17],
+      c.venomFangs,
+      0,
+      [],
+      ["beast", "reptile"],
+    ),
+    // Immune to its own venom.
+    resistances: { poison: 0 },
+  },
   archetype(
     "enemy",
     "bandit",

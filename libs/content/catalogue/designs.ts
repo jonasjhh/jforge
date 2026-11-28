@@ -1,4 +1,4 @@
-import { content } from "@jforge/melee/shared";
+import * as content from "./starter";
 import {
   LIBRARY_VERSION,
   type Archetype,

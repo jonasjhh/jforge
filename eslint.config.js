@@ -54,7 +54,16 @@ function boundaries() {
         ),
       ],
     ),
-    block(["libs/content/**/*.{ts,tsx}"], [NO_APP, NO_DEEP_BATTLE]),
+    block(
+      ["libs/content/**/*.{ts,tsx}"],
+      [
+        NO_APP,
+        ban(
+          ["melee", "battle"],
+          "content imports only rules: each game fields its own versions of it.",
+        ),
+      ],
+    ),
     block(
       ["modules/melee/**/__tests__/**/*.{ts,tsx}"],
       [NO_CHAR, ban(["jrpg", "autob"], "melee imports no other game.")],

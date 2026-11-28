@@ -287,16 +287,9 @@ importers:
 
   libs/content:
     dependencies:
-      '@jforge/melee':
-        specifier: workspace:*
-        version: link:../../modules/melee
       '@jforge/rules':
         specifier: workspace:*
         version: link:../rules
-    devDependencies:
-      '@jforge/battle':
-        specifier: workspace:*
-        version: link:../battle
 
   libs/look:
     dependencies:
@@ -387,6 +380,9 @@ importers:
       '@jforge/battle':
         specifier: workspace:*
         version: link:../../libs/battle
+      '@jforge/content':
+        specifier: workspace:*
+        version: link:../../libs/content
       '@jforge/look':
         specifier: workspace:*
         version: link:../../libs/look

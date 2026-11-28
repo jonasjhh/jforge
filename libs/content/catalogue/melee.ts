@@ -1,4 +1,4 @@
-import { content } from "@jforge/melee/shared";
+import * as content from "./starter";
 import {
   canUse,
   type Archetype,
@@ -10,10 +10,10 @@ import {
   type Skill,
 } from "@jforge/rules/core";
 
-// Melee's own classes and creatures in the catalogue, so every one of them
-// can be geared and used by the games like any other class, each class
-// with a hero of it in basic gear. Melee's content stays in melee for now
-// (see README.md, Layout).
+// The melee classes (the twelve starter classes, starter.ts) and their
+// creatures in the catalogue, so every one of them can be geared and used
+// by the games like any other class, each class with a hero of it in
+// basic gear. The melee module fields its test units from them.
 
 export const meleeClassId = (id: string) => `melee-${id}`;
 export const meleeHeroId = (id: string) => `melee-hero-${id}`;

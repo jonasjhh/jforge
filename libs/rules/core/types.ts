@@ -1,4 +1,11 @@
-import type { Skill, StatName, Stats, Trait, Weapon } from "./format";
+import type {
+  Resistances,
+  Skill,
+  StatName,
+  Stats,
+  Trait,
+  Weapon,
+} from "./format";
 
 // The shapes of jforge's content: classes, enemy types, summons, skills, gear and
 // characters, written as code in @jforge/content and read by the games and
@@ -74,6 +81,8 @@ export interface Archetype {
   /** The ids of the skills it has. */
   skills: string[];
   traits: Trait[];
+  /** Damage taken per type on top of its traits' (0 immune, 2 double). */
+  resistances?: Resistances;
   /** Row it prefers when placed automatically: 0 front, 1 middle, 2 back. */
   preferredRow: number;
   /**

@@ -1,4 +1,4 @@
-import { content } from "@jforge/melee/shared";
+import * as content from "./catalogue/starter";
 import { MELEE_CREATURES, meleeClassId, meleeCreatureId } from "./catalogue";
 
 /**

@@ -67,6 +67,9 @@ export function creatureOf(
     weapon: structuredClone(archetype.weapon),
     skills: archetypeSkills(library, archetype, depth - 1),
     traits: [...archetype.traits],
+    ...(archetype.resistances
+      ? { resistances: { ...archetype.resistances } }
+      : {}),
     preferredRow: archetype.preferredRow,
     portrait: archetype.portrait,
     ...(archetype.obstacle ? { obstacle: true } : {}),
@@ -121,6 +124,9 @@ export function toCreature(
     weapon: characterWeapon(library, archetype, character),
     skills: archetypeSkills(library, archetype),
     traits: [...archetype.traits],
+    ...(archetype.resistances
+      ? { resistances: { ...archetype.resistances } }
+      : {}),
     preferredRow: archetype.preferredRow,
     portrait: archetype.portrait,
   };
