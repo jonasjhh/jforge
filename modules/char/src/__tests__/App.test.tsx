@@ -188,9 +188,11 @@ describe("char App", () => {
       (a) => a.kind === "class" && a.skills.length > 0,
     )!;
     const skill = saved().skills.find((s) => s.id === archetype.skills[0])!;
-    fireEvent.click(
-      screen.getByRole("button", { name: new RegExp(`^${archetype.name} `) }),
-    );
+    // A skill-less class of the same name may be listed too; it is in no game.
+    const open = screen
+      .getAllByRole("button", { name: new RegExp(`^${archetype.name} `) })
+      .find((b) => !b.textContent?.includes("in no game"))!;
+    fireEvent.click(open);
 
     fireEvent.click(screen.getByRole("button", { name: `Open ${skill.name}` }));
 

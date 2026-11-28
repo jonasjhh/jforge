@@ -230,7 +230,7 @@ function secondClasses(): Archetype[] {
   const apprentice = from("class-apprentice");
   return [
     // Squire: the front line.
-    squire("class-guardian", "Guardian", "knight", {
+    squire("class-warrior", "Warrior", "knight", {
       baseStats: {
         maxHp: 130,
         maxMp: 14,
@@ -244,7 +244,7 @@ function secondClasses(): Archetype[] {
       preferredRow: 0,
       proficiencies: ["blade", "polearm", "heavy"],
     }),
-    squire("class-warrior", "Warrior", "fighter", {
+    squire("class-fighter", "Fighter", "fighter", {
       baseStats: {
         maxHp: 115,
         maxMp: 10,
@@ -315,7 +315,7 @@ function secondClasses(): Archetype[] {
       preferredRow: 0,
       proficiencies: ["blade", "dagger", "light"],
     }),
-    scout("class-beastmaster", "Beastmaster", "wolf", {
+    scout("class-hunter", "Hunter", "wolf", {
       baseStats: {
         maxHp: 92,
         maxMp: 24,
@@ -344,7 +344,7 @@ function secondClasses(): Archetype[] {
       preferredRow: 2,
       proficiencies: ["staff", "focus", "robe"],
     }),
-    apprentice("class-cleric", "Cleric", "healer", {
+    apprentice("class-healer", "Healer", "healer", {
       baseStats: {
         maxHp: 82,
         maxMp: 50,

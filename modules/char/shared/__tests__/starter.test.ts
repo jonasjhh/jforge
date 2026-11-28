@@ -7,9 +7,9 @@ const names = (ids: { name: string }[]) => ids.map((a) => a.name).sort();
 
 describe("starterLibrary's class graph", () => {
   it.each([
-    ["class-squire", ["Guardian", "Spearman", "Warrior"]],
-    ["class-scout", ["Archer", "Beastmaster", "Duelist", "Thief"]],
-    ["class-apprentice", ["Cleric", "Enchanter", "Mage", "Summoner"]],
+    ["class-squire", ["Fighter", "Spearman", "Warrior"]],
+    ["class-scout", ["Archer", "Duelist", "Hunter", "Thief"]],
+    ["class-apprentice", ["Enchanter", "Healer", "Mage", "Summoner"]],
   ])(
     "given the starter library, when %s's next classes are asked, then they are %j",
     (base, expected) => {
