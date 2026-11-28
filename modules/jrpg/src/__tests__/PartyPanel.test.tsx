@@ -56,12 +56,12 @@ describe("PartyPanel", () => {
     expect(run.current.bag).toEqual([]);
   });
 
-  it("given worn armor, when its slot is set to none, then the armor goes in the bag", () => {
+  it("given worn armour, when its slot is set to none, then the armour goes in the bag", () => {
     const run = show(at([battle]));
 
-    fireEvent.change(slot("Aldric: Armor"), { target: { value: "" } });
+    fireEvent.change(slot("Aldric: Armour"), { target: { value: "" } });
 
-    expect(run.current.party[0]!.gear.armor).toBeUndefined();
+    expect(run.current.party[0]!.gear.armour).toBeUndefined();
     expect(run.current.bag).toEqual(["armour-mail"]);
   });
 

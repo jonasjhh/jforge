@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { act, advance, createBattle } from "../battle";
 import {
-  armorPierce,
+  armourPierce,
   hook,
   lancer,
   skewer,
@@ -157,27 +157,27 @@ describe("Hook", () => {
   });
 });
 
-describe("Armor Pierce", () => {
-  const armored = (defense: number) =>
-    place(def("armored", { maxHp: 10_000, speed: 1, defense }), "enemy", 2, 0);
+describe("Armour Pierce", () => {
+  const armoured = (defense: number) =>
+    place(def("armoured", { maxHp: 10_000, speed: 1, defense }), "enemy", 2, 0);
 
-  it("given a target of defense 40, when Armor Pierce is previewed, then it hits as a plain attack on defense 20", () => {
-    const state = lancerTurn([armored(40)]);
+  it("given a target of defense 40, when Armour Pierce is previewed, then it hits as a plain attack on defense 20", () => {
+    const state = lancerTurn([armoured(40)]);
     const [self, target] = state.units;
-    const halved = lancerTurn([armored(20)]);
+    const halved = lancerTurn([armoured(20)]);
     const plain = previewDamage(halved.units[0]!, halved.units[1]!)!.amount;
 
-    const pierced = previewDamage(self!, target!, armorPierce)!.amount;
+    const pierced = previewDamage(self!, target!, armourPierce)!.amount;
 
     expect(pierced).toBe(plain);
   });
 
-  it("given its preview, when Armor Pierce lands, then it deals the previewed damage within the spread", () => {
-    const state = lancerTurn([armored(40)]);
+  it("given its preview, when Armour Pierce lands, then it deals the previewed damage within the spread", () => {
+    const state = lancerTurn([armoured(40)]);
     const [self, target] = state.units;
-    const expected = previewDamage(self!, target!, armorPierce)!.amount;
+    const expected = previewDamage(self!, target!, armourPierce)!.amount;
 
-    const { events } = perform(state, armorPierce.id, at(2, 0));
+    const { events } = perform(state, armourPierce.id, at(2, 0));
 
     const hit = events.find((e): e is Damage => e.type === "damage")!;
     expect(hit.amount).toBeGreaterThanOrEqual(Math.floor(expected * 0.88));
@@ -268,7 +268,7 @@ describe("Weakening Strike", () => {
     expect(skills).toEqual([
       skewer,
       hook,
-      armorPierce,
+      armourPierce,
       staggeringThrust,
       weakeningStrike,
     ]);

@@ -10,7 +10,7 @@ import { changeGear, gearOf, gearSummary, xpToNext, type Run } from "../shared";
 
 const SLOT_LABELS: Record<GearSlot, string> = {
   weapon: "Weapon",
-  armor: "Armor",
+  armour: "Armour",
   accessory: "Accessory",
 };
 

@@ -53,7 +53,7 @@ export function designs(): Library {
       {
         id: "armour-mail",
         name: "Chain Mail",
-        slot: "armor",
+        slot: "armour",
         category: "heavy",
         bonuses: [
           { stat: "defense", op: "add", value: 8 },
@@ -63,7 +63,7 @@ export function designs(): Library {
       {
         id: "armour-robe",
         name: "Silk Robe",
-        slot: "armor",
+        slot: "armour",
         category: "robe",
         bonuses: [
           { stat: "spirit", op: "add", value: 6 },

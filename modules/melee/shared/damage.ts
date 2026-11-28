@@ -92,7 +92,7 @@ export function rowFactor(attacker: Unit, target: Unit): number {
 /**
  * A hit without the random spread: weapon hits (physical, scaled by rows)
  * use attack against defense, spells (magical) magic against spirit.
- * `defenseShare` is how much of the defense counts (Armor Pierce: 0.5).
+ * `defenseShare` is how much of the defense counts (Armour Pierce: 0.5).
  */
 export function expectedDamage(
   attacker: Unit,
@@ -141,7 +141,7 @@ export function physicalHit(
   power = 1,
   /** Overrides the weapon's type, e.g. impact for a collision. */
   damageType: DamageType = attacker.weapon.damageType,
-  /** How much of the target's defense counts (Armor Pierce: 0.5). */
+  /** How much of the target's defense counts (Armour Pierce: 0.5). */
   defenseShare = 1,
 ): Hit {
   return mitigate(

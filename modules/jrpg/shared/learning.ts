@@ -43,7 +43,7 @@ export const LEARNING_ORDER: Record<string, string[]> = {
   [meleeClassId(c.lancer.id)]: [
     c.skewer.id,
     c.hook.id,
-    c.armorPierce.id,
+    c.armourPierce.id,
     c.staggeringThrust.id,
     c.weakeningStrike.id,
   ],

@@ -379,15 +379,15 @@ export const manaTap: Skill = {
 };
 
 /** Lancer: a thrust between the plates: half the target's defense counts. */
-export const armorPierce: Skill = {
-  id: "armor-pierce",
-  name: "Armor Pierce",
+export const armourPierce: Skill = {
+  id: "armour-pierce",
+  name: "Armour Pierce",
   description:
     "A thrust (x1.0) between the plates: only half the target's defense counts.",
   mpCost: 5,
   target: "enemy",
   area: "single",
-  effect: { type: "strike", power: 1, armorPierce: 0.5 },
+  effect: { type: "strike", power: 1, armourPierce: 0.5 },
 };
 
 /** Lancer: a jarring thrust that knocks the target's next turn back. */
@@ -773,7 +773,7 @@ export const imp: CombatantDef = {
 
 /** Warlock: summons an Imp into an empty cell; replaces the old one. */
 export const summonImp: Skill = {
-  id: "summon-imp",
+  id: "skill-summon-imp",
   name: "Summon Imp",
   description:
     "Summons an Imp you control into an empty cell on your side. Replaces your current Imp.",
@@ -1338,7 +1338,7 @@ export const skills = [
   lightningBolt,
   manaTap,
   frostLance,
-  armorPierce,
+  armourPierce,
   staggeringThrust,
   weakeningStrike,
   skewer,
@@ -1507,7 +1507,7 @@ export const lancer: CombatantDef = {
     speed: 11,
   },
   weapon: spear,
-  skills: [skewer, hook, armorPierce, staggeringThrust, weakeningStrike],
+  skills: [skewer, hook, armourPierce, staggeringThrust, weakeningStrike],
   preferredRow: 0,
 };
 

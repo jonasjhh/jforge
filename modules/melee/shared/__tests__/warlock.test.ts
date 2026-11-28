@@ -115,7 +115,7 @@ describe("Summon Imp", () => {
   it("given an empty cell, when the Warlock summons there, then a player-controlled Imp appears, for 10 HP and 6 MP", () => {
     const start = warlockTurn();
 
-    const { events, state } = cast(start, "summon-imp", mine(2, 0));
+    const { events, state } = cast(start, summonImp.id, mine(2, 0));
 
     expect(events).toContainEqual({
       type: "summoned",
@@ -142,7 +142,7 @@ describe("Summon Imp", () => {
     (_, cell, error) => {
       const start = warlockTurn();
 
-      const summon = () => cast(start, "summon-imp", cell);
+      const summon = () => cast(start, summonImp.id, cell);
 
       expect(summon).toThrow(error);
     },
@@ -150,7 +150,7 @@ describe("Summon Imp", () => {
 
   /** Summons once, then plays on until `unitId` is waiting. */
   const turnOf = (unitId: string) => {
-    let state = cast(warlockTurn(), "summon-imp", mine(2, 0)).state;
+    let state = cast(warlockTurn(), summonImp.id, mine(2, 0)).state;
     for (let i = 0; i < 20; i++) {
       state = advance(state).state;
       if (state.phase.kind !== "awaitingCommand") break;
@@ -165,7 +165,7 @@ describe("Summon Imp", () => {
     const before = turnOf("player-4-2");
     imps(before)[0]!.hp = 5;
 
-    const { state, events } = cast(before, "summon-imp", mine(3, 0));
+    const { state, events } = cast(before, summonImp.id, mine(3, 0));
 
     expect(events).toContainEqual({ type: "vanished", unitId: "summon-1" });
     expect(imps(state)).toHaveLength(1);
@@ -180,7 +180,7 @@ describe("Summon Imp", () => {
   it("given an Imp, when the Warlock summons into the Imp's cell, then it is replaced", () => {
     const before = turnOf("player-4-2");
 
-    const { state } = cast(before, "summon-imp", mine(2, 0));
+    const { state } = cast(before, summonImp.id, mine(2, 0));
 
     expect(imps(state).map((u) => u.id)).toEqual(["summon-2"]);
   });
@@ -222,7 +222,7 @@ describe("Summon Imp", () => {
       ...def("killer", { attack: 100, speed: 30, maxHp: 1000 }),
       targeting: { finish: 9, wounded: 0, soft: 0, noise: 0 },
     };
-    const summoned = cast(warlockTurn(killer), "summon-imp", mine(0, 1)).state;
+    const summoned = cast(warlockTurn(killer), summonImp.id, mine(0, 1)).state;
     summoned.units.find((u) => u.id === "summon-1")!.hp = 1;
     // Keep everyone else out of the killer's reach of a finishing blow.
     summoned.units.find((u) => u.id === "player-0-0")!.hp = 200;
@@ -243,7 +243,7 @@ describe("Summon Imp", () => {
   });
 
   it("given only an Imp left standing, when the battle advances, then the enemy wins", () => {
-    const summoned = cast(warlockTurn(), "summon-imp", mine(2, 0)).state;
+    const summoned = cast(warlockTurn(), summonImp.id, mine(2, 0)).state;
     for (const u of summoned.units)
       if (u.side === "player" && !u.summonedBy) u.hp = 0;
 

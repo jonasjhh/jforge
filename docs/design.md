@@ -98,11 +98,11 @@ weapon attack (reach, rows, damage type) at a power, with an optional
 (knocked-out units count), the target doesn't move and takes a collision
 instead: x1.5 damage, reported before the blow.
 
-**Armor Pierce** (Lancer): a spear strike at x1.0 where only half the
-target's defense counts (`armorPierce: 0.5` on a strike), 5 MP. Modifiers
+**Armour Pierce** (Lancer): a spear strike at x1.0 where only half the
+target's defense counts (`armourPierce: 0.5` on a strike), 5 MP. Modifiers
 to defense (Shield Wall, Braced) are halved with it; spirit is untouched.
 With DEFENSE_K 50 it adds about a sixth against defense 20 and a quarter
-against 40, so it pays against armored foes and the Knight.
+against 40, so it pays against armoured foes and the Knight.
 
 **Staggering Thrust** (Lancer): a spear strike at x0.8 that knocks a
 quarter of a full gauge off a target it doesn't knock out (`stagger: 0.25`
@@ -202,13 +202,13 @@ halberd's spike is pierce, a warhammer's pick is pierce).
 
 **Physical types**
 
-| Type   | Typical sources                                  | Identity                                        |
-| ------ | ------------------------------------------------ | ----------------------------------------------- |
-| Slash  | swords, claws, whips, glaives, scythes           | Strong vs flesh; poor vs armor, stone, bone     |
-| Pierce | arrows, spears, fangs, daggers, rapiers, darts   | Strong vs beasts, light armor; poor vs oozes    |
-| Chop   | axes, cleavers, halberds, throwing axes          | Splitting blows: strong vs wood, shields, armor |
-| Crush  | maces, clubs, staffs, flails, hammers, fists     | Strong vs armor, bone, stone; poor vs oozes     |
-| Impact | siege engines, giants, collisions, falls, blasts | Beyond human scale; strong vs structures        |
+| Type   | Typical sources                                  | Identity                                         |
+| ------ | ------------------------------------------------ | ------------------------------------------------ |
+| Slash  | swords, claws, whips, glaives, scythes           | Strong vs flesh; poor vs armour, stone, bone     |
+| Pierce | arrows, spears, fangs, daggers, rapiers, darts   | Strong vs beasts, light armour; poor vs oozes    |
+| Chop   | axes, cleavers, halberds, throwing axes          | Splitting blows: strong vs wood, shields, armour |
+| Crush  | maces, clubs, staffs, flails, hammers, fists     | Strong vs armour, bone, stone; poor vs oozes     |
+| Impact | siege engines, giants, collisions, falls, blasts | Beyond human scale; strong vs structures         |
 
 Crush is anything a person swings; impact is beyond human scale.
 **Collisions** (blocked pushes and pulls) and **Shatter** deal impact.
@@ -219,8 +219,8 @@ Crush is anything a person swings; impact is beyond human scale.
 | --------- | ----------------------------------------------------- |
 | Fire      | Strong vs beasts, plants, oozes                       |
 | Cold      | Strong vs reptiles, fire creatures                    |
-| Lightning | Strong vs armored and metal targets                   |
-| Acid      | Eats armor                                            |
+| Lightning | Strong vs armoured and metal targets                  |
+| Acid      | Eats armour                                           |
 | Poison    | Living things only (undead, constructs, oozes immune) |
 | Holy      | Strong vs undead and demons                           |
 | Shadow    | Strong vs holy and celestial creatures                |
@@ -271,7 +271,7 @@ creature's own `resistances` override them (`traits.ts`).
 | demon     | holy x2, fire x0.5, shadow x0.5                               |
 | undead    | holy x2, shadow x0.5, poison immune                           |
 | construct | slash x0.5, crush x1.5, lightning x1.5, poison immune         |
-| armored   | slash/pierce x0.75, chop/crush/lightning x1.25, acid x1.5     |
+| armoured  | slash/pierce x0.75, chop/crush/lightning x1.25, acid x1.5     |
 
 **Current content:** Sword, Claws: slash. Spear, Bow, Fangs, Venom
 Fangs, Daggers: pierce. Staff, Slam, Hourglass, Rod: crush. Blessed
@@ -439,7 +439,7 @@ Expose without new code.
   impact, which hits whoever stands in the marked zone at that moment, so
   allies can step out. If the caster is knocked out first, it fizzles.
 - **Lightning Bolt** (Mage): lightning at x0.9 on one enemy and the unit
-  right behind it (the **line** area), 10 MP. Constructs and armored foes
+  right behind it (the **line** area), 10 MP. Constructs and armoured foes
   take more from lightning.
 - **Mana Tap** (Mage): pays 10 HP to regain 15 MP, never above max, no MP
   (`restoreMp` effect). Not allowed at full MP. The AI taps only once it
@@ -642,7 +642,7 @@ Viper picks on soft targets.
 **Skills** (done): an AI unit weighs every skill it can afford at every
 cell it may aim it, and uses the best one if it beats its best attack.
 A skill's worth is summed over everyone it would hit, friend or foe, in
-the same units as a target score (a plain attack on a healthy, unarmored
+the same units as a target score (a plain attack on a healthy, unarmoured
 target is about 1):
 
 - damage (spells, strikes, shatter): the target score scaled by the
@@ -762,7 +762,7 @@ skill may break one for a reason worth stating.
 
 Existing (12): **Fighter** (melee, front; both damage and tank: Cleave hits all in reach, Provoke draws single-target attacks, Iron Stance doubles its defense, Second Wind heals it, War Cry raises its row's attack, Rend leaves a bleed that worsens as its target acts), **Archer** (ranged, starts late; Aimed Shot takes aim, ignores cover, not from the front row; Volley rains on a 3x3; Pinning Shot slows its target; Quick Shot costs half a turn; Fire Arrow burns), **Mage**
 (area magic; Lightning Bolt hits a line of two, Mana Tap trades HP for MP, Frost Lance chills), **Healer** (support), **Lancer** (spear: reaches behind the
-front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armor Pierce halves defense, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
+front unit; Skewer hits a line of two, Hook pulls an enemy forward, Armour Pierce halves defense, Staggering Thrust delays a turn, Weakening Strike makes its target deal less), **Chronomancer** (time control:
 Haste, Slow, and Quicken to give an ally its turn now; Time Bomb explodes on an enemy and its neighbours, Rewind gives an ally back the HP it lost since its last turn), **Warlock** (spends its own HP:
 Blood Bolt costs HP, Drain wins it back, Summon Imp puts a player-controlled
 Imp on the field, Curse wears an enemy down, Sacrifice gives up the Imp
@@ -811,10 +811,10 @@ reviewed like any code; char shows it and changes nothing. A library of
 four lists, all plain data (types in `libs/rules/core/types.ts`):
 
 - **Skills**: melee's own `Skill` type.
-- **Gear**: a slot (weapon, armor, accessory) and stat bonuses (`add` or
+- **Gear**: a slot (weapon, armour, accessory) and stat bonuses (`add` or
   `mul`). A weapon also says how it attacks (melee's `Weapon`). Weapons
-  and armor can have a **category**: blade, polearm, dagger, bow, staff or
-  focus; heavy armor, light armor or robe. Accessories have none.
+  and armour can have a **category**: blade, polearm, dagger, bow, staff or
+  focus; heavy armour, light armour or robe. Accessories have none.
 - **Types**: a class, an enemy type or a summon. Stats at level 1, an unarmed
   attack, traits, an icon, and the skills it has. An enemy's threat is
   not written in: it is estimated from the compiled character (stats,
@@ -862,8 +862,8 @@ in every view. Enemy types take no part. Melee's classes have no links.
 The catalogue has the
 graph's **base classes**, one per main stat line: **Squire** (strength:
 attack, defense and HP, front row, blades, polearms, heavy and light
-armor), **Scout** (agility: speed and attack, middle row, daggers, bows
-and light armor) and **Apprentice** (magic: magic, spirit and MP, back
+armour), **Scout** (agility: speed and attack, middle row, daggers, bows
+and light armour) and **Apprentice** (magic: magic, spirit and MP, back
 row, staves, foci and robes; it is to fork into offensive and defensive
 magic). Their stats are close to melee's Fighter, Rogue, and Mage and
 Healer. Each base leads to a **second level** of broad roles, linked in
@@ -917,10 +917,10 @@ still compiles. Melee's Imp and boulder are summons (`summon-imp`,
 `obstacle`), and Summon Imp and Raise Boulder point at them.
 
 **Ids say what a thing is**: enemy types start with `enemy-`, summons
-with `summon-`, gear with its slot: `weapon-`, `armour-` (the slot is
-`armor` in code) or `accessory-`; tiers add `+1` to `+3`. Classes are
+with `summon-`, gear with its slot: `weapon-`, `armour-` or `accessory-`; tiers add `+1` to `+3`. Classes are
 `melee-…`/`class-…` and heroes `melee-hero-…`. A catalogue test checks
-the prefixes.
+the prefixes. Skills keep melee's ids for now, but Summon Imp is
+`skill-summon-imp`, apart from the summon it puts in.
 
 **Melee's classes** (`libs/content/catalogue/melee.ts`): every melee
 class is also a class of the catalogue (`melee-fighter`, ...), so each
@@ -929,7 +929,7 @@ own and it has all of melee's skills for it.
 Their proficiencies (`MELEE_PROFICIENCIES`) include their own weapon's
 category:
 
-| Class              | Weapons        | Armor        |
+| Class              | Weapons        | Armour       |
 | ------------------ | -------------- | ------------ |
 | Fighter, Lancer    | blade, polearm | heavy, light |
 | Paladin            | blade          | heavy, light |
@@ -945,11 +945,11 @@ category:
 (`melee-hero-fighter`, ...: Brann, Isolde, Vex, Tamsin, Orrin, Hale, Wren,
 Cade, Sable, Lucan, Aldric, Mira) and basic gear: each class's own weapon as a piece
 (`weapon-fighter`, "Fighter's Sword", +3 to the class's best of
-attack, magic and spirit) and two armors (Traveller's Jerkin, Traveller's
+attack, magic and spirit) and two armours (Traveller's Jerkin, Traveller's
 Robe: `armour-travellers-jerkin`, `armour-travellers-robe`). Basic gear has no drawbacks. `starterKit` fills a character's
 empty slots with it: their melee class's weapon, and the robe if the
 class's magic beats its attack, the jerkin if not, or the other when the
-class can't wear that one (designed classes get armor only). Every hero
+class can't wear that one (designed classes get armour only). Every hero
 starts in their kit.
 
 **Stats**: the stats before gear (the type's own, or what a game passes
@@ -1018,7 +1018,7 @@ copied when the run starts so later changes don't break it. Besides
 melee's classes and heroes, jrpg picks the world's content from the
 catalogue (`libs/content/catalogue/world.ts`): 9 enemy types
 (Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
-Imp, Raider) and 20 pieces of gear, each weapon and armor with a
+Imp, Raider) and 20 pieces of gear, each weapon and armour with a
 category (two foci, Seer's Orb and Black Tome, so every class has finds); the catalogue provides the heroes and their
 basic gear, which finds and drops leave out. The names of travellers
 (`TRAVELLER_NAMES`) are in `@jforge/content/jrpg`. All gear exists at four **tiers**
@@ -1151,7 +1151,7 @@ unit acts in order:
   Enemy skills aim at the target in range; ally skills at the most hurt
   ally; self skills at the caster; "any" skills at an ally when they
   help.
-- **Effects that work**: strike (power, armor pierce, finisher), magical
+- **Effects that work**: strike (power, armour pierce, finisher), magical
   damage (power, element, drain), heal (by magic or max HP), timed stat
   modifiers, and heal / damage over time and shields. Any other effect
   makes a skill one autob doesn't cast.

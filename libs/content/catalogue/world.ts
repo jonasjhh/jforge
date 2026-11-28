@@ -188,7 +188,7 @@ const worn = (
 ): Gear => ({
   id: `armour-${id}`,
   name,
-  slot: "armor",
+  slot: "armour",
   category,
   bonuses,
 });
@@ -228,7 +228,7 @@ export const WORLD_GEAR: Gear[] = [
     add("magic", 3),
     add("spirit", 5),
   ]),
-  worn("heavy", "plate", "Plate Armor", [
+  worn("heavy", "plate", "Plate Armour", [
     add("defense", 12),
     mul("speed", 0.85),
   ]),

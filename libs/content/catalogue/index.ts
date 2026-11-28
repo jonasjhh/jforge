@@ -16,7 +16,7 @@ export function catalogue(): Library {
 }
 
 export {
-  BASIC_ARMOR,
+  BASIC_ARMOUR,
   MELEE_CREATURES,
   MELEE_HEROES,
   basicGear,

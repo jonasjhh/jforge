@@ -73,7 +73,7 @@ export const TRAITS = [
   "demon",
   "undead",
   "construct",
-  "armored",
+  "armoured",
 ] as const;
 export type Trait = (typeof TRAITS)[number];
 
@@ -258,8 +258,8 @@ export type SkillEffect =
       pin?: boolean;
       ignite?: boolean;
       bleed?: boolean;
-      /** Share of the target's defense ignored (Armor Pierce: 0.5). */
-      armorPierce?: number;
+      /** Share of the target's defense ignored (Armour Pierce: 0.5). */
+      armourPierce?: number;
       /**
        * Power multiplier on a target below `finishBelow` of its max HP
        * (Coup de Grâce: 2.5, see finisher.ts).

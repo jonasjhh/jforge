@@ -4,7 +4,7 @@ import { toCombatantDef } from "@jforge/rules/core";
 import { canUse } from "@jforge/rules/core";
 import { blankCharacter, emptyLibrary, parseLibrary } from "@jforge/rules/core";
 import {
-  BASIC_ARMOR,
+  BASIC_ARMOUR,
   MELEE_CREATURES,
   MELEE_HEROES,
   MELEE_PROFICIENCIES,
@@ -194,7 +194,7 @@ describe("starterKit", () => {
 
     expect(kitted.gear).toEqual({
       weapon: meleeWeaponId("fighter"),
-      armor: "armour-travellers-jerkin",
+      armour: "armour-travellers-jerkin",
     });
   });
 
@@ -203,18 +203,18 @@ describe("starterKit", () => {
 
     const kitted = starterKit(library, bare);
 
-    expect(kitted.gear.armor).toBe("armour-travellers-robe");
+    expect(kitted.gear.armour).toBe("armour-travellers-robe");
   });
 
-  it("given a fighter already wearing armor, when it gets its starter kit, then the armor is kept", () => {
+  it("given a fighter already wearing armour, when it gets its starter kit, then the armour is kept", () => {
     const worn = {
       ...blankCharacter("a", type("fighter")),
-      gear: { armor: "x" },
+      gear: { armour: "x" },
     };
 
     const kitted = starterKit(library, worn);
 
-    expect(kitted.gear.armor).toBe("x");
+    expect(kitted.gear.armour).toBe("x");
   });
 
   it("given a library with no gear, when a fighter gets its starter kit, then it wears nothing", () => {
@@ -225,13 +225,13 @@ describe("starterKit", () => {
     expect(kitted.gear).toEqual({});
   });
 
-  it("given a designed class, when one of its characters gets a starter kit, then it gets armor only", () => {
+  it("given a designed class, when one of its characters gets a starter kit, then it gets armour only", () => {
     const starter = designedLibrary();
     const sage = starter.archetypes.find((a) => a.id === "type-scholar")!;
 
     const kitted = starterKit(starter, blankCharacter("c", sage));
 
-    expect(kitted.gear).toEqual({ armor: "armour-travellers-robe" });
+    expect(kitted.gear).toEqual({ armour: "armour-travellers-robe" });
   });
 });
 
@@ -244,14 +244,14 @@ describe("melee heroes", () => {
     );
   });
 
-  it("given an empty library, when melee's classes are added, then each hero wears a weapon and armor, and the basic armor is added", () => {
+  it("given an empty library, when melee's classes are added, then each hero wears a weapon and armour, and the basic armour is added", () => {
     const library = withMeleeClasses(emptyLibrary());
 
     for (const hero of library.characters) {
       expect(hero.gear.weapon).toBeDefined();
-      expect(hero.gear.armor).toBeDefined();
+      expect(hero.gear.armour).toBeDefined();
     }
-    expect(library.gear.slice(-BASIC_ARMOR.length)).toEqual(BASIC_ARMOR);
+    expect(library.gear.slice(-BASIC_ARMOUR.length)).toEqual(BASIC_ARMOUR);
   });
 
   it("given a hero whose gear was taken off, when melee's classes are added, then the edit is kept", () => {
@@ -271,7 +271,7 @@ describe("melee heroes", () => {
 
 describe("melee proficiencies", () => {
   it.each(playerIds)(
-    "given melee's %s, when its class and hero are added, then it can use its own weapon and wears it with armor",
+    "given melee's %s, when its class and hero are added, then it can use its own weapon and wears it with armour",
     (id, def) => {
       const library = withMeleeClasses(emptyLibrary());
 
@@ -281,7 +281,7 @@ describe("melee proficiencies", () => {
       expect(type.proficiencies).toEqual(MELEE_PROFICIENCIES[id]);
       expect(canUse(type, basicWeapon(def))).toBe(true);
       expect(hero.gear.weapon).toBe(meleeWeaponId(id));
-      expect(hero.gear.armor).toBeDefined();
+      expect(hero.gear.armour).toBeDefined();
     },
   );
 
@@ -292,6 +292,6 @@ describe("melee proficiencies", () => {
       (c) => c.id === meleeHeroId("archer"),
     )!;
 
-    expect(archer.gear.armor).toBe("armour-travellers-jerkin");
+    expect(archer.gear.armour).toBe("armour-travellers-jerkin");
   });
 });

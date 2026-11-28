@@ -39,9 +39,9 @@ export const MELEE_HEROES: Record<string, string> = {
 
 /**
  * What each melee class can use. Fighters and lancers take blades and
- * polearms and any armor but robes; archers and rogues bows and daggers
- * in light armor; casters staves and foci in robes, some also in light
- * armor. Each class's own weapon is among its categories.
+ * polearms and any armour but robes; archers and rogues bows and daggers
+ * in light armour; casters staves and foci in robes, some also in light
+ * armour. Each class's own weapon is among its categories.
  */
 export const MELEE_PROFICIENCIES: Record<string, GearCategory[]> = {
   fighter: ["blade", "polearm", "heavy", "light"],
@@ -78,12 +78,12 @@ const MELEE_WEAPON_CATEGORY: Record<string, GearCategory> = {
 const BASIC_WEAPON_BONUS = 3;
 const WEAPON_STATS = ["attack", "magic", "spirit"] as const;
 
-/** Basic armor: a jerkin, or a robe for casters. */
-export const BASIC_ARMOR: Gear[] = [
+/** Basic armour: a jerkin, or a robe for casters. */
+export const BASIC_ARMOUR: Gear[] = [
   {
     id: "armour-travellers-jerkin",
     name: "Traveller's Jerkin",
-    slot: "armor",
+    slot: "armour",
     category: "light",
     bonuses: [
       { stat: "defense", op: "add", value: 3 },
@@ -93,7 +93,7 @@ export const BASIC_ARMOR: Gear[] = [
   {
     id: "armour-travellers-robe",
     name: "Traveller's Robe",
-    slot: "armor",
+    slot: "armour",
     category: "robe",
     bonuses: [
       { stat: "spirit", op: "add", value: 3 },
@@ -139,9 +139,9 @@ export function basicWeapon(def: CombatantDef): Gear {
   };
 }
 
-/** Every piece of basic gear: each melee class's weapon, and the armor. */
+/** Every piece of basic gear: each melee class's weapon, and the armour. */
 export function basicGear(): Gear[] {
-  return [...content.playerTypes.map(basicWeapon), ...BASIC_ARMOR];
+  return [...content.playerTypes.map(basicWeapon), ...BASIC_ARMOUR];
 }
 
 /**
@@ -154,14 +154,14 @@ export function starterKit(library: Library, character: Character): Character {
   const type = library.archetypes.find((a) => a.id === character.archetypeId);
   if (!type || type.kind !== "class") return character;
   const caster = type.baseStats.magic > type.baseStats.attack;
-  const armor = caster
+  const armour = caster
     ? ["armour-travellers-robe", "armour-travellers-jerkin"]
     : ["armour-travellers-jerkin", "armour-travellers-robe"];
   const wanted = [
     type.id.startsWith("melee-")
       ? meleeWeaponId(type.id.slice("melee-".length))
       : undefined,
-    ...armor,
+    ...armour,
   ];
   const gear = { ...character.gear };
   for (const id of wanted) {

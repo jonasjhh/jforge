@@ -60,7 +60,7 @@ function foeHits(state: BattleState) {
   const foe = state.units.find((u) => u.id === "enemy-0-0")!;
   foe.base.speed = 100;
   foe.weapon = { ...foe.weapon, columns: "any", depth: "any" };
-  // Always the soft ally (defense 0), never the armored Paladin.
+  // Always the soft ally (defense 0), never the armoured Paladin.
   foe.targeting = { finish: 0, wounded: 0, soft: 10, noise: 0 };
   state.units.find((u) => u.id === "player-4-2")!.base.speed = 0;
   return advance(state, { stopAfterAction: true });

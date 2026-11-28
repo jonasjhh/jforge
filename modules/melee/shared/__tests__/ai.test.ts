@@ -58,9 +58,9 @@ describe("enemy targeting", () => {
     expect(target).toBe("player-3-0");
   });
 
-  it("given an armored and a robed unit, equally healthy, when the AI picks, then it picks the robed one", () => {
+  it("given an armoured and a robed unit, equally healthy, when the AI picks, then it picks the robed one", () => {
     const party = [
-      place(def("armored", { defense: 30 }), "player", 1),
+      place(def("armoured", { defense: 30 }), "player", 1),
       place(def("robed", { defense: 2 }), "player", 3),
     ];
 

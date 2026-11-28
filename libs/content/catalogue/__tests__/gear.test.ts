@@ -80,7 +80,7 @@ describe("equipping", () => {
 
     expect(dressed.gear).toEqual({
       weapon: "weapon-sword",
-      armor: "armour-mail",
+      armour: "armour-mail",
     });
   });
 
@@ -101,7 +101,7 @@ describe("equipping", () => {
   });
 
   it("given a bare character, when an empty slot is emptied, then nothing changes", () => {
-    const emptied = unequip(bare, "armor");
+    const emptied = unequip(bare, "armour");
 
     expect(emptied.gear).toEqual({});
   });
@@ -121,14 +121,14 @@ describe("equipping", () => {
   });
 
   it("given gear ids that are gone or in the wrong slot, when worn gear is listed, then those slots count as empty", () => {
-    const odd = { ...bare, gear: { weapon: "gone", armor: "weapon-sword" } };
+    const odd = { ...bare, gear: { weapon: "gone", armour: "weapon-sword" } };
 
     const gear = equippedGear(library, odd);
 
     expect(gear).toEqual([]);
   });
 
-  it("given armor filed under the accessory slot, when worn gear is listed, then that slot counts as empty", () => {
+  it("given armour filed under the accessory slot, when worn gear is listed, then that slot counts as empty", () => {
     const misfiled: Gear = { ...mail, id: "x" };
     const lib = { ...emptyLibrary(), gear: [misfiled] };
 

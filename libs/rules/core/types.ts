@@ -13,16 +13,16 @@ import type {
 // Skills and weapons are melee's own types: what is written here is
 // exactly what a battle uses.
 
-export const GEAR_SLOTS = ["weapon", "armor", "accessory"] as const;
+export const GEAR_SLOTS = ["weapon", "armour", "accessory"] as const;
 export type GearSlot = (typeof GEAR_SLOTS)[number];
 
 /**
- * What sort of weapon or armor a piece is. A class names the categories
+ * What sort of weapon or armour a piece is. A class names the categories
  * it can use; accessories have none, so anyone wears them.
  */
 export const GEAR_CATEGORIES = {
   weapon: ["blade", "polearm", "dagger", "bow", "staff", "focus"],
-  armor: ["heavy", "light", "robe"],
+  armour: ["heavy", "light", "robe"],
   accessory: [],
 } as const satisfies Record<GearSlot, readonly string[]>;
 export type GearCategory = (typeof GEAR_CATEGORIES)[GearSlot][number];
@@ -34,13 +34,13 @@ export const GEAR_CATEGORY_NAMES: Record<GearCategory, string> = {
   bow: "Bow",
   staff: "Staff",
   focus: "Focus",
-  heavy: "Heavy armor",
-  light: "Light armor",
+  heavy: "Heavy armour",
+  light: "Light armour",
   robe: "Robe",
 };
 export const ALL_GEAR_CATEGORIES: GearCategory[] = [
   ...GEAR_CATEGORIES.weapon,
-  ...GEAR_CATEGORIES.armor,
+  ...GEAR_CATEGORIES.armour,
 ];
 
 /** One change a piece of gear makes to a stat: +5 attack, or x1.1 speed. */

@@ -327,7 +327,7 @@ function apply(w: Work, f: Fighter, skill: Skill, target: Fighter) {
         effect.finisher && target.hp / maxHpOf(target) < below
           ? effect.finisher
           : 1;
-      physical(w, f, target, effect.power * finishing, effect.armorPierce);
+      physical(w, f, target, effect.power * finishing, effect.armourPierce);
       return;
     }
     case "damage": {

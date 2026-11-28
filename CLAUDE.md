@@ -42,6 +42,11 @@ Object bindings and classes with the module name.
 Name tests given/when/then in one sentence and write them
 arrange/act/assert; see Testing in `README.md`.
 
+## Spelling
+
+British English everywhere, code included: `armour`, `colour`,
+`behaviour` (CSS properties such as `color` excepted).
+
 ## Saved data
 
 Saved data (jrpg's and autob's runs) may be invalidated at

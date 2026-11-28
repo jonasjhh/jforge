@@ -4,7 +4,7 @@ import { catalogue } from "..";
 
 const GEAR_PREFIX: Record<Gear["slot"], string> = {
   weapon: "weapon-",
-  armor: "armour-",
+  armour: "armour-",
   accessory: "accessory-",
 };
 const misnamed = <T extends { id: string }>(

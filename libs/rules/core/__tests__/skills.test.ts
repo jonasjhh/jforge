@@ -89,7 +89,7 @@ describe("effectSummary", () => {
       bleed: true,
       weaken: 0.5,
       stagger: 0.25,
-      armorPierce: 0.4,
+      armourPierce: 0.4,
       finisher: 2,
       mend: 0.3,
     });

@@ -981,7 +981,7 @@ describe("resolveAlly", () => {
 
     const run = resolveAlly(at([ally]), true);
 
-    expect(kit.armor).toBeDefined();
+    expect(kit.armour).toBeDefined();
     expect(run.party.at(-1)!.gear).toEqual(kit);
   });
 
@@ -1118,18 +1118,18 @@ describe("changeGear", () => {
     expect(after.party[1]!.gear.accessory).toBe("accessory-ring");
   });
 
-  it("given worn armor, when the slot is emptied, then the armor goes in the bag", () => {
-    const after = changeGear(run, ALDRIC, "armor", null);
+  it("given worn armour, when the slot is emptied, then the armour goes in the bag", () => {
+    const after = changeGear(run, ALDRIC, "armour", null);
 
-    expect(after.party[0]!.gear.armor).toBeUndefined();
+    expect(after.party[0]!.gear.armour).toBeUndefined();
     expect(after.bag).toContain("armour-mail");
   });
 
   it.each([
     ["a bow for a knight", ALDRIC, "weapon", "weapon-bow"],
-    ["plate for a sage", MIRA, "armor", "armour-plate"],
+    ["plate for a sage", MIRA, "armour", "armour-plate"],
     ["gear not in the bag", ALDRIC, "weapon", "weapon-staff"],
-    ["gear for another slot", ALDRIC, "armor", "accessory-ring"],
+    ["gear for another slot", ALDRIC, "armour", "accessory-ring"],
     ["gear for a stranger", "nobody", "accessory", "accessory-ring"],
   ] as const)(
     "given %s, when it is put on, then nothing changes",

@@ -537,7 +537,7 @@ function applySkill(
           power,
           // A crash into something is impact damage.
           blocked ? "impact" : unit.weapon.damageType,
-          1 - (effect.armorPierce ?? 0),
+          1 - (effect.armourPierce ?? 0),
         );
         const suffered = applyDamage(state, target, hit, events);
         if (effect.mend && isAlive(unit)) {

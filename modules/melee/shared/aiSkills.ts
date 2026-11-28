@@ -38,7 +38,7 @@ import type {
 } from "./types";
 
 // How much a skill is worth to the AI, in the units of a target score: a
-// plain attack on a healthy, unarmored target is worth about 1 (see
+// plain attack on a healthy, unarmoured target is worth about 1 (see
 // targetScore). Every effect lands on friend and foe alike, so each victim
 // counts for its side: good for the caster's side is positive.
 

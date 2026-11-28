@@ -18,7 +18,7 @@ export const TRAIT_RESISTANCES: Record<Trait, Resistances> = {
   demon: { holy: 2, fire: 0.5, shadow: 0.5 },
   undead: { holy: 2, shadow: 0.5, poison: 0 },
   construct: { slash: 0.5, crush: 1.5, lightning: 1.5, poison: 0 },
-  armored: {
+  armoured: {
     slash: 0.75,
     pierce: 0.75,
     chop: 1.25,
