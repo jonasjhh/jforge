@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { starterLibrary } from "@jforge/char/shared";
+import { autobLibrary } from "@jforge/content/autob";
 import {
   STAR_POWER,
   TIERS,
@@ -13,7 +13,7 @@ import {
   unitName,
 } from "../units";
 
-const library = starterLibrary();
+const library = autobLibrary();
 
 describe("shopClasses", () => {
   it("given the starter library, when the shop's classes are listed, then they are its classes and no enemies", () => {

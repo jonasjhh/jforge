@@ -1,8 +1,8 @@
-import { starterLibrary } from "@jforge/char/shared";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import { pair } from "../../shared/__tests__/pair";
 import { roadOf, startRun, type Encounter, type Run } from "../../shared";
 
-export const library = starterLibrary();
+export const library = jrpgLibrary();
 
 /** A run of Aldric and Mira standing at the first of these encounters. */
 export const at = (

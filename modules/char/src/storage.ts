@@ -1,82 +1,45 @@
-import { writeRoster } from "@jforge/melee/shared";
-import {
-  LIBRARY_STORAGE_KEY,
-  compileRoster,
-  forGame,
-  parseLibrary,
-  starterLibrary,
-  withMeleeClasses,
-  type Library,
-} from "../shared";
-import { isPlaces, type Places } from "./board";
+import { VIEWS, type ContentView } from "@jforge/content";
 import { TABS, type Tab } from "./tabs";
 
-/**
- * The library saved on this device, with any melee class or hero it lacks,
- * or the starter one. A save of another SAVE_VERSION counts as none.
- */
-export function loadLibrary(): Library {
-  try {
-    const saved = parseLibrary(localStorage.getItem(LIBRARY_STORAGE_KEY));
-    return saved ? withMeleeClasses(saved) : starterLibrary();
-  } catch {
-    return starterLibrary();
-  }
-}
-
-/**
- * Saves the library and publishes to melee the characters of the designs
- * it uses; melee shares this origin's storage. False if the browser refused either.
- */
-export function saveLibrary(library: Library): boolean {
-  try {
-    localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(library));
-    return writeRoster(localStorage, compileRoster(forGame(library, "melee")));
-  } catch {
-    return false;
-  }
-}
+// What the codex remembers on this device: only where the reader was. The
+// content itself is code (@jforge/content) and is never saved here.
 
 const TAB_STORAGE_KEY = "jforge.char.tab";
+const VIEW_STORAGE_KEY = "jforge.char.view";
 
-/** The tab open when the app was last used, or the roster. */
-export function loadTab(): Tab {
+const read = (key: string): string | null => {
   try {
-    const saved = localStorage.getItem(TAB_STORAGE_KEY);
-    return TABS.find((tab) => tab === saved) ?? "Roster";
+    return localStorage.getItem(key);
   } catch {
-    return "Roster";
+    return null;
   }
+};
+const write = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Only a convenience.
+  }
+};
+
+/** The tab open when the codex was last used, or Classes. */
+export function loadTab(): Tab {
+  const saved = read(TAB_STORAGE_KEY);
+  return TABS.find((tab) => tab === saved) ?? "Classes";
 }
 
 /** Remembers the open tab; a browser that refuses just forgets it. */
 export function saveTab(tab: Tab): void {
-  try {
-    localStorage.setItem(TAB_STORAGE_KEY, tab);
-  } catch {
-    // Only a convenience.
-  }
+  write(TAB_STORAGE_KEY, tab);
 }
 
-const BOARD_STORAGE_KEY = "jforge.char.board";
-
-/** The places of classes on the Paths board on this device, or none. */
-export function loadPlaces(): Places {
-  try {
-    const saved: unknown = JSON.parse(
-      localStorage.getItem(BOARD_STORAGE_KEY) ?? "{}",
-    );
-    return isPlaces(saved) ? saved : {};
-  } catch {
-    return {};
-  }
+/** The game whose content was shown last, or everything. */
+export function loadView(): ContentView["id"] {
+  const saved = read(VIEW_STORAGE_KEY);
+  return VIEWS.find((view) => view.id === saved)?.id ?? "all";
 }
 
-/** Remembers the board's layout; a browser that refuses just forgets it. */
-export function savePlaces(places: Places): void {
-  try {
-    localStorage.setItem(BOARD_STORAGE_KEY, JSON.stringify(places));
-  } catch {
-    // Only a convenience.
-  }
+/** Remembers the game shown; a browser that refuses just forgets it. */
+export function saveView(id: ContentView["id"]): void {
+  write(VIEW_STORAGE_KEY, id);
 }

@@ -12,12 +12,19 @@ credentials, deploys and secrets are set up once, not per module.
 
 ## Modules
 
-| Module  | Path      | Depends on      | What it is                                |
-| ------- | --------- | --------------- | ----------------------------------------- |
-| `melee` | `/melee/` | —               | Battle engine: time-based turns, 5x3 grid |
-| `jrpg`  | `/jrpg/`  | `melee`, `char` | Runs through levels of encounters         |
-| `char`  | `/char/`  | `melee`         | Designer: classes, enemies, skills, gear  |
-| `autob` | `/autob/` | `melee`, `char` | Autobattler: shop, bench, hex board       |
+| Module  | Path      | Depends on                  | What it is                                  |
+| ------- | --------- | --------------------------- | ------------------------------------------- |
+| `melee` | `/melee/` | —                           | Battle engine: time-based turns, 5x3 grid   |
+| `jrpg`  | `/jrpg/`  | `melee`, `rules`, `content` | Runs through levels of encounters           |
+| `char`  | `/char/`  | `rules`, `content`          | Codex: all content, read-only, and per game |
+| `autob` | `/autob/` | `melee`, `rules`, `content` | Autobattler: shop, bench, hex board         |
+
+And two libraries, which are packages but no apps:
+
+| Library   | Package           | Depends on       | What it is                                                        |
+| --------- | ----------------- | ---------------- | ----------------------------------------------------------------- |
+| `rules`   | `@jforge/rules`   | `melee`          | Logic on content, game by game: `core/` is what every game shares |
+| `content` | `@jforge/content` | `melee`, `rules` | The content as code: `catalogue/`, and a folder per game          |
 
 ## Layout
 
@@ -31,22 +38,42 @@ modules/<name>/
   worker/             the module's Hono API, mounted at /api/<name>
   e2e/                Playwright smoke tests (see Testing)
   public/             icons
+libs/
+  rules/core/         what content is (types) and the rules on it every game
+                      shares: gear, compiling to melee, the class graph, checks.
+                      A game's own rules on content go in rules/<game>/.
+  content/catalogue/  every class, enemy type, skill, gear and character
+  content/<game>/     what that game uses of the catalogue (jrpg/, autob/)
 worker/index.ts       the one Worker: mounts every module's API, serves dist/
 tooling/              shared Vite/PWA config, dev ports, icon generator,
                       icons/jforge.svg (source of the jforge app icon)
 wrangler.toml         the one Worker's config
 ```
 
-Modules depend on each other through pnpm workspace packages: `jrpg`
-lists `"@jforge/melee": "workspace:*"` and imports
-`@jforge/melee/shared`. `char` publishes the characters designed in it as a
-roster in melee's format (browser storage, one origin), which `melee`
-reads without depending on char. `jrpg` depends on both: it reads char's
-library (`@jforge/char/shared`) and shows melee's battle screen
-(`@jforge/melee/battle`). `autob` reads char's library too, but has its
-own board and fight engine and uses only melee's unit data and look. A
-module exposes what others may import through
-the `exports` field of its `package.json`.
+Modules and libraries depend on each other through pnpm workspace
+packages: `jrpg` lists `"@jforge/melee": "workspace:*"` and imports
+`@jforge/melee/shared`. A package exposes what others may import through
+the `exports` field of its `package.json`. The concerns are kept apart:
+
+- **Content is code.** Classes, enemy types, skills, gear and characters
+  are written in `libs/content`, not in an app. The catalogue holds all of
+  it; `content/jrpg` and `content/autob` pick (and, to rebalance for one
+  game, replace) what that game uses. Content imports only `rules` (for
+  types and helpers) and `melee` (for its data).
+- **Rules are logic, not data.** `libs/rules` never imports content: its
+  tests build their own fixtures, and tests that need the real catalogue
+  live in `libs/content`.
+- **char only shows.** It reads `@jforge/content` and `@jforge/rules` and
+  saves nothing but which tab and game were open. No app imports char.
+- **Games read their content from `@jforge/content/<game>`** and its
+  rules from `@jforge/rules`. `jrpg` shows melee's battle screen
+  (`@jforge/melee/battle`); `autob` has its own board and fight engine and
+  uses only melee's unit data and look.
+- **melee depends on nothing.** For now `rules` and `content` use melee's
+  types and data (`@jforge/melee/shared`); the battle UI stays in melee.
+
+ESLint enforces these imports (`no-restricted-imports` in
+`eslint.config.js`).
 
 ## Development
 
@@ -103,7 +130,7 @@ it would cost much more time without reading better.
 ```
 pnpm test             # unit tests
 pnpm coverage         # unit tests with a coverage report (coverage/) and its floors
-pnpm mutation         # mutation testing of modules/*/shared (reports/mutation/)
+pnpm mutation         # mutation testing of modules/*/shared and libs (reports/mutation/)
 pnpm build && pnpm e2e   # starts the Worker on :8791 and drives Chromium
 ```
 

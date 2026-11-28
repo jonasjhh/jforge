@@ -4,7 +4,7 @@ import { FightView } from "./FightView";
 import { PlanningScreen } from "./PlanningScreen";
 import { RunOverScreen } from "./RunOverScreen";
 import { StartScreen } from "./StartScreen";
-import { loadLibrary, loadRun, saveRun } from "./storage";
+import { loadRun, saveRun } from "./storage";
 
 export function App() {
   const [run, setRun] = useState<Run | null>(loadRun);
@@ -18,7 +18,8 @@ export function App() {
   };
 
   if (run === null) {
-    const library = loadLibrary();
+    // A run draws from its game's content (@jforge/content).
+    const library = null;
     return (
       <StartScreen
         library={library}

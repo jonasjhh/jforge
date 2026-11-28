@@ -1,4 +1,4 @@
-import { starterLibrary } from "@jforge/char/shared";
+import { autobLibrary } from "@jforge/content/autob";
 import {
   BENCH_SIZE,
   SHOP_SIZE,
@@ -7,7 +7,7 @@ import {
   type Run,
 } from "../../shared";
 
-export const library = starterLibrary();
+export const library = autobLibrary();
 
 export const unit = (
   uid: string,

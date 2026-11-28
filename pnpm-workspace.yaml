@@ -1,6 +1,7 @@
 packages:
   - landing
   - modules/*
+  - libs/*
 
 allowBuilds:
   esbuild: true

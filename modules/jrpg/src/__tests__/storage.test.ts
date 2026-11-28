@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { LIBRARY_STORAGE_KEY, starterLibrary } from "@jforge/char/shared";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import { RUN_STORAGE_KEY, startRun } from "../../shared";
-import { loadLibrary, loadRun, saveRun } from "../storage";
+import { loadRun, saveRun } from "../storage";
 
 const refusals: { mockRestore(): void }[] = [];
 /** Makes the browser refuse this storage call until the test ends. */
@@ -17,42 +17,8 @@ const refuse = (method: "getItem" | "setItem" | "removeItem") => {
 beforeEach(() => localStorage.clear());
 afterEach(() => refusals.splice(0).forEach((spy) => spy.mockRestore()));
 
-describe("loadLibrary", () => {
-  it("given nothing saved by char, when the library is loaded, then there is none", () => {
-    const loaded = loadLibrary();
-
-    expect(loaded).toBeNull();
-  });
-
-  it("given a broken save, when the library is loaded, then there is none", () => {
-    localStorage.setItem(LIBRARY_STORAGE_KEY, "nope");
-
-    const loaded = loadLibrary();
-
-    expect(loaded).toBeNull();
-  });
-
-  it("given a library saved by char, when it is loaded, then it is that library", () => {
-    const library = starterLibrary();
-    localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(library));
-
-    const loaded = loadLibrary();
-
-    expect(loaded).toEqual(library);
-  });
-
-  it("given a saved library and a browser that refuses to read, when it is loaded, then there is none", () => {
-    localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(starterLibrary()));
-    refuse("getItem");
-
-    const loaded = loadLibrary();
-
-    expect(loaded).toBeNull();
-  });
-});
-
 describe("loadRun and saveRun", () => {
-  const run = startRun(starterLibrary(), 3);
+  const run = startRun(jrpgLibrary(), 3);
 
   it("given no run saved, when the run is loaded, then there is none", () => {
     const loaded = loadRun();

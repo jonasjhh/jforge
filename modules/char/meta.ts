@@ -4,7 +4,7 @@ export const meta: ModuleMeta = {
   name: "char",
   title: "Char",
   description:
-    "Design classes, enemies, skills and gear for melee, jrpg and autob.",
+    "The codex: every class, enemy, skill and piece of gear in jforge, and what each game uses.",
   themeColor: "#0f1416",
   devPort: 5183,
 };

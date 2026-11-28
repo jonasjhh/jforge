@@ -4,7 +4,6 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    "./shared": "./shared/index.ts",
     "./worker": "./worker/index.ts"
   },
   "scripts": {
@@ -12,8 +11,9 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@jforge/content": "workspace:*",
     "@jforge/melee": "workspace:*",
-    "@xyflow/react": "12.12.1",
+    "@jforge/rules": "workspace:*",
     "hono": "^4.13.19",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

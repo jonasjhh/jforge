@@ -8,7 +8,7 @@ jrpgApi.get("/health", (c) =>
   c.json({
     module: "jrpg",
     status: "ok",
-    uses: ["melee"],
+    uses: ["melee", "content"],
     demo: previewOpeningBattle(),
   }),
 );

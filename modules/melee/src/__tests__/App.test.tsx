@@ -7,8 +7,6 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import { writeRoster } from "../../shared";
-import { def } from "../../shared/__tests__/helpers";
 import { App } from "../App";
 
 beforeEach(() => {
@@ -25,7 +23,6 @@ afterEach(() => {
 });
 
 const button = (name: string) => screen.getByRole("button", { name });
-const party = () => screen.getByText("Your party:").parentElement!.textContent;
 
 const encounterText = () => screen.getByText(/^Encounter #/).textContent;
 
@@ -62,20 +59,6 @@ describe("melee App", () => {
 
     expect(screen.getByText("Encounter #200000")).toBeTruthy();
     random.mockRestore();
-  });
-
-  it("given a roster char published, when Custom is chosen, then the party is drawn from it", () => {
-    writeRoster(localStorage, {
-      party: [{ ...def("custom-hero"), name: "Gwen" }],
-      monsters: [{ ...def("custom-foe"), name: "Grub" }],
-    });
-    render(<App />);
-    const builtIn = party();
-
-    fireEvent.click(screen.getByRole("radio", { name: "Custom" }));
-
-    expect(builtIn).not.toContain("Gwen");
-    expect(party()).toContain("Gwen");
   });
 
   it("given a battle that is over, when the next one is asked for, then a fresh battle starts", () => {

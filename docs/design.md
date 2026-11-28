@@ -1,8 +1,9 @@
 # jforge game framework: design
 
-jforge is a small game development framework: build characters and skills
-in **char**, test them in fights in **melee**, and use them in games such
-as **jrpg**. The combat is inspired by classic time-based JRPG battles
+jforge is a small game development framework: content (classes, enemy
+types, skills, gear, characters) is written as code in **libs/content**,
+fought with in **melee**, used in games such as **jrpg** and **autob**,
+and browsed read-only in **char**. The combat is inspired by classic time-based JRPG battles
 (gauges that fill with speed, front and back rows, elements), but all
 content (classes, monsters, skills, names) is original.
 
@@ -12,22 +13,23 @@ them, is in [progression.md](progression.md).
 ## Modules
 
 ```
-melee  <-  char  <-  jrpg
-  ^ ^______________/
-  |          ^
-  +-------- autob
+melee  <-  rules  <-  content  <-  char
+  ^          ^          ^
+  +----------+----------+------  jrpg, autob
 ```
 
-| Module  | Role                                                                                                                     |
-| ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `melee` | Battle engine and rules: what combatants, stats, damage types, statuses and skills are. Starter content. Runs any fight. |
-| `char`  | Character creator and skill designer. Builds on melee's definitions. Stores the roster. "Test in melee".                 |
-| `jrpg`  | The game: runs through levels of encounters. Uses melee for battles and char for the party, enemies and gear.            |
-| `autob` | An autobattler: shop, bench and a hex board. Uses char's classes as units and melee's unit data, with its own engine.    |
+| Package   | Role                                                                                                                         |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `melee`   | Battle engine and rules: what combatants, stats, damage types, statuses and skills are. Starter content. Runs any fight.     |
+| `rules`   | A library: what content is (types) and the logic on it, `core/` for every game, a folder per game that needs its own.        |
+| `content` | A library: the content as code. `catalogue/` holds all of it; `jrpg/` and `autob/` say what each game uses.                  |
+| `char`    | The codex: shows all content, or one game's, read-only. Saves only which tab and game were open.                             |
+| `jrpg`    | The game: runs through levels of encounters. Uses melee for battles and its content for the party, enemies and gear.         |
+| `autob`   | An autobattler: shop, bench and a hex board. Uses its content's classes as units and melee's unit data, with its own engine. |
 
-**melee never depends on char.** It accepts plain data (a party and an
-encounter); char converts its characters into that format. Otherwise the
-two would depend on each other.
+**melee depends on nothing.** It accepts plain data (a party and an
+encounter); `rules` compiles content into that format. **rules never
+imports content**, and **no package imports char**. ESLint enforces it.
 
 ## Battle engine (`modules/melee/shared`)
 
@@ -736,13 +738,11 @@ Still open:
   least five skills that no other class has, mixing roles (a Fighter
   deals damage and tanks). They are added one skill at a time, each
   reviewed first.
-- **Saved data.** For now, every save may be invalidated: the library,
-  the roster char publishes to melee and the run in progress all carry
-  `SAVE_VERSION` (`melee/shared/save.ts`), and a save of any other version
-  is ignored as if there were none (char starts from the starter library,
-  jrpg and autob have no run). Raise it whenever a change makes old saves stale,
-  such as a class gaining a skill; saves are never migrated. Exported
-  library files of an older version no longer import.
+- **Saved data.** For now, every save may be invalidated: a run in
+  progress (jrpg's and autob's) carries `SAVE_VERSION`
+  (`melee/shared/save.ts`), and a save of any other version is ignored as
+  if there were none. Raise it whenever a change makes old saves stale,
+  such as a class gaining a skill; saves are never migrated.
 
 ### Skill design guidelines
 
@@ -797,58 +797,66 @@ Ideas to build in small steps, roughly in this order when they fit:
 - **One "leaves a status" field on strikes**: replace the per-effect
   flags (`ignite`, `bleed`, ...) with one field naming the status a
   strike leaves, before more signature effects (sunder, corrode) arrive.
-  Touches char's effect fields and the existing skills.
+  Touches the existing skills and their checks in `libs/rules/core`.
 - **Signature effects** for the other types (puncture, sunder, stagger,
   knockback, chill, interrupt, corrode) as skills call for them.
 - **Sonic** damage type, with a future Bard.
 - **Push on spells**: reuse the strike push on a spell (e.g. a blast that
   knocks enemies back).
 
-## char (phase 4)
+## char: the codex (`modules/char`)
 
-**Bootstrapped** (`modules/char`). A library of four lists, all plain data:
+**Content is code.** All content is written in `libs/content` and
+reviewed like any code; char shows it and changes nothing. A library of
+four lists, all plain data (types in `libs/rules/core/types.ts`):
 
-- **Skills**: melee's own `Skill` type. The designer edits every effect
-  and option melee has (see **Skill designer** below).
+- **Skills**: melee's own `Skill` type.
 - **Gear**: a slot (weapon, armor, accessory) and stat bonuses (`add` or
   `mul`). A weapon also says how it attacks (melee's `Weapon`). Weapons
   and armor can have a **category**: blade, polearm, dagger, bow, staff or
   focus; heavy armor, light armor or robe. Accessories have none.
 - **Types**: a class or an enemy type. Stats at level 1, an unarmed
   attack, traits, an icon, and the skills it has. An enemy's threat is
-  not typed in: it is estimated from the compiled character (stats,
+  not written in: it is estimated from the compiled character (stats,
   weapon, skills), so stronger stats or better gear mean fewer of it per
-  encounter. The character editor shows it.
-- **Characters**: a type wearing gear. Characters of a class form the
-  party; characters of an enemy type the monster pool.
+  encounter. The codex shows it.
+- **Characters**: a type wearing gear. Characters of a class form a
+  party; characters of an enemy type a monster pool.
 
-**Used in** (`shared/games.ts`): every class and enemy type lists the
-games that may use it (melee, jrpg, autob), and reaches a game only if
-it is listed; a new design is in none until it is ticked. Each game
-reads char's library through `forGame`: melee gets the characters of the
-designs ticked for it, and jrpg and autob drop the rest when a run
-starts (so autob's shop sells only classes ticked for autob). Melee's
-classes and creatures and the starter designs are in all three. A
-summon of an enemy type a game leaves out falls back to the creature
-saved in the skill, as for a deleted type.
+**Per-game content** (`libs/content/<game>/`): the catalogue holds every
+design; a game's folder picks the archetypes it uses (`select`) and may
+replace one with a changed copy to rebalance it for that game alone,
+leaving the catalogue as it is. jrpg and autob read their own
+(`@jforge/content/jrpg`, `@jforge/content/autob`) when a run starts, so
+autob's shop sells only the classes autob picks. A summon of an enemy
+type a game leaves out falls back to the creature saved in the skill.
+Melee keeps its own content and needs none of this.
 
-**Char knows no levels or progression**: it designs classes, enemy types
-and skills at level 1. How they grow, when skills are learned and what
+**The codex** shows, on tabs, the classes, the class graph (**Paths**),
+enemy types, characters, skills and gear, either all of it
+(**Everything**) or what one game uses. Each item links to those it
+names (a class to its skills, a skill to who knows it, gear to who wears
+it). It saves only the tab and the game picked, on this device.
+
+**The content knows no levels or progression**: classes, enemy types and
+skills are at level 1. How they grow, when skills are learned and what
 experience is for belong to the game that uses them (jrpg: see **Levels
-and growth** under The run).
+and growth** under The run), and a game's own rules on content go in
+`libs/rules/<game>/`.
 
-**Class graph** (`shared/classGraph.ts`): classes can be linked into a
+**Class graph** (`libs/rules/core/classGraph.ts`): classes can be linked into a
 graph of related classes, where a base class leads to specialisations
 (a Fighter to a Paladin or a Battle Mage, a Mage to a Battle Mage or an
 Archmage). A class lists the classes it **comes from** (`comesFrom`);
 any one of them is enough to reach it, and a class with none is a
-**base class**. The links carry no levels, costs or conditions, so char
-still knows no progression: a game that uses the graph decides when and
+**base class**. The links carry no levels, costs or conditions, so the
+content knows no progression: a game that uses the graph decides when and
 how a character may take a link (jrpg2: see section 6 of
 [progression.md](progression.md)). Links go forward only and can be any
-depth: `withSource` refuses a link that would loop, and `linkProblem`
-says why. Enemy types take no part. Deleting a class removes the links to
-it. Melee's classes start with no links. The starter library has the
+depth, but never loop; `graphProblems` lists what is wrong (a loop, a
+link to itself or to no class) and the content's tests require it empty
+in every view. Enemy types take no part. Melee's classes have no links.
+The catalogue has the
 graph's **base classes**, one per main stat line: **Squire** (strength:
 attack, defense and HP, front row, blades, polearms, heavy and light
 armor), **Scout** (agility: speed and attack, middle row, daggers, bows
@@ -856,7 +864,7 @@ and light armor) and **Apprentice** (magic: magic, spirit and MP, back
 row, staves, foci and robes; it is to fork into offensive and defensive
 magic). Their stats are close to melee's Fighter, Rogue, and Mage and
 Healer. Each base leads to a **second level** of broad roles, linked in
-the starter library: Squire to **Warrior** (tank), **Fighter**
+the catalogue: Squire to **Warrior** (tank), **Fighter**
 (two-handed fighter) and **Spearman**; Scout to **Thief**, **Archer**,
 **Duelist** (agile front-line fighter) and **Hunter** (fights with a
 pet); Apprentice to **Mage** (offensive magic), **Healer**, **Enchanter**
@@ -867,18 +875,10 @@ level have no skills yet and are in no game yet; the second level's
 Fighter, Archer, Mage and Healer are apart from melee's classes of the
 same name, which are not placed in the graph yet.
 
-The graph is edited on char's **Paths** tab, a board (React Flow):
-classes not in the graph wait in a tray and are dragged (or tapped) onto
-the board; dragging from one class's right dot to another's left dot
-links them, and a refused link says why. Picking a class offers to edit
-it or take it off the board, which removes its links (`withoutLinks`);
-picking a link offers to remove it. Where classes sit on the board is
-kept **on this device only** (`jforge.char.board`), apart from the
-library, and is not exported; a linked class with no place (an imported
-library) is laid out in the column of its depth. The class editor shows
-what a class comes from and what it becomes, read-only, with links to
-open them. A game can use the classes alone, as jrpg
-and autob do, or the classes and the graph.
+**Paths** shows the graph in columns by depth: the base classes, then
+each step after them; classes not in the graph are listed apart. A
+game can use the classes alone, as jrpg and autob do, or the classes and
+the graph.
 
 **Stand-ins for a source's skills** (a design rule, not checked): a
 character that takes a link starts fresh with the new class's skills, so
@@ -886,43 +886,32 @@ a class that can be reached should have skills that stand in, roughly,
 for its source's key ones (a Paladin a guard and a strike like a
 Fighter's).
 
-**Gear restrictions** (`canUse`, `canWear` in `shared/gear.ts`): a type
+**Gear restrictions** (`canUse`, `canWear` in `libs/rules/core/gear.ts`): a type
 can list the categories it is **proficient** with. Its characters can use
 gear of those categories and gear with no category; a type without a list
-uses anything, as does every type of a library saved before categories.
-Gear a character can't use is worn in name only: `equippedGear` leaves it
-out, so it adds no stats and no weapon, and the character editor marks it
-"(can't use)" and offers only what fits. The class editor sets the list
-("Any gear" or a choice of categories); the gear editor sets a piece's
-category.
+uses anything. Gear a character can't use is worn in name only:
+`equippedGear` leaves it out, so it adds no stats and no weapon, and the
+codex marks it "(can't use)".
 
-**Skill designer** (`shared/effectFields.ts`): every effect kind, every
-option on it, every kind of status and the skill's own fields (MP and HP
-cost, cast time, target, area, not on itself, only next to the caster,
-not from the front row, half a turn, can single out covered enemies) are described once as data, with
-labels and defaults; the editor draws its form from that table, so a new
-option in melee is one entry there. An option at its default (a strike
-with no push, a flag that is off) is left out of the saved skill. A status
-shows the strengths its kind has (Blessing's dealt and taken, Expose's
-taken, ...), at melee's defaults until changed; picking another kind of
-status starts it from that kind's defaults. `skillProblems` checks every
-kind (power above 0, a duration, a gauge share, a summon's type).
+**Skill checks** (`libs/rules/core/skills.ts`): `effectSummary` says
+what a skill does in words, as the codex shows it, and `skillProblems`
+checks every kind (power above 0, a duration, a gauge share, a summon's
+type); the content's tests require it empty for every skill.
 
 **Summons are enemy types**: a summon picks an enemy type, saved on the
 effect as its `source`. The creature is compiled from the
-type then, and again whenever the roster is compiled, so edits to the
-type reach it; if the type is deleted the creature saved last is used and
-the editor says the type is gone. A creature's own summons are compiled
+type then, and again whenever the roster is compiled, so changes to the
+type reach it; if a game leaves the type out, the creature saved on the
+skill is used. A creature's own summons are compiled
 one step deep (`SUMMON_DEPTH` 2), so a type that summons itself still
 compiles. Melee's Imp and boulder are enemy types too (`melee-creature-imp`,
 `melee-creature-boulder`, with melee's stats; an archetype can be
 an `obstacle`), and Summon Imp and Raise Boulder point at them.
 
-**Melee's classes** (`shared/melee.ts`): every melee class is also a char
-class (`melee-fighter`, ...), in the starter library and added to saved
-libraries when they load, so each can be geared, edited and used by
-jrpg. Its level-1 stats are melee's own and it has all of melee's skills
-for it. An edited copy is kept; a deleted one comes back.
+**Melee's classes** (`libs/content/catalogue/melee.ts`): every melee
+class is also a class of the catalogue (`melee-fighter`, ...), so each
+can be geared and used by jrpg and autob. Its level-1 stats are melee's
+own and it has all of melee's skills for it.
 Their proficiencies (`MELEE_PROFICIENCIES`) include their own weapon's
 category:
 
@@ -946,25 +935,12 @@ attack, magic and spirit) and two armors (Traveller's Jerkin, Traveller's
 Robe). Basic gear has no drawbacks. `starterKit` fills a character's
 empty slots with it: their melee class's weapon, and the robe if the
 class's magic beats its attack, the jerkin if not, or the other when the
-class can't wear that one (designed classes get armor only). Every hero starts in their kit. Like the classes, an edited
-hero or piece is kept and a deleted one comes back. Melee's Custom roster
-gets the heroes too and fields five of its party characters per
-encounter.
+class can't wear that one (designed classes get armor only). Every hero
+starts in their kit.
 
 **Stats**: the stats before gear (the type's own, or what a game passes
 in, such as jrpg's levelled stats), then gear the way melee applies
 modifiers: `(stat + adds) x muls`, rounded.
-
-**Import into melee and jrpg**: melee owns a roster format (`shared/roster.ts`:
-party and monster pool as `CombatantDef`s under one storage key). Char
-compiles every character into a `CombatantDef` (gear worked into plain
-stats) and writes the roster on every change; melee offers it as the
-**Custom** roster on its start screen, and jrpg sets out with the imported
-party. All modules share one origin, so no server is involved. Char depends
-on melee, never the other way round.
-
-The library is saved in the browser (localStorage), with JSON export and
-import, both of the current `SAVE_VERSION` only.
 
 ## The run (`modules/jrpg`)
 
@@ -995,7 +971,7 @@ party size` experience and sometimes gear (40%; elites and the final
   battle seed, so coming back never rerolls its luck. Starting a battle
   over is allowed (the ↺ button, once the party has acted).
 - **Ally**: a traveller who isn't in the party offers to join, at the
-  level of the party's weakest member, with char's
+  level of the party's weakest member, with the catalogue's
   `starterKit` in their empty slots (heroes already wear theirs).
   The party holds five; when it is full the recruit can take a member's
   place, standing where they stood, and the one who leaves puts their gear
@@ -1023,24 +999,25 @@ random (gear, forks, another ally or training), between the first and
 last battle and never two in a row. Between encounters gear can be
 swapped with the bag. A cleared level leads to the next, deeper one.
 
-**The world** (`shared/world.ts`): the run plays with char's library (the
-starter library if it has no class character) plus jrpg's own content,
-copied when the run starts so later edits don't break it: 9 enemy types
+**The world** (`shared/world.ts`): the run plays with jrpg's content
+(`@jforge/content/jrpg`) plus the world's own, copied when the run starts
+so later changes don't break it (the world's own still lives here; it is
+to move to `libs/content/jrpg`): 9 enemy types
 (Wolf, Slime, Viper, Bandit Archer, Hedge Witch, Bone Priest, Stone Golem,
 Imp, Raider) and 20 pieces of gear, each weapon and armor with a
-category (two foci, Seer's Orb and Black Tome, so every class has finds); char provides the heroes and their
+category (two foci, Seer's Orb and Black Tome, so every class has finds); the catalogue provides the heroes and their
 basic gear, which finds and drops leave out. All gear exists at four **tiers** (plain,
 Fine, Superior, Masterwork: each adds half again to what the piece adds);
 finds are a tier better per depth, with some luck.
 
 **The player chooses the party**: two of the heroes (every class
-character in char's library: melee's heroes and any designed), both at
+character in jrpg's content: melee's heroes for now), both at
 level 1 (`START_LEVEL`). The start screen preselects two drawn by
 the run's seed and can draw again; choosing a third lets go of the first.
 Whoever doesn't set out can be met as an ally.
 
 **Levels and growth** (`shared/progression.ts`, `growth.ts`,
-`learning.ts`): jrpg owns them; char's designs are level 1.
+`learning.ts`): jrpg owns them; the content is level 1.
 
 - **Party levels**: a run keeps each member's level (1 to 50) and
   experience. A level costs `100 x level`; `gainXp` levels up as often as
@@ -1084,16 +1061,15 @@ type, AI targeting profiles, IndexedDB or cloud saves.
 
 Autob is a single-player autobattler: a run of `ROUNDS` (30) rounds
 against monster packs, after TFT's shop, gold and board and in the manner
-of a solo trial against the house. It reuses only units: char's classes
+of a solo trial against the house. It reuses only units: its content's classes
 (stats, weapon, skills) and creatures. Its board and fights are its own;
 **melee's battle rules don't apply and melee is not changed for it**.
 The rules are pure functions in `shared/` (`run.ts` the run, `fight.ts`
 the engine), like melee's.
 
 **Units and stars** (`units.ts`). The shop sells every class of the run's
-library that is ticked for autob (char's on this device, or the starter
-library), copied at the
-start so later edits can't break a run. A bought copy is a 1★ unit;
+library: the classes autob picks (`@jforge/content/autob`), copied at
+the start so later changes can't break a run. A bought copy is a 1★ unit;
 three of a class at the same star merge at once into one a star higher,
 up to 3★, keeping the place of the first (board before bench). Stars
 multiply max HP, attack and magic by 1 / 1.8 / 3.24. Each class has a

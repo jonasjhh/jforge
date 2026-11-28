@@ -1,4 +1,4 @@
-import { GEAR_CATEGORY_NAMES, type Gear } from "@jforge/char/shared";
+import { GEAR_CATEGORY_NAMES, type Gear } from "@jforge/rules/core";
 import type { BattleSetup } from "@jforge/melee/shared";
 import type { Encounter } from "./run";
 

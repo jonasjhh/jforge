@@ -1,26 +1,13 @@
-import { monsters, playerTypes } from "./content";
-import { SAVE_VERSION } from "./save";
 import type { EncounterPools } from "./encounters";
 import { DAMAGE_TYPES, STAT_NAMES, type CombatantDef } from "./types";
 
-// Combatants designed outside melee (in the char module) arrive as a
-// roster: plain CombatantDefs for the party and for the monster pool, saved
-// under one storage key that every module on this origin can read. Melee
-// owns the format, so char depends on melee and never the other way round.
+// Combatants made outside melee (compiled from @jforge/content by
+// @jforge/rules) arrive as a roster: plain CombatantDefs for the party and
+// for the monster pool. Melee owns the format; the libs depend on melee and
+// never the other way round.
 
-/** Where the imported roster is kept in the browser. */
-export const ROSTER_STORAGE_KEY = "jforge.melee.roster";
-
-/** An imported roster: the same shape encounters are built from. */
+/** A roster: the same shape encounters are built from. */
 export type Roster = EncounterPools;
-
-export const EMPTY_ROSTER: Roster = { party: [], monsters: [] };
-
-/** The part of localStorage a roster needs; a test can pass a plain object. */
-export interface RosterStore {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-}
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -67,60 +54,4 @@ export function isCombatantDef(v: unknown): v is CombatantDef {
   return v.skills === undefined
     ? true
     : Array.isArray(v.skills) && v.skills.every(isSkill);
-}
-
-/**
- * Reads a saved roster. Anything that is not a well-formed roster (no
- * text, broken JSON, another SAVE_VERSION, a combatant missing a stat)
- * gives null: melee then
- * plays with its built-in types.
- */
-export function parseRoster(text: string | null): Roster | null {
-  if (!text) return null;
-  let data: unknown;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    return null;
-  }
-  if (!isRecord(data) || data.version !== SAVE_VERSION) return null;
-  const { party, monsters: pool } = data;
-  if (!Array.isArray(party) || !Array.isArray(pool)) return null;
-  if (![...party, ...pool].every(isCombatantDef)) return null;
-  return { party, monsters: pool };
-}
-
-/** The roster saved in `store`, or an empty one. Never throws. */
-export function readRoster(store: Pick<RosterStore, "getItem">): Roster {
-  try {
-    return parseRoster(store.getItem(ROSTER_STORAGE_KEY)) ?? EMPTY_ROSTER;
-  } catch {
-    return EMPTY_ROSTER;
-  }
-}
-
-/** Saves a roster for melee and jrpg. False if the store refused it. */
-export function writeRoster(store: RosterStore, roster: Roster): boolean {
-  try {
-    const saved = { version: SAVE_VERSION, ...roster };
-    store.setItem(ROSTER_STORAGE_KEY, JSON.stringify(saved));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * The pools an encounter draws from. With `custom`, each imported side
- * replaces the built-in one; a side nothing was imported for stays built in,
- * so custom heroes can fight stock monsters and the other way round.
- */
-export function encounterPools(
-  roster: Roster,
-  custom: boolean,
-): EncounterPools {
-  return {
-    party: custom && roster.party.length > 0 ? roster.party : playerTypes,
-    monsters: custom && roster.monsters.length > 0 ? roster.monsters : monsters,
-  };
 }

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { starterLibrary } from "@jforge/char/shared";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import { content, type BattleSetup } from "@jforge/melee/shared";
 import { encounterLabel, enemySummary, gearSummary } from "../labels";
 import type { Encounter } from "../run";
 
-const gear = (id: string) => starterLibrary().gear.find((g) => g.id === id)!;
+const gear = (id: string) => jrpgLibrary().gear.find((g) => g.id === id)!;
 
 const cursed = {
   ...gear("gear-sword"),
@@ -35,7 +35,7 @@ describe("encounterLabel", () => {
     ["training", { kind: "training" }, "Training"],
     [
       "an ally",
-      { kind: "ally", character: starterLibrary().characters[0]! },
+      { kind: "ally", character: jrpgLibrary().characters[0]! },
       "Ally",
     ],
   ])("given %s, when it is labelled, then it reads %s", (_, stop, label) => {

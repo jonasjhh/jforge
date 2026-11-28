@@ -6,7 +6,7 @@ import {
   statsAtLevel,
   xpToNext,
 } from "../progression";
-import { flatStats } from "@jforge/char/shared";
+import { flatStats } from "@jforge/rules/core";
 
 describe("clampLevel", () => {
   it.each([

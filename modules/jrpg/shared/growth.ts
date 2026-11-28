@@ -1,11 +1,10 @@
 import {
   archetypeOf,
-  meleeClassId,
-  meleeCreatureId,
   toCombatantDef,
   type Character,
   type Library,
-} from "@jforge/char/shared";
+} from "@jforge/rules/core";
+import { meleeClassId, meleeCreatureId } from "@jforge/content/catalogue";
 import {
   STAT_NAMES,
   content as c,

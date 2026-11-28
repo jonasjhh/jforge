@@ -5,7 +5,7 @@ import {
   canWear,
   type Character,
   type GearSlot,
-} from "@jforge/char/shared";
+} from "@jforge/rules/core";
 import { changeGear, gearOf, gearSummary, xpToNext, type Run } from "../shared";
 
 const SLOT_LABELS: Record<GearSlot, string> = {

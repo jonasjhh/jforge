@@ -1,11 +1,11 @@
 import {
-  withMeleeClasses,
   type Archetype,
   type Character,
   type Gear,
   type GearCategory,
   type Library,
-} from "@jforge/char/shared";
+} from "@jforge/rules/core";
+import { withMeleeClasses } from "@jforge/content/catalogue";
 import { content, type Stats, type Weapon } from "@jforge/melee/shared";
 
 // The world a run travels through: enemies to meet, travellers to recruit
@@ -55,7 +55,6 @@ function archetype(
     skills,
     traits,
     preferredRow,
-    games: ["jrpg"],
   };
 }
 

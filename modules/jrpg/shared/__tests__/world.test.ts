@@ -1,13 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-  compileRoster,
-  parseLibrary,
-  starterLibrary,
-} from "@jforge/char/shared";
+import { compileRoster, parseLibrary } from "@jforge/rules/core";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import { createBattle, isCombatantDef } from "@jforge/melee/shared";
 import { GEAR_TIERS, atTier, withWorld } from "../world";
 
-const starter = starterLibrary();
+const starter = jrpgLibrary();
 const world = withWorld(starter);
 
 describe("withWorld", () => {

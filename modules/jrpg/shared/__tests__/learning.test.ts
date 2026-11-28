@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { meleeClassId } from "@jforge/char/shared";
+import { meleeClassId } from "@jforge/content/catalogue";
 import { content } from "@jforge/melee/shared";
 import {
   FIRST_LEVEL_SKILLS,

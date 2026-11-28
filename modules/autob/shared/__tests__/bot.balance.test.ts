@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { starterLibrary } from "@jforge/char/shared";
+import { autobLibrary } from "@jforge/content/autob";
 import { botRun } from "../bot";
 import { ROUNDS, ROUNDS_PER_STAGE } from "../monsters";
 import { roundsCleared, startRun } from "../run";
@@ -12,7 +12,7 @@ const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 describe("difficulty", () => {
   it("given the starter library, when the bot plays many runs, then it lasts past the third stage on average but rarely wins", () => {
-    const library = starterLibrary();
+    const library = autobLibrary();
 
     const cleared = SEEDS.map((seed) =>
       roundsCleared(botRun(startRun(library, seed))),

@@ -1,9 +1,9 @@
-/** The app's sections, in tab order. */
+/** The codex's sections, in tab order. */
 export const TABS = [
-  "Roster",
   "Classes",
   "Paths",
   "Enemies",
+  "Characters",
   "Skills",
   "Gear",
 ] as const;

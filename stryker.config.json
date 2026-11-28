@@ -5,7 +5,12 @@
   "vitest": {
     "configFile": "vitest.stryker.config.ts"
   },
-  "mutate": ["modules/*/shared/**/*.ts", "!**/__tests__/**"],
+  "mutate": [
+    "modules/*/shared/**/*.ts",
+    "libs/**/*.ts",
+    "!**/__tests__/**",
+    "!**/node_modules/**"
+  ],
   "coverageAnalysis": "perTest",
   "ignoreStatic": true,
   "reporters": ["clear-text", "progress", "html", "json"],

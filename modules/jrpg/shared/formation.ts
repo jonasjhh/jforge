@@ -1,4 +1,4 @@
-import { archetypeOf } from "@jforge/char/shared";
+import { archetypeOf } from "@jforge/rules/core";
 import {
   GRID_COLUMNS,
   GRID_ROWS,

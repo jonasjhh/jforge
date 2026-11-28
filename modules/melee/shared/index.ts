@@ -62,16 +62,6 @@ export {
   type Difficulty,
   type EncounterPools,
 } from "./encounters";
-export {
-  EMPTY_ROSTER,
-  ROSTER_STORAGE_KEY,
-  encounterPools,
-  isCombatantDef,
-  parseRoster,
-  readRoster,
-  writeRoster,
-  type Roster,
-  type RosterStore,
-} from "./roster";
+export { isCombatantDef, type Roster } from "./roster";
 export { SAVE_VERSION } from "./save";
 export * as content from "./content";

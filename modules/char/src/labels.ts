@@ -1,14 +1,17 @@
-import { content } from "@jforge/melee/shared";
+import type { StatName } from "@jforge/melee/shared";
 
-export { DAMAGE_OPTIONS, STAT_LABELS, STAT_OPTIONS } from "../shared";
-export const ROW_OPTIONS = [
-  ["0", "Front"],
-  ["1", "Middle"],
-  ["2", "Back"],
-] as const;
+export const STAT_LABELS: Record<StatName, string> = {
+  maxHp: "HP",
+  maxMp: "MP",
+  attack: "Attack",
+  magic: "Magic",
+  defense: "Defense",
+  spirit: "Spirit",
+  speed: "Speed",
+};
 
-/** Built-in melee types whose icon a designed type can wear. */
-export const PORTRAIT_OPTIONS = [
-  ...content.playerTypes,
-  ...content.monsters,
-].map((def) => [def.id, def.name] as const);
+export const ROW_NAMES = ["Front", "Middle", "Back"] as const;
+
+/** "1 skill", "3 skills". */
+export const count = (n: number, one: string, many = `${one}s`) =>
+  `${n} ${n === 1 ? one : many}`;

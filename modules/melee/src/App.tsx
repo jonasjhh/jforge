@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  encounterPools,
-  randomEncounter,
-  type BattleSetup,
-  type Difficulty,
-} from "../shared";
-import { loadRoster } from "./customRoster";
+import { randomEncounter, type BattleSetup, type Difficulty } from "../shared";
 import { BattleScreen } from "./battle/BattleScreen";
 import { StartScreen } from "./StartScreen";
 
@@ -15,10 +9,6 @@ export function App() {
   // Kept here so the chosen encounter survives a battle and coming back.
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [encounterSeed, setEncounterSeed] = useState(newSeed);
-  // Characters and enemies designed in the char module, if any.
-  const [roster] = useState(loadRoster);
-  const [custom, setCustom] = useState(false);
-  const pools = encounterPools(roster, custom);
   const [battle, setBattle] = useState<{
     setup: BattleSetup;
     seed: number;
@@ -29,10 +19,6 @@ export function App() {
       <StartScreen
         difficulty={difficulty}
         encounterSeed={encounterSeed}
-        pools={pools}
-        imported={roster.party.length + roster.monsters.length}
-        custom={custom}
-        onCustom={setCustom}
         onDifficulty={setDifficulty}
         onReroll={() => setEncounterSeed(newSeed())}
         onStart={(setup) => setBattle({ setup, seed: newSeed() })}
@@ -54,7 +40,7 @@ export function App() {
         const next = newSeed();
         setEncounterSeed(next);
         setBattle({
-          setup: randomEncounter(next, difficulty, pools),
+          setup: randomEncounter(next, difficulty),
           seed: newSeed(),
         });
       }}

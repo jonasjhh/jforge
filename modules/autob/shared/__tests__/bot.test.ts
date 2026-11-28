@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { starterLibrary } from "@jforge/char/shared";
+import { autobLibrary } from "@jforge/content/autob";
 import { botRound, botRun } from "../bot";
 import { startRun } from "../run";
 
-const library = starterLibrary();
+const library = autobLibrary();
 
 describe("botRound", () => {
   it("given a new run, when the bot plays a round, then it has fielded a unit and moved on to round 2", () => {

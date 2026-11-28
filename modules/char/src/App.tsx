@@ -1,43 +1,38 @@
-import { useState } from "react";
-import { meta } from "../meta";
+import { useMemo, useState } from "react";
+import { VIEWS, type ContentView } from "@jforge/content";
 import {
   archetypeOf,
-  blankArchetype,
-  blankCharacter,
-  blankGear,
-  blankSkill,
-  compileRoster,
-  forGame,
   effectSummary,
-  nextId,
-  remove,
   sourcesOf,
-  upsert,
   type Archetype,
-  type Collection as CollectionName,
-  type Library,
-} from "../shared";
-import { ArchetypeEditor } from "./ArchetypeEditor";
-import { CharacterEditor } from "./CharacterEditor";
-import { ClassBoard } from "./ClassBoard";
+} from "@jforge/rules/core";
+import { meta } from "../meta";
+import { ArchetypeView } from "./ArchetypeView";
+import { CharacterView } from "./CharacterView";
 import { Collection } from "./Collection";
-import { GearEditor } from "./GearEditor";
-import { SkillEditor } from "./SkillEditor";
-import { Transfer } from "./Transfer";
-import { loadTab, saveTab } from "./storage";
+import { GearView } from "./GearView";
+import { PathsView } from "./PathsView";
+import { SkillView } from "./SkillView";
+import { count } from "./labels";
+import { loadTab, loadView, saveTab, saveView } from "./storage";
 import { TABS, type Tab } from "./tabs";
-import { useLibrary } from "./useLibrary";
 
-const count = (n: number, one: string, many = `${one}s`) =>
-  `${n} ${n === 1 ? one : many}`;
-
+/**
+ * Char, the codex: jforge's content, read-only, all of it or what one game
+ * uses. Content is written in code (@jforge/content), not here.
+ */
 export function App() {
-  const { library, update, saved } = useLibrary();
+  const [viewId, setViewIdState] = useState<ContentView["id"]>(loadView);
   const [tab, setTabState] = useState<Tab>(loadTab);
   // The item open in each tab; switching tabs keeps it.
   const [selected, setSelected] = useState<Partial<Record<Tab, string>>>({});
-  const roster = compileRoster(forGame(library, "melee"));
+  const view = VIEWS.find((v) => v.id === viewId) ?? VIEWS[0]!;
+  const library = useMemo(() => view.library(), [view]);
 
+  const setView = (next: ContentView["id"]) => {
+    setViewIdState(next);
+    saveView(next);
+  };
   const setTab = (next: Tab) => {
     setTabState(next);
     saveTab(next);
@@ -49,27 +44,13 @@ export function App() {
     setTab(inTab);
     select(inTab)(id);
   };
+  const openArchetype = (a: Archetype) =>
+    open(a.kind === "class" ? "Classes" : "Enemies", a.id);
   const selection = (inTab: Tab) => ({
     title: inTab,
     selectedId: selected[inTab] ?? null,
     onSelect: select(inTab),
   });
-
-  /** Adds a new item to a list and returns its id, for the list to select. */
-  const add = <K extends CollectionName>(
-    collection: K,
-    make: (id: string) => Library[K][number],
-  ) => {
-    const id = nextId(library, collection);
-    update((lib) => upsert(lib, collection, make(id)));
-    return id;
-  };
-  const save =
-    <K extends CollectionName>(collection: K) =>
-    (item: Library[K][number]) =>
-      update((lib) => upsert(lib, collection, item));
-  const drop = (collection: CollectionName) => (id: string) =>
-    update((lib) => remove(lib, collection, id));
 
   const archetypes = (kind: Archetype["kind"]) => (
     <Collection
@@ -78,24 +59,21 @@ export function App() {
       items={library.archetypes.filter((a) => a.kind === kind)}
       note={(a) => {
         const from = sourcesOf(library, a).map((s) => s.name);
-        return `${a.baseStats.maxHp} HP · ${count(a.skills.length, "skill")}${from.length > 0 ? ` · from ${from.join(", ")}` : ""}${a.games.length === 0 ? " · in no game" : ""}`;
+        return `${a.baseStats.maxHp} HP · ${count(a.skills.length, "skill")}${from.length > 0 ? ` · from ${from.join(", ")}` : ""}`;
       }}
-      onNew={() => add("archetypes", (id) => blankArchetype(id, kind))}
-      onDelete={drop("archetypes")}
     >
       {(archetype) => (
-        <ArchetypeEditor
+        <ArchetypeView
           archetype={archetype}
           library={library}
-          onChange={save("archetypes")}
           onOpenSkill={(id) => open("Skills", id)}
           onOpenClass={(id) => open("Classes", id)}
+          onOpenCharacter={(c) => open("Characters", c.id)}
         />
       )}
     </Collection>
   );
 
-  const firstArchetype = library.archetypes[0];
   return (
     <main className="page">
       <a className="back" href="/">
@@ -103,6 +81,21 @@ export function App() {
       </a>
       <h1>{meta.title}</h1>
       <p className="muted">{meta.description}</p>
+
+      <div className="segmented" role="radiogroup" aria-label="Game">
+        {VIEWS.map((v) => (
+          <button
+            key={v.id}
+            type="button"
+            role="radio"
+            aria-checked={v.id === view.id}
+            className={v.id === view.id ? "selected" : ""}
+            onClick={() => setView(v.id)}
+          >
+            {v.name}
+          </button>
+        ))}
+      </div>
 
       <div className="segmented" role="tablist" aria-label="Section">
         {TABS.map((name) => (
@@ -119,60 +112,43 @@ export function App() {
         ))}
       </div>
 
-      {tab === "Roster" && (
-        <Collection
-          noun="character"
-          {...selection("Roster")}
-          items={library.characters}
-          note={(c) => {
-            const archetype = archetypeOf(library, c);
-            return archetype?.name ?? "?";
-          }}
-          onNew={
-            firstArchetype &&
-            (() =>
-              add("characters", (id) => blankCharacter(id, firstArchetype)))
-          }
-          onDelete={drop("characters")}
-        >
-          {(character) => (
-            <CharacterEditor
-              library={library}
-              character={character}
-              onChange={save("characters")}
-              onOpenArchetype={(archetype) =>
-                open(
-                  archetype.kind === "class" ? "Classes" : "Enemies",
-                  archetype.id,
-                )
-              }
-            />
-          )}
-        </Collection>
-      )}
       {tab === "Classes" && archetypes("class")}
       {tab === "Paths" && (
-        <ClassBoard
+        <PathsView
           library={library}
-          onUpdate={update}
           onOpenClass={(id) => open("Classes", id)}
         />
       )}
       {tab === "Enemies" && archetypes("enemy")}
+      {tab === "Characters" && (
+        <Collection
+          noun="character"
+          {...selection("Characters")}
+          items={library.characters}
+          note={(c) => archetypeOf(library, c)?.name ?? "?"}
+        >
+          {(character) => (
+            <CharacterView
+              character={character}
+              library={library}
+              onOpenArchetype={openArchetype}
+              onOpenGear={(id) => open("Gear", id)}
+            />
+          )}
+        </Collection>
+      )}
       {tab === "Skills" && (
         <Collection
           noun="skill"
           {...selection("Skills")}
           items={library.skills}
           note={effectSummary}
-          onNew={() => add("skills", blankSkill)}
-          onDelete={drop("skills")}
         >
           {(skill) => (
-            <SkillEditor
+            <SkillView
               skill={skill}
               library={library}
-              onChange={save("skills")}
+              onOpenArchetype={openArchetype}
             />
           )}
         </Collection>
@@ -185,47 +161,17 @@ export function App() {
           note={(g) =>
             `${g.slot} · ${count(g.bonuses.length, "bonus", "bonuses")}`
           }
-          onNew={() => add("gear", blankGear)}
-          onDelete={drop("gear")}
         >
-          {(gear) => <GearEditor gear={gear} onChange={save("gear")} />}
+          {(gear) => (
+            <GearView
+              gear={gear}
+              library={library}
+              onOpenArchetype={openArchetype}
+              onOpenCharacter={(c) => open("Characters", c.id)}
+            />
+          )}
         </Collection>
       )}
-
-      <section className="panel">
-        <h2>In melee, jrpg and autob</h2>
-        <p role="status">
-          {saved ? (
-            <>
-              Published: <strong>{roster.party.length}</strong> party members
-              and <strong>{roster.monsters.length}</strong> enemies. Characters
-              of a class join the party; characters of an enemy type join the
-              monster pool. Autob's shop sells your classes.
-            </>
-          ) : (
-            <span className="bad">
-              Could not save on this device; changes will be lost.
-            </span>
-          )}
-        </p>
-        <div className="button-row">
-          <a className="primary" href="/melee/">
-            Test in Melee
-          </a>
-          <a className="secondary" href="/jrpg/">
-            Open JRPG
-          </a>
-          <a className="secondary" href="/autob/">
-            Open Autob
-          </a>
-        </div>
-        <p className="muted small">In Melee, choose the Custom roster.</p>
-      </section>
-
-      <Transfer
-        library={library}
-        onImport={(imported) => update(() => imported)}
-      />
     </main>
   );
 }

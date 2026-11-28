@@ -12,9 +12,16 @@
 
 A monorepo of modules under `modules/<name>/`, each its own PWA at
 `/<name>/`, all served by one Cloudflare Worker (`worker/index.ts`,
-`wrangler.toml`). See `README.md` for the layout and the steps for adding a
-module. Modules import each other only through workspace packages
-(`@jforge/<name>/...`), never relative paths into another module.
+`wrangler.toml`), and libraries under `libs/<name>/` that are packages but
+no apps: `libs/rules` (logic on content, `core/` plus a folder per game
+that needs its own) and `libs/content` (the content as code: `catalogue/`
+plus a folder per game). See `README.md` for the layout, the dependency
+rules and the steps for adding a module. Modules and libraries import
+each other only through workspace packages (`@jforge/<name>/...`), never
+relative paths into another package.
+
+Content is written in `libs/content`, never in an app: char is a
+read-only codex of it.
 
 ## Infrastructure
 
@@ -36,7 +43,7 @@ arrange/act/assert; see Testing in `README.md`.
 
 ## Saved data
 
-Saved data (char's library, the roster, jrpg's and autob's runs) may be invalidated at
+Saved data (jrpg's and autob's runs) may be invalidated at
 any time for now: raise `SAVE_VERSION` in `modules/melee/shared/save.ts`
 when a change makes old saves stale, instead of writing a migration.
 

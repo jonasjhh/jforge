@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { archetypeOf, type Library } from "@jforge/char/shared";
+import { archetypeOf, type Library } from "@jforge/rules/core";
 import {
   MIN_LEVEL_LENGTH,
   START_LEVEL,
@@ -13,7 +13,7 @@ import { meta } from "../meta";
 const newSeed = () => Math.floor(Math.random() * 1_000_000);
 
 interface StartScreenProps {
-  /** The library designed in char, if any. */
+  /** The content to start from; null for the game's own. */
   library: Library | null;
   onStart: (seed: number, chosen: string[]) => void;
 }
@@ -58,9 +58,8 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
         <h2>Setting out</h2>
         <p className="muted small">
           Choose {START_PARTY_SIZE} to set out, at Level {START_LEVEL}. The
-          others may be met on the road. Class characters you design in{" "}
-          <a href="/char/">Char</a> join them; your enemies and gear join the
-          world's own.
+          others may be met on the road. <a href="/char/">Char</a> shows every
+          class and what each can do.
         </p>
         <div className="pieces" role="group" aria-label="Heroes">
           {all.map((hero) => (

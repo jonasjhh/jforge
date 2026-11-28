@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { EMPTY_ROSTER, encounterPools, randomEncounter } from "../../shared";
+import { randomEncounter } from "../../shared";
 import { StartScreen } from "../StartScreen";
 
 const health = vi.fn<() => Promise<Response>>();
@@ -16,15 +16,10 @@ afterEach(() => {
 });
 
 type Props = ComponentProps<typeof StartScreen>;
-const pools = encounterPools(EMPTY_ROSTER, false);
 const show = (changes: Partial<Props> = {}) => {
   const props: Props = {
     difficulty: "normal",
     encounterSeed: 42,
-    pools,
-    imported: 0,
-    custom: false,
-    onCustom: vi.fn(),
     onDifficulty: vi.fn(),
     onReroll: vi.fn(),
     onStart: vi.fn(),
@@ -35,7 +30,7 @@ const show = (changes: Partial<Props> = {}) => {
 };
 const names = (side: "player" | "enemy") => {
   const counts = new Map<string, number>();
-  for (const p of randomEncounter(42, "normal", pools).placements) {
+  for (const p of randomEncounter(42, "normal").placements) {
     if (p.side === side)
       counts.set(p.def.name, (counts.get(p.def.name) ?? 0) + 1);
   }
@@ -71,13 +66,7 @@ describe("melee StartScreen", () => {
 
   it.each<[string, "radio" | "button", string, keyof Props, unknown[]]>([
     ["Hard", "radio", "Hard", "onDifficulty", ["hard"]],
-    [
-      "Start",
-      "button",
-      "Start",
-      "onStart",
-      [randomEncounter(42, "normal", pools)],
-    ],
+    ["Start", "button", "Start", "onStart", [randomEncounter(42, "normal")]],
   ])(
     "given the start screen, when %s is pressed, then it is reported",
     (_, role, name, handler, args) => {
@@ -96,28 +85,6 @@ describe("melee StartScreen", () => {
 
     expect(props.onReroll).toHaveBeenCalledOnce();
   });
-
-  it("given char published nothing, when it shows, then there is no roster choice", () => {
-    const imported = 0;
-
-    show({ imported });
-
-    expect(screen.queryByRole("radiogroup", { name: "Roster" })).toBeNull();
-  });
-
-  it.each([
-    ["Custom", true],
-    ["Built-in", false],
-  ])(
-    "given char published a roster, when %s is chosen, then it is reported",
-    (name, custom) => {
-      const props = show({ imported: 3, custom: !custom });
-
-      click("radio", name);
-
-      expect(props.onCustom).toHaveBeenCalledWith(custom);
-    },
-  );
 
   it("given the API has not answered yet, when it shows, then it says it is checking", () => {
     health.mockReturnValue(new Promise(() => {}));

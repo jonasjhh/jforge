@@ -1,182 +1,46 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ROSTER_STORAGE_KEY, readRoster } from "@jforge/melee/shared";
-import {
-  LIBRARY_STORAGE_KEY,
-  meleeHeroId,
-  starterLibrary,
-  upsert,
-} from "../../shared";
-import {
-  loadLibrary,
-  loadPlaces,
-  loadTab,
-  saveLibrary,
-  savePlaces,
-  saveTab,
-} from "../storage";
-
-const refusals: { mockRestore(): void }[] = [];
-/** Makes the browser refuse this storage call until the test ends. */
-const refuse = (method: "getItem" | "setItem" | "removeItem") => {
-  refusals.push(
-    vi.spyOn(localStorage, method).mockImplementation(() => {
-      throw new Error("denied");
-    }),
-  );
-};
+import { loadTab, loadView, saveTab, saveView } from "../storage";
 
 beforeEach(() => localStorage.clear());
-afterEach(() => refusals.splice(0).forEach((spy) => spy.mockRestore()));
+afterEach(() => vi.restoreAllMocks());
 
-const renamed = () => {
-  const start = starterLibrary();
-  return upsert(start, "characters", {
-    ...start.characters[0]!,
-    name: "Renamed",
-  });
-};
+describe("tab and view", () => {
+  it("given nothing saved, when they are loaded, then it is Classes of everything", () => {
+    const loaded = [loadTab(), loadView()];
 
-describe("loadLibrary", () => {
-  it("given nothing saved, when the library is loaded, then it is the starter library", () => {
-    const library = loadLibrary();
-
-    expect(library).toEqual(starterLibrary());
+    expect(loaded).toEqual(["Classes", "all"]);
   });
 
-  it("given a save that is not a library, when the library is loaded, then it is the starter library", () => {
-    localStorage.setItem(LIBRARY_STORAGE_KEY, "{broken");
+  it("given Gear and autob saved, when they are loaded, then they come back", () => {
+    saveTab("Gear");
+    saveView("autob");
 
-    const library = loadLibrary();
+    const loaded = [loadTab(), loadView()];
 
-    expect(library).toEqual(starterLibrary());
+    expect(loaded).toEqual(["Gear", "autob"]);
   });
 
-  it("given a saved library with an edited character, when it is loaded, then the edit is kept", () => {
-    saveLibrary(renamed());
+  it("given an unknown tab and view saved, when they are loaded, then the defaults are used", () => {
+    localStorage.setItem("jforge.char.tab", "Roster");
+    localStorage.setItem("jforge.char.view", "chess");
 
-    const library = loadLibrary();
+    const loaded = [loadTab(), loadView()];
 
-    expect(library.characters[0]!.name).toBe("Renamed");
+    expect(loaded).toEqual(["Classes", "all"]);
   });
 
-  it("given a save that lacks a melee hero, when it is loaded, then the hero is brought back", () => {
-    const start = starterLibrary();
-    const id = meleeHeroId("knight");
-    saveLibrary({
-      ...start,
-      characters: start.characters.filter((c) => c.id !== id),
+  it("given a browser that refuses storage, when they are saved and loaded, then nothing throws", () => {
+    vi.spyOn(localStorage, "getItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    vi.spyOn(localStorage, "setItem").mockImplementation(() => {
+      throw new Error("denied");
     });
 
-    const library = loadLibrary();
+    saveTab("Gear");
+    const loaded = loadTab();
 
-    expect(library.characters.some((c) => c.id === id)).toBe(true);
-  });
-
-  it("given a saved library and a browser that refuses to read, when it is loaded, then it is the starter library", () => {
-    saveLibrary(renamed());
-    refuse("getItem");
-
-    const library = loadLibrary();
-
-    expect(library).toEqual(starterLibrary());
-  });
-});
-
-describe("saveLibrary", () => {
-  it("given the starter library, when it is saved, then the library and its roster are stored", () => {
-    const library = starterLibrary();
-
-    const ok = saveLibrary(library);
-
-    expect(ok).toBe(true);
-    expect(localStorage.getItem(LIBRARY_STORAGE_KEY)).not.toBeNull();
-    expect(localStorage.getItem(ROSTER_STORAGE_KEY)).not.toBeNull();
-    expect(readRoster(localStorage).party.length).toBeGreaterThan(0);
-  });
-
-  it("given a browser that refuses to write, when the library is saved, then saving fails", () => {
-    refuse("setItem");
-
-    const ok = saveLibrary(starterLibrary());
-
-    expect(ok).toBe(false);
-  });
-});
-
-describe("loadTab", () => {
-  it("given a tab saved earlier, when the tab is loaded, then it is that tab", () => {
-    saveTab("Skills");
-
-    const tab = loadTab();
-
-    expect(tab).toBe("Skills");
-  });
-
-  it.each([
-    ["nothing saved", () => {}],
-    [
-      "an unknown tab saved",
-      () => localStorage.setItem("jforge.char.tab", "Maps"),
-    ],
-    ["a browser that refuses", () => refuse("getItem")],
-  ])(
-    "given %s, when the tab is loaded, then it is the roster",
-    (_, arrange) => {
-      arrange();
-
-      const tab = loadTab();
-
-      expect(tab).toBe("Roster");
-    },
-  );
-});
-
-describe("saveTab", () => {
-  it("given a browser that refuses, when a tab is saved, then nothing throws", () => {
-    refuse("setItem");
-
-    const save = () => saveTab("Gear");
-
-    expect(save).not.toThrow();
-  });
-});
-
-describe("loadPlaces", () => {
-  it("given places saved earlier, when they are loaded, then they come back", () => {
-    savePlaces({ fighter: { x: 10, y: 20 } });
-
-    const places = loadPlaces();
-
-    expect(places).toEqual({ fighter: { x: 10, y: 20 } });
-  });
-
-  it.each([
-    ["nothing saved", () => {}],
-    [
-      "something that is not places",
-      () => localStorage.setItem("jforge.char.board", '{"fighter":{"x":"a"}}'),
-    ],
-    ["broken JSON", () => localStorage.setItem("jforge.char.board", "{")],
-    ["a browser that refuses", () => refuse("getItem")],
-  ])(
-    "given %s, when the places are loaded, then there are none",
-    (_, arrange) => {
-      arrange();
-
-      const places = loadPlaces();
-
-      expect(places).toEqual({});
-    },
-  );
-});
-
-describe("savePlaces", () => {
-  it("given a browser that refuses, when places are saved, then nothing throws", () => {
-    refuse("setItem");
-
-    const save = () => savePlaces({});
-
-    expect(save).not.toThrow();
+    expect(loaded).toBe("Classes");
   });
 });

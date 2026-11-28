@@ -8,7 +8,7 @@ autobApi.get("/health", (c) =>
   c.json({
     module: "autob",
     status: "ok",
-    uses: ["melee", "char"],
+    uses: ["melee", "content"],
     rounds: ROUNDS,
   }),
 );

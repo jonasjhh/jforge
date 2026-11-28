@@ -1,0 +1,16 @@
+{
+  "name": "@jforge/content",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./catalogue": "./catalogue/index.ts",
+    "./jrpg": "./jrpg/index.ts",
+    "./autob": "./autob/index.ts"
+  },
+  "dependencies": {
+    "@jforge/melee": "workspace:*",
+    "@jforge/rules": "workspace:*"
+  }
+}

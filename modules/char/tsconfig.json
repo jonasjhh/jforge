@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.app.base.json",
-  "include": ["src", "shared", "meta.ts"],
+  "include": ["src", "meta.ts"],
   "exclude": ["**/__tests__"]
 }

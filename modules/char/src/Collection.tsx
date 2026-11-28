@@ -13,13 +13,10 @@ interface CollectionProps<T extends Named> {
   items: T[];
   /** A short note beside the name in the list. */
   note: (item: T) => string;
-  /** The item being edited, or null for none. */
+  /** The item open, or null for none. */
   selectedId: string | null;
   onSelect: (id: string | null) => void;
-  /** Adds an item and returns its id; absent when nothing can be added. */
-  onNew?: () => string;
-  onDelete: (id: string) => void;
-  /** The editor for the selected item. */
+  /** What the open item shows. */
   children: (item: T) => ReactNode;
 }
 
@@ -30,9 +27,9 @@ const matches = (query: string, ...texts: string[]) => {
 };
 
 /**
- * A list of designs and the editor of the one picked. On a phone the editor
+ * A list of content and the page of the one picked. On a phone the page
  * takes the list's place, with a way back; on a wide screen they sit side
- * by side (see index.css).
+ * by side (see index.css). Read-only: content is changed in code.
  */
 export function Collection<T extends Named>({
   noun,
@@ -41,8 +38,6 @@ export function Collection<T extends Named>({
   note,
   selectedId,
   onSelect,
-  onNew,
-  onDelete,
   children,
 }: CollectionProps<T>) {
   const [query, setQuery] = useState("");
@@ -52,8 +47,8 @@ export function Collection<T extends Named>({
   const list = useRef<HTMLUListElement>(null);
   const lastOpen = useRef<string | null>(null);
 
-  // Bring the editor into view when an item opens, and the item back into
-  // view in the list when its editor closes.
+  // Bring the page into view when an item opens, and the item back into
+  // view in the list when its page closes.
   const openId = selected?.id ?? null;
   useEffect(() => {
     if (openId) {
@@ -101,24 +96,12 @@ export function Collection<T extends Named>({
         {items.length > 0 && shown.length === 0 && (
           <p className="muted">Nothing matches “{query.trim()}”.</p>
         )}
-        <button
-          type="button"
-          className="secondary"
-          disabled={!onNew}
-          onClick={() => {
-            if (!onNew) return;
-            setQuery("");
-            onSelect(onNew());
-          }}
-        >
-          New {noun}
-        </button>
       </div>
       {selected ? (
         <section
           ref={editor}
           className="panel editor"
-          aria-label={`Edit ${noun}`}
+          aria-label={selected.name}
         >
           <button
             type="button"
@@ -128,54 +111,10 @@ export function Collection<T extends Named>({
             ← {title}
           </button>
           {children(selected)}
-          <DeleteButton
-            key={selected.id}
-            name={selected.name || noun}
-            onDelete={() => {
-              onDelete(selected.id);
-              onSelect(null);
-            }}
-          />
         </section>
       ) : (
-        <p className="panel no-selection muted">
-          Pick a {noun} to edit it, or make a new one.
-        </p>
+        <p className="panel no-selection muted">Pick a {noun} to see it.</p>
       )}
-    </div>
-  );
-}
-
-interface DeleteButtonProps {
-  name: string;
-  onDelete: () => void;
-}
-
-/** Delete, after asking once. */
-function DeleteButton({ name, onDelete }: DeleteButtonProps) {
-  const [asking, setAsking] = useState(false);
-  if (!asking) {
-    return (
-      <button type="button" className="danger" onClick={() => setAsking(true)}>
-        Delete {name}
-      </button>
-    );
-  }
-  return (
-    <div className="confirm" role="group" aria-label={`Delete ${name}?`}>
-      <p>Delete {name}? This can't be undone.</p>
-      <div className="button-row">
-        <button type="button" className="danger" onClick={onDelete}>
-          Yes, delete
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => setAsking(false)}
-        >
-          Keep it
-        </button>
-      </div>
     </div>
   );
 }

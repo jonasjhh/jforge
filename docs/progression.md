@@ -38,7 +38,7 @@ it wins.
 - **Modifiers** (`stats.ts`): buffs, debuffs, statuses and gear apply as
   (stat + adds) × multipliers, never below 0.
 
-## 2. Gear (`modules/char/shared/gear.ts`)
+## 2. Gear (`libs/rules/core/gear.ts`)
 
 - **Stats with gear:** (stat before gear + every add) × every multiplier,
   rounded. HP is always at least 1.
@@ -176,13 +176,14 @@ party size` (`XP_PER_THREAT`, `xpFor`).
 
 ## 6. Class paths (planned for jrpg2)
 
-jrpg2 is to be a separate game, built on char and melee only, with
-progression along char's class graph (see "Class graph" in
-[design.md](design.md)). char holds the graph; these rules belong to
-jrpg2 and are decided so far as follows. jrpg ignores the graph.
+jrpg2 is to be a separate game, built on the content and melee only,
+with progression along the class graph (see "Class graph" in
+[design.md](design.md)). The content holds the graph; these rules belong
+to jrpg2 (in `libs/rules/jrpg2/` when written) and are decided so far as
+follows. jrpg ignores the graph.
 
 - **Start** as a base class: Squire (strength), Scout (agility) or
-  Apprentice (magic), from char's starter library. Each leads to the
+  Apprentice (magic), from the catalogue. Each leads to the
   second level of broad roles (Warrior, Fighter, Spearman; Thief,
   Archer, Duelist, Hunter; Mage, Healer, Enchanter, Summoner);
   specialisation starts at the third level.

@@ -1,8 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { LIBRARY_STORAGE_KEY } from "@jforge/char/shared";
 import { RUN_STORAGE_KEY, startRun } from "../../shared";
-import { loadLibrary, loadRun, saveRun } from "../storage";
+import { loadRun, saveRun } from "../storage";
 import { library } from "./runs";
 
 const refusals: { mockRestore(): void }[] = [];
@@ -17,24 +16,6 @@ const refuse = (method: "getItem" | "setItem" | "removeItem") => {
 
 beforeEach(() => localStorage.clear());
 afterEach(() => refusals.splice(0).forEach((spy) => spy.mockRestore()));
-
-describe("loadLibrary", () => {
-  it("given a library saved by char, when it is loaded, then it is that library", () => {
-    localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(library));
-
-    const loaded = loadLibrary();
-
-    expect(loaded?.archetypes.length).toBe(library.archetypes.length);
-  });
-
-  it("given a browser that refuses storage, when the library is loaded, then there is none", () => {
-    refuse("getItem");
-
-    const loaded = loadLibrary();
-
-    expect(loaded).toBeNull();
-  });
-});
 
 describe("loadRun and saveRun", () => {
   it("given a saved run, when it is loaded, then it is that run", () => {

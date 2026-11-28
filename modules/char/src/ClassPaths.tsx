@@ -3,18 +3,18 @@ import {
   sourcesOf,
   type Archetype,
   type Library,
-} from "../shared";
+} from "@jforge/rules/core";
 
 interface ClassPathsProps {
   archetype: Archetype;
   library: Library;
-  /** Opens another class in its editor. */
+  /** Opens another class. */
   onOpen?: (id: string) => void;
 }
 
 /**
  * Where a class sits in the class graph: what it comes from and becomes.
- * Read-only: links are made on the Paths tab's board.
+ * The Paths tab shows the whole graph.
  */
 export function ClassPaths({ archetype, library, onOpen }: ClassPathsProps) {
   const name = (a: Archetype) => a.name || "(unnamed)";
@@ -54,9 +54,7 @@ export function ClassPaths({ archetype, library, onOpen }: ClassPathsProps) {
       <div className="field-label">Becomes</div>
       {list("Becomes", nextClasses(library, archetype.id), "Nothing yet.")}
       <p className="muted small">
-        Link classes on the Paths tab. A game decides when a character may take
-        a path. A class that can be reached should have stand-ins for its
-        source's key skills.
+        A game decides when a character may take a path.
       </p>
     </fieldset>
   );

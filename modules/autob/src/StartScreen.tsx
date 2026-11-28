@@ -1,9 +1,9 @@
-import type { Library } from "@jforge/char/shared";
+import type { Library } from "@jforge/rules/core";
 import { ROUNDS, START_LIVES, shopClasses, runLibrary } from "../shared";
 import { meta } from "../meta";
 
 interface StartScreenProps {
-  /** The library designed in char, if any. */
+  /** The content to start from; null for the game's own. */
   library: Library | null;
   onStart: (seed: number) => void;
 }
@@ -28,8 +28,7 @@ export function StartScreen({ library, onStart }: StartScreenProps) {
       <section className="panel" aria-label="The shop sells">
         <h2>The shop sells</h2>
         <p className="muted small">
-          Every class in your library. Classes you design in{" "}
-          <a href="/char/">Char</a> join them.
+          Every class autob uses. <a href="/char/">Char</a> shows them all.
         </p>
         <p>{classes.map((c) => c.name).join(", ")}</p>
         <div className="button-row">

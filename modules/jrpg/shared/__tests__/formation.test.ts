@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ALDRIC, MIRA, pair } from "./pair";
-import { starterLibrary } from "@jforge/char/shared";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import { createBattle } from "@jforge/melee/shared";
 import { formationOf, moveMember } from "../formation";
 import {
@@ -14,7 +14,7 @@ import {
   type Run,
 } from "../run";
 
-const library = starterLibrary();
+const library = jrpgLibrary();
 const battle: Encounter = {
   kind: "battle",
   difficulty: "easy",

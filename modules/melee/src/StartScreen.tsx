@@ -3,7 +3,6 @@ import {
   randomEncounter,
   type BattleSetup,
   type Difficulty,
-  type EncounterPools,
 } from "../shared";
 import { meta } from "../meta";
 import { PORTRAIT_AUTHORS } from "./battle/portraitIcons";
@@ -12,12 +11,6 @@ import { useApiHealth } from "./useApiHealth";
 interface StartScreenProps {
   difficulty: Difficulty;
   encounterSeed: number;
-  /** Who encounters are drawn from: built-in types or the imported roster. */
-  pools: EncounterPools;
-  /** How many combatants the char module has published on this device. */
-  imported: number;
-  custom: boolean;
-  onCustom: (custom: boolean) => void;
   onDifficulty: (difficulty: Difficulty) => void;
   onReroll: () => void;
   onStart: (setup: BattleSetup) => void;
@@ -44,16 +37,12 @@ function roster(setup: BattleSetup, side: "player" | "enemy"): string {
 export function StartScreen({
   difficulty,
   encounterSeed,
-  pools,
-  imported,
-  custom,
-  onCustom,
   onDifficulty,
   onReroll,
   onStart,
 }: StartScreenProps) {
   const health = useApiHealth<{ status: string }>("/api/melee/health");
-  const encounter = randomEncounter(encounterSeed, difficulty, pools);
+  const encounter = randomEncounter(encounterSeed, difficulty);
 
   return (
     <main className="page">
@@ -79,28 +68,6 @@ export function StartScreen({
             </button>
           ))}
         </div>
-        {imported > 0 && (
-          <div className="segmented" role="radiogroup" aria-label="Roster">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={!custom}
-              className={custom ? "" : "selected"}
-              onClick={() => onCustom(false)}
-            >
-              Built-in
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={custom}
-              className={custom ? "selected" : ""}
-              onClick={() => onCustom(true)}
-            >
-              Custom
-            </button>
-          </div>
-        )}
         <p>
           <strong>Your party:</strong> {roster(encounter, "player")}
         </p>

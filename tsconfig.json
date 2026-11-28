@@ -5,6 +5,8 @@
     { "path": "./tsconfig.worker.json" },
     { "path": "./tsconfig.test.json" },
     { "path": "./landing" },
+    { "path": "./libs/rules" },
+    { "path": "./libs/content" },
     { "path": "./modules/melee" },
     { "path": "./modules/jrpg" },
     { "path": "./modules/char" },

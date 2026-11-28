@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { starterLibrary } from "@jforge/char/shared";
+import { autobLibrary } from "@jforge/content/autob";
 import { BOARD_COLUMNS, BOARD_ROWS } from "../hex";
 import {
   BASE_BUDGET,
@@ -14,7 +14,7 @@ import {
   stageOf,
 } from "../monsters";
 
-const library = starterLibrary();
+const library = autobLibrary();
 
 describe("stageOf and isStageEnd", () => {
   it.each([

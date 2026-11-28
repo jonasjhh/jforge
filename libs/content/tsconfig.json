@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.app.base.json",
+  "include": ["*.ts", "catalogue", "jrpg", "autob"],
+  "exclude": ["**/__tests__"]
+}

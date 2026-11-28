@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forGame, starterLibrary } from "@jforge/char/shared";
+import { autobLibrary } from "@jforge/content/autob";
 import { SAVE_VERSION } from "@jforge/melee/shared";
 import {
   BASE_INCOME,
@@ -33,7 +33,7 @@ import {
 } from "../run";
 import type { OwnedUnit } from "../units";
 
-const library = starterLibrary();
+const library = autobLibrary();
 const knight = "melee-knight";
 
 /** A fresh run with rich pockets and a shop of nothing but Knights. */
@@ -54,18 +54,18 @@ const bench = (...units: OwnedUnit[]) =>
   Array.from({ length: BENCH_SIZE }, (_, i) => units[i] ?? null);
 
 describe("runLibrary", () => {
-  it("given no library, when the run's library is asked, then it is the starter library's designs for autob", () => {
+  it("given no library, when the run's library is asked, then it is autob's content", () => {
     const result = runLibrary(null);
 
-    expect(result).toEqual(forGame(starterLibrary(), "autob"));
+    expect(result).toEqual(autobLibrary());
   });
 
-  it("given the starter library, when the run's library is asked, then the base classes no game uses yet are left out", () => {
-    const result = runLibrary(starterLibrary());
+  it("given a library, when the run's library is asked, then it is that library", () => {
+    const given = { ...autobLibrary(), characters: [] };
 
-    const names = result.archetypes.map((a) => a.name);
-    expect(names).not.toContain("Squire");
-    expect(names).toContain("Fighter");
+    const result = runLibrary(given);
+
+    expect(result).toBe(given);
   });
 });
 
@@ -94,7 +94,7 @@ describe("startRun", () => {
   });
 
   it("given a library, when a run starts and the library changes later, then the run keeps its copy", () => {
-    const source = starterLibrary();
+    const source = autobLibrary();
     const run = startRun(source, 1);
 
     source.archetypes.length = 0;

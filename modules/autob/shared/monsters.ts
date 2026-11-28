@@ -1,4 +1,4 @@
-import type { Library } from "@jforge/char/shared";
+import type { Library } from "@jforge/rules/core";
 import {
   content,
   type CombatantDef,

@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { emptyLibrary, type Character } from "@jforge/rules/core";
 import {
   MELEE_CREATURES,
-  emptyLibrary,
   meleeClassId,
   meleeCreatureId,
   meleeHeroId,
-  type Character,
-} from "@jforge/char/shared";
+} from "@jforge/content/catalogue";
 import { content, type Skill, type Stats } from "@jforge/melee/shared";
 import {
   DEFAULT_GROWTH,

@@ -3,7 +3,7 @@ import {
   toCombatantDef,
   type Archetype,
   type Library,
-} from "@jforge/char/shared";
+} from "@jforge/rules/core";
 import {
   estimateThreat,
   type CombatantDef,

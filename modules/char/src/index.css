@@ -502,42 +502,26 @@ input[type="search"] {
   padding-right: 0.7rem;
 }
 
-/* The Paths tab: a tray of classes, the board, and what is picked on it. */
-.paths .tray {
-  margin-top: 0;
-}
-
-.tray-class {
-  padding: 0.45rem 0.8rem;
-  border: 1px dashed var(--line);
-  border-radius: 999px;
-  background: var(--raised);
-  color: var(--text);
-  font: inherit;
-  cursor: grab;
-}
-
-.board {
-  position: relative;
-  height: 60vh;
-  min-height: 22rem;
+/* The Paths tab: the class graph in columns, one per step from a base. */
+.path-columns {
+  display: flex;
+  gap: 1rem;
   margin-top: 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--surface);
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
 }
 
-.board .react-flow {
-  --xy-background-color: var(--surface);
+.path-column {
+  display: grid;
+  align-content: start;
+  gap: 0.6rem;
+  min-width: 10rem;
 }
 
-.board-empty {
-  position: absolute;
-  inset: 40% 1rem auto;
+.path-column h2 {
   margin: 0;
-  text-align: center;
-  pointer-events: none;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 .class-card {
@@ -548,12 +532,13 @@ input[type="search"] {
   border-radius: 12px;
   background: var(--raised);
   color: var(--text);
+  font: inherit;
   text-align: center;
+  cursor: pointer;
 }
 
-.react-flow__node.selected .class-card {
+.class-card:hover {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .class-card-name {
@@ -563,30 +548,4 @@ input[type="search"] {
 .class-card-note {
   color: var(--text-muted);
   font-size: 0.75rem;
-}
-
-/* Big enough to grab with a finger. */
-.class-card .react-flow__handle {
-  width: 14px;
-  height: 14px;
-  background: var(--accent);
-  border: 2px solid var(--bg);
-}
-
-.board-pick h2 {
-  margin-bottom: 0.75rem;
-}
-
-.board .react-flow__edge-path {
-  stroke: var(--text-muted);
-  stroke-width: 2;
-}
-
-.board .react-flow__edge.selected .react-flow__edge-path {
-  stroke: var(--accent);
-  stroke-width: 3;
-}
-
-.board-pick .button-row .danger {
-  margin-top: 0;
 }

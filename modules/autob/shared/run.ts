@@ -1,4 +1,5 @@
-import { forGame, starterLibrary, type Library } from "@jforge/char/shared";
+import { type Library } from "@jforge/rules/core";
+import { autobLibrary } from "@jforge/content/autob";
 import {
   SAVE_VERSION,
   createRandom,
@@ -76,11 +77,11 @@ export interface Run {
 }
 
 /**
- * The designs a run starts from: those of `library`, or of the starter
- * library, that autob is ticked for.
+ * The content a run starts from: `library` if given (tests give their
+ * own), or what autob uses of the catalogue (@jforge/content/autob).
  */
 export function runLibrary(library: Library | null): Library {
-  return forGame(library ?? starterLibrary(), "autob");
+  return library ?? autobLibrary();
 }
 
 const shopRandom = (seed: number, rolls: number) =>

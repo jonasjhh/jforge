@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { archetypeOf, canWear } from "@jforge/char/shared";
+import { archetypeOf, canWear } from "@jforge/rules/core";
 import {
   battleFor,
   canRecruit,

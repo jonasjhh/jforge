@@ -1,0 +1,12 @@
+{
+  "name": "@jforge/rules",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./core": "./core/index.ts"
+  },
+  "dependencies": {
+    "@jforge/melee": "workspace:*"
+  }
+}

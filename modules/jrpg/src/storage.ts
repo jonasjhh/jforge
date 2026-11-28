@@ -1,18 +1,4 @@
-import {
-  LIBRARY_STORAGE_KEY,
-  parseLibrary,
-  type Library,
-} from "@jforge/char/shared";
 import { RUN_STORAGE_KEY, parseRun, type Run } from "../shared";
-
-/** The library designed in char on this device, if any. */
-export function loadLibrary(): Library | null {
-  try {
-    return parseLibrary(localStorage.getItem(LIBRARY_STORAGE_KEY));
-  } catch {
-    return null;
-  }
-}
 
 /** The run in progress on this device, if any. */
 export function loadRun(): Run | null {

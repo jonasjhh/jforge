@@ -13,7 +13,7 @@ import {
 } from "../shared";
 import { RunScreen } from "./RunScreen";
 import { StartScreen } from "./StartScreen";
-import { loadLibrary, loadRun, saveRun } from "./storage";
+import { loadRun, saveRun } from "./storage";
 
 const BATTLE_LABELS = {
   exit: "← Retreat",
@@ -39,7 +39,8 @@ export function App() {
   };
 
   if (run === null) {
-    const library = loadLibrary();
+    // A run draws from its game's content (@jforge/content).
+    const library = null;
     return (
       <StartScreen
         library={library}

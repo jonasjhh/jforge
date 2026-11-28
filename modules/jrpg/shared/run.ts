@@ -1,18 +1,16 @@
 import {
-  basicGear,
   blankCharacter,
   canWear,
   equip,
-  forGame,
   parseLibrary,
-  starterKit,
-  starterLibrary,
   unequip,
   type Character,
   type Gear,
   type GearSlot,
   type Library,
-} from "@jforge/char/shared";
+} from "@jforge/rules/core";
+import { basicGear, starterKit } from "@jforge/content/catalogue";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import {
   MAX_PARTY_SIZE,
   SAVE_VERSION,
@@ -159,11 +157,11 @@ const averageLevel = (party: Member[]) =>
   Math.round(party.reduce((sum, c) => sum + c.level, 0) / party.length);
 
 /**
- * The designs a run starts from: those of `library`, or of the starter
- * library, that jrpg is ticked for.
+ * The content a run starts from: `library` if given (tests give their
+ * own), or what jrpg uses of the catalogue (@jforge/content/jrpg).
  */
 export function runLibrary(library: Library | null): Library {
-  return forGame(library ?? starterLibrary(), "jrpg");
+  return library ?? jrpgLibrary();
 }
 
 /** Everyone who could set out: every class character of the run's world. */

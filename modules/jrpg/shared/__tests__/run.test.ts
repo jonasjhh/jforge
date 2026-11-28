@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ALDRIC, MIRA, pair } from "./pair";
-import { forGame, starterLibrary } from "@jforge/char/shared";
+import { jrpgLibrary } from "@jforge/content/jrpg";
 import {
   MAX_PARTY_SIZE,
   content,
@@ -53,7 +53,7 @@ import {
 } from "../run";
 import { formationOf } from "../formation";
 
-const library = starterLibrary();
+const library = jrpgLibrary();
 const SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
 
 /** A run standing at the given encounters. */
@@ -186,18 +186,18 @@ describe("startRun", () => {
     expect(missing).toEqual([]);
   });
 
-  it("given nothing designed, when the run's library is taken, then it is the starter library's designs for jrpg", () => {
+  it("given no library, when the run's library is taken, then it is jrpg's content", () => {
     const used = runLibrary(null);
 
-    expect(used).toEqual(forGame(starterLibrary(), "jrpg"));
+    expect(used).toEqual(jrpgLibrary());
   });
 
-  it("given a library with classes jrpg isn't ticked for, when the run's library is taken, then they are left out", () => {
-    const used = runLibrary(library);
+  it("given a library, when the run's library is taken, then it is that library", () => {
+    const given = { ...jrpgLibrary(), characters: [] };
 
-    const names = used.archetypes.map((a) => a.name);
-    expect(names).not.toContain("Scout");
-    expect(names).toContain("Rogue");
+    const used = runLibrary(given);
+
+    expect(used).toBe(given);
   });
 });
 
@@ -233,11 +233,11 @@ describe("startRun and the world", () => {
   });
 
   it.each(["gear", "archetypes", "characters", "skills"] as const)(
-    "given a new run, when its %s are listed, then everything designed for jrpg is kept",
+    "given a new run, when its %s are listed, then everything jrpg uses is kept",
     (key) => {
       const ids = new Set(run.library[key].map((x) => x.id));
 
-      const lost = forGame(library, "jrpg")[key].filter((x) => !ids.has(x.id));
+      const lost = library[key].filter((x) => !ids.has(x.id));
 
       expect(lost).toEqual([]);
     },
